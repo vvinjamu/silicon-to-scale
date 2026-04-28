@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Transformer Pipeline</title>
+<style>body{margin:0;background:#0d1117;font-family:'Courier New',monospace;display:flex;justify-content:center;padding:20px;}
+h2{color:#58a6ff;text-align:center;font-size:18px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.sub{color:#8b949e;text-align:center;font-size:12px;margin-bottom:16px;}</style>
+</head><body><div>
+<h2>Transformer Architecture — Performance Engineer's View</h2>
+<div class="sub">Chapter 2 · One transformer block: operations, FLOPs, and HBM traffic</div>
+<svg viewBox="0 0 920 600" width="920" height="600" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+    <polygon points="0 0, 8 3, 0 6" fill="#8b949e"/>
+  </marker>
+  <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+    <polygon points="0 0, 8 3, 0 6" fill="#58a6ff"/>
+  </marker>
+  <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+    <polygon points="0 0, 8 3, 0 6" fill="#3fb950"/>
+  </marker>
+  <marker id="arrowYellow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+    <polygon points="0 0, 8 3, 0 6" fill="#f7c948"/>
+  </marker>
+</defs>
+
+<rect width="920" height="600" fill="#0d1117" rx="12"/>
+<rect x="1" y="1" width="918" height="598" fill="none" stroke="#30363d" stroke-width="1" rx="12"/>
+
+<!-- Input tokens -->
+<rect x="390" y="18" width="140" height="36" rx="5" fill="#1c2128" stroke="#444"/>
+<text x="460" y="42" text-anchor="middle" fill="#8b949e" font-size="12">Token Embeddings</text>
+<text x="460" y="58" text-anchor="middle" fill="#444" font-size="9">[S × d_model] = [4096 × 8192]</text>
+<line x1="460" y1="54" x2="460" y2="70" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<!-- Main block outer border -->
+<rect x="60" y="72" width="800" height="460" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1.5" stroke-dasharray="6,3"/>
+<text x="82" y="91" fill="#30363d" font-size="11">Transformer Block × L  (L=80 for LLaMA-3 70B)</text>
+
+<!-- ======= LEFT COLUMN: ATTENTION SUBLAYER ======= -->
+<!-- RMSNorm 1 -->
+<rect x="90" y="100" width="360" height="44" rx="5" fill="#1c2128" stroke="#3fb950" stroke-width="1.5"/>
+<text x="270" y="120" text-anchor="middle" fill="#3fb950" font-size="12" font-weight="bold">RMSNorm</text>
+<text x="270" y="135" text-anchor="middle" fill="#8b949e" font-size="9">Normalize across d_model dim · fused with residual</text>
+<line x1="270" y1="144" x2="270" y2="158" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+
+<!-- QKV Projection -->
+<rect x="90" y="160" width="360" height="56" rx="5" fill="#1c2128" stroke="#58a6ff" stroke-width="2"/>
+<text x="270" y="180" text-anchor="middle" fill="#58a6ff" font-size="12" font-weight="bold">QKV Projection (GEMM)</text>
+<text x="270" y="195" text-anchor="middle" fill="#8b949e" font-size="9">W_QKV [8192 × 3×8192] · Horizontal fusion: x read once</text>
+<text x="270" y="208" text-anchor="middle" fill="#f7c948" font-size="9">FLOPs: 2 × S × d² × 3 = 822 GFLOPs/layer</text>
+<line x1="270" y1="216" x2="270" y2="230" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+
+<!-- RoPE -->
+<rect x="90" y="232" width="170" height="36" rx="5" fill="#1c2128" stroke="#bc8cff" stroke-width="1.5"/>
+<text x="175" y="250" text-anchor="middle" fill="#bc8cff" font-size="11" font-weight="bold">RoPE</text>
+<text x="175" y="263" text-anchor="middle" fill="#8b949e" font-size="8">Rotary pos. embed</text>
+
+<!-- FlashAttention -->
+<rect x="90" y="280" width="360" height="60" rx="5" fill="#1c2128" stroke="#f7c948" stroke-width="2"/>
+<text x="270" y="302" text-anchor="middle" fill="#f7c948" font-size="12" font-weight="bold">FlashAttention (Kernel Replacement)</text>
+<text x="270" y="316" text-anchor="middle" fill="#8b949e" font-size="9">Tiled SRAM computation · No O(S²) HBM materialization</text>
+<text x="270" y="329" text-anchor="middle" fill="#f7c948" font-size="9">O(S) HBM traffic vs naive O(S²) · KV→ KV Cache</text>
+<line x1="270" y1="340" x2="270" y2="354" stroke="#f7c948" stroke-width="1.5" marker-end="url(#arrowYellow)"/>
+
+<!-- Output projection -->
+<rect x="90" y="356" width="360" height="44" rx="5" fill="#1c2128" stroke="#58a6ff" stroke-width="2"/>
+<text x="270" y="376" text-anchor="middle" fill="#58a6ff" font-size="12" font-weight="bold">Output Projection (GEMM)</text>
+<text x="270" y="391" text-anchor="middle" fill="#8b949e" font-size="9">W_O [8192 × 8192] · Row-parallel + AllReduce (TP)</text>
+<line x1="270" y1="400" x2="270" y2="414" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+
+<!-- Residual add 1 -->
+<rect x="90" y="416" width="360" height="30" rx="4" fill="#2d333b" stroke="#444"/>
+<text x="270" y="436" text-anchor="middle" fill="#8b949e" font-size="10">Residual Add  x = x + attn_out</text>
+
+<!-- Residual bypass line -->
+<line x1="80" y1="108" x2="68" y2="108" stroke="#3fb950" stroke-width="1.5"/>
+<line x1="68" y1="108" x2="68" y2="431" stroke="#3fb950" stroke-width="1.5"/>
+<line x1="68" y1="431" x2="90" y2="431" stroke="#3fb950" stroke-width="1.5"/>
+<text x="55" y="280" fill="#3fb950" font-size="9" transform="rotate(-90,55,280)">RESIDUAL</text>
+
+<!-- ======= RIGHT COLUMN: FFN SUBLAYER ======= -->
+<!-- RMSNorm 2 -->
+<rect x="470" y="100" width="370" height="44" rx="5" fill="#1c2128" stroke="#3fb950" stroke-width="1.5"/>
+<text x="655" y="120" text-anchor="middle" fill="#3fb950" font-size="12" font-weight="bold">RMSNorm</text>
+<text x="655" y="135" text-anchor="middle" fill="#8b949e" font-size="9">Second normalization · fused with residual add</text>
+<line x1="655" y1="144" x2="655" y2="158" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+
+<!-- Gate + Up projections -->
+<rect x="470" y="160" width="370" height="56" rx="5" fill="#1c2128" stroke="#ff6b35" stroke-width="2"/>
+<text x="655" y="180" text-anchor="middle" fill="#ff6b35" font-size="12" font-weight="bold">Gate + Up Projection (GEMM)</text>
+<text x="655" y="195" text-anchor="middle" fill="#8b949e" font-size="9">W_gate, W_up ∈ [8192×28672] · Horizontal: x read once</text>
+<text x="655" y="208" text-anchor="middle" fill="#f7c948" font-size="9">FLOPs: 2 × 2 × S × d × d_ff = 1,928 GFLOPs/layer</text>
+<line x1="655" y1="216" x2="655" y2="230" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<!-- SwiGLU -->
+<rect x="470" y="232" width="370" height="36" rx="5" fill="#1c2128" stroke="#ff6b35" stroke-width="1.5"/>
+<text x="655" y="252" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="bold">SwiGLU  →  SiLU(gate) ⊙ up</text>
+<text x="655" y="264" text-anchor="middle" fill="#8b949e" font-size="8">Fused: stays in registers, no HBM write for intermediate</text>
+<line x1="655" y1="268" x2="655" y2="282" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<!-- Down projection -->
+<rect x="470" y="284" width="370" height="56" rx="5" fill="#1c2128" stroke="#ff6b35" stroke-width="2"/>
+<text x="655" y="304" text-anchor="middle" fill="#ff6b35" font-size="12" font-weight="bold">Down Projection (GEMM)</text>
+<text x="655" y="320" text-anchor="middle" fill="#8b949e" font-size="9">W_down ∈ [28672×8192] · Row-parallel + AllReduce (TP)</text>
+<text x="655" y="334" text-anchor="middle" fill="#f7c948" font-size="9">FLOPs: 2 × S × d_ff × d = 964 GFLOPs/layer</text>
+<line x1="655" y1="340" x2="655" y2="354" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<!-- Residual add 2 -->
+<rect x="470" y="356" width="370" height="30" rx="4" fill="#2d333b" stroke="#444"/>
+<text x="655" y="376" text-anchor="middle" fill="#8b949e" font-size="10">Residual Add  x = x + ffn_out</text>
+
+<!-- FFN residual bypass -->
+<line x1="860" y1="108" x2="875" y2="108" stroke="#3fb950" stroke-width="1.5"/>
+<line x1="875" y1="108" x2="875" y2="371" stroke="#3fb950" stroke-width="1.5"/>
+<line x1="875" y1="371" x2="840" y2="371" stroke="#3fb950" stroke-width="1.5"/>
+
+<!-- Arrow between attention and FFN sublayers -->
+<line x1="450" y1="230" x2="470" y2="230" stroke="#8b949e" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+<text x="460" y="224" text-anchor="middle" fill="#444" font-size="9">→ FFN</text>
+
+<!-- Output arrow -->
+<rect x="390" y="490" width="140" height="36" rx="5" fill="#1c2128" stroke="#444"/>
+<text x="460" y="513" text-anchor="middle" fill="#8b949e" font-size="12">Block Output</text>
+<line x1="460" y1="446" x2="460" y2="490" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<!-- KV Cache annotation -->
+<rect x="620" y="415" width="210" height="55" rx="4" fill="#1c2128" stroke="#bc8cff" stroke-width="1"/>
+<text x="725" y="433" text-anchor="middle" fill="#bc8cff" font-size="10" font-weight="bold">KV Cache (inference)</text>
+<text x="725" y="448" text-anchor="middle" fill="#8b949e" font-size="9">Store K, V per token per layer</text>
+<text x="725" y="461" text-anchor="middle" fill="#8b949e" font-size="9">70B FP8: 160 KB/token all layers</text>
+<line x1="330" y1="310" x2="620" y2="433" stroke="#bc8cff" stroke-width="1" stroke-dasharray="3,3"/>
+
+<!-- FLOPs summary box bottom -->
+<rect x="60" y="540" width="800" height="42" rx="4" fill="#1c2128" stroke="#30363d"/>
+<text x="460" y="558" text-anchor="middle" fill="#f7c948" font-size="11" font-weight="bold">LLaMA-3 70B · One layer FLOPs (S=4096): ~3,714 GFLOPs  ·  Total 80 layers: ~297 TFLOPs/forward</text>
+<text x="460" y="574" text-anchor="middle" fill="#8b949e" font-size="9">Training (fwd+bwd): 6 × 70B × tokens  ·  Memory: 16 bytes/param for Adam = 1.12 TB total</text>
+
+<text x="20" y="595" fill="#30363d" font-size="10">Fig. 2.1 · Ch02 Transformer Block</text>
+<text x="900" y="595" text-anchor="end" fill="#30363d" font-size="10">Silicon to Scale © 2026</text>
+</svg>
+</div></body></html>

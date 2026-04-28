@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Speculative Decoding Flow</title>
+<style>body{margin:0;background:#0d1117;font-family:'Courier New',monospace;display:flex;justify-content:center;padding:20px;}
+h2{color:#58a6ff;text-align:center;font-size:18px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.sub{color:#8b949e;text-align:center;font-size:12px;margin-bottom:16px;}</style>
+</head><body><div>
+<h2>Speculative Decoding — Draft, Verify, Accept/Reject</h2>
+<div class="sub">Chapter 13 · One iteration: K=5 draft tokens, target verification, acceptance criterion min(1, p/q)</div>
+<svg viewBox="0 0 900 560" width="900" height="560" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="a1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#58a6ff"/></marker>
+  <marker id="a2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#3fb950"/></marker>
+  <marker id="a3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#f85149"/></marker>
+  <marker id="a4" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#f7c948"/></marker>
+</defs>
+<rect width="900" height="560" fill="#0d1117" rx="12"/>
+<rect x="1" y="1" width="898" height="558" fill="none" stroke="#30363d" rx="12"/>
+
+<!-- Title row -->
+<text x="20" y="22" fill="#30363d" font-size="10">Fig. 13.1 · Ch13 Speculative Decoding</text>
+
+<!-- PHASE 1: DRAFT (top row) -->
+<rect x="20" y="32" width="860" height="130" rx="6" fill="#161b22" stroke="#bc8cff" stroke-width="1.5"/>
+<text x="30" y="52" fill="#bc8cff" font-size="12" font-weight="bold">PHASE 1 — DRAFT  (K=5 sequential steps with small 7B model)</text>
+<text x="30" y="68" fill="#8b949e" font-size="10">Each step: T_q ≈ 0.10 × T_p  (draft is 10× faster than target)  ·  Total draft time: 5 × 0.10 × T_p = 0.5 × T_p</text>
+
+<!-- Draft tokens -->
+<g>
+  <!-- Context box -->
+  <rect x="30" y="78" width="100" height="70" rx="5" fill="#1c2128" stroke="#444"/>
+  <text x="80" y="100" text-anchor="middle" fill="#8b949e" font-size="10">Context</text>
+  <text x="80" y="116" text-anchor="middle" fill="#8b949e" font-size="9">(prompt +</text>
+  <text x="80" y="130" text-anchor="middle" fill="#8b949e" font-size="9">prior tokens)</text>
+
+  <line x1="130" y1="113" x2="148" y2="113" stroke="#bc8cff" stroke-width="1.5" marker-end="url(#a1)"/>
+
+  <!-- Draft model + 5 draft tokens -->
+  <rect x="150" y="78" width="100" height="70" rx="5" fill="#2d1d44" stroke="#bc8cff" stroke-width="2"/>
+  <text x="200" y="103" text-anchor="middle" fill="#bc8cff" font-size="11" font-weight="bold">Draft</text>
+  <text x="200" y="117" text-anchor="middle" fill="#bc8cff" font-size="11" font-weight="bold">Model</text>
+  <text x="200" y="131" text-anchor="middle" fill="#8b949e" font-size="9">7B · fast</text>
+
+  <line x1="250" y1="113" x2="268" y2="113" stroke="#bc8cff" stroke-width="1.5" marker-end="url(#a1)"/>
+
+  <!-- 5 draft tokens -->
+  <rect x="270" y="85" width="60" height="55" rx="4" fill="#1c2128" stroke="#bc8cff"/>
+  <text x="300" y="104" text-anchor="middle" fill="#bc8cff" font-size="11" font-weight="bold">t̂₁</text>
+  <text x="300" y="118" text-anchor="middle" fill="#8b949e" font-size="8">"The"</text>
+  <text x="300" y="131" text-anchor="middle" fill="#8b949e" font-size="7">q(t̂₁)=0.71</text>
+
+  <rect x="338" y="85" width="60" height="55" rx="4" fill="#1c2128" stroke="#bc8cff"/>
+  <text x="368" y="104" text-anchor="middle" fill="#bc8cff" font-size="11" font-weight="bold">t̂₂</text>
+  <text x="368" y="118" text-anchor="middle" fill="#8b949e" font-size="8">"quick"</text>
+  <text x="368" y="131" text-anchor="middle" fill="#8b949e" font-size="7">q(t̂₂)=0.62</text>
+
+  <rect x="406" y="85" width="60" height="55" rx="4" fill="#1c2128" stroke="#bc8cff"/>
+  <text x="436" y="104" text-anchor="middle" fill="#bc8cff" font-size="11" font-weight="bold">t̂₃</text>
+  <text x="436" y="118" text-anchor="middle" fill="#8b949e" font-size="8">"brown"</text>
+  <text x="436" y="131" text-anchor="middle" fill="#8b949e" font-size="7">q(t̂₃)=0.55</text>
+
+  <rect x="474" y="85" width="60" height="55" rx="4" fill="#1c2128" stroke="#bc8cff"/>
+  <text x="504" y="104" text-anchor="middle" fill="#bc8cff" font-size="11" font-weight="bold">t̂₄</text>
+  <text x="504" y="118" text-anchor="middle" fill="#8b949e" font-size="8">"fox"</text>
+  <text x="504" y="131" text-anchor="middle" fill="#8b949e" font-size="7">q(t̂₄)=0.48</text>
+
+  <rect x="542" y="85" width="60" height="55" rx="4" fill="#1c2128" stroke="#bc8cff"/>
+  <text x="572" y="104" text-anchor="middle" fill="#bc8cff" font-size="11" font-weight="bold">t̂₅</text>
+  <text x="572" y="118" text-anchor="middle" fill="#8b949e" font-size="8">"jumps"</text>
+  <text x="572" y="131" text-anchor="middle" fill="#8b949e" font-size="7">q(t̂₅)=0.38</text>
+</g>
+
+<!-- PHASE 2: VERIFY -->
+<line x1="450" y1="162" x2="450" y2="180" stroke="#f7c948" stroke-width="2" marker-end="url(#a4)"/>
+<text x="490" y="175" fill="#f7c948" font-size="9">One forward pass (target)</text>
+
+<rect x="20" y="182" width="860" height="100" rx="6" fill="#161b22" stroke="#f7c948" stroke-width="1.5"/>
+<text x="30" y="200" fill="#f7c948" font-size="12" font-weight="bold">PHASE 2 — VERIFY  (ONE target 70B forward pass: all K+1 positions simultaneously)</text>
+<text x="30" y="216" fill="#8b949e" font-size="10">Cost: 1 × T_p  (same cost as generating ONE token without spec decode)  ·  BUT verifies 5 tokens at once!</text>
+
+<rect x="30" y="225" width="120" height="50" rx="5" fill="#2d2200" stroke="#f7c948" stroke-width="2"/>
+<text x="90" y="247" text-anchor="middle" fill="#f7c948" font-size="11" font-weight="bold">Target Model</text>
+<text x="90" y="261" text-anchor="middle" fill="#8b949e" font-size="9">70B · 1 fwd pass</text>
+
+<!-- Target probs for each position -->
+<rect x="165" y="225" width="70" height="50" rx="4" fill="#1c2128" stroke="#f7c948"/>
+<text x="200" y="243" text-anchor="middle" fill="#f7c948" font-size="9">p(t̂₁)</text>
+<text x="200" y="256" text-anchor="middle" fill="#3fb950" font-size="8">"The"</text>
+<text x="200" y="268" text-anchor="middle" fill="#3fb950" font-size="8">p=0.75 ✓</text>
+
+<rect x="245" y="225" width="70" height="50" rx="4" fill="#1c2128" stroke="#f7c948"/>
+<text x="280" y="243" text-anchor="middle" fill="#f7c948" font-size="9">p(t̂₂)</text>
+<text x="280" y="256" text-anchor="middle" fill="#3fb950" font-size="8">"quick"</text>
+<text x="280" y="268" text-anchor="middle" fill="#3fb950" font-size="8">p=0.68 ✓</text>
+
+<rect x="325" y="225" width="70" height="50" rx="4" fill="#1c2128" stroke="#f7c948"/>
+<text x="360" y="243" text-anchor="middle" fill="#f7c948" font-size="9">p(t̂₃)</text>
+<text x="360" y="256" text-anchor="middle" fill="#f85149" font-size="8">"brown"</text>
+<text x="360" y="268" text-anchor="middle" fill="#f85149" font-size="8">p=0.12 ✗</text>
+
+<rect x="405" y="225" width="70" height="50" rx="4" fill="#1c2128" stroke="#444" opacity="0.4"/>
+<text x="440" y="254" text-anchor="middle" fill="#555" font-size="8">t̂₄ (skipped)</text>
+
+<rect x="485" y="225" width="70" height="50" rx="4" fill="#1c2128" stroke="#444" opacity="0.4"/>
+<text x="520" y="254" text-anchor="middle" fill="#555" font-size="8">t̂₅ (skipped)</text>
+
+<line x1="150" y1="250" x2="165" y2="250" stroke="#f7c948" stroke-width="1.5" marker-end="url(#a4)"/>
+
+<!-- PHASE 3: ACCEPT/REJECT -->
+<line x1="450" y1="282" x2="450" y2="298" stroke="#8b949e" stroke-width="2" marker-end="url(#a1)"/>
+
+<rect x="20" y="300" width="860" height="140" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+<text x="30" y="318" fill="#3fb950" font-size="12" font-weight="bold">PHASE 3 — ACCEPT / REJECT  (acceptance criterion: min(1, p_target / p_draft))</text>
+
+<!-- Token 1: accept -->
+<rect x="30" y="328" width="100" height="70" rx="5" fill="#0d2d0d" stroke="#3fb950" stroke-width="2"/>
+<text x="80" y="348" text-anchor="middle" fill="#3fb950" font-size="11" font-weight="bold">t̂₁: ACCEPT</text>
+<text x="80" y="362" text-anchor="middle" fill="#8b949e" font-size="8">"The"</text>
+<text x="80" y="375" text-anchor="middle" fill="#8b949e" font-size="8">min(1, 0.75/0.71)</text>
+<text x="80" y="388" text-anchor="middle" fill="#3fb950" font-size="8">= 1.0 → accept!</text>
+
+<!-- Token 2: accept -->
+<rect x="140" y="328" width="100" height="70" rx="5" fill="#0d2d0d" stroke="#3fb950" stroke-width="2"/>
+<text x="190" y="348" text-anchor="middle" fill="#3fb950" font-size="11" font-weight="bold">t̂₂: ACCEPT</text>
+<text x="190" y="362" text-anchor="middle" fill="#8b949e" font-size="8">"quick"</text>
+<text x="190" y="375" text-anchor="middle" fill="#8b949e" font-size="8">min(1, 0.68/0.62)</text>
+<text x="190" y="388" text-anchor="middle" fill="#3fb950" font-size="8">= 1.0 → accept!</text>
+
+<!-- Token 3: reject -->
+<rect x="250" y="328" width="100" height="70" rx="5" fill="#2d0d0d" stroke="#f85149" stroke-width="2"/>
+<text x="300" y="348" text-anchor="middle" fill="#f85149" font-size="11" font-weight="bold">t̂₃: REJECT</text>
+<text x="300" y="362" text-anchor="middle" fill="#8b949e" font-size="8">"brown"</text>
+<text x="300" y="375" text-anchor="middle" fill="#8b949e" font-size="8">min(1, 0.12/0.55)</text>
+<text x="300" y="388" text-anchor="middle" fill="#f85149" font-size="8">= 0.22 → reject!</text>
+
+<!-- Resample box -->
+<rect x="360" y="328" width="130" height="70" rx="5" fill="#2d2200" stroke="#f7c948" stroke-width="1.5"/>
+<text x="425" y="348" text-anchor="middle" fill="#f7c948" font-size="10" font-weight="bold">Resample from</text>
+<text x="425" y="362" text-anchor="middle" fill="#f7c948" font-size="10" font-weight="bold">residual dist</text>
+<text x="425" y="376" text-anchor="middle" fill="#8b949e" font-size="8">max(0, p - q) / Z</text>
+<text x="425" y="390" text-anchor="middle" fill="#f7c948" font-size="8">→ "gray" (target dist!)</text>
+
+<!-- Correctness proof -->
+<rect x="500" y="325" width="370" height="80" rx="5" fill="#1c2128" stroke="#3fb950" stroke-width="1"/>
+<text x="685" y="343" text-anchor="middle" fill="#3fb950" font-size="11" font-weight="bold">★ EXACT ALGORITHM — ZERO QUALITY LOSS</text>
+<text x="685" y="358" text-anchor="middle" fill="#8b949e" font-size="9">Accepted tokens follow target model distribution exactly</text>
+<text x="685" y="372" text-anchor="middle" fill="#8b949e" font-size="9">Residual resampling restores p_target after any rejection</text>
+<text x="685" y="386" text-anchor="middle" fill="#8b949e" font-size="9">No accuracy evaluation needed before deployment</text>
+<text x="685" y="400" text-anchor="middle" fill="#3fb950" font-size="9">This iteration: 2 accepted + 1 resampled = 3 tokens output</text>
+
+<!-- Speedup summary -->
+<rect x="20" y="452" width="860" height="80" rx="6" fill="#1c2128" stroke="#444"/>
+<text x="440" y="470" text-anchor="middle" fill="#f7c948" font-size="12" font-weight="bold">SPEEDUP:  E[accepted] / (K×c + 1)  ·  At α=0.85, K=5, c=0.10  →  2.51× TPOT improvement</text>
+<text x="130" y="490" text-anchor="middle" fill="#8b949e" font-size="10">α=0.60 → 1.55×</text>
+<text x="310" y="490" text-anchor="middle" fill="#8b949e" font-size="10">α=0.75 → 2.26×</text>
+<text x="490" y="490" text-anchor="middle" fill="#3fb950" font-size="10">α=0.85 → 2.51×</text>
+<text x="670" y="490" text-anchor="middle" fill="#3fb950" font-size="10">α=0.92 → 3.15×</text>
+<text x="840" y="490" text-anchor="middle" fill="#f7c948" font-size="10">α=0.95 → 3.43×</text>
+<text x="440" y="520" text-anchor="middle" fill="#f85149" font-size="10">⚠ MANDATORY: draft and target MUST share identical tokenizer vocabulary</text>
+
+<text x="900" y="555" text-anchor="end" fill="#30363d" font-size="9">Silicon to Scale © 2026</text>
+</svg>
+</div></body></html>

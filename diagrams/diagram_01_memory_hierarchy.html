@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GPU Memory Hierarchy — Silicon to Scale</title>
+<style>
+  body { margin: 0; background: #0d1117; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+  .container { padding: 20px; }
+  h2 { color: #58a6ff; text-align: center; font-size: 18px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+  .subtitle { color: #8b949e; text-align: center; font-size: 12px; margin-bottom: 20px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>GPU Memory Hierarchy — H100 SXM5</h2>
+  <div class="subtitle">Chapter 4 · Bandwidth decreases, capacity increases at each level</div>
+<svg viewBox="0 0 820 540" width="820" height="540" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="regGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ff6b35"/>
+      <stop offset="100%" stop-color="#ff8c5a"/>
+    </linearGradient>
+    <linearGradient id="smemGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f7c948"/>
+      <stop offset="100%" stop-color="#f9d96c"/>
+    </linearGradient>
+    <linearGradient id="l1Grad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3fb950"/>
+      <stop offset="100%" stop-color="#5acc63"/>
+    </linearGradient>
+    <linearGradient id="l2Grad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#58a6ff"/>
+      <stop offset="100%" stop-color="#79baff"/>
+    </linearGradient>
+    <linearGradient id="hbmGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#bc8cff"/>
+      <stop offset="100%" stop-color="#d0aaff"/>
+    </linearGradient>
+    <linearGradient id="dramGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#8b949e"/>
+      <stop offset="100%" stop-color="#aab0b8"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="820" height="540" fill="#0d1117" rx="12"/>
+  <rect x="1" y="1" width="818" height="538" fill="none" stroke="#30363d" stroke-width="1" rx="12"/>
+
+  <!-- Pyramid levels — widening downward -->
+  <!-- Level 1: Registers (top, narrowest) -->
+  <rect x="320" y="30" width="180" height="58" rx="6" fill="url(#regGrad)" filter="url(#glow)"/>
+  <text x="410" y="54" text-anchor="middle" fill="#0d1117" font-size="13" font-weight="bold">REGISTERS</text>
+  <text x="410" y="70" text-anchor="middle" fill="#0d1117" font-size="10">65,536 × 32-bit per SM</text>
+
+  <!-- Level 2: SMEM -->
+  <rect x="275" y="103" width="270" height="58" rx="6" fill="url(#smemGrad)"/>
+  <text x="410" y="127" text-anchor="middle" fill="#0d1117" font-size="13" font-weight="bold">SHARED MEMORY (SMEM)</text>
+  <text x="410" y="143" text-anchor="middle" fill="#0d1117" font-size="10">Up to 228 KB per SM · ~100 TB/s</text>
+
+  <!-- Level 3: L1 -->
+  <rect x="220" y="176" width="380" height="58" rx="6" fill="url(#l1Grad)"/>
+  <text x="410" y="200" text-anchor="middle" fill="#0d1117" font-size="13" font-weight="bold">L1 CACHE / TEXTURE CACHE</text>
+  <text x="410" y="216" text-anchor="middle" fill="#0d1117" font-size="10">64 KB per SM · ~20 TB/s est.</text>
+
+  <!-- Level 4: L2 -->
+  <rect x="150" y="249" width="520" height="58" rx="6" fill="url(#l2Grad)"/>
+  <text x="410" y="273" text-anchor="middle" fill="#0d1117" font-size="13" font-weight="bold">L2 CACHE (UNIFIED)</text>
+  <text x="410" y="289" text-anchor="middle" fill="#0d1117" font-size="10">50 MB · ~10 TB/s effective</text>
+
+  <!-- Level 5: HBM -->
+  <rect x="70" y="322" width="680" height="70" rx="6" fill="url(#hbmGrad)"/>
+  <text x="410" y="350" text-anchor="middle" fill="#0d1117" font-size="14" font-weight="bold">HBM3 (High-Bandwidth Memory)</text>
+  <text x="410" y="368" text-anchor="middle" fill="#0d1117" font-size="10">80 GB · 3.35 TB/s · 5 stacks × 16 GB · 5,120-bit bus</text>
+  <text x="410" y="383" text-anchor="middle" fill="#0d1117" font-size="10">H200: 141 GB / 4.8 TB/s  ·  B200: 192 GB / 8.0 TB/s</text>
+
+  <!-- Level 6: CPU DRAM -->
+  <rect x="10" y="407" width="800" height="58" rx="6" fill="url(#dramGrad)"/>
+  <text x="410" y="431" text-anchor="middle" fill="#0d1117" font-size="13" font-weight="bold">CPU DRAM (Host Memory)</text>
+  <text x="410" y="447" text-anchor="middle" fill="#0d1117" font-size="10">512 GB – 2 TB DDR5 · ~400 GB/s · PCIe 5.0 to GPU: 128 GB/s</text>
+
+  <!-- Connector arrows (left side) -->
+  <line x1="319" y1="88" x2="275" y2="103" stroke="#30363d" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="275" y1="161" x2="220" y2="176" stroke="#30363d" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="220" y1="234" x2="150" y2="249" stroke="#30363d" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="150" y1="307" x2="70" y2="322" stroke="#30363d" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="70" y1="392" x2="10" y2="407" stroke="#30363d" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+  <!-- Right side: bandwidth annotations -->
+  <rect x="630" y="38" width="175" height="42" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="718" y="55" text-anchor="middle" fill="#ff6b35" font-size="10" font-weight="bold">~∞ effective BW</text>
+  <text x="718" y="71" text-anchor="middle" fill="#8b949e" font-size="9">Register file: no latency</text>
+
+  <rect x="630" y="110" width="175" height="42" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="718" y="127" text-anchor="middle" fill="#f7c948" font-size="10" font-weight="bold">~100 TB/s</text>
+  <text x="718" y="143" text-anchor="middle" fill="#8b949e" font-size="9">~1 cycle latency</text>
+
+  <rect x="630" y="183" width="175" height="42" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="718" y="200" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="bold">~20 TB/s (est.)</text>
+  <text x="718" y="216" text-anchor="middle" fill="#8b949e" font-size="9">~20 cycle latency</text>
+
+  <rect x="630" y="256" width="175" height="42" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="718" y="273" text-anchor="middle" fill="#58a6ff" font-size="10" font-weight="bold">~10 TB/s</text>
+  <text x="718" y="289" text-anchor="middle" fill="#8b949e" font-size="9">~100 cycle latency</text>
+
+  <rect x="630" y="329" width="175" height="55" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="718" y="349" text-anchor="middle" fill="#bc8cff" font-size="10" font-weight="bold">3.35 TB/s (H100)</text>
+  <text x="718" y="364" text-anchor="middle" fill="#bc8cff" font-size="10" font-weight="bold">4.8 TB/s (H200)</text>
+  <text x="718" y="379" text-anchor="middle" fill="#8b949e" font-size="9">~400 cycle latency</text>
+
+  <rect x="630" y="412" width="175" height="42" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="718" y="429" text-anchor="middle" fill="#8b949e" font-size="10" font-weight="bold">128 GB/s (PCIe5)</text>
+  <text x="718" y="445" text-anchor="middle" fill="#8b949e" font-size="9">μs latency (PCIe)</text>
+
+  <!-- Connector lines to right annotations -->
+  <line x1="500" y1="59" x2="630" y2="59" stroke="#30363d" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="545" y1="131" x2="630" y2="131" stroke="#30363d" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="600" y1="205" x2="630" y2="205" stroke="#30363d" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="670" y1="278" x2="630" y2="278" stroke="#30363d" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="750" y1="357" x2="805" y2="357" stroke="#bc8cff" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="810" y1="436" x2="805" y2="436" stroke="#30363d" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <!-- Left: Capacity annotations -->
+  <rect x="14" y="38" width="140" height="42" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="84" y="54" text-anchor="middle" fill="#ff6b35" font-size="10" font-weight="bold">~256 KB</text>
+  <text x="84" y="70" text-anchor="middle" fill="#8b949e" font-size="9">per SM (H100)</text>
+
+  <rect x="14" y="110" width="140" height="42" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="84" y="127" text-anchor="middle" fill="#f7c948" font-size="10" font-weight="bold">228 KB</text>
+  <text x="84" y="143" text-anchor="middle" fill="#8b949e" font-size="9">programmable SMEM</text>
+
+  <rect x="14" y="183" width="140" height="42" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="84" y="200" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="bold">64 KB</text>
+  <text x="84" y="216" text-anchor="middle" fill="#8b949e" font-size="9">L1 per SM</text>
+
+  <rect x="14" y="256" width="140" height="42" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="84" y="273" text-anchor="middle" fill="#58a6ff" font-size="10" font-weight="bold">50 MB</text>
+  <text x="84" y="289" text-anchor="middle" fill="#8b949e" font-size="9">L2 unified</text>
+
+  <!-- Decode bandwidth annotation on HBM -->
+  <rect x="160" y="470" width="500" height="32" rx="4" fill="#1c2128" stroke="#bc8cff" stroke-width="1"/>
+  <text x="410" y="491" text-anchor="middle" fill="#bc8cff" font-size="11">
+    ★ LLaMA-3 70B decode bottleneck: 140 GB weights / 3.35 TB/s = 42 ms/token (batch=1)
+  </text>
+
+  <!-- Title label top-left -->
+  <text x="20" y="22" fill="#30363d" font-size="10">Fig. 4.1 · Ch04 Memory Hierarchy</text>
+  <text x="800" y="22" text-anchor="end" fill="#30363d" font-size="10">Silicon to Scale © 2026</text>
+</svg>
+</div>
+</body>
+</html>

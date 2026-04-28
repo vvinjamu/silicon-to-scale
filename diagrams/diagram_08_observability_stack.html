@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Observability Stack</title>
+<style>body{margin:0;background:#0d1117;font-family:'Courier New',monospace;display:flex;justify-content:center;padding:20px;}
+h2{color:#58a6ff;text-align:center;font-size:18px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.sub{color:#8b949e;text-align:center;font-size:12px;margin-bottom:16px;}</style>
+</head><body><div>
+<h2>AI Cluster Observability — Seven-Layer Stack</h2>
+<div class="sub">Chapter 17 · From silicon counters to regression CI — tools, metrics, and alert thresholds</div>
+<svg viewBox="0 0 920 600" width="920" height="600" xmlns="http://www.w3.org/2000/svg">
+<rect width="920" height="600" fill="#0d1117" rx="12"/>
+<rect x="1" y="1" width="918" height="598" fill="none" stroke="#30363d" rx="12"/>
+
+<!-- Layer colors (bottom=silicon, top=regression) -->
+<!-- L1: Silicon -->
+<rect x="20" y="490" width="620" height="68" rx="6" fill="#1a1010" stroke="#f85149" stroke-width="2"/>
+<text x="30" y="510" fill="#f85149" font-size="11" font-weight="bold">LAYER 1 — SILICON  (DCGM Hardware Counters)</text>
+<text x="30" y="526" fill="#8b949e" font-size="9">SM util · HBM BW · Temperature · ECC errors · SM clock · NVLink bytes · Thermal violation</text>
+<text x="30" y="541" fill="#8b949e" font-size="9">Field IDs: 203 (GPU%) · 155 (Power) · 100 (Temp) · 1001 (SBE ECC) · 1002 (DBE ECC) · 150 (Clock)</text>
+<text x="30" y="555" fill="#8b949e" font-size="9">Always-on · 1-second sampling · dcgm-exporter port 9400 → Prometheus</text>
+
+<!-- L2: Kernel -->
+<rect x="20" y="414" width="620" height="70" rx="6" fill="#1a1500" stroke="#f7c948" stroke-width="1.5"/>
+<text x="30" y="434" fill="#f7c948" font-size="11" font-weight="bold">LAYER 2 — KERNEL PROFILING  (On-demand, triggered by anomaly)</text>
+<text x="30" y="450" fill="#8b949e" font-size="9">Nsight Systems (nsys): timeline, CUDA+NCCL trace, kernel gaps, AllReduce overlap</text>
+<text x="30" y="464" fill="#8b949e" font-size="9">Nsight Compute (ncu): TC utilization, HBM bytes, warp stalls, roofline chart</text>
+<text x="30" y="478" fill="#8b949e" font-size="9">AMD: ROCprofiler-systems · Omniperf  ·  NEVER run ncu without nsys first</text>
+
+<!-- L3: Framework -->
+<rect x="20" y="338" width="620" height="70" rx="6" fill="#161a10" stroke="#3fb950" stroke-width="1.5"/>
+<text x="30" y="358" fill="#3fb950" font-size="11" font-weight="bold">LAYER 3 — FRAMEWORK METRICS  (Per-step training instrumentation)</text>
+<text x="30" y="374" fill="#8b949e" font-size="9">training_mfu · step_time_seconds · forward_time · backward_time · allreduce_time</text>
+<text x="30" y="388" fill="#8b949e" font-size="9">gradient_norm · loss curve · learning rate · data loading wait time</text>
+<text x="30" y="402" fill="#8b949e" font-size="9">Prometheus client port 8001 · W&B / MLflow experiment tracking</text>
+
+<!-- L4: System -->
+<rect x="20" y="262" width="620" height="70" rx="6" fill="#10141a" stroke="#58a6ff" stroke-width="1.5"/>
+<text x="30" y="282" fill="#58a6ff" font-size="11" font-weight="bold">LAYER 4 — SYSTEM METRICS  (node_exporter + IB + NCCL)</text>
+<text x="30" y="298" fill="#8b949e" font-size="9">CPU/RAM/disk/NIC via node_exporter · InfiniBand port errors · link speed</text>
+<text x="30" y="312" fill="#8b949e" font-size="9">NCCL AllReduce timing (custom NVTX) · SLURM job metrics (slurm_exporter)</text>
+<text x="30" y="326" fill="#8b949e" font-size="9">IB alert: busbw &lt; 35 GB/s · NVLink alert: &gt;20% drop from peer median</text>
+
+<!-- L5: Service -->
+<rect x="20" y="186" width="620" height="70" rx="6" fill="#14101a" stroke="#bc8cff" stroke-width="1.5"/>
+<text x="30" y="206" fill="#bc8cff" font-size="11" font-weight="bold">LAYER 5 — SERVICE METRICS  (Inference SLA tracking)</text>
+<text x="30" y="222" fill="#8b949e" font-size="9">vllm:time_to_first_token_seconds (TTFT P50/P99) · time_per_output_token (TPOT)</text>
+<text x="30" y="236" fill="#8b949e" font-size="9">vllm:gpu_cache_usage_perc → alert at &gt;0.82 · num_preemptions_total · queue depth</text>
+<text x="30" y="250" fill="#8b949e" font-size="9">OpenTelemetry + Jaeger: distributed request tracing across microservices</text>
+
+<!-- L6: Fleet Dashboard -->
+<rect x="20" y="110" width="620" height="70" rx="6" fill="#1a1510" stroke="#ff6b35" stroke-width="1.5"/>
+<text x="30" y="130" fill="#ff6b35" font-size="11" font-weight="bold">LAYER 6 — FLEET DASHBOARDS & ALERTING</text>
+<text x="30" y="146" fill="#8b949e" font-size="9">Grafana: GPU utilization heatmap · temperature map · MFU trend · TTFT percentiles</text>
+<text x="30" y="160" fill="#8b949e" font-size="9">PagerDuty: DBE ECC (any) → P0 · thermal violation → P0 · TTFT P99 &gt;SLA → P1</text>
+<text x="30" y="174" fill="#8b949e" font-size="9">Thanos/Mimir: 90-day metric retention · recording rules (fleet aggregates pre-computed)</text>
+
+<!-- L7: Regression CI -->
+<rect x="20" y="34" width="620" height="70" rx="6" fill="#101a10" stroke="#3fb950" stroke-width="2"/>
+<text x="30" y="54" fill="#3fb950" font-size="11" font-weight="bold">LAYER 7 — REGRESSION CI/CD PIPELINE</text>
+<text x="30" y="70" fill="#8b949e" font-size="9">3-tier: every commit (5min) · kernel/driver change (20min) · nightly release gate (2hr)</text>
+<text x="30" y="84" fill="#8b949e" font-size="9">Statistical baseline: rolling 7-day mean ± 3σ → alert on z-score &lt;-3  (not fixed thresholds)</text>
+<text x="30" y="98" fill="#8b949e" font-size="9">Auto-ncu trace on P0/P1 regression · Block merge &gt;5% MFU drop · post ncu artifact to PR</text>
+
+<!-- Right column: alert thresholds reference -->
+<rect x="654" y="34" width="250" height="524" rx="6" fill="#161b22" stroke="#30363d"/>
+<text x="779" y="54" text-anchor="middle" fill="#58a6ff" font-size="11" font-weight="bold">ALERT THRESHOLDS</text>
+<line x1="664" y1="58" x2="894" y2="58" stroke="#30363d" stroke-width="1"/>
+
+<text x="664" y="75" fill="#f85149" font-size="9" font-weight="bold">P0 — PAGE IMMEDIATELY</text>
+<text x="664" y="90" fill="#8b949e" font-size="8">GPU uncorrectable ECC (any)</text>
+<text x="664" y="103" fill="#8b949e" font-size="8">Thermal violation active</text>
+<text x="664" y="116" fill="#8b949e" font-size="8">Training MFU drop &gt;5%</text>
+<text x="664" y="129" fill="#8b949e" font-size="8">Gradient norm = NaN/Inf</text>
+<text x="664" y="142" fill="#8b949e" font-size="8">GEMM TFLOPS drop &gt;5%</text>
+
+<line x1="664" y1="150" x2="894" y2="150" stroke="#30363d" stroke-width="1"/>
+<text x="664" y="165" fill="#f7c948" font-size="9" font-weight="bold">P1 — ALERT, INVESTIGATE</text>
+<text x="664" y="180" fill="#8b949e" font-size="8">TTFT P99 &gt;SLA × 1.5</text>
+<text x="664" y="193" fill="#8b949e" font-size="8">KV cache &gt;82% (2min)</text>
+<text x="664" y="206" fill="#8b949e" font-size="8">SM clock &lt;1700 MHz (5min)</text>
+<text x="664" y="219" fill="#8b949e" font-size="8">GPU temp &gt;82°C (5min)</text>
+<text x="664" y="232" fill="#8b949e" font-size="8">AllReduce &gt;20% step time</text>
+<text x="664" y="245" fill="#8b949e" font-size="8">IB busbw &lt;35 GB/s</text>
+
+<line x1="664" y1="252" x2="894" y2="252" stroke="#30363d" stroke-width="1"/>
+<text x="664" y="267" fill="#3fb950" font-size="9" font-weight="bold">P2 — WARNING ONLY</text>
+<text x="664" y="282" fill="#8b949e" font-size="8">SBE ECC &gt;5/hr (schedule repl)</text>
+<text x="664" y="295" fill="#8b949e" font-size="8">Scaling efficiency &gt;3% drop</text>
+<text x="664" y="308" fill="#8b949e" font-size="8">DataLoader wait &gt;50ms/step</text>
+
+<line x1="664" y1="316" x2="894" y2="316" stroke="#30363d" stroke-width="1"/>
+<text x="779" y="332" text-anchor="middle" fill="#8b949e" font-size="10" font-weight="bold">TOOL SELECTION</text>
+<text x="664" y="348" fill="#8b949e" font-size="8">Fleet health?   → DCGM + Grafana</text>
+<text x="664" y="361" fill="#8b949e" font-size="8">Where = slow?  → nsys profile</text>
+<text x="664" y="374" fill="#8b949e" font-size="8">Why = slow?   → ncu kernel</text>
+<text x="664" y="387" fill="#8b949e" font-size="8">TTFT root cause? → Jaeger</text>
+<text x="664" y="400" fill="#8b949e" font-size="8">MFU low?      → custom metric</text>
+<text x="664" y="413" fill="#8b949e" font-size="8">IB degraded?   → ibstatus</text>
+<text x="664" y="426" fill="#8b949e" font-size="8">Regression?   → CI z-score</text>
+
+<line x1="664" y1="434" x2="894" y2="434" stroke="#30363d" stroke-width="1"/>
+<text x="779" y="450" text-anchor="middle" fill="#8b949e" font-size="10" font-weight="bold">5-STEP DECISION TREE</text>
+<text x="664" y="466" fill="#f7c948" font-size="8">1. MFU / throughput vs target?</text>
+<text x="664" y="479" fill="#f7c948" font-size="8">2. SM utilization &gt;60%?</text>
+<text x="664" y="492" fill="#f7c948" font-size="8">3. HBM bandwidth &lt;40%?</text>
+<text x="664" y="505" fill="#f7c948" font-size="8">4. HBM bandwidth &gt;80%?</text>
+<text x="664" y="518" fill="#f7c948" font-size="8">5. AllReduce &gt;15% of step?</text>
+<text x="664" y="534" fill="#8b949e" font-size="7">(1)&lt;40%→investigate  (2)&lt;60%→overhead</text>
+<text x="664" y="547" fill="#8b949e" font-size="7">(3)compute-bound  (4)BW-bound  (5)comm</text>
+
+<text x="20" y="595" fill="#30363d" font-size="10">Fig. 17.1 · Ch17 Observability Architecture</text>
+<text x="900" y="595" text-anchor="end" fill="#30363d" font-size="10">Silicon to Scale © 2026</text>
+</svg>
+</div></body></html>

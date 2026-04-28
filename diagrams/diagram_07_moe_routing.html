@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>MoE Routing</title>
+<style>body{margin:0;background:#0d1117;font-family:'Courier New',monospace;display:flex;justify-content:center;padding:20px;}
+h2{color:#58a6ff;text-align:center;font-size:18px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.sub{color:#8b949e;text-align:center;font-size:12px;margin-bottom:16px;}</style>
+</head><body><div>
+<h2>Mixture of Experts — Router, Expert Dispatch & All-to-All</h2>
+<div class="sub">Chapter 13 · DeepSeek-V3 style: 64 routed + 2 shared experts, K=6 active per token</div>
+<svg viewBox="0 0 920 580" width="920" height="580" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ar" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#8b949e"/></marker>
+  <marker id="arB" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#58a6ff"/></marker>
+  <marker id="arO" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#ff6b35"/></marker>
+  <marker id="arG" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#3fb950"/></marker>
+</defs>
+<rect width="920" height="580" fill="#0d1117" rx="12"/>
+<rect x="1" y="1" width="918" height="578" fill="none" stroke="#30363d" rx="12"/>
+
+<!-- Input tokens row -->
+<text x="20" y="22" fill="#30363d" font-size="10">Fig. 13.2 · Ch13 MoE Routing Architecture</text>
+
+<!-- Tokens (left side) -->
+<rect x="20" y="32" width="120" height="240" rx="6" fill="#161b22" stroke="#444"/>
+<text x="80" y="52" text-anchor="middle" fill="#8b949e" font-size="10" font-weight="bold">Input Tokens</text>
+<text x="80" y="68" text-anchor="middle" fill="#8b949e" font-size="9">(batch × seq)</text>
+
+<rect x="30" y="78" width="100" height="24" rx="3" fill="#1d3244" stroke="#58a6ff"/>
+<text x="80" y="94" text-anchor="middle" fill="#58a6ff" font-size="9">token_0 [d_model]</text>
+<rect x="30" y="108" width="100" height="24" rx="3" fill="#1d3244" stroke="#58a6ff"/>
+<text x="80" y="124" text-anchor="middle" fill="#58a6ff" font-size="9">token_1 [d_model]</text>
+<rect x="30" y="138" width="100" height="24" rx="3" fill="#2d1d44" stroke="#bc8cff"/>
+<text x="80" y="154" text-anchor="middle" fill="#bc8cff" font-size="9">token_2 [d_model]</text>
+<rect x="30" y="168" width="100" height="24" rx="3" fill="#1d2d0d" stroke="#3fb950"/>
+<text x="80" y="184" text-anchor="middle" fill="#3fb950" font-size="9">token_3 [d_model]</text>
+<rect x="30" y="198" width="100" height="24" rx="3" fill="#2d2200" stroke="#f7c948"/>
+<text x="80" y="214" text-anchor="middle" fill="#f7c948" font-size="9">token_4 [d_model]</text>
+<text x="80" y="248" text-anchor="middle" fill="#444" font-size="9">...</text>
+
+<!-- Router -->
+<line x1="140" y1="152" x2="168" y2="152" stroke="#8b949e" stroke-width="1.5" marker-end="url(#ar)"/>
+<rect x="170" y="112" width="130" height="80" rx="6" fill="#1c2128" stroke="#f7c948" stroke-width="2"/>
+<text x="235" y="138" text-anchor="middle" fill="#f7c948" font-size="12" font-weight="bold">Router</text>
+<text x="235" y="153" text-anchor="middle" fill="#8b949e" font-size="9">softmax(W_r × x)</text>
+<text x="235" y="167" text-anchor="middle" fill="#8b949e" font-size="9">→ top-K expert scores</text>
+<text x="235" y="181" text-anchor="middle" fill="#8b949e" font-size="9">W_r ∈ [d × N_experts]</text>
+
+<!-- Expert grid (8 boxes = 8 experts on 8 GPUs for EP=8) -->
+<text x="400" y="30" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="bold">Expert Parallelism (EP=8): One expert per GPU</text>
+
+<!-- GPU 0 (Expert 0) -->
+<rect x="320" y="42" width="90" height="90" rx="5" fill="#1c1520" stroke="#ff6b35" stroke-width="2"/>
+<text x="365" y="63" text-anchor="middle" fill="#ff6b35" font-size="9" font-weight="bold">GPU 0</text>
+<text x="365" y="77" text-anchor="middle" fill="#8b949e" font-size="9">Expert 0</text>
+<rect x="330" y="84" width="70" height="28" rx="3" fill="#2d1010" stroke="#ff6b35" stroke-width="1"/>
+<text x="365" y="102" text-anchor="middle" fill="#ff6b35" font-size="8">FFN (d_ff=2816)</text>
+<text x="365" y="125" text-anchor="middle" fill="#3fb950" font-size="7">← token_0,token_1</text>
+
+<!-- GPU 1 -->
+<rect x="420" y="42" width="90" height="90" rx="5" fill="#1c1520" stroke="#ff6b35" stroke-width="1.5"/>
+<text x="465" y="63" text-anchor="middle" fill="#ff6b35" font-size="9" font-weight="bold">GPU 1</text>
+<text x="465" y="77" text-anchor="middle" fill="#8b949e" font-size="9">Expert 1</text>
+<rect x="430" y="84" width="70" height="28" rx="3" fill="#2d1010" stroke="#ff6b35" stroke-width="1"/>
+<text x="465" y="102" text-anchor="middle" fill="#ff6b35" font-size="8">FFN</text>
+<text x="465" y="125" text-anchor="middle" fill="#8b949e" font-size="7">← token_3</text>
+
+<!-- GPU 2 -->
+<rect x="520" y="42" width="90" height="90" rx="5" fill="#1c1520" stroke="#ff6b35" stroke-width="1.5"/>
+<text x="565" y="63" text-anchor="middle" fill="#ff6b35" font-size="9" font-weight="bold">GPU 2</text>
+<text x="565" y="77" text-anchor="middle" fill="#8b949e" font-size="9">Expert 2</text>
+<rect x="530" y="84" width="70" height="28" rx="3" fill="#2d1010" stroke="#ff6b35" stroke-width="1"/>
+<text x="565" y="102" text-anchor="middle" fill="#ff6b35" font-size="8">FFN</text>
+<text x="565" y="125" text-anchor="middle" fill="#bc8cff" font-size="7">← token_2,token_4</text>
+
+<!-- More GPUs -->
+<rect x="620" y="42" width="90" height="90" rx="5" fill="#1c1520" stroke="#ff6b35" stroke-width="1.5"/>
+<text x="665" y="77" text-anchor="middle" fill="#ff6b35" font-size="9" font-weight="bold">GPU 3</text>
+<text x="665" y="91" text-anchor="middle" fill="#8b949e" font-size="9">Expert 3</text>
+<text x="665" y="125" text-anchor="middle" fill="#444" font-size="7">← (none)</text>
+
+<rect x="720" y="42" width="90" height="90" rx="5" fill="#1c1520" stroke="#444" stroke-width="1"/>
+<text x="765" y="77" text-anchor="middle" fill="#444" font-size="9">GPU 4–7</text>
+<text x="765" y="91" text-anchor="middle" fill="#444" font-size="9">Exp 4–7</text>
+<text x="765" y="110" text-anchor="middle" fill="#444" font-size="8">...</text>
+
+<!-- Shared experts box (always active) -->
+<rect x="820" y="42" width="90" height="90" rx="5" fill="#1c2128" stroke="#3fb950" stroke-width="2"/>
+<text x="865" y="63" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="bold">Shared</text>
+<text x="865" y="77" text-anchor="middle" fill="#3fb950" font-size="9">Experts</text>
+<text x="865" y="91" text-anchor="middle" fill="#8b949e" font-size="8">Always active</text>
+<text x="865" y="105" text-anchor="middle" fill="#8b949e" font-size="8">for all tokens</text>
+<text x="865" y="119" text-anchor="middle" fill="#3fb950" font-size="8">2 experts</text>
+<text x="865" y="132" text-anchor="middle" fill="#8b949e" font-size="7">(DeepSeek-V3)</text>
+
+<!-- All-to-All arrows -->
+<text x="545" y="165" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="bold">── All-to-All Dispatch ──▶</text>
+
+<rect x="300" y="178" width="580" height="55" rx="5" fill="#1c1500" stroke="#ff6b35" stroke-width="1.5"/>
+<text x="590" y="196" text-anchor="middle" fill="#ff6b35" font-size="10" font-weight="bold">All-to-All Round 1 — Dispatch tokens to expert GPUs</text>
+<text x="590" y="210" text-anchor="middle" fill="#8b949e" font-size="9">Each GPU sends token embeddings to all 7 other GPUs based on router decision</text>
+<text x="590" y="224" text-anchor="middle" fill="#8b949e" font-size="9">Volume: 2 × B × S × K × d_model × bytes = 8.6 GB/layer (batch=32, S=4096, K=2)</text>
+
+<!-- Expert compute -->
+<rect x="300" y="245" width="580" height="55" rx="5" fill="#162416" stroke="#3fb950" stroke-width="1.5"/>
+<text x="590" y="263" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="bold">Expert Compute — Each GPU runs its FFN on received tokens</text>
+<text x="590" y="277" text-anchor="middle" fill="#8b949e" font-size="9">GPU 0: FFN(token_0, token_1)  ·  GPU 1: FFN(token_3)  ·  GPU 2: FFN(token_2, token_4)</text>
+<text x="590" y="291" text-anchor="middle" fill="#f85149" font-size="9">⚠ LOAD IMBALANCE: GPU 0 runs 2 tokens, GPU 3 runs 0 → straggler! (barrier sync)</text>
+
+<!-- All-to-All combine -->
+<rect x="300" y="312" width="580" height="55" rx="5" fill="#1c1500" stroke="#ff6b35" stroke-width="1.5"/>
+<text x="590" y="330" text-anchor="middle" fill="#ff6b35" font-size="10" font-weight="bold">All-to-All Round 2 — Return results to source GPUs</text>
+<text x="590" y="344" text-anchor="middle" fill="#8b949e" font-size="9">Expert outputs routed back; gating weights applied; results summed</text>
+<text x="590" y="358" text-anchor="middle" fill="#8b949e" font-size="9">output = Σᵢ∈topK  gᵢ(x) × Expert_i(x)  +  SharedExpert₁(x)  +  SharedExpert₂(x)</text>
+
+<!-- Load imbalance warning box -->
+<rect x="20" y="280" width="270" height="140" rx="6" fill="#2d0d0d" stroke="#f85149" stroke-width="1.5"/>
+<text x="155" y="298" text-anchor="middle" fill="#f85149" font-size="11" font-weight="bold">⚠ Load Imbalance Risk</text>
+<text x="155" y="314" text-anchor="middle" fill="#8b949e" font-size="9">All GPUs sync after expert compute</text>
+<text x="155" y="328" text-anchor="middle" fill="#8b949e" font-size="9">Slowest expert = barrier for all</text>
+<text x="155" y="342" text-anchor="middle" fill="#8b949e" font-size="9">3× overload → 67% throughput loss</text>
+<text x="155" y="362" text-anchor="middle" fill="#f7c948" font-size="9" font-weight="bold">Fix: auxiliary balance loss</text>
+<text x="155" y="376" text-anchor="middle" fill="#8b949e" font-size="9">L = α × N × Σᵢ (fᵢ × Pᵢ)</text>
+<text x="155" y="392" text-anchor="middle" fill="#8b949e" font-size="9">Alert: any expert &gt;2× mean tokens</text>
+<text x="155" y="406" text-anchor="middle" fill="#8b949e" font-size="9">capacity_factor = 1.25 (overflow buf)</text>
+
+<!-- Dense vs MoE comparison table -->
+<rect x="20" y="432" width="880" height="110" rx="6" fill="#161b22" stroke="#30363d"/>
+<text x="460" y="450" text-anchor="middle" fill="#58a6ff" font-size="12" font-weight="bold">Dense vs MoE — The Fundamental Trade-off</text>
+
+<text x="100" y="470" text-anchor="middle" fill="#8b949e" font-size="10" font-weight="bold">Property</text>
+<text x="300" y="470" text-anchor="middle" fill="#58a6ff" font-size="10" font-weight="bold">Dense LLaMA-3 70B</text>
+<text x="530" y="470" text-anchor="middle" fill="#ff6b35" font-size="10" font-weight="bold">MoE DeepSeek-V3</text>
+<text x="760" y="470" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="bold">Winner</text>
+
+<line x1="30" y1="474" x2="890" y2="474" stroke="#30363d" stroke-width="1"/>
+
+<text x="100" y="490" text-anchor="middle" fill="#8b949e" font-size="9">Total params</text>
+<text x="300" y="490" text-anchor="middle" fill="#58a6ff" font-size="9">70B</text>
+<text x="530" y="490" text-anchor="middle" fill="#ff6b35" font-size="9">671B</text>
+<text x="760" y="490" text-anchor="middle" fill="#ff6b35" font-size="9">MoE (quality)</text>
+
+<text x="100" y="506" text-anchor="middle" fill="#8b949e" font-size="9">Active per token</text>
+<text x="300" y="506" text-anchor="middle" fill="#58a6ff" font-size="9">70B (100%)</text>
+<text x="530" y="506" text-anchor="middle" fill="#3fb950" font-size="9">37B (5.5%)</text>
+<text x="760" y="506" text-anchor="middle" fill="#3fb950" font-size="9">MoE (compute)</text>
+
+<text x="100" y="522" text-anchor="middle" fill="#8b949e" font-size="9">HBM required</text>
+<text x="300" y="522" text-anchor="middle" fill="#3fb950" font-size="9">140 GB BF16</text>
+<text x="530" y="522" text-anchor="middle" fill="#f85149" font-size="9">671 GB FP8 (~9 H100s)</text>
+<text x="760" y="522" text-anchor="middle" fill="#58a6ff" font-size="9">Dense (fewer GPUs)</text>
+
+<text x="100" y="538" text-anchor="middle" fill="#8b949e" font-size="9">Quality (MMLU)</text>
+<text x="300" y="538" text-anchor="middle" fill="#8b949e" font-size="9">80.3%</text>
+<text x="530" y="538" text-anchor="middle" fill="#3fb950" font-size="9">88.5%</text>
+<text x="760" y="538" text-anchor="middle" fill="#3fb950" font-size="9">MoE</text>
+
+<text x="900" y="575" text-anchor="end" fill="#30363d" font-size="9">Silicon to Scale © 2026</text>
+</svg>
+</div></body></html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>KV Cache — Silicon to Scale</title>
+<style>body{margin:0;background:#0d1117;font-family:'Courier New',monospace;display:flex;justify-content:center;padding:20px;}
+h2{color:#58a6ff;text-align:center;font-size:18px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.sub{color:#8b949e;text-align:center;font-size:12px;margin-bottom:16px;}</style>
+</head><body><div>
+<h2>KV Cache — Architecture, Paging & Cascade Cliff</h2>
+<div class="sub">Chapter 11 · PagedAttention mechanics and the 82% admission control threshold</div>
+<svg viewBox="0 0 900 580" width="900" height="580" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="kvg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#bc8cff"/><stop offset="100%" stop-color="#8957e5"/></linearGradient>
+  <linearGradient id="kvg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3fb950"/><stop offset="100%" stop-color="#238636"/></linearGradient>
+  <linearGradient id="kvg3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f85149"/><stop offset="100%" stop-color="#b91c1c"/></linearGradient>
+  <linearGradient id="chartbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1c2128"/><stop offset="100%" stop-color="#161b22"/></linearGradient>
+</defs>
+<rect width="900" height="580" fill="#0d1117" rx="12"/>
+<rect x="1" y="1" width="898" height="578" fill="none" stroke="#30363d" stroke-width="1" rx="12"/>
+
+<!-- SECTION A: PagedAttention block table (left top) -->
+<text x="22" y="30" fill="#58a6ff" font-size="13" font-weight="bold">A. PagedAttention — Physical Block Table</text>
+<text x="22" y="46" fill="#8b949e" font-size="10">Each physical block = 16 tokens × KV per token. Non-contiguous in HBM.</text>
+
+<!-- Physical HBM pool -->
+<rect x="22" y="55" width="380" height="170" rx="6" fill="#161b22" stroke="#30363d"/>
+<text x="32" y="72" fill="#8b949e" font-size="10">HBM Physical Block Pool  (80 GB, ~16,000 blocks at 5 MB each)</text>
+
+<!-- Blocks — color coded by sequence -->
+<g>
+  <!-- Seq A blocks (purple) -->
+  <rect x="35" y="80" width="50" height="30" rx="3" fill="url(#kvg1)" opacity="0.9"/>
+  <text x="60" y="100" text-anchor="middle" fill="white" font-size="9" font-weight="bold">A[0]</text>
+  <rect x="150" y="80" width="50" height="30" rx="3" fill="url(#kvg1)" opacity="0.9"/>
+  <text x="175" y="100" text-anchor="middle" fill="white" font-size="9" font-weight="bold">A[1]</text>
+  <rect x="265" y="115" width="50" height="30" rx="3" fill="url(#kvg1)" opacity="0.9"/>
+  <text x="290" y="135" text-anchor="middle" fill="white" font-size="9" font-weight="bold">A[2]</text>
+  <rect x="35" y="150" width="50" height="30" rx="3" fill="url(#kvg1)" opacity="0.9"/>
+  <text x="60" y="170" text-anchor="middle" fill="white" font-size="9" font-weight="bold">A[3]</text>
+
+  <!-- Seq B blocks (green) -->
+  <rect x="95" y="80" width="50" height="30" rx="3" fill="url(#kvg2)" opacity="0.9"/>
+  <text x="120" y="100" text-anchor="middle" fill="white" font-size="9" font-weight="bold">B[0]</text>
+  <rect x="210" y="80" width="50" height="30" rx="3" fill="url(#kvg2)" opacity="0.9"/>
+  <text x="235" y="100" text-anchor="middle" fill="white" font-size="9" font-weight="bold">B[1]</text>
+  <rect x="95" y="115" width="50" height="30" rx="3" fill="url(#kvg2)" opacity="0.9"/>
+  <text x="120" y="135" text-anchor="middle" fill="white" font-size="9" font-weight="bold">B[2]</text>
+  <rect x="210" y="150" width="50" height="30" rx="3" fill="url(#kvg2)" opacity="0.9"/>
+  <text x="235" y="170" text-anchor="middle" fill="white" font-size="9" font-weight="bold">B[3]</text>
+
+  <!-- Free blocks (gray) -->
+  <rect x="155" y="115" width="50" height="30" rx="3" fill="#2d333b" stroke="#444" stroke-width="1"/>
+  <text x="180" y="135" text-anchor="middle" fill="#555" font-size="9">FREE</text>
+  <rect x="320" y="80" width="50" height="30" rx="3" fill="#2d333b" stroke="#444" stroke-width="1"/>
+  <text x="345" y="100" text-anchor="middle" fill="#555" font-size="9">FREE</text>
+  <rect x="155" y="150" width="50" height="30" rx="3" fill="#2d333b" stroke="#444" stroke-width="1"/>
+  <text x="180" y="170" text-anchor="middle" fill="#555" font-size="9">FREE</text>
+  <rect x="320" y="150" width="50" height="30" rx="3" fill="#2d333b" stroke="#444" stroke-width="1"/>
+  <text x="345" y="170" text-anchor="middle" fill="#555" font-size="9">FREE</text>
+  <rect x="320" y="115" width="50" height="30" rx="3" fill="#2d333b" stroke="#444" stroke-width="1"/>
+  <text x="345" y="135" text-anchor="middle" fill="#555" font-size="9">FREE</text>
+</g>
+
+<!-- Block table for Seq A -->
+<rect x="22" y="235" width="170" height="90" rx="4" fill="#1c2128" stroke="#bc8cff" stroke-width="1"/>
+<text x="107" y="252" text-anchor="middle" fill="#bc8cff" font-size="10" font-weight="bold">Seq A Block Table</text>
+<text x="35" y="268" fill="#8b949e" font-size="9">Logical[0] → Block #1247</text>
+<text x="35" y="281" fill="#8b949e" font-size="9">Logical[1] → Block #5823</text>
+<text x="35" y="294" fill="#8b949e" font-size="9">Logical[2] → Block #0091</text>
+<text x="35" y="307" fill="#8b949e" font-size="9">Logical[3] → Block #7734</text>
+
+<!-- Block table for Seq B -->
+<rect x="205" y="235" width="170" height="90" rx="4" fill="#1c2128" stroke="#3fb950" stroke-width="1"/>
+<text x="290" y="252" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="bold">Seq B Block Table</text>
+<text x="218" y="268" fill="#8b949e" font-size="9">Logical[0] → Block #0402</text>
+<text x="218" y="281" fill="#8b949e" font-size="9">Logical[1] → Block #3301</text>
+<text x="218" y="294" fill="#8b949e" font-size="9">Logical[2] → Block #1188</text>
+<text x="218" y="307" fill="#8b949e" font-size="9">Logical[3] → Block #9012</text>
+
+<!-- Key stat box -->
+<rect x="22" y="335" width="380" height="50" rx="4" fill="#1c2128" stroke="#444"/>
+<text x="212" y="357" text-anchor="middle" fill="#f7c948" font-size="11">Fragmentation: Pre-paged 80% → PagedAttention &lt;1%</text>
+<text x="212" y="373" text-anchor="middle" fill="#8b949e" font-size="10">Non-contiguous blocks — attention kernel uses indirection table</text>
+
+<!-- SECTION B: KV size growth bar chart (right side) -->
+<text x="435" y="30" fill="#58a6ff" font-size="13" font-weight="bold">B. KV Cache Size by Context Length (LLaMA-3 70B, FP8)</text>
+<text x="435" y="46" fill="#8b949e" font-size="10">GQA-8, d_head=128, 80 layers — linear scaling per 160 KB/token</text>
+
+<!-- Chart area -->
+<rect x="435" y="55" width="445" height="230" rx="6" fill="url(#chartbg)" stroke="#30363d"/>
+
+<!-- Bars -->
+<!-- 1K: 0.16 GB -->
+<rect x="455" y="224" width="40" height="20" fill="#3fb950" rx="2"/>
+<text x="475" y="218" text-anchor="middle" fill="#3fb950" font-size="9">0.16</text>
+<text x="475" y="255" text-anchor="middle" fill="#8b949e" font-size="9">1K</text>
+
+<!-- 4K: 0.67 GB -->
+<rect x="515" y="190" width="40" height="54" fill="#3fb950" rx="2"/>
+<text x="535" y="184" text-anchor="middle" fill="#3fb950" font-size="9">0.67</text>
+<text x="535" y="255" text-anchor="middle" fill="#8b949e" font-size="9">4K</text>
+
+<!-- 8K: 1.34 GB -->
+<rect x="575" y="156" width="40" height="88" fill="#58a6ff" rx="2"/>
+<text x="595" y="150" text-anchor="middle" fill="#58a6ff" font-size="9">1.34</text>
+<text x="595" y="255" text-anchor="middle" fill="#8b949e" font-size="9">8K</text>
+
+<!-- 32K: 5.24 GB -->
+<rect x="635" y="90" width="40" height="154" fill="#f7c948" rx="2"/>
+<text x="655" y="84" text-anchor="middle" fill="#f7c948" font-size="9">5.24</text>
+<text x="655" y="255" text-anchor="middle" fill="#8b949e" font-size="9">32K</text>
+
+<!-- 64K: 10.49 GB -->
+<rect x="695" y="71" width="40" height="173" fill="#f85149" rx="2"/>
+<text x="715" y="65" text-anchor="middle" fill="#f85149" font-size="9">10.5</text>
+<text x="715" y="255" text-anchor="middle" fill="#8b949e" font-size="9">64K</text>
+
+<!-- 128K: 20.97 GB  — bar truncated with overflow arrow -->
+<rect x="755" y="71" width="40" height="173" fill="#f85149" rx="2" opacity="0.7"/>
+<text x="775" y="65" text-anchor="middle" fill="#f85149" font-size="9">21 GB</text>
+<polygon points="775,58 769,68 781,68" fill="#f85149"/>
+<text x="775" y="255" text-anchor="middle" fill="#8b949e" font-size="9">128K</text>
+
+<!-- Y-axis label -->
+<text x="447" y="200" text-anchor="middle" fill="#8b949e" font-size="9" transform="rotate(-90, 447, 150)">GB per sequence</text>
+<!-- X axis line -->
+<line x1="450" y1="244" x2="810" y2="244" stroke="#30363d" stroke-width="1"/>
+<!-- H100 KV budget line -->
+<line x1="450" y1="100" x2="810" y2="100" stroke="#f85149" stroke-width="1" stroke-dasharray="5,3"/>
+<text x="812" y="104" fill="#f85149" font-size="9">H100 KV budget</text>
+<text x="812" y="116" fill="#f85149" font-size="9">~10 GB</text>
+
+<!-- Context lengths label -->
+<text x="628" y="268" text-anchor="middle" fill="#8b949e" font-size="10">Context Length (tokens)</text>
+
+<!-- SECTION C: KV Cascade cliff chart -->
+<text x="435" y="305" fill="#58a6ff" font-size="13" font-weight="bold">C. KV Cache Cascade Cliff — The 82% Threshold</text>
+
+<!-- Cliff chart area -->
+<rect x="435" y="315" width="445" height="175" rx="6" fill="url(#chartbg)" stroke="#30363d"/>
+
+<!-- Axes -->
+<line x1="470" y1="460" x2="850" y2="460" stroke="#444" stroke-width="1"/>
+<line x1="470" y1="330" x2="470" y2="460" stroke="#444" stroke-width="1"/>
+<text x="660" y="478" text-anchor="middle" fill="#8b949e" font-size="10">KV Cache Utilization %</text>
+<text x="450" y="400" fill="#8b949e" font-size="9" transform="rotate(-90,450,400)">TTFT P99 (ms)</text>
+
+<!-- X axis ticks -->
+<text x="508" y="472" text-anchor="middle" fill="#8b949e" font-size="8">50%</text>
+<text x="584" y="472" text-anchor="middle" fill="#8b949e" font-size="8">65%</text>
+<text x="662" y="472" text-anchor="middle" fill="#8b949e" font-size="8">80%</text>
+<text x="700" y="472" text-anchor="middle" fill="#f7c948" font-size="8">82%</text>
+<text x="738" y="472" text-anchor="middle" fill="#f85149" font-size="8">88%</text>
+<text x="812" y="472" text-anchor="middle" fill="#f85149" font-size="8">95%</text>
+
+<!-- TTFT curve — flat then cliff -->
+<polyline points="490,445 508,443 530,441 560,439 584,437 610,435 640,433 662,432 680,430 700,425 720,418 738,395 755,360 775,310 800,335 825,480" 
+  fill="none" stroke="#3fb950" stroke-width="2.5"/>
+<!-- Shade the "safe zone" -->
+<polygon points="490,460 700,460 700,425 680,430 662,432 640,433 610,435 584,437 560,439 530,441 508,443 490,445" fill="#238636" opacity="0.15"/>
+<!-- Shade the "danger zone" -->
+<polygon points="700,460 850,460 850,480 825,480 800,335 775,310 755,360 738,395 720,418 700,425" fill="#f85149" opacity="0.12"/>
+
+<!-- 82% admission control line -->
+<line x1="700" y1="330" x2="700" y2="460" stroke="#f7c948" stroke-width="1.5" stroke-dasharray="5,3"/>
+<rect x="660" y="330" width="90" height="22" rx="3" fill="#2d333b" stroke="#f7c948" stroke-width="1"/>
+<text x="705" y="345" text-anchor="middle" fill="#f7c948" font-size="9" font-weight="bold">82% ALERT THRESHOLD</text>
+
+<!-- Labels -->
+<text x="590" y="345" text-anchor="middle" fill="#3fb950" font-size="9">SAFE ZONE</text>
+<text x="590" y="358" text-anchor="middle" fill="#3fb950" font-size="9">P99 ~410ms</text>
+<text x="790" y="350" text-anchor="middle" fill="#f85149" font-size="9">CASCADE</text>
+<text x="790" y="362" text-anchor="middle" fill="#f85149" font-size="9">P99 8,200ms</text>
+<text x="790" y="374" text-anchor="middle" fill="#f85149" font-size="9">20× spike!</text>
+
+<text x="20" y="570" fill="#30363d" font-size="10">Fig. 11.1 · Ch11 KV Cache Architecture</text>
+<text x="880" y="570" text-anchor="end" fill="#30363d" font-size="10">Silicon to Scale © 2026</text>
+</svg>
+</div></body></html>
