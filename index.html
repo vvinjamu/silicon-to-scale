@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI/ML Infrastructure from Silicon to Scale — Venkat Vinjam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #080c10;
+  --bg2:       #0d1117;
+  --bg3:       #161b22;
+  --bg4:       #1c2128;
+  --border:    #21262d;
+  --border2:   #30363d;
+  --text:      #e6edf3;
+  --text2:     #8b949e;
+  --text3:     #6e7681;
+  --accent:    #58a6ff;
+  --gold:      #d4a017;
+  --gold2:     #f0c040;
+  --green:     #3fb950;
+  --orange:    #ff6b35;
+  --purple:    #bc8cff;
+  --red:       #f85149;
+  --yellow:    #f7c948;
+  --mono:      'IBM Plex Mono', monospace;
+  --sans:      'IBM Plex Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── GRID BACKGROUND ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(88,166,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(88,166,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── HERO ── */
+.hero {
+  position: relative;
+  z-index: 1;
+  min-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 24px 40px;
+  overflow: hidden;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 300px;
+  background: radial-gradient(ellipse, rgba(88,166,255,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 100px;
+  padding: 6px 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 32px;
+  animation: fadeUp 0.6s ease both;
+}
+
+.badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.hero-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 20px;
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+
+h1 {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: clamp(32px, 5vw, 58px);
+  line-height: 1.1;
+  letter-spacing: -1.5px;
+  max-width: 860px;
+  margin-bottom: 12px;
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+
+h1 .accent { color: var(--accent); }
+h1 .gold   { color: var(--gold2); }
+
+.hero-sub {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--gold);
+  letter-spacing: 1px;
+  margin-bottom: 24px;
+  animation: fadeUp 0.6s 0.25s ease both;
+}
+
+.hero-desc {
+  font-size: 17px;
+  color: var(--text2);
+  line-height: 1.7;
+  max-width: 680px;
+  margin: 0 auto 40px;
+  animation: fadeUp 0.6s 0.3s ease both;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 48px;
+  animation: fadeUp 0.6s 0.4s ease both;
+}
+
+.stat { text-align: center; }
+.stat-num {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--accent);
+  display: block;
+  line-height: 1;
+}
+.stat-label {
+  font-size: 11px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+.hero-cta {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  animation: fadeUp 0.6s 0.5s ease both;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #000;
+  font-weight: 600;
+}
+.btn-primary:hover { background: #79baff; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(88,166,255,0.3); }
+.btn-secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--border2);
+}
+.btn-secondary:hover { border-color: var(--accent); background: rgba(88,166,255,0.06); }
+
+/* ── SCROLL INDICATOR ── */
+.scroll-indicator {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: fadeUp 1s 1s ease both;
+}
+.scroll-arrow { animation: bounce 1.5s infinite; }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+
+/* ── AUTHOR STRIP ── */
+.author-strip {
+  position: relative; z-index: 1;
+  background: var(--bg3);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  flex-wrap: wrap;
+}
+.author-name { font-size: 15px; font-weight: 600; }
+.author-title { font-family: var(--mono); font-size: 11px; color: var(--text2); margin-top: 2px; }
+.author-divider { width: 1px; height: 36px; background: var(--border2); }
+.author-tag {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 11px; color: var(--text2);
+}
+.tag-pill {
+  background: var(--bg4); border: 1px solid var(--border2);
+  border-radius: 4px; padding: 2px 8px;
+  font-size: 10px; color: var(--accent);
+}
+
+/* ── MAIN CONTENT ── */
+main { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 24px 80px; }
+
+/* ── SECTION HEADERS ── */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 64px 0 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.section-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+.section-title { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+.section-desc { font-size: 13px; color: var(--text2); font-family: var(--mono); margin-left: auto; }
+
+/* ── HOW TO USE THIS BOOK ── */
+.paths-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 48px;
+}
+.path-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  transition: all 0.2s;
+}
+.path-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.path-icon { font-size: 24px; margin-bottom: 10px; }
+.path-title { font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--accent); }
+.path-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+/* ── PART GROUPS ── */
+.part-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 48px 0 20px;
+  padding: 14px 20px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 8px 8px 0;
+}
+.part-num {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+.part-title { font-size: 15px; font-weight: 600; }
+.part-subtitle { font-size: 12px; color: var(--text2); font-family: var(--mono); margin-left: auto; }
+
+/* ── CHAPTER GRID ── */
+.chapters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.chapter-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  transition: all 0.2s;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  overflow: hidden;
+}
+.chapter-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.chapter-card:hover { border-color: var(--accent); transform: translateX(2px); background: var(--bg3); }
+.chapter-card:hover::before { opacity: 1; }
+
+.ch-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  background: var(--bg4);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 4px 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.ch-body { flex: 1; min-width: 0; }
+.ch-title { font-size: 14px; font-weight: 600; margin-bottom: 5px; line-height: 1.3; }
+.ch-desc { font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 10px; }
+.ch-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.ch-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+}
+.ch-tag.compute   { border-color: #58a6ff33; color: var(--accent); }
+.ch-tag.memory    { border-color: #bc8cff33; color: var(--purple); }
+.ch-tag.training  { border-color: #3fb95033; color: var(--green); }
+.ch-tag.inference { border-color: #f7c94833; color: var(--yellow); }
+.ch-tag.ops       { border-color: #ff6b3533; color: var(--orange); }
+.ch-tag.career    { border-color: #d4a01733; color: var(--gold2); }
+
+.ch-action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--accent);
+  opacity: 0;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+.chapter-card:hover .ch-action { opacity: 1; }
+
+/* ── DIAGRAMS SECTION ── */
+.diagrams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+.diagram-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s;
+}
+.diagram-card:hover { border-color: var(--yellow); background: var(--bg3); }
+.diagram-icon {
+  width: 44px; height: 44px;
+  border-radius: 8px;
+  background: var(--bg4);
+  border: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.diagram-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.diagram-ch { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+
+/* ── APPENDIX ── */
+.appendix-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+.appendix-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s;
+}
+.appendix-card:hover { border-color: var(--green); background: var(--bg3); }
+.appendix-icon {
+  width: 44px; height: 44px;
+  border-radius: 8px;
+  background: var(--bg4);
+  border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.appendix-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.appendix-desc { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+
+/* ── NUMBERS STRIP ── */
+.numbers-strip {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 32px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 24px;
+  margin: 48px 0;
+  text-align: center;
+}
+.number-item {}
+.number-val {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--accent);
+  display: block;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.number-label { font-size: 11px; color: var(--text3); }
+
+/* ── FOOTER ── */
+footer {
+  position: relative; z-index: 1;
+  border-top: 1px solid var(--border);
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+footer a { color: var(--accent); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.fade-in.visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  .hero-stats { gap: 24px; }
+  .author-strip { gap: 16px; }
+  .author-divider { display: none; }
+  .section-desc { display: none; }
+  .chapters-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ HERO ═══════════════════════════ -->
+<section class="hero">
+  <div class="badge">
+    <span class="badge-dot"></span>
+    First Edition · 2026 · Free Online Release
+  </div>
+
+  <div class="hero-eyebrow">Principal Performance Architect's Complete Guide</div>
+
+  <h1>
+    <span class="gold">AI/ML Infrastructure</span><br>
+    from <span class="accent">Silicon to Scale</span>
+  </h1>
+
+  <div class="hero-sub">
+    The Layer-by-Layer Guide from GPU Physics to 10,000-GPU Production Systems
+  </div>
+
+  <p class="hero-desc">
+    A generational reference covering the complete technical stack — from CMOS physics and HBM memory hierarchies, through transformer kernels and distributed training, to fleet-scale observability and TCO modeling. Built for engineers who need both deep technical grounding and architectural decision-making frameworks.
+  </p>
+
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-num">18</span><div class="stat-label">Chapters</div></div>
+    <div class="stat"><span class="stat-num">6</span><div class="stat-label">Parts</div></div>
+    <div class="stat"><span class="stat-num">72+</span><div class="stat-label">Review Questions</div></div>
+    <div class="stat"><span class="stat-num">8</span><div class="stat-label">Architecture Diagrams</div></div>
+    <div class="stat"><span class="stat-num">580</span><div class="stat-label">Target Pages</div></div>
+    <div class="stat"><span class="stat-num">Free</span><div class="stat-label">Open Access</div></div>
+  </div>
+
+  <div class="hero-cta">
+    <a href="#chapters" class="btn btn-primary">📖 Read Now</a>
+    <a href="https://github.com/YOUR_USERNAME/silicon-to-scale" class="btn btn-secondary" target="_blank">⭐ Star on GitHub</a>
+  </div>
+
+  <div class="scroll-indicator">
+    <div class="scroll-arrow">↓</div>
+    <span>scroll to explore</span>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ AUTHOR STRIP ═══════════════════════════ -->
+<div class="author-strip">
+  <div>
+    <div class="author-name">Venkat Vinjam</div>
+    <div class="author-title">Principal Performance Architect</div>
+  </div>
+  <div class="author-divider"></div>
+  <div class="author-tag"><span class="tag-pill">AMD</span> GPU Performance · AI/ML Workloads</div>
+  <div class="author-divider"></div>
+  <div class="author-tag"><span class="tag-pill">20+ yrs</span> Intel · Cisco · IBM</div>
+  <div class="author-divider"></div>
+  <div class="author-tag"><span class="tag-pill">HPC</span> GROMACS · LAMMPS · Scale</div>
+</div>
+
+<!-- ═══════════════════════════ MAIN ═══════════════════════════ -->
+<main>
+
+  <!-- HOW TO USE -->
+  <div class="section-header fade-in">
+    <span class="section-num">00</span>
+    <div class="section-title">How to Use This Book</div>
+    <div class="section-desc">Four reading paths for different goals</div>
+  </div>
+
+  <div class="paths-grid fade-in">
+    <div class="path-card">
+      <div class="path-icon">🔬</div>
+      <div class="path-title">Silicon-Up Path</div>
+      <div class="path-desc">Start at Ch01 → read sequentially. Best for engineers building comprehensive knowledge from GPU physics through fleet operations.</div>
+    </div>
+    <div class="path-card">
+      <div class="path-icon">⚡</div>
+      <div class="path-title">Inference Fast-Track</div>
+      <div class="path-desc">Ch02 → Ch06 → Ch08 → Ch11 → Ch13 → Ch17. Ship a production LLM serving system. Target: 2 weeks.</div>
+    </div>
+    <div class="path-card">
+      <div class="path-icon">🏋️</div>
+      <div class="path-title">Training Specialist</div>
+      <div class="path-desc">Ch02 → Ch03A → Ch10 → Ch14 → Ch15 → Ch16. Design and operate large-scale distributed training. Target: 3 weeks.</div>
+    </div>
+    <div class="path-card">
+      <div class="path-icon">🎯</div>
+      <div class="path-title">Interview Prep</div>
+      <div class="path-desc">Ch18 → Ch12 → Ch11 → Ch10 → Ch06. Read Ch18 first for strategy, then the five most-tested chapters. Target: 1 week.</div>
+    </div>
+  </div>
+
+  <!-- NUMBERS STRIP -->
+  <div class="numbers-strip fade-in">
+    <div class="number-item"><span class="number-val">989T</span><div class="number-label">H100 BF16 TFLOPS</div></div>
+    <div class="number-item"><span class="number-val">3.35</span><div class="number-label">H100 HBM TB/s</div></div>
+    <div class="number-item"><span class="number-val">295</span><div class="number-label">H100 Ridge Point (F/B)</div></div>
+    <div class="number-item"><span class="number-val">16B</span><div class="number-label">Bytes/param (AdamW)</div></div>
+    <div class="number-item"><span class="number-val">TP≤8</span><div class="number-label">NVLink Domain Rule</div></div>
+    <div class="number-item"><span class="number-val">82%</span><div class="number-label">KV Cache Alert %</div></div>
+    <div class="number-item"><span class="number-val">6N·D</span><div class="number-label">Training FLOPs Formula</div></div>
+  </div>
+
+  <!-- ═══ CHAPTERS ═══ -->
+  <div id="chapters" class="section-header fade-in">
+    <span class="section-num">01–18</span>
+    <div class="section-title">Chapters</div>
+    <div class="section-desc">Click any chapter to open the PDF</div>
+  </div>
+
+  <!-- PART I -->
+  <div class="part-header fade-in">
+    <span class="part-num">Part I</span>
+    <div class="part-title">Foundations — Silicon, Architecture, and the Performance Mindset</div>
+    <span class="part-subtitle">Ch01 – Ch03B</span>
+  </div>
+  <div class="chapters-grid fade-in">
+    <a href="pdfs/ch01_performance_mindset.pdf" class="chapter-card">
+      <span class="ch-num">Ch 01</span>
+      <div class="ch-body">
+        <div class="ch-title">The AI/ML Performance Architecture Mindset</div>
+        <div class="ch-desc">7-layer stack, Roofline model, three performance regimes, MFU/HFU, measurement discipline</div>
+        <div class="ch-tags">
+          <span class="ch-tag compute">compute</span>
+          <span class="ch-tag memory">roofline</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+    <a href="pdfs/ch02_transformer_deep_dive.pdf" class="chapter-card">
+      <span class="ch-num">Ch 02</span>
+      <div class="ch-body">
+        <div class="ch-title">The Transformer Architecture Deep Dive</div>
+        <div class="ch-desc">Attention derivation, GQA/MQA/MLA, RoPE, SwiGLU, RMSNorm, FLOP budget, scaling laws</div>
+        <div class="ch-tags">
+          <span class="ch-tag compute">architecture</span>
+          <span class="ch-tag inference">attention</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+    <a href="pdfs/ch03a_gpu_fundamentals.pdf" class="chapter-card">
+      <span class="ch-num">Ch 03A</span>
+      <div class="ch-body">
+        <div class="ch-title">GPU Architecture — Fundamentals</div>
+        <div class="ch-desc">SM, Tensor Cores, NVLink/NVSwitch, PCIe vs SXM, memory hierarchy, CUDA programming model</div>
+        <div class="ch-tags">
+          <span class="ch-tag compute">silicon</span>
+          <span class="ch-tag memory">HBM</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+    <a href="pdfs/ch03b_gpu_roadmap.pdf" class="chapter-card">
+      <span class="ch-num">Ch 03B</span>
+      <div class="ch-body">
+        <div class="ch-title">GPU Roadmap — H100 to B200 to MI300X</div>
+        <div class="ch-desc">H100/H200/B200/GB200 NVL72, AMD CDNA3/4, hardware selection decision matrix</div>
+        <div class="ch-tags">
+          <span class="ch-tag compute">roadmap</span>
+          <span class="ch-tag ops">AMD</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+  </div>
+
+  <!-- PART II -->
+  <div class="part-header fade-in">
+    <span class="part-num">Part II</span>
+    <div class="part-title">Hardware Performance — Memory, Thermal, and Compute</div>
+    <span class="part-subtitle">Ch04 – Ch05</span>
+  </div>
+  <div class="chapters-grid fade-in">
+    <a href="pdfs/ch04_memory_hierarchy.pdf" class="chapter-card">
+      <span class="ch-num">Ch 04</span>
+      <div class="ch-body">
+        <div class="ch-title">Memory Hierarchy and HBM Deep Dive</div>
+        <div class="ch-desc">Memory wall, HBM physics/generations, FlashAttention case study, KV cache sizing, optimization decision tree</div>
+        <div class="ch-tags">
+          <span class="ch-tag memory">HBM3e</span>
+          <span class="ch-tag memory">bandwidth</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+    <a href="pdfs/ch05_thermal_power_tco.pdf" class="chapter-card">
+      <span class="ch-num">Ch 05</span>
+      <div class="ch-body">
+        <div class="ch-title">Thermal Management, Power, and TCO</div>
+        <div class="ch-desc">CMOS power physics, cooling (air/DLC/immersion), DVFS, TCO model, cost-per-token, build vs buy</div>
+        <div class="ch-tags">
+          <span class="ch-tag ops">thermal</span>
+          <span class="ch-tag ops">TCO</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+  </div>
+
+  <!-- PART III -->
+  <div class="part-header fade-in">
+    <span class="part-num">Part III</span>
+    <div class="part-title">LLM Inference — Serving, Kernels, and Optimization</div>
+    <span class="part-subtitle">Ch06 – Ch09</span>
+  </div>
+  <div class="chapters-grid fade-in">
+    <a href="pdfs/ch06_inference_systems.pdf" class="chapter-card">
+      <span class="ch-num">Ch 06</span>
+      <div class="ch-body">
+        <div class="ch-title">LLM Inference Systems</div>
+        <div class="ch-desc">Prefill vs decode, continuous batching, chunked prefill, vLLM/TRT-LLM, PagedAttention, P-D disaggregation</div>
+        <div class="ch-tags">
+          <span class="ch-tag inference">vLLM</span>
+          <span class="ch-tag inference">batching</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+    <a href="pdfs/ch07_gpu_kernels.pdf" class="chapter-card">
+      <span class="ch-num">Ch 07</span>
+      <div class="ch-body">
+        <div class="ch-title">GPU Kernels — GEMM, FlashAttention, Triton</div>
+        <div class="ch-desc">GEMM tiling, FlashAttention O(S) proof, Triton, CUDA Graphs, kernel profiling methodology</div>
+        <div class="ch-tags">
+          <span class="ch-tag compute">GEMM</span>
+          <span class="ch-tag compute">Triton</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+    <a href="pdfs/ch08_quantization.pdf" class="chapter-card">
+      <span class="ch-num">Ch 08</span>
+      <div class="ch-body">
+        <div class="ch-title">Quantization and Precision Optimization</div>
+        <div class="ch-desc">FP32→NVFP4 formats, GPTQ/AWQ/SmoothQuant, FP8 Transformer Engine, KV quantization, QLoRA</div>
+        <div class="ch-tags">
+          <span class="ch-tag inference">FP8</span>
+          <span class="ch-tag inference">INT4</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+    <a href="pdfs/ch09_fusion_compiler.pdf" class="chapter-card">
+      <span class="ch-num">Ch 09</span>
+      <div class="ch-body">
+        <div class="ch-title">Operator Fusion and the Compiler Stack</div>
+        <div class="ch-desc">PyTorch 2.x (Dynamo→Inductor→Triton), XLA, TensorRT, NVFuser, min-cut recomputation, CUDA Graphs</div>
+        <div class="ch-tags">
+          <span class="ch-tag compute">torch.compile</span>
+          <span class="ch-tag compute">TRT</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+  </div>
+
+  <!-- PART IV -->
+  <div class="part-header fade-in">
+    <span class="part-num">Part IV</span>
+    <div class="part-title">Distributed Training — Parallelism, Memory, and Scale</div>
+    <span class="part-subtitle">Ch10 – Ch12</span>
+  </div>
+  <div class="chapters-grid fade-in">
+    <a href="pdfs/ch10_training_complete.pdf" class="chapter-card">
+      <span class="ch-num">Ch 10</span>
+      <div class="ch-body">
+        <div class="ch-title">Distributed Training Systems at Scale</div>
+        <div class="ch-desc">4D parallelism (TP/PP/DP/CP), ZeRO/FSDP, gradient overlap, fault tolerance, RLHF, pre-launch checklist</div>
+        <div class="ch-tags">
+          <span class="ch-tag training">TP/PP/DP</span>
+          <span class="ch-tag training">ZeRO</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+    <a href="pdfs/ch11_kv_cache_complete.pdf" class="chapter-card">
+      <span class="ch-num">Ch 11</span>
+      <div class="ch-body">
+        <div class="ch-title">KV Cache — The Heart of LLM Serving</div>
+        <div class="ch-desc">PagedAttention, FP8 KV, prefix caching (RadixAttention), tiering, P-D disaggregation, MLA 57× compression</div>
+        <div class="ch-tags">
+          <span class="ch-tag memory">KV cache</span>
+          <span class="ch-tag inference">MLA</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+    <a href="pdfs/ch12_benchmarking_complete.pdf" class="chapter-card">
+      <span class="ch-num">Ch 12</span>
+      <div class="ch-body">
+        <div class="ch-title">Benchmarking and Performance Methodology</div>
+        <div class="ch-desc">5 measurement rules, Roofline in practice, MLPerf, MFU measurement, 5-step decision tree, regression CI</div>
+        <div class="ch-tags">
+          <span class="ch-tag compute">roofline</span>
+          <span class="ch-tag ops">MLPerf</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+  </div>
+
+  <!-- PART V -->
+  <div class="part-header fade-in">
+    <span class="part-num">Part V</span>
+    <div class="part-title">Advanced Techniques and Cluster Operations</div>
+    <span class="part-subtitle">Ch13 – Ch17</span>
+  </div>
+  <div class="chapters-grid fade-in">
+    <a href="pdfs/ch13_speculative_moe.pdf" class="chapter-card">
+      <span class="ch-num">Ch 13</span>
+      <div class="ch-body">
+        <div class="ch-title">Speculative Decoding and Mixture of Experts</div>
+        <div class="ch-desc">Spec-decode math/variants/vLLM config, MoE architecture, expert parallelism, load imbalance, production</div>
+        <div class="ch-tags">
+          <span class="ch-tag inference">spec decode</span>
+          <span class="ch-tag inference">MoE</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+    <a href="pdfs/ch14_networking.pdf" class="chapter-card">
+      <span class="ch-num">Ch 14</span>
+      <div class="ch-body">
+        <div class="ch-title">Networking and Collective Communication</div>
+        <div class="ch-desc">NVLink/NVLS, InfiniBand/SHARP/GPUDirect RDMA, RoCEv2/PFC/CTS, rail topology, NCCL config</div>
+        <div class="ch-tags">
+          <span class="ch-tag training">NVLink</span>
+          <span class="ch-tag training">InfiniBand</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+    <a href="pdfs/ch15_storage_io.pdf" class="chapter-card">
+      <span class="ch-num">Ch 15</span>
+      <div class="ch-body">
+        <div class="ch-title">Storage, Data Pipelines, and I/O Performance</div>
+        <div class="ch-desc">Lustre stripe config, async checkpointing, sequence packing, DataLoader instrumentation, 3-tier retention</div>
+        <div class="ch-tags">
+          <span class="ch-tag ops">Lustre</span>
+          <span class="ch-tag ops">checkpointing</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+    <a href="pdfs/ch16_cluster_management.pdf" class="chapter-card">
+      <span class="ch-num">Ch 16</span>
+      <div class="ch-body">
+        <div class="ch-title">Cluster Management and Multi-Tenant Systems</div>
+        <div class="ch-desc">SLURM QOS/fair-share/topology, Kubernetes GPU model/MIG, Volcano gang scheduling, fault-tolerant training</div>
+        <div class="ch-tags">
+          <span class="ch-tag ops">SLURM</span>
+          <span class="ch-tag ops">Kubernetes</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+    <a href="pdfs/ch17_telemetry_tools.pdf" class="chapter-card">
+      <span class="ch-num">Ch 17</span>
+      <div class="ch-body">
+        <div class="ch-title">Telemetry, Observability, and Performance Tools</div>
+        <div class="ch-desc">DCGM field IDs, XID errors, Prometheus/Grafana alerts, straggler detection, KV cascade, regression CI</div>
+        <div class="ch-tags">
+          <span class="ch-tag ops">DCGM</span>
+          <span class="ch-tag ops">Prometheus</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+  </div>
+
+  <!-- PART VI -->
+  <div class="part-header fade-in">
+    <span class="part-num">Part VI</span>
+    <div class="part-title">The Principal Architect — Career and Interviews</div>
+    <span class="part-subtitle">Ch18</span>
+  </div>
+  <div class="chapters-grid fade-in">
+    <a href="pdfs/ch18_principal_career.pdf" class="chapter-card">
+      <span class="ch-num">Ch 18</span>
+      <div class="ch-body">
+        <div class="ch-title">The Principal Architect: Career, Interviews, and Professional Development</div>
+        <div class="ch-desc">4 superpowers, STAR+Impact stories, system design playbook, ChatGPT at production scale walkthrough</div>
+        <div class="ch-tags">
+          <span class="ch-tag career">career</span>
+          <span class="ch-tag career">interviews</span>
+        </div>
+      </div>
+      <span class="ch-action">PDF ↗</span>
+    </a>
+  </div>
+
+  <!-- ═══ DIAGRAMS ═══ -->
+  <div class="section-header fade-in">
+    <span class="section-num">Fig</span>
+    <div class="section-title">Architecture Diagrams</div>
+    <div class="section-desc">Open in browser · Print to PDF</div>
+  </div>
+
+  <div class="diagrams-grid fade-in">
+    <a href="diagrams/diagram_01_memory_hierarchy.html" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🏔️</div>
+      <div>
+        <div class="diagram-title">Memory Hierarchy — H100 SXM5</div>
+        <div class="diagram-ch">Fig 4.1 · Chapter 04</div>
+      </div>
+    </a>
+    <a href="diagrams/diagram_02_kv_cache.html" class="diagram-card" target="_blank">
+      <div class="diagram-icon">💾</div>
+      <div>
+        <div class="diagram-title">KV Cache — PagedAttention & Cascade Cliff</div>
+        <div class="diagram-ch">Fig 11.1 · Chapter 11</div>
+      </div>
+    </a>
+    <a href="diagrams/diagram_03_transformer_pipeline.html" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🔄</div>
+      <div>
+        <div class="diagram-title">Transformer Block — Performance View</div>
+        <div class="diagram-ch">Fig 2.1 · Chapter 02</div>
+      </div>
+    </a>
+    <a href="diagrams/diagram_04_compiler_stack.html" class="diagram-card" target="_blank">
+      <div class="diagram-icon">⚙️</div>
+      <div>
+        <div class="diagram-title">PyTorch 2.x Compiler Stack</div>
+        <div class="diagram-ch">Fig 9.1 · Chapter 09</div>
+      </div>
+    </a>
+    <a href="diagrams/diagram_05_parallelism_topology.html" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🌐</div>
+      <div>
+        <div class="diagram-title">4D Parallelism — Physical Hardware Mapping</div>
+        <div class="diagram-ch">Fig 10.1 · Chapter 10</div>
+      </div>
+    </a>
+    <a href="diagrams/diagram_06_speculative_decoding.html" class="diagram-card" target="_blank">
+      <div class="diagram-icon">⚡</div>
+      <div>
+        <div class="diagram-title">Speculative Decoding — Draft, Verify, Accept</div>
+        <div class="diagram-ch">Fig 13.1 · Chapter 13</div>
+      </div>
+    </a>
+    <a href="diagrams/diagram_07_moe_routing.html" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🧩</div>
+      <div>
+        <div class="diagram-title">Mixture of Experts — Router & All-to-All</div>
+        <div class="diagram-ch">Fig 13.2 · Chapter 13</div>
+      </div>
+    </a>
+    <a href="diagrams/diagram_08_observability_stack.html" class="diagram-card" target="_blank">
+      <div class="diagram-icon">📊</div>
+      <div>
+        <div class="diagram-title">Observability — Seven-Layer Architecture</div>
+        <div class="diagram-ch">Fig 17.1 · Chapter 17</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- ═══ APPENDICES ═══ -->
+  <div class="section-header fade-in">
+    <span class="section-num">A–C</span>
+    <div class="section-title">Appendices</div>
+    <div class="section-desc">Reference material</div>
+  </div>
+
+  <div class="appendix-grid fade-in">
+    <a href="pdfs/appendix_a_hardware_reference.pdf" class="appendix-card">
+      <div class="appendix-icon">📋</div>
+      <div>
+        <div class="appendix-title">Appendix A — Hardware Reference Tables</div>
+        <div class="appendix-desc">GPU specs A100→B200, HBM generations, networking, capacity planning formulas, 30 numbers to know cold</div>
+      </div>
+    </a>
+    <a href="pdfs/appendix_b_tools_reference.pdf" class="appendix-card">
+      <div class="appendix-icon">🔧</div>
+      <div>
+        <div class="appendix-title">Appendix B — Tool Quick Reference</div>
+        <div class="appendix-desc">nsys, ncu, DCGM, NCCL, vLLM, AMD tools, storage, cluster management one-liners</div>
+      </div>
+    </a>
+    <a href="pdfs/appendix_c_glossary.pdf" class="appendix-card">
+      <div class="appendix-icon">📖</div>
+      <div>
+        <div class="appendix-title">Appendix C — Glossary</div>
+        <div class="appendix-desc">70+ terms from AllGather to ZeRO — production-precision definitions with cross-references</div>
+      </div>
+    </a>
+  </div>
+
+</main>
+
+<!-- ═══════════════════════════ FOOTER ═══════════════════════════ -->
+<footer>
+  <p style="margin-bottom:8px;">
+    <strong style="color:var(--text2);">AI/ML Infrastructure from Silicon to Scale</strong>
+    &nbsp;·&nbsp; First Edition, 2026
+  </p>
+  <p style="margin-bottom:16px; color:var(--text3);">
+    © Venkat Vinjam · Principal Performance Architect · Free for personal and educational use
+  </p>
+  <p>
+    <a href="https://github.com/YOUR_USERNAME/silicon-to-scale" target="_blank">GitHub</a>
+    &nbsp;·&nbsp;
+    <a href="https://www.linkedin.com/in/venkatvinjam/" target="_blank">LinkedIn</a>
+    &nbsp;·&nbsp;
+    <a href="mailto:your@email.com">Contact</a>
+  </p>
+</footer>
+
+<script>
+// Intersection observer for fade-in animations
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => {
+        entry.target.classList.add('visible');
+      }, i * 80);
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
