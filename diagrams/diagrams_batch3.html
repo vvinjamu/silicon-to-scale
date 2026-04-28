@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Making AI Go Fast — Diagram Reference Pack 3</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #21262d;
+    --blue: #58a6ff;
+    --green: #3fb950;
+    --orange: #f78166;
+    --gold: #ffd700;
+    --teal: #39d0d8;
+    --purple: #bc8cff;
+    --muted: #8b949e;
+    --text: #e6edf3;
+    --red: #ff4d6d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', monospace;
+    min-height: 100vh;
+  }
+  header {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 60px 30px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(88,166,255,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(63,185,80,0.05) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .book-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: var(--blue);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    opacity: 0.8;
+  }
+  header h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: clamp(22px, 3vw, 36px);
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+  header h1 span { color: var(--blue); }
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 60px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  nav a {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+  nav a:hover { color: var(--blue); border-color: var(--blue); }
+  main {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 50px 60px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(820px, 1fr));
+    gap: 50px;
+  }
+  .diagram-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .diagram-card:hover { border-color: #30363d; }
+  .diagram-header {
+    padding: 16px 24px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+  .diagram-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--blue);
+    background: rgba(88,166,255,0.1);
+    border: 1px solid rgba(88,166,255,0.25);
+    border-radius: 4px;
+    padding: 2px 8px;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+  .diagram-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.3px;
+  }
+  .diagram-card svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  @media (max-width: 900px) {
+    main { padding: 24px; grid-template-columns: 1fr; }
+    nav { padding: 10px 24px; }
+    header { padding: 28px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="book-label">Making AI Go Fast · Diagram Reference Pack 3</div>
+  <h1><span>//</span> AI/ML Infrastructure: Silicon to Scale</h1>
+  <div class="subtitle">Diagrams 23–32 · Transformer Arch · Attention Variants · GPU vs CPU · SIMT · CUDA Hierarchy · torch.compile · Training Streams · Profiling · MoE · Fat-Tree</div>
+</header>
+
+<nav>
+  <a href="#d23">23 Transformer Block</a>
+  <a href="#d24">24 MHA vs GQA vs MLA</a>
+  <a href="#d25">25 GPU vs CPU</a>
+  <a href="#d26">26 SIMT Warp</a>
+  <a href="#d27">27 CUDA Hierarchy</a>
+  <a href="#d28">28 torch.compile</a>
+  <a href="#d29">29 Training Streams</a>
+  <a href="#d30">30 Profiling Tree</a>
+  <a href="#d31">31 MoE Routing</a>
+  <a href="#d32">32 Fat-Tree Topology</a>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 23 -->
+<div class="diagram-card" id="d23">
+  <div class="diagram-header">
+    <span class="diagram-num">23</span>
+    <span class="diagram-title">Transformer Decoder Block Architecture — Pre-Norm (Modern) vs Post-Norm (Original)</span>
+  </div>
+  <svg viewBox="0 0 820 620" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="620" fill="#0d1117"/>
+
+    <!-- ── Background column ── -->
+    <rect x="290" y="10" width="240" height="600" rx="6" fill="rgba(88,166,255,0.03)" stroke="#21262d" stroke-width="1"/>
+
+    <!-- ── Title note ── -->
+    <text x="410" y="32" text-anchor="middle" fill="#8b949e" font-size="10">Flow: top → bottom  |  [B, T, D] shape preserved through every sub-layer</text>
+
+    <!-- INPUT BOX -->
+    <rect x="300" y="44" width="220" height="40" rx="6" fill="#0d1117" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="410" y="60" text-anchor="middle" fill="#58a6ff" font-size="11" font-weight="700">Input Tokens</text>
+    <text x="410" y="76" text-anchor="middle" fill="#8b949e" font-size="9">vocab_id sequence</text>
+
+    <!-- arrow down -->
+    <line x1="410" y1="84" x2="410" y2="104" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- EMBEDDING -->
+    <rect x="300" y="104" width="220" height="40" rx="6" fill="#161b22" stroke="#39d0d8" stroke-width="1.5"/>
+    <text x="410" y="120" text-anchor="middle" fill="#39d0d8" font-size="11" font-weight="700">Embedding + Positional Enc.</text>
+    <text x="410" y="135" text-anchor="middle" fill="#8b949e" font-size="9">W_e ∈ [V, D]  +  RoPE / sinusoidal</text>
+
+    <!-- arrow down + dimension label -->
+    <line x1="410" y1="144" x2="410" y2="168" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arr)"/>
+    <rect x="420" y="149" width="110" height="16" rx="3" fill="rgba(255,215,0,0.12)"/>
+    <text x="474" y="161" text-anchor="middle" fill="#ffd700" font-size="9" font-weight="600">[B, T, D]  →  [B, T, D]</text>
+
+    <!-- ── RESIDUAL STREAM line (left) ── -->
+    <line x1="285" y1="168" x2="285" y2="488" stroke="#ffd700" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>
+    <text x="275" y="330" text-anchor="middle" fill="#ffd700" font-size="9" transform="rotate(-90,275,330)" opacity="0.8">residual stream x</text>
+
+    <!-- ── BLOCK 1: Self-Attention ── -->
+    <!-- RMSNorm 1 -->
+    <rect x="300" y="168" width="220" height="36" rx="5" fill="#161b22" stroke="#bc8cff" stroke-width="1.5"/>
+    <text x="410" y="183" text-anchor="middle" fill="#bc8cff" font-size="11" font-weight="700">RMSNorm</text>
+    <text x="410" y="197" text-anchor="middle" fill="#8b949e" font-size="9">γ · x / RMS(x)   params: D</text>
+
+    <line x1="410" y1="204" x2="410" y2="224" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- MHA box -->
+    <rect x="290" y="224" width="240" height="56" rx="5" fill="rgba(88,166,255,0.08)" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="410" y="244" text-anchor="middle" fill="#58a6ff" font-size="11" font-weight="700">Multi-Head Attention</text>
+    <text x="410" y="258" text-anchor="middle" fill="#8b949e" font-size="9">Q=xW_Q   K=xW_K   V=xW_V</text>
+    <text x="410" y="271" text-anchor="middle" fill="#8b949e" font-size="9">softmax(QKᵀ/√d_k)·V → W_O</text>
+
+    <!-- Residual bypass arrow (gold, left side) -->
+    <path d="M 285 204 L 258 204 L 258 300 L 285 300" fill="none" stroke="#ffd700" stroke-width="2" stroke-dasharray="5,3"/>
+    <polygon points="285,297 280,300 285,303" fill="#ffd700"/>
+    <text x="240" y="256" text-anchor="middle" fill="#ffd700" font-size="9" transform="rotate(-90,240,256)">residual add</text>
+
+    <line x1="410" y1="280" x2="410" y2="300" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- ADD & NORM label -->
+    <rect x="345" y="296" width="130" height="22" rx="4" fill="rgba(255,215,0,0.15)" stroke="#ffd700" stroke-width="1"/>
+    <text x="410" y="311" text-anchor="middle" fill="#ffd700" font-size="10" font-weight="700">⊕  Residual Add</text>
+
+    <line x1="410" y1="318" x2="410" y2="338" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- ── BLOCK 2: FFN ── -->
+    <!-- RMSNorm 2 -->
+    <rect x="300" y="338" width="220" height="36" rx="5" fill="#161b22" stroke="#bc8cff" stroke-width="1.5"/>
+    <text x="410" y="353" text-anchor="middle" fill="#bc8cff" font-size="11" font-weight="700">RMSNorm</text>
+    <text x="410" y="367" text-anchor="middle" fill="#8b949e" font-size="9">γ · x / RMS(x)   params: D</text>
+
+    <line x1="410" y1="374" x2="410" y2="394" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- FFN / SwiGLU box -->
+    <rect x="290" y="394" width="240" height="66" rx="5" fill="rgba(63,185,80,0.08)" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="410" y="413" text-anchor="middle" fill="#3fb950" font-size="11" font-weight="700">FFN  —  SwiGLU</text>
+    <text x="410" y="428" text-anchor="middle" fill="#8b949e" font-size="9">gate  = SiLU(x · W_gate)   [D→4D]</text>
+    <text x="410" y="441" text-anchor="middle" fill="#8b949e" font-size="9">up    = x · W_up            [D→4D]</text>
+    <text x="410" y="454" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="600">out   = (gate × up) · W_down [4D→D]</text>
+
+    <!-- Residual bypass arrow 2 (gold, left side) -->
+    <path d="M 285 374 L 258 374 L 258 488 L 285 488" fill="none" stroke="#ffd700" stroke-width="2" stroke-dasharray="5,3"/>
+    <polygon points="285,485 280,488 285,491" fill="#ffd700"/>
+
+    <line x1="410" y1="460" x2="410" y2="480" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- ADD & NORM 2 -->
+    <rect x="345" y="476" width="130" height="22" rx="4" fill="rgba(255,215,0,0.15)" stroke="#ffd700" stroke-width="1"/>
+    <text x="410" y="491" text-anchor="middle" fill="#ffd700" font-size="10" font-weight="700">⊕  Residual Add</text>
+
+    <line x1="410" y1="498" x2="410" y2="518" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- OUTPUT -->
+    <rect x="300" y="518" width="220" height="38" rx="6" fill="#0d1117" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="410" y="534" text-anchor="middle" fill="#58a6ff" font-size="11" font-weight="700">Output → Next Layer</text>
+    <text x="410" y="549" text-anchor="middle" fill="#8b949e" font-size="9">[B, T, D]  shape preserved</text>
+
+    <!-- ── RIGHT SIDE: param count annotations ── -->
+    <line x1="535" y1="50" x2="710" y2="50" stroke="#21262d" stroke-width="1"/>
+    <text x="625" y="46" text-anchor="middle" fill="#8b949e" font-size="9" font-weight="600">PARAMETER COUNT (D=4096)</text>
+
+    <!-- Embedding -->
+    <line x1="520" y1="124" x2="545" y2="124" stroke="#39d0d8" stroke-width="1" stroke-dasharray="3,2"/>
+    <line x1="545" y1="124" x2="545" y2="140" stroke="#39d0d8" stroke-width="1"/>
+    <text x="620" y="140" text-anchor="middle" fill="#39d0d8" font-size="9">V × D  ≈  131M (V=32k)</text>
+
+    <!-- MHA -->
+    <line x1="530" y1="252" x2="560" y2="252" stroke="#58a6ff" stroke-width="1" stroke-dasharray="3,2"/>
+    <line x1="560" y1="252" x2="560" y2="268" stroke="#58a6ff" stroke-width="1"/>
+    <text x="635" y="268" text-anchor="middle" fill="#58a6ff" font-size="9">4 × D²  ≈  67M</text>
+
+    <!-- FFN -->
+    <line x1="530" y1="427" x2="560" y2="427" stroke="#3fb950" stroke-width="1" stroke-dasharray="3,2"/>
+    <line x1="560" y1="427" x2="560" y2="443" stroke="#3fb950" stroke-width="1"/>
+    <text x="635" y="443" text-anchor="middle" fill="#3fb950" font-size="9">3 × D × 4D  ≈  201M</text>
+
+    <!-- ── BOTTOM: Pre-Norm vs Post-Norm ── -->
+    <rect x="20" y="558" width="255" height="52" rx="5" fill="rgba(255,215,0,0.07)" stroke="#ffd700" stroke-width="1"/>
+    <text x="32" y="573" fill="#ffd700" font-size="10" font-weight="700">● Pre-Norm (Modern — LLaMA, GPT-4)</text>
+    <text x="32" y="588" fill="#8b949e" font-size="9">RMSNorm applied BEFORE each sub-layer.</text>
+    <text x="32" y="601" fill="#8b949e" font-size="9">Stable training; gradient flows through residual.</text>
+
+    <rect x="555" y="558" width="250" height="52" rx="5" fill="rgba(139,148,158,0.07)" stroke="#8b949e" stroke-width="1"/>
+    <text x="567" y="573" fill="#8b949e" font-size="10" font-weight="700">● Post-Norm (Original — vanilla Transformer)</text>
+    <text x="567" y="588" fill="#8b949e" font-size="9">LayerNorm applied AFTER add. Gradient can</text>
+    <text x="567" y="601" fill="#8b949e" font-size="9">vanish in deep stacks. Requires warmup care.</text>
+
+    <!-- Arrow markers -->
+    <defs>
+      <marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#8b949e"/>
+      </marker>
+    </defs>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 24 -->
+<div class="diagram-card" id="d24">
+  <div class="diagram-header">
+    <span class="diagram-num">24</span>
+    <span class="diagram-title">Attention Variants: MHA vs GQA vs MLA — KV Cache Memory Comparison</span>
+  </div>
+  <svg viewBox="0 0 820 560" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="560" fill="#0d1117"/>
+
+    <defs>
+      <marker id="arr2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#8b949e"/>
+      </marker>
+    </defs>
+
+    <!-- Column headers -->
+    <rect x="20" y="18" width="240" height="30" rx="5" fill="rgba(88,166,255,0.12)" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="140" y="38" text-anchor="middle" fill="#58a6ff" font-size="12" font-weight="700">MHA — Multi-Head Attention</text>
+
+    <rect x="290" y="18" width="240" height="30" rx="5" fill="rgba(63,185,80,0.12)" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="410" y="38" text-anchor="middle" fill="#3fb950" font-size="12" font-weight="700">GQA — Grouped Query Attention</text>
+
+    <rect x="560" y="18" width="240" height="30" rx="5" fill="rgba(188,140,255,0.12)" stroke="#bc8cff" stroke-width="1.5"/>
+    <text x="680" y="38" text-anchor="middle" fill="#bc8cff" font-size="12" font-weight="700">MLA — Multi-head Latent Attention</text>
+
+    <!-- ── MHA Column ── -->
+    <!-- 8 Q heads -->
+    <text x="140" y="72" text-anchor="middle" fill="#8b949e" font-size="9">QUERY HEADS</text>
+    <g id="mha-q">
+      <!-- 8 Q boxes -->
+      <rect x="28"  y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="54"  y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="80"  y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="106" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="132" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="158" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="184" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="210" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+      <text x="39"  y="91" text-anchor="middle" fill="#58a6ff" font-size="7">Q1</text>
+      <text x="65"  y="91" text-anchor="middle" fill="#58a6ff" font-size="7">Q2</text>
+      <text x="91"  y="91" text-anchor="middle" fill="#58a6ff" font-size="7">Q3</text>
+      <text x="117" y="91" text-anchor="middle" fill="#58a6ff" font-size="7">Q4</text>
+      <text x="143" y="91" text-anchor="middle" fill="#58a6ff" font-size="7">Q5</text>
+      <text x="169" y="91" text-anchor="middle" fill="#58a6ff" font-size="7">Q6</text>
+      <text x="195" y="91" text-anchor="middle" fill="#58a6ff" font-size="7">Q7</text>
+      <text x="221" y="91" text-anchor="middle" fill="#58a6ff" font-size="7">Q8</text>
+    </g>
+
+    <!-- Arrows Q→KV -->
+    <line x1="39"  y1="96" x2="39"  y2="134" stroke="#8b949e" stroke-width="0.8" stroke-dasharray="2,2"/>
+    <line x1="65"  y1="96" x2="65"  y2="134" stroke="#8b949e" stroke-width="0.8" stroke-dasharray="2,2"/>
+    <line x1="91"  y1="96" x2="91"  y2="134" stroke="#8b949e" stroke-width="0.8" stroke-dasharray="2,2"/>
+    <line x1="117" y1="96" x2="117" y2="134" stroke="#8b949e" stroke-width="0.8" stroke-dasharray="2,2"/>
+    <line x1="143" y1="96" x2="143" y2="134" stroke="#8b949e" stroke-width="0.8" stroke-dasharray="2,2"/>
+    <line x1="169" y1="96" x2="169" y2="134" stroke="#8b949e" stroke-width="0.8" stroke-dasharray="2,2"/>
+    <line x1="195" y1="96" x2="195" y2="134" stroke="#8b949e" stroke-width="0.8" stroke-dasharray="2,2"/>
+    <line x1="221" y1="96" x2="221" y2="134" stroke="#8b949e" stroke-width="0.8" stroke-dasharray="2,2"/>
+
+    <!-- 8 K heads -->
+    <text x="140" y="128" text-anchor="middle" fill="#8b949e" font-size="9">KEY HEADS (cached)</text>
+    <rect x="28"  y="134" width="22" height="18" rx="2" fill="rgba(247,129,102,0.25)" stroke="#f78166" stroke-width="1"/>
+    <rect x="54"  y="134" width="22" height="18" rx="2" fill="rgba(247,129,102,0.25)" stroke="#f78166" stroke-width="1"/>
+    <rect x="80"  y="134" width="22" height="18" rx="2" fill="rgba(247,129,102,0.25)" stroke="#f78166" stroke-width="1"/>
+    <rect x="106" y="134" width="22" height="18" rx="2" fill="rgba(247,129,102,0.25)" stroke="#f78166" stroke-width="1"/>
+    <rect x="132" y="134" width="22" height="18" rx="2" fill="rgba(247,129,102,0.25)" stroke="#f78166" stroke-width="1"/>
+    <rect x="158" y="134" width="22" height="18" rx="2" fill="rgba(247,129,102,0.25)" stroke="#f78166" stroke-width="1"/>
+    <rect x="184" y="134" width="22" height="18" rx="2" fill="rgba(247,129,102,0.25)" stroke="#f78166" stroke-width="1"/>
+    <rect x="210" y="134" width="22" height="18" rx="2" fill="rgba(247,129,102,0.25)" stroke="#f78166" stroke-width="1"/>
+
+    <!-- 8 V heads -->
+    <text x="140" y="168" text-anchor="middle" fill="#8b949e" font-size="9">VALUE HEADS (cached)</text>
+    <rect x="28"  y="174" width="22" height="18" rx="2" fill="rgba(255,215,0,0.2)" stroke="#ffd700" stroke-width="1"/>
+    <rect x="54"  y="174" width="22" height="18" rx="2" fill="rgba(255,215,0,0.2)" stroke="#ffd700" stroke-width="1"/>
+    <rect x="80"  y="174" width="22" height="18" rx="2" fill="rgba(255,215,0,0.2)" stroke="#ffd700" stroke-width="1"/>
+    <rect x="106" y="174" width="22" height="18" rx="2" fill="rgba(255,215,0,0.2)" stroke="#ffd700" stroke-width="1"/>
+    <rect x="132" y="174" width="22" height="18" rx="2" fill="rgba(255,215,0,0.2)" stroke="#ffd700" stroke-width="1"/>
+    <rect x="158" y="174" width="22" height="18" rx="2" fill="rgba(255,215,0,0.2)" stroke="#ffd700" stroke-width="1"/>
+    <rect x="184" y="174" width="22" height="18" rx="2" fill="rgba(255,215,0,0.2)" stroke="#ffd700" stroke-width="1"/>
+    <rect x="210" y="174" width="22" height="18" rx="2" fill="rgba(255,215,0,0.2)" stroke="#ffd700" stroke-width="1"/>
+
+    <!-- MHA formula -->
+    <rect x="20" y="202" width="240" height="46" rx="4" fill="rgba(247,129,102,0.07)" stroke="#f78166" stroke-width="1"/>
+    <text x="140" y="219" text-anchor="middle" fill="#f78166" font-size="9" font-weight="700">KV mem = 2 × H × d × L × seq × bytes</text>
+    <text x="140" y="234" text-anchor="middle" fill="#8b949e" font-size="9">= 2 × 8 × 128 × 80 × 4096 × 2</text>
+    <text x="140" y="248" text-anchor="middle" fill="#f78166" font-size="10" font-weight="700">≈  40 GB  (BF16, 70B, seq=4096)</text>
+
+    <!-- ── GQA Column ── -->
+    <!-- 8 Q heads -->
+    <text x="410" y="72" text-anchor="middle" fill="#8b949e" font-size="9">8 QUERY HEADS  (4 per group)</text>
+    <rect x="298" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+    <rect x="324" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+    <rect x="350" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+    <rect x="376" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+    <rect x="406" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.3)" stroke="#58a6ff" stroke-width="1.5"/>
+    <rect x="432" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.3)" stroke="#58a6ff" stroke-width="1.5"/>
+    <rect x="458" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.3)" stroke="#58a6ff" stroke-width="1.5"/>
+    <rect x="484" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.3)" stroke="#58a6ff" stroke-width="1.5"/>
+
+    <!-- Group brackets -->
+    <line x1="298" y1="100" x2="398" y2="100" stroke="#3fb950" stroke-width="1.5"/>
+    <line x1="348" y1="100" x2="348" y2="110" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr2)"/>
+    <line x1="406" y1="100" x2="506" y2="100" stroke="#3fb950" stroke-width="1.5"/>
+    <line x1="456" y1="100" x2="456" y2="110" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr2)"/>
+    <text x="348" y="99" text-anchor="middle" fill="#3fb950" font-size="8">group 1</text>
+    <text x="456" y="99" text-anchor="middle" fill="#3fb950" font-size="8">group 2</text>
+
+    <!-- 2 K heads only -->
+    <text x="410" y="128" text-anchor="middle" fill="#8b949e" font-size="9">2 KEY HEADS  (shared)</text>
+    <rect x="336" y="134" width="50" height="18" rx="2" fill="rgba(247,129,102,0.3)" stroke="#f78166" stroke-width="1.5"/>
+    <rect x="424" y="134" width="50" height="18" rx="2" fill="rgba(247,129,102,0.3)" stroke="#f78166" stroke-width="1.5"/>
+    <text x="361" y="147" text-anchor="middle" fill="#f78166" font-size="9" font-weight="600">K1</text>
+    <text x="449" y="147" text-anchor="middle" fill="#f78166" font-size="9" font-weight="600">K2</text>
+
+    <!-- 2 V heads -->
+    <text x="410" y="168" text-anchor="middle" fill="#8b949e" font-size="9">2 VALUE HEADS  (shared)</text>
+    <rect x="336" y="174" width="50" height="18" rx="2" fill="rgba(255,215,0,0.25)" stroke="#ffd700" stroke-width="1.5"/>
+    <rect x="424" y="174" width="50" height="18" rx="2" fill="rgba(255,215,0,0.25)" stroke="#ffd700" stroke-width="1.5"/>
+    <text x="361" y="187" text-anchor="middle" fill="#ffd700" font-size="9" font-weight="600">V1</text>
+    <text x="449" y="187" text-anchor="middle" fill="#ffd700" font-size="9" font-weight="600">V2</text>
+
+    <!-- GQA formula -->
+    <rect x="290" y="202" width="240" height="46" rx="4" fill="rgba(63,185,80,0.07)" stroke="#3fb950" stroke-width="1"/>
+    <text x="410" y="219" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">KV mem = 2 × (H/G) × d × L × seq × bytes</text>
+    <text x="410" y="234" text-anchor="middle" fill="#8b949e" font-size="9">G=4 groups  →  8/4 = 2 K,V heads</text>
+    <text x="410" y="248" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="700">≈  5 GB  (4× reduction vs MHA)</text>
+
+    <!-- ── MLA Column ── -->
+    <!-- 8 Q heads -->
+    <text x="680" y="72" text-anchor="middle" fill="#8b949e" font-size="9">8 QUERY HEADS  (standard)</text>
+    <rect x="568" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+    <rect x="594" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+    <rect x="620" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+    <rect x="646" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+    <rect x="672" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+    <rect x="698" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+    <rect x="724" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+    <rect x="750" y="78" width="22" height="18" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+
+    <!-- Compress arrows to latent vector -->
+    <line x1="620" y1="96" x2="620" y2="108" stroke="#bc8cff" stroke-width="0.8" stroke-dasharray="2,2"/>
+    <line x1="660" y1="96" x2="660" y2="108" stroke="#bc8cff" stroke-width="0.8" stroke-dasharray="2,2"/>
+    <line x1="700" y1="96" x2="700" y2="108" stroke="#bc8cff" stroke-width="0.8" stroke-dasharray="2,2"/>
+    <path d="M 575,114 L 797,114" fill="none" stroke="#bc8cff" stroke-width="1" stroke-dasharray="3,2"/>
+    <path d="M 686,114 L 686,134" fill="none" stroke="#bc8cff" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+    <!-- Latent vector c -->
+    <text x="680" y="128" text-anchor="middle" fill="#8b949e" font-size="9">LOW-RANK LATENT VECTOR c</text>
+    <rect x="630" y="134" width="100" height="30" rx="4" fill="rgba(188,140,255,0.2)" stroke="#bc8cff" stroke-width="2"/>
+    <text x="680" y="147" text-anchor="middle" fill="#bc8cff" font-size="10" font-weight="700">c_KV  ∈ ℝ^d_c</text>
+    <text x="680" y="160" text-anchor="middle" fill="#8b949e" font-size="8">d_c ≪ H×d_k</text>
+
+    <!-- arrows out to decode-time K,V -->
+    <line x1="680" y1="164" x2="680" y2="180" stroke="#bc8cff" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+    <!-- decode time expansion box -->
+    <rect x="580" y="180" width="200" height="30" rx="4" fill="rgba(188,140,255,0.08)" stroke="#bc8cff" stroke-width="1"/>
+    <text x="680" y="194" text-anchor="middle" fill="#bc8cff" font-size="9">K,V reconstructed at decode time</text>
+    <text x="680" y="207" text-anchor="middle" fill="#8b949e" font-size="8">W_K × c,  W_V × c  (no KV storage)</text>
+
+    <!-- MLA formula -->
+    <rect x="560" y="220" width="240" height="28" rx="4" fill="rgba(188,140,255,0.07)" stroke="#bc8cff" stroke-width="1"/>
+    <text x="680" y="236" text-anchor="middle" fill="#bc8cff" font-size="9" font-weight="700">KV mem ≈ (d_c + d_r) per token per layer</text>
+
+    <rect x="600" y="254" width="160" height="20" rx="4" fill="rgba(188,140,255,0.15)"/>
+    <text x="680" y="268" text-anchor="middle" fill="#bc8cff" font-size="10" font-weight="700">≈  1.9 GB  (5.25× vs MHA)</text>
+
+    <!-- ── BOTTOM comparison table ── -->
+    <line x1="20" y1="298" x2="800" y2="298" stroke="#21262d" stroke-width="1"/>
+    <text x="410" y="316" text-anchor="middle" fill="#8b949e" font-size="10" font-weight="700">LLAMA-3 70B  —  seq=4096  —  BF16  —  80 layers</text>
+
+    <!-- Table -->
+    <rect x="20" y="325" width="780" height="116" rx="6" fill="#161b22" stroke="#21262d" stroke-width="1"/>
+
+    <!-- Table header row -->
+    <rect x="20" y="325" width="780" height="28" rx="6" fill="#21262d"/>
+    <text x="100" y="344" text-anchor="middle" fill="#8b949e" font-size="10" font-weight="700">Variant</text>
+    <text x="260" y="344" text-anchor="middle" fill="#8b949e" font-size="10" font-weight="700">K heads</text>
+    <text x="390" y="344" text-anchor="middle" fill="#8b949e" font-size="10" font-weight="700">V heads</text>
+    <text x="530" y="344" text-anchor="middle" fill="#8b949e" font-size="10" font-weight="700">KV memory</text>
+    <text x="680" y="344" text-anchor="middle" fill="#8b949e" font-size="10" font-weight="700">Throughput impact</text>
+
+    <!-- Row 1: MHA -->
+    <line x1="20" y1="353" x2="800" y2="353" stroke="#21262d" stroke-width="1"/>
+    <text x="100" y="370" text-anchor="middle" fill="#58a6ff" font-size="11" font-weight="700">MHA</text>
+    <text x="260" y="370" text-anchor="middle" fill="#e6edf3" font-size="10">8</text>
+    <text x="390" y="370" text-anchor="middle" fill="#e6edf3" font-size="10">8</text>
+    <text x="530" y="370" text-anchor="middle" fill="#f78166" font-size="11" font-weight="700">~40 GB</text>
+    <text x="680" y="370" text-anchor="middle" fill="#f78166" font-size="10">Baseline — memory bottleneck</text>
+
+    <!-- Row 2: GQA -->
+    <line x1="20" y1="381" x2="800" y2="381" stroke="#21262d" stroke-width="1"/>
+    <text x="100" y="398" text-anchor="middle" fill="#3fb950" font-size="11" font-weight="700">GQA</text>
+    <text x="260" y="398" text-anchor="middle" fill="#e6edf3" font-size="10">2 (G=4)</text>
+    <text x="390" y="398" text-anchor="middle" fill="#e6edf3" font-size="10">2 (G=4)</text>
+    <text x="530" y="398" text-anchor="middle" fill="#3fb950" font-size="11" font-weight="700">~5 GB</text>
+    <text x="680" y="398" text-anchor="middle" fill="#3fb950" font-size="10">4× reduction — production standard</text>
+
+    <!-- Row 3: MLA -->
+    <line x1="20" y1="409" x2="800" y2="409" stroke="#21262d" stroke-width="1"/>
+    <text x="100" y="426" text-anchor="middle" fill="#bc8cff" font-size="11" font-weight="700">MLA</text>
+    <text x="260" y="426" text-anchor="middle" fill="#e6edf3" font-size="10">1 latent c</text>
+    <text x="390" y="426" text-anchor="middle" fill="#e6edf3" font-size="10">reconstructed</text>
+    <text x="530" y="426" text-anchor="middle" fill="#bc8cff" font-size="11" font-weight="700">~1.9 GB</text>
+    <text x="680" y="426" text-anchor="middle" fill="#bc8cff" font-size="10">5.25× reduction — DeepSeek V2/V3</text>
+
+    <!-- Note -->
+    <text x="410" y="462" text-anchor="middle" fill="#8b949e" font-size="9">Formula: MHA = 2 × H × d_head × num_layers × seq_len × dtype_bytes</text>
+    <text x="410" y="476" text-anchor="middle" fill="#8b949e" font-size="9">GQA reduction factor G = Q_heads / KV_heads  |  MLA stores compressed c_KV + decoupled RoPE key d_r</text>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 25 -->
+<div class="diagram-card" id="d25">
+  <div class="diagram-header">
+    <span class="diagram-num">25</span>
+    <span class="diagram-title">GPU vs CPU Architecture — Latency-Optimized vs Throughput-Optimized</span>
+  </div>
+  <svg viewBox="0 0 820 520" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="520" fill="#0d1117"/>
+
+    <defs>
+      <marker id="arr3" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#ffd700"/>
+      </marker>
+    </defs>
+
+    <!-- CPU box -->
+    <rect x="20" y="28" width="360" height="350" rx="8" fill="rgba(88,166,255,0.04)" stroke="#58a6ff" stroke-width="2"/>
+    <text x="200" y="52" text-anchor="middle" fill="#58a6ff" font-size="13" font-weight="700">CPU — Intel Xeon 8592+</text>
+    <text x="200" y="68" text-anchor="middle" fill="#8b949e" font-size="9">Latency Optimized · 1.9 – 3.9 GHz</text>
+
+    <!-- 64 CPU cores (8×8 grid of big squares) -->
+    <text x="200" y="90" text-anchor="middle" fill="#8b949e" font-size="8">64 CORES</text>
+    <!-- 8 rows × 8 cols of 28×28 core boxes -->
+    <g id="cpu-cores">
+      <!-- Row 0 -->
+      <rect x="38"  y="96" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="72"  y="96" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="106" y="96" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="140" y="96" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="174" y="96" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="208" y="96" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="242" y="96" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="276" y="96" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <!-- Row 1 -->
+      <rect x="38"  y="130" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="72"  y="130" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="106" y="130" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="140" y="130" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="174" y="130" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="208" y="130" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="242" y="130" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="276" y="130" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <!-- Row 2 -->
+      <rect x="38"  y="164" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="72"  y="164" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="106" y="164" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="140" y="164" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="174" y="164" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="208" y="164" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="242" y="164" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="276" y="164" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <!-- Row 3 -->
+      <rect x="38"  y="198" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="72"  y="198" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="106" y="198" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="140" y="198" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="174" y="198" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="208" y="198" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="242" y="198" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="276" y="198" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <!-- Row 4 -->
+      <rect x="38"  y="232" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="72"  y="232" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="106" y="232" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="140" y="232" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="174" y="232" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="208" y="232" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="242" y="232" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="276" y="232" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <!-- Row 5 -->
+      <rect x="38"  y="266" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="72"  y="266" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="106" y="266" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="140" y="266" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="174" y="266" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="208" y="266" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="242" y="266" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="276" y="266" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <!-- Row 6 -->
+      <rect x="38"  y="300" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="72"  y="300" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="106" y="300" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="140" y="300" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="174" y="300" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="208" y="300" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="242" y="300" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="276" y="300" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <!-- Row 7 -->
+      <rect x="38"  y="334" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="72"  y="334" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="106" y="334" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="140" y="334" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="174" y="334" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="208" y="334" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="242" y="334" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+      <rect x="276" y="334" width="28" height="28" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1"/>
+    </g>
+
+    <!-- CPU annotations inside box -->
+    <text x="316" y="110" text-anchor="start" fill="#58a6ff" font-size="9">L3 Cache:</text>
+    <text x="316" y="122" text-anchor="start" fill="#e6edf3" font-size="9">320 MB</text>
+    <text x="316" y="140" text-anchor="start" fill="#58a6ff" font-size="9">DRAM:</text>
+    <text x="316" y="152" text-anchor="start" fill="#e6edf3" font-size="9">DDR5</text>
+    <text x="316" y="170" text-anchor="start" fill="#58a6ff" font-size="9">Clock:</text>
+    <text x="316" y="182" text-anchor="start" fill="#e6edf3" font-size="9">3.9 GHz</text>
+    <text x="316" y="200" text-anchor="start" fill="#58a6ff" font-size="9">Threads:</text>
+    <text x="316" y="212" text-anchor="start" fill="#e6edf3" font-size="9">128</text>
+
+    <!-- CPU feature chips -->
+    <rect x="38" y="370" width="150" height="18" rx="3" fill="rgba(88,166,255,0.1)" stroke="#58a6ff" stroke-width="1"/>
+    <text x="113" y="382" text-anchor="middle" fill="#58a6ff" font-size="8">Out-of-order execution</text>
+    <rect x="196" y="370" width="138" height="18" rx="3" fill="rgba(88,166,255,0.1)" stroke="#58a6ff" stroke-width="1"/>
+    <text x="265" y="382" text-anchor="middle" fill="#58a6ff" font-size="8">Branch prediction</text>
+
+    <!-- Center arrow -->
+    <text x="410" y="200" text-anchor="middle" fill="#ffd700" font-size="11" font-weight="700">Same</text>
+    <text x="410" y="216" text-anchor="middle" fill="#ffd700" font-size="11" font-weight="700">DGEMM</text>
+    <text x="410" y="232" text-anchor="middle" fill="#ffd700" font-size="11" font-weight="700">result</text>
+    <line x1="388" y1="240" x2="388" y2="260" stroke="#ffd700" stroke-width="1" stroke-dasharray="3,2"/>
+    <line x1="432" y1="240" x2="432" y2="260" stroke="#ffd700" stroke-width="1" stroke-dasharray="3,2"/>
+    <rect x="370" y="260" width="80" height="26" rx="4" fill="rgba(255,215,0,0.12)" stroke="#ffd700" stroke-width="1.5"/>
+    <text x="410" y="277" text-anchor="middle" fill="#ffd700" font-size="10" font-weight="700">300× faster</text>
+
+    <!-- GPU box -->
+    <rect x="440" y="28" width="360" height="350" rx="8" fill="rgba(63,185,80,0.04)" stroke="#3fb950" stroke-width="2"/>
+    <text x="620" y="52" text-anchor="middle" fill="#3fb950" font-size="13" font-weight="700">GPU — H100 SXM5</text>
+    <text x="620" y="68" text-anchor="middle" fill="#8b949e" font-size="9">Throughput Optimized · 1.98 GHz</text>
+
+    <!-- 132 SM grid (12×11) -->
+    <text x="620" y="90" text-anchor="middle" fill="#8b949e" font-size="8">132 SMs  (16,896 CUDA cores)</text>
+    <!-- Generate SM grid 11 cols × 12 rows = 132 -->
+    <g id="gpu-sms" fill="rgba(63,185,80,0.18)" stroke="#3fb950" stroke-width="0.5">
+      <!-- Row 0 -->
+      <rect x="460" y="96" width="22" height="22" rx="1"/><rect x="486" y="96" width="22" height="22" rx="1"/><rect x="512" y="96" width="22" height="22" rx="1"/><rect x="538" y="96" width="22" height="22" rx="1"/><rect x="564" y="96" width="22" height="22" rx="1"/><rect x="590" y="96" width="22" height="22" rx="1"/><rect x="616" y="96" width="22" height="22" rx="1"/><rect x="642" y="96" width="22" height="22" rx="1"/><rect x="668" y="96" width="22" height="22" rx="1"/><rect x="694" y="96" width="22" height="22" rx="1"/><rect x="720" y="96" width="22" height="22" rx="1"/>
+      <!-- Row 1 -->
+      <rect x="460" y="122" width="22" height="22" rx="1"/><rect x="486" y="122" width="22" height="22" rx="1"/><rect x="512" y="122" width="22" height="22" rx="1"/><rect x="538" y="122" width="22" height="22" rx="1"/><rect x="564" y="122" width="22" height="22" rx="1"/><rect x="590" y="122" width="22" height="22" rx="1"/><rect x="616" y="122" width="22" height="22" rx="1"/><rect x="642" y="122" width="22" height="22" rx="1"/><rect x="668" y="122" width="22" height="22" rx="1"/><rect x="694" y="122" width="22" height="22" rx="1"/><rect x="720" y="122" width="22" height="22" rx="1"/>
+      <!-- Row 2 -->
+      <rect x="460" y="148" width="22" height="22" rx="1"/><rect x="486" y="148" width="22" height="22" rx="1"/><rect x="512" y="148" width="22" height="22" rx="1"/><rect x="538" y="148" width="22" height="22" rx="1"/><rect x="564" y="148" width="22" height="22" rx="1"/><rect x="590" y="148" width="22" height="22" rx="1"/><rect x="616" y="148" width="22" height="22" rx="1"/><rect x="642" y="148" width="22" height="22" rx="1"/><rect x="668" y="148" width="22" height="22" rx="1"/><rect x="694" y="148" width="22" height="22" rx="1"/><rect x="720" y="148" width="22" height="22" rx="1"/>
+      <!-- Row 3 -->
+      <rect x="460" y="174" width="22" height="22" rx="1"/><rect x="486" y="174" width="22" height="22" rx="1"/><rect x="512" y="174" width="22" height="22" rx="1"/><rect x="538" y="174" width="22" height="22" rx="1"/><rect x="564" y="174" width="22" height="22" rx="1"/><rect x="590" y="174" width="22" height="22" rx="1"/><rect x="616" y="174" width="22" height="22" rx="1"/><rect x="642" y="174" width="22" height="22" rx="1"/><rect x="668" y="174" width="22" height="22" rx="1"/><rect x="694" y="174" width="22" height="22" rx="1"/><rect x="720" y="174" width="22" height="22" rx="1"/>
+      <!-- Row 4 -->
+      <rect x="460" y="200" width="22" height="22" rx="1"/><rect x="486" y="200" width="22" height="22" rx="1"/><rect x="512" y="200" width="22" height="22" rx="1"/><rect x="538" y="200" width="22" height="22" rx="1"/><rect x="564" y="200" width="22" height="22" rx="1"/><rect x="590" y="200" width="22" height="22" rx="1"/><rect x="616" y="200" width="22" height="22" rx="1"/><rect x="642" y="200" width="22" height="22" rx="1"/><rect x="668" y="200" width="22" height="22" rx="1"/><rect x="694" y="200" width="22" height="22" rx="1"/><rect x="720" y="200" width="22" height="22" rx="1"/>
+      <!-- Row 5 -->
+      <rect x="460" y="226" width="22" height="22" rx="1"/><rect x="486" y="226" width="22" height="22" rx="1"/><rect x="512" y="226" width="22" height="22" rx="1"/><rect x="538" y="226" width="22" height="22" rx="1"/><rect x="564" y="226" width="22" height="22" rx="1"/><rect x="590" y="226" width="22" height="22" rx="1"/><rect x="616" y="226" width="22" height="22" rx="1"/><rect x="642" y="226" width="22" height="22" rx="1"/><rect x="668" y="226" width="22" height="22" rx="1"/><rect x="694" y="226" width="22" height="22" rx="1"/><rect x="720" y="226" width="22" height="22" rx="1"/>
+      <!-- Row 6 -->
+      <rect x="460" y="252" width="22" height="22" rx="1"/><rect x="486" y="252" width="22" height="22" rx="1"/><rect x="512" y="252" width="22" height="22" rx="1"/><rect x="538" y="252" width="22" height="22" rx="1"/><rect x="564" y="252" width="22" height="22" rx="1"/><rect x="590" y="252" width="22" height="22" rx="1"/><rect x="616" y="252" width="22" height="22" rx="1"/><rect x="642" y="252" width="22" height="22" rx="1"/><rect x="668" y="252" width="22" height="22" rx="1"/><rect x="694" y="252" width="22" height="22" rx="1"/><rect x="720" y="252" width="22" height="22" rx="1"/>
+      <!-- Row 7 -->
+      <rect x="460" y="278" width="22" height="22" rx="1"/><rect x="486" y="278" width="22" height="22" rx="1"/><rect x="512" y="278" width="22" height="22" rx="1"/><rect x="538" y="278" width="22" height="22" rx="1"/><rect x="564" y="278" width="22" height="22" rx="1"/><rect x="590" y="278" width="22" height="22" rx="1"/><rect x="616" y="278" width="22" height="22" rx="1"/><rect x="642" y="278" width="22" height="22" rx="1"/><rect x="668" y="278" width="22" height="22" rx="1"/><rect x="694" y="278" width="22" height="22" rx="1"/><rect x="720" y="278" width="22" height="22" rx="1"/>
+      <!-- Row 8 -->
+      <rect x="460" y="304" width="22" height="22" rx="1"/><rect x="486" y="304" width="22" height="22" rx="1"/><rect x="512" y="304" width="22" height="22" rx="1"/><rect x="538" y="304" width="22" height="22" rx="1"/><rect x="564" y="304" width="22" height="22" rx="1"/><rect x="590" y="304" width="22" height="22" rx="1"/><rect x="616" y="304" width="22" height="22" rx="1"/><rect x="642" y="304" width="22" height="22" rx="1"/><rect x="668" y="304" width="22" height="22" rx="1"/><rect x="694" y="304" width="22" height="22" rx="1"/><rect x="720" y="304" width="22" height="22" rx="1"/>
+      <!-- Row 9 -->
+      <rect x="460" y="330" width="22" height="22" rx="1"/><rect x="486" y="330" width="22" height="22" rx="1"/><rect x="512" y="330" width="22" height="22" rx="1"/><rect x="538" y="330" width="22" height="22" rx="1"/><rect x="564" y="330" width="22" height="22" rx="1"/><rect x="590" y="330" width="22" height="22" rx="1"/><rect x="616" y="330" width="22" height="22" rx="1"/><rect x="642" y="330" width="22" height="22" rx="1"/><rect x="668" y="330" width="22" height="22" rx="1"/><rect x="694" y="330" width="22" height="22" rx="1"/><rect x="720" y="330" width="22" height="22" rx="1"/>
+      <!-- Row 10 (only 11 for 121; remaining 11 with 2 diff fill) -->
+      <rect x="460" y="356" width="22" height="16" rx="1" fill="rgba(63,185,80,0.25)"/><rect x="486" y="356" width="22" height="16" rx="1" fill="rgba(63,185,80,0.25)"/><rect x="512" y="356" width="22" height="16" rx="1" fill="rgba(63,185,80,0.25)"/><rect x="538" y="356" width="22" height="16" rx="1" fill="rgba(63,185,80,0.25)"/><rect x="564" y="356" width="22" height="16" rx="1" fill="rgba(63,185,80,0.25)"/><rect x="590" y="356" width="22" height="16" rx="1" fill="rgba(63,185,80,0.25)"/><rect x="616" y="356" width="22" height="16" rx="1" fill="rgba(63,185,80,0.25)"/><rect x="642" y="356" width="22" height="16" rx="1" fill="rgba(63,185,80,0.25)"/><rect x="668" y="356" width="22" height="16" rx="1" fill="rgba(63,185,80,0.25)"/><rect x="694" y="356" width="22" height="16" rx="1" fill="rgba(63,185,80,0.25)"/><rect x="720" y="356" width="22" height="16" rx="1" fill="rgba(63,185,80,0.25)"/>
+    </g>
+    <!-- GPU side annotation -->
+    <text x="750" y="110" text-anchor="start" fill="#3fb950" font-size="8">L2:</text>
+    <text x="760" y="120" text-anchor="start" fill="#e6edf3" font-size="8">50 MB</text>
+    <text x="750" y="136" text-anchor="start" fill="#3fb950" font-size="8">HBM3e:</text>
+    <text x="760" y="147" text-anchor="start" fill="#e6edf3" font-size="8">80 GB</text>
+    <text x="750" y="163" text-anchor="start" fill="#3fb950" font-size="8">SM:</text>
+    <text x="760" y="173" text-anchor="start" fill="#e6edf3" font-size="8">132</text>
+
+    <!-- GPU chips -->
+    <rect x="460" y="383" width="144" height="18" rx="3" fill="rgba(63,185,80,0.1)" stroke="#3fb950" stroke-width="1"/>
+    <text x="532" y="395" text-anchor="middle" fill="#3fb950" font-size="8">16,896 CUDA cores</text>
+    <rect x="612" y="383" width="152" height="18" rx="3" fill="rgba(63,185,80,0.1)" stroke="#3fb950" stroke-width="1"/>
+    <text x="688" y="395" text-anchor="middle" fill="#3fb950" font-size="8">Simple in-order per warp</text>
+
+    <!-- Bottom win conditions -->
+    <rect x="20" y="398" width="360" height="50" rx="5" fill="rgba(88,166,255,0.06)" stroke="#58a6ff" stroke-width="1"/>
+    <text x="200" y="415" text-anchor="middle" fill="#58a6ff" font-size="10" font-weight="700">CPU WINS</text>
+    <text x="200" y="430" text-anchor="middle" fill="#8b949e" font-size="9">Complex branching · Serial dependencies</text>
+    <text x="200" y="444" text-anchor="middle" fill="#8b949e" font-size="9">Low-latency single-thread tasks · OS scheduling</text>
+
+    <rect x="440" y="398" width="360" height="50" rx="5" fill="rgba(63,185,80,0.06)" stroke="#3fb950" stroke-width="1"/>
+    <text x="620" y="415" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="700">GPU WINS</text>
+    <text x="620" y="430" text-anchor="middle" fill="#8b949e" font-size="9">Embarrassingly parallel · GEMM · Convolution</text>
+    <text x="620" y="444" text-anchor="middle" fill="#8b949e" font-size="9">Same op, many data (SIMD/SIMT) · High BW ops</text>
+
+    <text x="410" y="468" text-anchor="middle" fill="#ffd700" font-size="9">Note: CPU is the host controller + I/O orchestrator; GPU is the compute accelerator</text>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 26 -->
+<div class="diagram-card" id="d26">
+  <div class="diagram-header">
+    <span class="diagram-num">26</span>
+    <span class="diagram-title">SIMT Warp Execution Model — Divergence, Occupancy &amp; Scheduling</span>
+  </div>
+  <svg viewBox="0 0 820 500" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="500" fill="#0d1117"/>
+
+    <!-- SM outer box -->
+    <rect x="20" y="20" width="780" height="440" rx="8" fill="rgba(88,166,255,0.03)" stroke="#21262d" stroke-width="1.5"/>
+    <text x="410" y="44" text-anchor="middle" fill="#58a6ff" font-size="13" font-weight="700">Streaming Multiprocessor (SM) — H100</text>
+
+    <!-- Warp pool -->
+    <rect x="30" y="56" width="760" height="56" rx="6" fill="#161b22" stroke="#21262d" stroke-width="1"/>
+    <text x="50" y="74" fill="#8b949e" font-size="9" font-weight="600">WARP POOL  (64 warps/SM max)</text>
+    <!-- 32 warp boxes: 4 active, 28 waiting -->
+    <!-- active warps (blue) -->
+    <rect x="30"  y="80" width="18" height="26" rx="2" fill="rgba(88,166,255,0.4)" stroke="#58a6ff" stroke-width="1.5"/>
+    <rect x="52"  y="80" width="18" height="26" rx="2" fill="rgba(88,166,255,0.4)" stroke="#58a6ff" stroke-width="1.5"/>
+    <rect x="74"  y="80" width="18" height="26" rx="2" fill="rgba(88,166,255,0.4)" stroke="#58a6ff" stroke-width="1.5"/>
+    <rect x="96"  y="80" width="18" height="26" rx="2" fill="rgba(88,166,255,0.4)" stroke="#58a6ff" stroke-width="1.5"/>
+    <!-- waiting warps (muted) -->
+    <rect x="120" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="138" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="156" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="174" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="192" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="210" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="228" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="246" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="264" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="282" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="300" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="318" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="336" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="354" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="372" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="390" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="408" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="426" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="444" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="462" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="480" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="498" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="516" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="534" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="552" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="570" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="588" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <rect x="606" y="80" width="14" height="26" rx="1" fill="rgba(139,148,158,0.15)" stroke="#21262d" stroke-width="1"/>
+    <text x="650" y="97" text-anchor="start" fill="#8b949e" font-size="8">⬛ = waiting   🟦 = active</text>
+    <text x="52" y="96" text-anchor="middle" fill="#58a6ff" font-size="7">W0</text>
+    <text x="74" y="96" text-anchor="middle" fill="#58a6ff" font-size="7">W1</text>
+    <text x="96" y="96" text-anchor="middle" fill="#58a6ff" font-size="7">W2</text>
+    <text x="118" y="96" text-anchor="middle" fill="#58a6ff" font-size="7">W3</text>
+
+    <!-- 4 warp schedulers -->
+    <text x="50" y="140" fill="#8b949e" font-size="9" font-weight="600">4 WARP SCHEDULERS  (select 1 warp/cycle each → 4 instructions issued simultaneously)</text>
+    <rect x="30"  y="148" width="165" height="24" rx="4" fill="rgba(188,140,255,0.15)" stroke="#bc8cff" stroke-width="1"/>
+    <text x="112" y="164" text-anchor="middle" fill="#bc8cff" font-size="9">Scheduler 0 → Warp 0</text>
+    <rect x="204" y="148" width="165" height="24" rx="4" fill="rgba(188,140,255,0.15)" stroke="#bc8cff" stroke-width="1"/>
+    <text x="287" y="164" text-anchor="middle" fill="#bc8cff" font-size="9">Scheduler 1 → Warp 1</text>
+    <rect x="378" y="148" width="165" height="24" rx="4" fill="rgba(188,140,255,0.15)" stroke="#bc8cff" stroke-width="1"/>
+    <text x="461" y="164" text-anchor="middle" fill="#bc8cff" font-size="9">Scheduler 2 → Warp 2</text>
+    <rect x="552" y="148" width="165" height="24" rx="4" fill="rgba(188,140,255,0.15)" stroke="#bc8cff" stroke-width="1"/>
+    <text x="635" y="164" text-anchor="middle" fill="#bc8cff" font-size="9">Scheduler 3 → Warp 3</text>
+
+    <!-- WARP A — no divergence -->
+    <rect x="30" y="188" width="360" height="140" rx="6" fill="rgba(63,185,80,0.05)" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="210" y="206" text-anchor="middle" fill="#3fb950" font-size="11" font-weight="700">WARP A — No Divergence (ideal)</text>
+    <text x="210" y="220" text-anchor="middle" fill="#8b949e" font-size="9">All 32 threads execute same instruction → FULL efficiency</text>
+    <!-- 32 green lanes -->
+    <g fill="#3fb950">
+      <rect x="36" y="228" width="10" height="22" rx="1"/><rect x="48" y="228" width="10" height="22" rx="1"/><rect x="60" y="228" width="10" height="22" rx="1"/><rect x="72" y="228" width="10" height="22" rx="1"/><rect x="84" y="228" width="10" height="22" rx="1"/><rect x="96" y="228" width="10" height="22" rx="1"/><rect x="108" y="228" width="10" height="22" rx="1"/><rect x="120" y="228" width="10" height="22" rx="1"/>
+      <rect x="132" y="228" width="10" height="22" rx="1"/><rect x="144" y="228" width="10" height="22" rx="1"/><rect x="156" y="228" width="10" height="22" rx="1"/><rect x="168" y="228" width="10" height="22" rx="1"/><rect x="180" y="228" width="10" height="22" rx="1"/><rect x="192" y="228" width="10" height="22" rx="1"/><rect x="204" y="228" width="10" height="22" rx="1"/><rect x="216" y="228" width="10" height="22" rx="1"/>
+      <rect x="228" y="228" width="10" height="22" rx="1"/><rect x="240" y="228" width="10" height="22" rx="1"/><rect x="252" y="228" width="10" height="22" rx="1"/><rect x="264" y="228" width="10" height="22" rx="1"/><rect x="276" y="228" width="10" height="22" rx="1"/><rect x="288" y="228" width="10" height="22" rx="1"/><rect x="300" y="228" width="10" height="22" rx="1"/><rect x="312" y="228" width="10" height="22" rx="1"/>
+      <rect x="324" y="228" width="10" height="22" rx="1"/><rect x="336" y="228" width="10" height="22" rx="1"/><rect x="348" y="228" width="10" height="22" rx="1"/>
+    </g>
+    <!-- labels inside -->
+    <text x="200" y="244" text-anchor="middle" fill="#0d1117" font-size="8" font-weight="700">T0–T31 active</text>
+    <text x="210" y="272" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="700">Efficiency: 100%</text>
+    <text x="210" y="288" text-anchor="middle" fill="#8b949e" font-size="9">SIMT executes all 32 lanes in lockstep — ideal for GEMM</text>
+    <text x="210" y="302" text-anchor="middle" fill="#8b949e" font-size="9">1 instruction / warp / cycle</text>
+    <text x="210" y="316" text-anchor="middle" fill="#8b949e" font-size="8">Latency hidden by context-switching to another ready warp</text>
+
+    <!-- WARP B — divergence -->
+    <rect x="420" y="188" width="380" height="140" rx="6" fill="rgba(247,129,102,0.05)" stroke="#f78166" stroke-width="1.5"/>
+    <text x="610" y="206" text-anchor="middle" fill="#f78166" font-size="11" font-weight="700">WARP B — Divergence (if/else branch)</text>
+    <text x="610" y="220" text-anchor="middle" fill="#8b949e" font-size="9">16 threads: if-branch TRUE  |  16 threads: else-branch FALSE</text>
+    <!-- pass 1: TRUE branch active -->
+    <text x="430" y="238" fill="#8b949e" font-size="8">Pass 1  (if TRUE):</text>
+    <g fill="#3fb950">
+      <rect x="426" y="242" width="10" height="14" rx="1"/><rect x="438" y="242" width="10" height="14" rx="1"/><rect x="450" y="242" width="10" height="14" rx="1"/><rect x="462" y="242" width="10" height="14" rx="1"/><rect x="474" y="242" width="10" height="14" rx="1"/><rect x="486" y="242" width="10" height="14" rx="1"/><rect x="498" y="242" width="10" height="14" rx="1"/><rect x="510" y="242" width="10" height="14" rx="1"/><rect x="522" y="242" width="10" height="14" rx="1"/><rect x="534" y="242" width="10" height="14" rx="1"/><rect x="546" y="242" width="10" height="14" rx="1"/><rect x="558" y="242" width="10" height="14" rx="1"/><rect x="570" y="242" width="10" height="14" rx="1"/><rect x="582" y="242" width="10" height="14" rx="1"/><rect x="594" y="242" width="10" height="14" rx="1"/><rect x="606" y="242" width="10" height="14" rx="1"/>
+    </g>
+    <!-- pass 1: FALSE branch masked -->
+    <g fill="rgba(255,77,109,0.2)" stroke="#ff4d6d" stroke-width="0.5">
+      <rect x="620" y="242" width="10" height="14" rx="1"/><rect x="632" y="242" width="10" height="14" rx="1"/><rect x="644" y="242" width="10" height="14" rx="1"/><rect x="656" y="242" width="10" height="14" rx="1"/><rect x="668" y="242" width="10" height="14" rx="1"/><rect x="680" y="242" width="10" height="14" rx="1"/><rect x="692" y="242" width="10" height="14" rx="1"/><rect x="704" y="242" width="10" height="14" rx="1"/><rect x="716" y="242" width="10" height="14" rx="1"/><rect x="728" y="242" width="10" height="14" rx="1"/><rect x="740" y="242" width="10" height="14" rx="1"/><rect x="752" y="242" width="10" height="14" rx="1"/><rect x="764" y="242" width="10" height="14" rx="1"/><rect x="776" y="242" width="10" height="14" rx="1"/>
+    </g>
+    <!-- X marks on masked -->
+    <text x="625" y="252" fill="#ff4d6d" font-size="6">✕</text><text x="637" y="252" fill="#ff4d6d" font-size="6">✕</text><text x="649" y="252" fill="#ff4d6d" font-size="6">✕</text><text x="661" y="252" fill="#ff4d6d" font-size="6">✕</text><text x="673" y="252" fill="#ff4d6d" font-size="6">✕</text><text x="685" y="252" fill="#ff4d6d" font-size="6">✕</text><text x="697" y="252" fill="#ff4d6d" font-size="6">✕</text><text x="709" y="252" fill="#ff4d6d" font-size="6">✕</text>
+
+    <!-- pass 2 -->
+    <text x="430" y="272" fill="#8b949e" font-size="8">Pass 2  (if FALSE):</text>
+    <g fill="rgba(63,185,80,0.2)">
+      <rect x="426" y="276" width="10" height="14" rx="1"/><rect x="438" y="276" width="10" height="14" rx="1"/><rect x="450" y="276" width="10" height="14" rx="1"/><rect x="462" y="276" width="10" height="14" rx="1"/><rect x="474" y="276" width="10" height="14" rx="1"/><rect x="486" y="276" width="10" height="14" rx="1"/><rect x="498" y="276" width="10" height="14" rx="1"/><rect x="510" y="276" width="10" height="14" rx="1"/><rect x="522" y="276" width="10" height="14" rx="1"/><rect x="534" y="276" width="10" height="14" rx="1"/><rect x="546" y="276" width="10" height="14" rx="1"/><rect x="558" y="276" width="10" height="14" rx="1"/><rect x="570" y="276" width="10" height="14" rx="1"/><rect x="582" y="276" width="10" height="14" rx="1"/><rect x="594" y="276" width="10" height="14" rx="1"/><rect x="606" y="276" width="10" height="14" rx="1"/>
+    </g>
+    <text x="426" y="284" fill="#ff4d6d" font-size="5">✕</text><text x="438" y="284" fill="#ff4d6d" font-size="5">✕</text>
+    <g fill="#f78166">
+      <rect x="620" y="276" width="10" height="14" rx="1"/><rect x="632" y="276" width="10" height="14" rx="1"/><rect x="644" y="276" width="10" height="14" rx="1"/><rect x="656" y="276" width="10" height="14" rx="1"/><rect x="668" y="276" width="10" height="14" rx="1"/><rect x="680" y="276" width="10" height="14" rx="1"/><rect x="692" y="276" width="10" height="14" rx="1"/><rect x="704" y="276" width="10" height="14" rx="1"/><rect x="716" y="276" width="10" height="14" rx="1"/><rect x="728" y="276" width="10" height="14" rx="1"/><rect x="740" y="276" width="10" height="14" rx="1"/><rect x="752" y="276" width="10" height="14" rx="1"/><rect x="764" y="276" width="10" height="14" rx="1"/><rect x="776" y="276" width="10" height="14" rx="1"/>
+    </g>
+    <text x="610" y="302" text-anchor="middle" fill="#f78166" font-size="10" font-weight="700">2× slowdown from divergence</text>
+    <text x="610" y="316" text-anchor="middle" fill="#8b949e" font-size="9">Both passes serialize → 50% lane efficiency</text>
+
+    <!-- Occupancy bottom bar -->
+    <rect x="30" y="344" width="760" height="108" rx="6" fill="rgba(255,215,0,0.04)" stroke="#ffd700" stroke-width="1"/>
+    <text x="410" y="362" text-anchor="middle" fill="#ffd700" font-size="11" font-weight="700">OCCUPANCY  =  active_warps / max_warps_per_SM</text>
+    <text x="410" y="378" text-anchor="middle" fill="#8b949e" font-size="9">H100: max 64 warps / SM  →  target &gt; 75% occupancy (≥ 48 warps resident)</text>
+
+    <!-- limiters -->
+    <rect x="40" y="386" width="220" height="34" rx="4" fill="rgba(247,129,102,0.08)" stroke="#f78166" stroke-width="1"/>
+    <text x="150" y="400" text-anchor="middle" fill="#f78166" font-size="9" font-weight="700">Register Pressure</text>
+    <text x="150" y="413" text-anchor="middle" fill="#8b949e" font-size="8">Each SM has 65,536 registers. More regs/thread → fewer warps</text>
+
+    <rect x="300" y="386" width="220" height="34" rx="4" fill="rgba(57,208,216,0.08)" stroke="#39d0d8" stroke-width="1"/>
+    <text x="410" y="400" text-anchor="middle" fill="#39d0d8" font-size="9" font-weight="700">Shared Memory Pressure</text>
+    <text x="410" y="413" text-anchor="middle" fill="#8b949e" font-size="8">228 KB SMEM/SM. Large tiles → fewer blocks resident</text>
+
+    <rect x="560" y="386" width="220" height="34" rx="4" fill="rgba(188,140,255,0.08)" stroke="#bc8cff" stroke-width="1"/>
+    <text x="670" y="400" text-anchor="middle" fill="#bc8cff" font-size="9" font-weight="700">Block Size</text>
+    <text x="670" y="413" text-anchor="middle" fill="#8b949e" font-size="8">blockDim too small → not enough warps to fill SM schedulers</text>
+
+    <text x="410" y="440" text-anchor="middle" fill="#8b949e" font-size="8">Use CUDA Occupancy Calculator or ncu --set full to find the binding limiter per kernel</text>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 27 -->
+<div class="diagram-card" id="d27">
+  <div class="diagram-header">
+    <span class="diagram-num">27</span>
+    <span class="diagram-title">CUDA Thread Hierarchy — Grid → Block → Warp → Thread + Memory Spaces</span>
+  </div>
+  <svg viewBox="0 0 820 560" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="560" fill="#0d1117"/>
+
+    <!-- GRID -->
+    <rect x="20" y="20" width="500" height="320" rx="8" fill="rgba(88,166,255,0.03)" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="270" y="42" text-anchor="middle" fill="#58a6ff" font-size="12" font-weight="700">GRID  — gridDim = (4, 4, 1)</text>
+
+    <!-- 4x4 thread blocks -->
+    <!-- row 0 -->
+    <rect x="34" y="52" width="108" height="64" rx="4" fill="rgba(188,140,255,0.08)" stroke="#bc8cff" stroke-width="1"/>
+    <rect x="148" y="52" width="108" height="64" rx="4" fill="rgba(188,140,255,0.06)" stroke="#bc8cff" stroke-width="0.7"/>
+    <rect x="262" y="52" width="108" height="64" rx="4" fill="rgba(188,140,255,0.06)" stroke="#bc8cff" stroke-width="0.7"/>
+    <rect x="376" y="52" width="108" height="64" rx="4" fill="rgba(188,140,255,0.06)" stroke="#bc8cff" stroke-width="0.7"/>
+    <!-- row 1 -->
+    <rect x="34" y="122" width="108" height="64" rx="4" fill="rgba(188,140,255,0.06)" stroke="#bc8cff" stroke-width="0.7"/>
+    <rect x="148" y="122" width="108" height="64" rx="4" fill="rgba(188,140,255,0.06)" stroke="#bc8cff" stroke-width="0.7"/>
+    <rect x="262" y="122" width="108" height="64" rx="4" fill="rgba(188,140,255,0.06)" stroke="#bc8cff" stroke-width="0.7"/>
+    <rect x="376" y="122" width="108" height="64" rx="4" fill="rgba(188,140,255,0.06)" stroke="#bc8cff" stroke-width="0.7"/>
+    <!-- row 2 -->
+    <rect x="34" y="192" width="108" height="64" rx="4" fill="rgba(188,140,255,0.06)" stroke="#bc8cff" stroke-width="0.7"/>
+    <rect x="148" y="192" width="108" height="64" rx="4" fill="rgba(188,140,255,0.06)" stroke="#bc8cff" stroke-width="0.7"/>
+    <rect x="262" y="192" width="108" height="64" rx="4" fill="rgba(188,140,255,0.06)" stroke="#bc8cff" stroke-width="0.7"/>
+    <rect x="376" y="192" width="108" height="64" rx="4" fill="rgba(188,140,255,0.06)" stroke="#bc8cff" stroke-width="0.7"/>
+    <!-- row 3 -->
+    <rect x="34" y="262" width="108" height="64" rx="4" fill="rgba(188,140,255,0.06)" stroke="#bc8cff" stroke-width="0.7"/>
+    <rect x="148" y="262" width="108" height="64" rx="4" fill="rgba(188,140,255,0.06)" stroke="#bc8cff" stroke-width="0.7"/>
+    <rect x="262" y="262" width="108" height="64" rx="4" fill="rgba(188,140,255,0.06)" stroke="#bc8cff" stroke-width="0.7"/>
+    <rect x="376" y="262" width="108" height="64" rx="4" fill="rgba(188,140,255,0.06)" stroke="#bc8cff" stroke-width="0.7"/>
+
+    <!-- Expanded first block internals (highlight) -->
+    <text x="88" y="68" text-anchor="middle" fill="#bc8cff" font-size="8" font-weight="700">Block(0,0)</text>
+    <!-- 8x4 thread dots -->
+    <g fill="#3fb950">
+      <circle cx="44" cy="82" r="3"/><circle cx="54" cy="82" r="3"/><circle cx="64" cy="82" r="3"/><circle cx="74" cy="82" r="3"/><circle cx="84" cy="82" r="3"/><circle cx="94" cy="82" r="3"/><circle cx="104" cy="82" r="3"/><circle cx="114" cy="82" r="3"/>
+      <circle cx="44" cy="93" r="3"/><circle cx="54" cy="93" r="3"/><circle cx="64" cy="93" r="3"/><circle cx="74" cy="93" r="3"/><circle cx="84" cy="93" r="3"/><circle cx="94" cy="93" r="3"/><circle cx="104" cy="93" r="3"/><circle cx="114" cy="93" r="3"/>
+      <circle cx="44" cy="104" r="3"/><circle cx="54" cy="104" r="3"/><circle cx="64" cy="104" r="3"/><circle cx="74" cy="104" r="3"/><circle cx="84" cy="104" r="3"/><circle cx="94" cy="104" r="3"/><circle cx="104" cy="104" r="3"/><circle cx="114" cy="104" r="3"/>
+      <circle cx="44" cy="115" r="3"/><circle cx="54" cy="115" r="3"/><circle cx="64" cy="115" r="3"/><circle cx="74" cy="115" r="3"/><circle cx="84" cy="115" r="3"/><circle cx="94" cy="115" r="3"/><circle cx="104" cy="115" r="3"/>
+    </g>
+    <!-- highlight warp (row 0) in gold -->
+    <rect x="38" y="77" width="85" height="12" rx="2" fill="rgba(255,215,0,0.2)" stroke="#ffd700" stroke-width="1"/>
+
+    <!-- Other blocks label -->
+    <text x="200" y="90" text-anchor="middle" fill="#8b949e" font-size="8">Block(1,0)</text>
+    <text x="314" y="90" text-anchor="middle" fill="#8b949e" font-size="8">Block(2,0)</text>
+    <text x="428" y="90" text-anchor="middle" fill="#8b949e" font-size="8">Block(3,0)</text>
+
+    <!-- blockDim label -->
+    <text x="270" y="342" text-anchor="middle" fill="#8b949e" font-size="9">blockDim = (32, 1, 1)  |  Each block: 32 threads = 1 warp</text>
+    <text x="270" y="356" text-anchor="middle" fill="#8b949e" font-size="9">Total threads = 4 × 4 × 32 = 512  (for this kernel launch)</text>
+
+    <!-- Warp call-out -->
+    <rect x="20" y="370" width="500" height="36" rx="5" fill="rgba(255,215,0,0.08)" stroke="#ffd700" stroke-width="1.5"/>
+    <text x="270" y="384" text-anchor="middle" fill="#ffd700" font-size="10" font-weight="700">WARP  =  32 consecutive threads within a block  (highlighted gold above)</text>
+    <text x="270" y="398" text-anchor="middle" fill="#8b949e" font-size="9">All 32 execute in SIMT lockstep. threadIdx.x / 32 = warp index within block.</text>
+
+    <!-- Shared memory bubble -->
+    <ellipse cx="88" cy="142" rx="42" ry="14" fill="rgba(57,208,216,0.12)" stroke="#39d0d8" stroke-width="1.5" stroke-dasharray="4,2"/>
+    <text x="88" y="146" text-anchor="middle" fill="#39d0d8" font-size="8">SMEM</text>
+    <line x1="88" y1="122" x2="88" y2="128" stroke="#39d0d8" stroke-width="1" stroke-dasharray="2,2"/>
+    <text x="34" y="166" fill="#39d0d8" font-size="7">228 KB/SM — shared within block</text>
+
+    <!-- ── RIGHT SIDE: Memory space legend ── -->
+    <rect x="540" y="20" width="260" height="520" rx="8" fill="rgba(22,27,34,0.9)" stroke="#21262d" stroke-width="1.5"/>
+    <text x="670" y="44" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">MEMORY SPACES</text>
+
+    <!-- Latency scale bar -->
+    <line x1="760" y1="56" x2="760" y2="510" stroke="#21262d" stroke-width="1"/>
+    <text x="762" y="60" fill="#8b949e" font-size="8">fast</text>
+    <text x="762" y="510" fill="#8b949e" font-size="8">slow</text>
+
+    <!-- Register -->
+    <rect x="550" y="66" width="200" height="52" rx="5" fill="rgba(255,215,0,0.1)" stroke="#ffd700" stroke-width="1.5"/>
+    <text x="650" y="83" text-anchor="middle" fill="#ffd700" font-size="10" font-weight="700">Register File</text>
+    <text x="650" y="97" text-anchor="middle" fill="#8b949e" font-size="8">Private per thread · 65,536 / SM</text>
+    <text x="650" y="109" text-anchor="middle" fill="#ffd700" font-size="9" font-weight="700">~1 cycle latency</text>
+    <rect x="755" y="82" width="8" height="30" rx="1" fill="#ffd700" opacity="0.5"/>
+
+    <!-- Shared -->
+    <rect x="550" y="128" width="200" height="52" rx="5" fill="rgba(57,208,216,0.1)" stroke="#39d0d8" stroke-width="1.5"/>
+    <text x="650" y="145" text-anchor="middle" fill="#39d0d8" font-size="10" font-weight="700">Shared Memory (SMEM)</text>
+    <text x="650" y="159" text-anchor="middle" fill="#8b949e" font-size="8">Shared within block · 228 KB / SM</text>
+    <text x="650" y="171" text-anchor="middle" fill="#39d0d8" font-size="9" font-weight="700">~30 cycle latency</text>
+    <rect x="755" y="144" width="8" height="30" rx="1" fill="#39d0d8" opacity="0.5"/>
+
+    <!-- L2 Cache -->
+    <rect x="550" y="190" width="200" height="52" rx="5" fill="rgba(63,185,80,0.08)" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="650" y="207" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="700">L2 Cache</text>
+    <text x="650" y="221" text-anchor="middle" fill="#8b949e" font-size="8">GPU-wide · 50 MB (H100)</text>
+    <text x="650" y="233" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">~200 cycle latency</text>
+    <rect x="755" y="206" width="8" height="30" rx="1" fill="#3fb950" opacity="0.5"/>
+
+    <!-- HBM -->
+    <rect x="550" y="252" width="200" height="52" rx="5" fill="rgba(88,166,255,0.08)" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="650" y="269" text-anchor="middle" fill="#58a6ff" font-size="10" font-weight="700">HBM (Global Memory)</text>
+    <text x="650" y="283" text-anchor="middle" fill="#8b949e" font-size="8">All threads · 80 GB · 3.35 TB/s</text>
+    <text x="650" y="295" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">~700 cycle latency</text>
+    <rect x="755" y="268" width="8" height="30" rx="1" fill="#58a6ff" opacity="0.5"/>
+
+    <!-- Host DRAM -->
+    <rect x="550" y="314" width="200" height="52" rx="5" fill="rgba(247,129,102,0.08)" stroke="#f78166" stroke-width="1.5"/>
+    <text x="650" y="331" text-anchor="middle" fill="#f78166" font-size="10" font-weight="700">Host DRAM (via PCIe)</text>
+    <text x="650" y="345" text-anchor="middle" fill="#8b949e" font-size="8">CPU-side · DDR5 · 64-128 GB/s</text>
+    <text x="650" y="357" text-anchor="middle" fill="#f78166" font-size="9" font-weight="700">~50,000 cycle latency</text>
+    <rect x="755" y="330" width="8" height="30" rx="1" fill="#f78166" opacity="0.5"/>
+
+    <!-- Key takeaway box -->
+    <rect x="550" y="380" width="200" height="148" rx="5" fill="rgba(22,27,34,0.8)" stroke="#21262d" stroke-width="1"/>
+    <text x="650" y="398" text-anchor="middle" fill="#e6edf3" font-size="9" font-weight="700">MEMORY RULES OF THUMB</text>
+    <text x="558" y="416" fill="#ffd700" font-size="8">• Stage data in SMEM to reuse</text>
+    <text x="558" y="432" fill="#ffd700" font-size="8">• Coalesce HBM access (128B lines)</text>
+    <text x="558" y="448" fill="#ffd700" font-size="8">• Avoid bank conflicts in SMEM</text>
+    <text x="558" y="464" fill="#ffd700" font-size="8">• Minimize H↔D transfers</text>
+    <text x="558" y="480" fill="#8b949e" font-size="8">Reg spill → local mem (DRAM)</text>
+    <text x="558" y="494" fill="#8b949e" font-size="8">→ kills performance instantly</text>
+    <text x="558" y="510" fill="#8b949e" font-size="8">Check with ncu --set full</text>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 28 -->
+<div class="diagram-card" id="d28">
+  <div class="diagram-header">
+    <span class="diagram-num">28</span>
+    <span class="diagram-title">torch.compile Pipeline — TorchDynamo → AOTAutograd → TorchInductor → Triton → SASS</span>
+  </div>
+  <svg viewBox="0 0 820 500" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="500" fill="#0d1117"/>
+
+    <defs>
+      <marker id="arr4" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z" fill="#58a6ff"/>
+      </marker>
+      <marker id="arr4g" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z" fill="#3fb950"/>
+      </marker>
+    </defs>
+
+    <!-- Top labels -->
+    <text x="410" y="24" text-anchor="middle" fill="#8b949e" font-size="10">torch.compile wraps model once → optimized native GPU instructions on subsequent runs</text>
+
+    <!-- Stage boxes with connecting arrows -->
+    <!-- STAGE 1: TorchDynamo -->
+    <rect x="20" y="36" width="148" height="130" rx="7" fill="rgba(88,166,255,0.08)" stroke="#58a6ff" stroke-width="1.5"/>
+    <rect x="20" y="36" width="148" height="26" rx="7" fill="rgba(88,166,255,0.2)"/>
+    <rect x="20" y="50" width="148" height="12" fill="rgba(88,166,255,0.2)"/>
+    <text x="94" y="54" text-anchor="middle" fill="#e6edf3" font-size="10" font-weight="700">① TorchDynamo</text>
+    <text x="94" y="72" text-anchor="middle" fill="#8b949e" font-size="8">Python bytecode</text>
+    <text x="94" y="84" text-anchor="middle" fill="#8b949e" font-size="8">interception</text>
+    <text x="94" y="100" text-anchor="middle" fill="#58a6ff" font-size="8" font-weight="600">Input:</text>
+    <text x="94" y="112" text-anchor="middle" fill="#8b949e" font-size="8">PyTorch eager model</text>
+    <text x="94" y="126" text-anchor="middle" fill="#58a6ff" font-size="8" font-weight="600">Output:</text>
+    <text x="94" y="138" text-anchor="middle" fill="#8b949e" font-size="8">FX Graph</text>
+    <text x="94" y="154" text-anchor="middle" fill="#8b949e" font-size="7">Handles dynamic shapes</text>
+
+    <!-- arrow 1→2 -->
+    <line x1="168" y1="101" x2="192" y2="101" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arr4)"/>
+
+    <!-- STAGE 2: AOTAutograd -->
+    <rect x="192" y="36" width="148" height="130" rx="7" fill="rgba(57,208,216,0.08)" stroke="#39d0d8" stroke-width="1.5"/>
+    <rect x="192" y="36" width="148" height="26" rx="7" fill="rgba(57,208,216,0.2)"/>
+    <rect x="192" y="50" width="148" height="12" fill="rgba(57,208,216,0.2)"/>
+    <text x="266" y="54" text-anchor="middle" fill="#e6edf3" font-size="10" font-weight="700">② AOTAutograd</text>
+    <text x="266" y="72" text-anchor="middle" fill="#8b949e" font-size="8">Ahead-of-time autodiff</text>
+    <text x="266" y="84" text-anchor="middle" fill="#8b949e" font-size="8">traces backward pass</text>
+    <text x="266" y="100" text-anchor="middle" fill="#39d0d8" font-size="8" font-weight="600">Input:</text>
+    <text x="266" y="112" text-anchor="middle" fill="#8b949e" font-size="8">FX Graph (fwd only)</text>
+    <text x="266" y="126" text-anchor="middle" fill="#39d0d8" font-size="8" font-weight="600">Output:</text>
+    <text x="266" y="138" text-anchor="middle" fill="#8b949e" font-size="8">Joint fwd+bwd graph</text>
+    <text x="266" y="154" text-anchor="middle" fill="#8b949e" font-size="7">No Python overhead</text>
+
+    <!-- arrow 2→3 -->
+    <line x1="340" y1="101" x2="364" y2="101" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arr4)"/>
+
+    <!-- STAGE 3: TorchInductor -->
+    <rect x="364" y="36" width="148" height="130" rx="7" fill="rgba(188,140,255,0.08)" stroke="#bc8cff" stroke-width="1.5"/>
+    <rect x="364" y="36" width="148" height="26" rx="7" fill="rgba(188,140,255,0.2)"/>
+    <rect x="364" y="50" width="148" height="12" fill="rgba(188,140,255,0.2)"/>
+    <text x="438" y="54" text-anchor="middle" fill="#e6edf3" font-size="10" font-weight="700">③ TorchInductor</text>
+    <text x="438" y="70" text-anchor="middle" fill="#bc8cff" font-size="8">Graph optimization:</text>
+    <text x="438" y="82" text-anchor="middle" fill="#8b949e" font-size="8">• Dead code elimination</text>
+    <text x="438" y="94" text-anchor="middle" fill="#8b949e" font-size="8">• Constant folding</text>
+    <text x="438" y="106" text-anchor="middle" fill="#8b949e" font-size="8">• Operator fusion</text>
+    <text x="438" y="118" text-anchor="middle" fill="#8b949e" font-size="8">• Layout optimization</text>
+    <text x="438" y="138" text-anchor="middle" fill="#bc8cff" font-size="8" font-weight="600">Output: fused op graph</text>
+    <text x="438" y="154" text-anchor="middle" fill="#8b949e" font-size="7">Also emits C++ / OpenMP (CPU)</text>
+
+    <!-- arrow 3→4 -->
+    <line x1="512" y1="101" x2="536" y2="101" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arr4)"/>
+
+    <!-- STAGE 4: Triton Codegen -->
+    <rect x="536" y="36" width="148" height="130" rx="7" fill="rgba(255,215,0,0.06)" stroke="#ffd700" stroke-width="1.5"/>
+    <rect x="536" y="36" width="148" height="26" rx="7" fill="rgba(255,215,0,0.15)"/>
+    <rect x="536" y="50" width="148" height="12" fill="rgba(255,215,0,0.15)"/>
+    <text x="610" y="54" text-anchor="middle" fill="#e6edf3" font-size="10" font-weight="700">④ Triton Codegen</text>
+    <text x="610" y="72" text-anchor="middle" fill="#8b949e" font-size="8">Fused kernels written</text>
+    <text x="610" y="84" text-anchor="middle" fill="#8b949e" font-size="8">in Triton DSL</text>
+    <text x="610" y="100" text-anchor="middle" fill="#ffd700" font-size="8" font-weight="600">Output:</text>
+    <text x="610" y="112" text-anchor="middle" fill="#8b949e" font-size="8">.py Triton kernels</text>
+    <text x="610" y="128" text-anchor="middle" fill="#8b949e" font-size="8">Block-level tiling,</text>
+    <text x="610" y="140" text-anchor="middle" fill="#8b949e" font-size="8">SMEM management</text>
+    <text x="610" y="154" text-anchor="middle" fill="#8b949e" font-size="7">auto-handled by Triton</text>
+
+    <!-- STAGE 5: Triton → PTX → SASS -->
+    <rect x="20" y="200" width="764" height="90" rx="7" fill="rgba(63,185,80,0.05)" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="410" y="220" text-anchor="middle" fill="#3fb950" font-size="11" font-weight="700">⑤ Triton → LLVM IR → PTX → SASS  (native GPU binary)</text>
+    <!-- pipeline horizontal -->
+    <rect x="36" y="228" width="130" height="30" rx="4" fill="rgba(57,208,216,0.12)" stroke="#39d0d8" stroke-width="1"/>
+    <text x="101" y="247" text-anchor="middle" fill="#39d0d8" font-size="9" font-weight="600">Triton (.py)</text>
+    <line x1="166" y1="243" x2="184" y2="243" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr4g)"/>
+    <rect x="184" y="228" width="130" height="30" rx="4" fill="rgba(188,140,255,0.12)" stroke="#bc8cff" stroke-width="1"/>
+    <text x="249" y="247" text-anchor="middle" fill="#bc8cff" font-size="9" font-weight="600">LLVM IR</text>
+    <line x1="314" y1="243" x2="332" y2="243" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr4g)"/>
+    <rect x="332" y="228" width="130" height="30" rx="4" fill="rgba(255,215,0,0.12)" stroke="#ffd700" stroke-width="1"/>
+    <text x="397" y="247" text-anchor="middle" fill="#ffd700" font-size="9" font-weight="600">PTX  (virtual ISA)</text>
+    <line x1="462" y1="243" x2="480" y2="243" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr4g)"/>
+    <rect x="480" y="228" width="130" height="30" rx="4" fill="rgba(63,185,80,0.2)" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="545" y="247" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="600">SASS (hardware ISA)</text>
+    <text x="410" y="278" text-anchor="middle" fill="#8b949e" font-size="9">First run: JIT compilation (slow). Subsequent runs: cached kernel binary. Disable with TORCHINDUCTOR_CACHE_DIR.</text>
+
+    <!-- Vertical arrow from stage 4 down to stage 5 -->
+    <line x1="610" y1="166" x2="610" y2="196" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arr4)"/>
+    <line x1="438" y1="166" x2="438" y2="196" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arr4)"/>
+
+    <!-- Performance numbers -->
+    <rect x="20" y="312" width="780" height="172" rx="7" fill="rgba(22,27,34,0.6)" stroke="#21262d" stroke-width="1"/>
+    <text x="410" y="332" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">PERFORMANCE IMPACT</text>
+
+    <!-- bar chart -->
+    <!-- bar 1: baseline -->
+    <rect x="50" y="380" width="60" height="30" rx="3" fill="rgba(139,148,158,0.3)" stroke="#8b949e" stroke-width="1"/>
+    <text x="80" y="422" text-anchor="middle" fill="#8b949e" font-size="9">No compile</text>
+    <text x="80" y="435" text-anchor="middle" fill="#8b949e" font-size="10" font-weight="700">1×</text>
+    <text x="80" y="373" text-anchor="middle" fill="#8b949e" font-size="8">baseline</text>
+
+    <!-- bar 2: torch.compile -->
+    <rect x="180" y="342" width="120" height="68" rx="3" fill="rgba(63,185,80,0.2)" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="240" y="422" text-anchor="middle" fill="#3fb950" font-size="9">torch.compile</text>
+    <text x="240" y="435" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="700">1.5 – 2.5×</text>
+    <text x="240" y="335" text-anchor="middle" fill="#3fb950" font-size="8">typical speedup</text>
+
+    <!-- bar 3: compile + custom triton -->
+    <rect x="370" y="318" width="180" height="92" rx="3" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="2"/>
+    <text x="460" y="422" text-anchor="middle" fill="#58a6ff" font-size="9">compile + custom Triton</text>
+    <text x="460" y="435" text-anchor="middle" fill="#58a6ff" font-size="10" font-weight="700">2 – 4×</text>
+    <text x="460" y="311" text-anchor="middle" fill="#58a6ff" font-size="8">best case</text>
+
+    <!-- bar 4: FlashAttention2 custom -->
+    <rect x="620" y="348" width="160" height="62" rx="3" fill="rgba(255,215,0,0.15)" stroke="#ffd700" stroke-width="1.5"/>
+    <text x="700" y="422" text-anchor="middle" fill="#ffd700" font-size="9">FA2 + compile</text>
+    <text x="700" y="435" text-anchor="middle" fill="#ffd700" font-size="10" font-weight="700">3 – 5×</text>
+    <text x="700" y="341" text-anchor="middle" fill="#ffd700" font-size="8">attn-specific</text>
+
+    <text x="410" y="468" text-anchor="middle" fill="#8b949e" font-size="8">Benchmarks vs. eager PyTorch on single H100 · LLaMA-3 7B forward pass · BF16 · batch=32</text>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 29 -->
+<div class="diagram-card" id="d29">
+  <div class="diagram-header">
+    <span class="diagram-num">29</span>
+    <span class="diagram-title">Training Step Timeline — CUDA Stream Overlap (Compute + NCCL + Data Pipeline)</span>
+  </div>
+  <svg viewBox="0 0 820 440" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="440" fill="#0d1117"/>
+
+    <!-- Axis labels -->
+    <text x="410" y="24" text-anchor="middle" fill="#8b949e" font-size="10">One complete DDP training step  (time flows left → right)</text>
+
+    <!-- Y axis labels -->
+    <text x="16" y="88"  text-anchor="middle" fill="#8b949e" font-size="9" transform="rotate(-90,16,88)">STREAM 1</text>
+    <text x="16" y="174" text-anchor="middle" fill="#8b949e" font-size="9" transform="rotate(-90,16,174)">STREAM 2</text>
+    <text x="16" y="258" text-anchor="middle" fill="#8b949e" font-size="9" transform="rotate(-90,16,258)">STREAM 3</text>
+
+    <!-- Time axis -->
+    <line x1="35" y1="310" x2="800" y2="310" stroke="#21262d" stroke-width="1"/>
+    <text x="35"  y="325" text-anchor="start"  fill="#8b949e" font-size="8">t=0</text>
+    <text x="800" y="325" text-anchor="end"   fill="#8b949e" font-size="8">t=step_time</text>
+
+    <!-- % markers (rough proportions: H2D=5%, Fwd=35%, Bwd=45%, Opt=5%, rest overlap) -->
+    <!-- Total width = 765px (35→800) -->
+    <!-- H2D: 35→73 (5%), Fwd: 73→340 (35%), Bwd: 340→644 (40%), Opt: 644→720 (10%), end: 720→800 -->
+
+    <!-- ─── STREAM 1: Compute ─── -->
+    <rect x="34" y="45" width="200" height="30" rx="4" fill="rgba(139,148,158,0.25)" stroke="#8b949e" stroke-width="1"/>
+    <text x="134" y="65" text-anchor="middle" fill="#e6edf3" font-size="9">Data Prefetch H2D</text>
+
+    <rect x="234" y="45" width="270" height="30" rx="4" fill="rgba(88,166,255,0.3)" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="369" y="65" text-anchor="middle" fill="#e6edf3" font-size="10" font-weight="700">Forward Pass</text>
+
+    <rect x="504" y="45" width="205" height="30" rx="4" fill="rgba(188,140,255,0.3)" stroke="#bc8cff" stroke-width="1.5"/>
+    <text x="606" y="65" text-anchor="middle" fill="#e6edf3" font-size="10" font-weight="700">Backward Pass</text>
+
+    <rect x="709" y="45" width="86" height="30" rx="4" fill="rgba(255,215,0,0.25)" stroke="#ffd700" stroke-width="1.5"/>
+    <text x="752" y="65" text-anchor="middle" fill="#e6edf3" font-size="9" font-weight="700">Optimizer</text>
+
+    <!-- STREAM 1 label (critical path annotation) -->
+    <text x="34" y="40" fill="#f78166" font-size="8" font-weight="600">← critical path</text>
+    <line x1="34" y1="42" x2="795" y2="42" stroke="#f78166" stroke-width="0.7" stroke-dasharray="3,3" opacity="0.6"/>
+
+    <!-- ─── STREAM 2: NCCL AllReduce ─── -->
+    <!-- Overlap with backward: bucket-by-bucket -->
+    <!-- 4 gradient buckets, each ~50px wide, starting during backward -->
+    <text x="34" y="120" fill="#8b949e" font-size="8">NCCL AllReduce  (4 buckets, overlapped with backward)</text>
+    <rect x="504" y="130" width="48" height="28" rx="3" fill="rgba(63,185,80,0.2)" stroke="#3fb950" stroke-width="1"/>
+    <text x="528" y="148" text-anchor="middle" fill="#3fb950" font-size="7">bucket 1</text>
+    <rect x="558" y="130" width="48" height="28" rx="3" fill="rgba(63,185,80,0.2)" stroke="#3fb950" stroke-width="1"/>
+    <text x="582" y="148" text-anchor="middle" fill="#3fb950" font-size="7">bucket 2</text>
+    <rect x="612" y="130" width="48" height="28" rx="3" fill="rgba(63,185,80,0.2)" stroke="#3fb950" stroke-width="1"/>
+    <text x="636" y="148" text-anchor="middle" fill="#3fb950" font-size="7">bucket 3</text>
+    <rect x="666" y="130" width="48" height="28" rx="3" fill="rgba(63,185,80,0.2)" stroke="#3fb950" stroke-width="1"/>
+    <text x="690" y="148" text-anchor="middle" fill="#3fb950" font-size="7">bucket 4</text>
+
+    <!-- dotted line from bucket to backward -->
+    <line x1="504" y1="130" x2="504" y2="75" stroke="#3fb950" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.7"/>
+    <line x1="714" y1="130" x2="714" y2="75" stroke="#3fb950" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.7"/>
+
+    <!-- "no overlap" scenario ghost -->
+    <rect x="709" y="130" width="86" height="28" rx="3" fill="rgba(247,129,102,0.08)" stroke="#f78166" stroke-width="1" stroke-dasharray="4,2"/>
+    <text x="752" y="148" text-anchor="middle" fill="#f78166" font-size="7">AllReduce exposed</text>
+    <text x="752" y="155" text-anchor="middle" fill="#f78166" font-size="7">(if not overlapped)</text>
+
+    <text x="500" y="172" fill="#8b949e" font-size="8">Each bucket: ReduceScatter → AllGather (ring / tree)   |   bucket_size=25MB default</text>
+
+    <!-- ─── STREAM 3: Data Pipeline ─── -->
+    <text x="34" y="204" fill="#8b949e" font-size="8">Async data pipeline  (cuDNN DataLoader, CPU→GPU, pinned memory)</text>
+    <rect x="34" y="214" width="760" height="28" rx="3" fill="rgba(57,208,216,0.1)" stroke="#39d0d8" stroke-width="1"/>
+    <text x="414" y="233" text-anchor="middle" fill="#39d0d8" font-size="9">Next batch CPU→GPU prefetch  (overlaps entire current step)</text>
+
+    <!-- ─── Annotation bars ─── -->
+    <rect x="34" y="340" width="760" height="88" rx="6" fill="rgba(22,27,34,0.7)" stroke="#21262d" stroke-width="1"/>
+
+    <!-- fwd annotation -->
+    <rect x="234" y="310" width="2" height="30" fill="#58a6ff" opacity="0.5"/>
+    <rect x="504" y="310" width="2" height="30" fill="#bc8cff" opacity="0.5"/>
+    <rect x="709" y="310" width="2" height="30" fill="#ffd700" opacity="0.5"/>
+    <rect x="795" y="310" width="2" height="30" fill="#8b949e" opacity="0.5"/>
+
+    <text x="54"  y="358" fill="#8b949e" font-size="9" font-weight="600">H2D prefetch</text>
+    <text x="54"  y="371" fill="#e6edf3" font-size="9">~5% step time</text>
+    <text x="54"  y="384" fill="#8b949e" font-size="8">async, hidden</text>
+
+    <text x="260"  y="358" fill="#58a6ff" font-size="9" font-weight="600">Forward pass</text>
+    <text x="260"  y="371" fill="#e6edf3" font-size="9">~35% step time</text>
+    <text x="260"  y="384" fill="#8b949e" font-size="8">compute-bound</text>
+
+    <text x="510"  y="358" fill="#bc8cff" font-size="9" font-weight="600">Backward pass</text>
+    <text x="510"  y="371" fill="#e6edf3" font-size="9">~45% step time</text>
+    <text x="510"  y="384" fill="#8b949e" font-size="8">~2× fwd cost (rule)</text>
+
+    <text x="640"  y="358" fill="#ffd700" font-size="9" font-weight="600">AllReduce</text>
+    <text x="640"  y="371" fill="#3fb950" font-size="9">~10% if overlapped</text>
+    <text x="640"  y="384" fill="#f78166" font-size="8">~25% if exposed</text>
+
+    <text x="716" y="358" fill="#ffd700" font-size="9" font-weight="600">Optimizer</text>
+    <text x="716" y="371" fill="#e6edf3" font-size="9">~5% step time</text>
+    <text x="716" y="384" fill="#8b949e" font-size="8">AdamW, bf16</text>
+
+    <text x="410" y="415" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">Overlap saves ~10–15% step time  |  Set DDP bucket_cap_mb=25  |  nccl_socket_ifname=eth0</text>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 30 -->
+<div class="diagram-card" id="d30">
+  <div class="diagram-header">
+    <span class="diagram-num">30</span>
+    <span class="diagram-title">5-Step GPU Performance Profiling Decision Tree</span>
+  </div>
+  <svg viewBox="0 0 820 680" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="680" fill="#0d1117"/>
+
+    <defs>
+      <marker id="arr5" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#8b949e"/>
+      </marker>
+      <marker id="arr5y" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#f78166"/>
+      </marker>
+      <marker id="arr5g" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#3fb950"/>
+      </marker>
+    </defs>
+
+    <!-- START box -->
+    <rect x="270" y="12" width="280" height="38" rx="6" fill="rgba(88,166,255,0.15)" stroke="#58a6ff" stroke-width="2"/>
+    <text x="410" y="27" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">START: GPU performance unsatisfactory</text>
+    <text x="410" y="42" text-anchor="middle" fill="#8b949e" font-size="9">MFU below target / tokens/sec too low / step time too high</text>
+
+    <line x1="410" y1="50" x2="410" y2="68" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arr5)"/>
+
+    <!-- STEP 1 diamond -->
+    <polygon points="410,68 520,100 410,132 300,100" fill="rgba(255,215,0,0.12)" stroke="#ffd700" stroke-width="2"/>
+    <text x="410" y="95" text-anchor="middle" fill="#ffd700" font-size="10" font-weight="700">STEP 1</text>
+    <text x="410" y="110" text-anchor="middle" fill="#e6edf3" font-size="10">MFU &lt; 40%?</text>
+    <!-- NO branch right -->
+    <line x1="520" y1="100" x2="620" y2="100" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr5g)"/>
+    <text x="568" y="93" text-anchor="middle" fill="#3fb950" font-size="9">NO</text>
+    <rect x="620" y="74" width="186" height="52" rx="5" fill="rgba(63,185,80,0.1)" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="713" y="91" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">✓ You're healthy!</text>
+    <text x="713" y="105" text-anchor="middle" fill="#8b949e" font-size="8">&gt;40% MFU is good.</text>
+    <text x="713" y="117" text-anchor="middle" fill="#8b949e" font-size="8">Fine-tune batch size &amp; seq len.</text>
+    <!-- YES branch down -->
+    <line x1="410" y1="132" x2="410" y2="152" stroke="#f78166" stroke-width="1.5" marker-end="url(#arr5y)"/>
+    <text x="420" y="145" fill="#f78166" font-size="9">YES</text>
+
+    <!-- STEP 2 diamond -->
+    <polygon points="410,152 520,184 410,216 300,184" fill="rgba(255,215,0,0.12)" stroke="#ffd700" stroke-width="2"/>
+    <text x="410" y="179" text-anchor="middle" fill="#ffd700" font-size="10" font-weight="700">STEP 2</text>
+    <text x="410" y="194" text-anchor="middle" fill="#e6edf3" font-size="10">SM Utilization &lt; 60%?</text>
+    <!-- NO down -->
+    <line x1="410" y1="216" x2="410" y2="236" stroke="#f78166" stroke-width="1.5" marker-end="url(#arr5y)"/>
+    <text x="420" y="230" fill="#f78166" font-size="9">YES → step 3</text>
+    <!-- YES two sub-branches -->
+    <line x1="300" y1="184" x2="200" y2="184" stroke="#3fb950" stroke-width="1.5"/>
+    <line x1="200" y1="184" x2="200" y2="218" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr5g)"/>
+    <text x="250" y="177" text-anchor="middle" fill="#3fb950" font-size="9">YES</text>
+
+    <!-- Sub-branch 1: AllReduce -->
+    <rect x="30" y="218" width="210" height="64" rx="5" fill="rgba(57,208,216,0.08)" stroke="#39d0d8" stroke-width="1"/>
+    <text x="135" y="234" text-anchor="middle" fill="#39d0d8" font-size="9" font-weight="700">AllReduce &gt; 15% step?</text>
+    <text x="135" y="248" text-anchor="middle" fill="#f78166" font-size="8" font-weight="600">→ Communication bottleneck</text>
+    <text x="135" y="261" text-anchor="middle" fill="#8b949e" font-size="7">Fix: check NCCL config, ↑ bucket size,</text>
+    <text x="135" y="274" text-anchor="middle" fill="#8b949e" font-size="7">keep TP within NVLink domain</text>
+
+    <!-- Sub-branch 2: Launch overhead -->
+    <line x1="200" y1="282" x2="200" y2="302" stroke="#39d0d8" stroke-width="1.5" marker-end="url(#arr5)"/>
+    <rect x="30" y="302" width="210" height="52" rx="5" fill="rgba(247,129,102,0.08)" stroke="#f78166" stroke-width="1"/>
+    <text x="135" y="318" text-anchor="middle" fill="#f78166" font-size="9" font-weight="700">Low SM, no comm issue</text>
+    <text x="135" y="332" text-anchor="middle" fill="#8b949e" font-size="8">→ Launch overhead bound</text>
+    <text x="135" y="344" text-anchor="middle" fill="#8b949e" font-size="7">Fix: CUDA Graphs, fuse ops, reduce kernel count</text>
+
+    <!-- STEP 3 diamond -->
+    <polygon points="410,236 520,268 410,300 300,268" fill="rgba(255,215,0,0.12)" stroke="#ffd700" stroke-width="2"/>
+    <text x="410" y="263" text-anchor="middle" fill="#ffd700" font-size="10" font-weight="700">STEP 3</text>
+    <text x="410" y="278" text-anchor="middle" fill="#e6edf3" font-size="9">HBM BW &gt; 90% peak?</text>
+
+    <line x1="410" y1="300" x2="410" y2="320" stroke="#f78166" stroke-width="1.5" marker-end="url(#arr5y)"/>
+    <text x="420" y="314" fill="#f78166" font-size="9">NO → step 4</text>
+
+    <!-- YES right branch -->
+    <line x1="520" y1="268" x2="620" y2="268" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr5g)"/>
+    <text x="568" y="261" text-anchor="middle" fill="#3fb950" font-size="9">YES</text>
+    <rect x="620" y="242" width="186" height="68" rx="5" fill="rgba(88,166,255,0.08)" stroke="#58a6ff" stroke-width="1"/>
+    <text x="713" y="258" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">Memory Bound</text>
+    <text x="713" y="272" text-anchor="middle" fill="#8b949e" font-size="8">Expected for decode stage</text>
+    <text x="713" y="284" text-anchor="middle" fill="#8b949e" font-size="7">Fix: quantization (FP8/INT4),</text>
+    <text x="713" y="296" text-anchor="middle" fill="#8b949e" font-size="7">↑ batch size, check coalescence</text>
+
+    <!-- STEP 4 diamond -->
+    <polygon points="410,320 520,352 410,384 300,352" fill="rgba(255,215,0,0.12)" stroke="#ffd700" stroke-width="2"/>
+    <text x="410" y="347" text-anchor="middle" fill="#ffd700" font-size="10" font-weight="700">STEP 4</text>
+    <text x="410" y="362" text-anchor="middle" fill="#e6edf3" font-size="9">Tensor Core Util &lt; 50%?</text>
+
+    <line x1="410" y1="384" x2="410" y2="404" stroke="#f78166" stroke-width="1.5" marker-end="url(#arr5y)"/>
+    <text x="420" y="398" fill="#f78166" font-size="9">NO → step 5</text>
+
+    <!-- YES right branch -->
+    <line x1="520" y1="352" x2="620" y2="352" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr5g)"/>
+    <text x="568" y="345" text-anchor="middle" fill="#3fb950" font-size="9">YES</text>
+    <rect x="620" y="320" width="186" height="76" rx="5" fill="rgba(63,185,80,0.08)" stroke="#3fb950" stroke-width="1"/>
+    <text x="713" y="336" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">Compute Inefficiency</text>
+    <text x="713" y="350" text-anchor="middle" fill="#8b949e" font-size="7">Fix: matrix dims multiples of 16/64</text>
+    <text x="713" y="362" text-anchor="middle" fill="#8b949e" font-size="7">Verify FP8/BF16 path is active</text>
+    <text x="713" y="374" text-anchor="middle" fill="#8b949e" font-size="7">Check GEMM tile sizes in ncu</text>
+    <text x="713" y="386" text-anchor="middle" fill="#8b949e" font-size="7">Use --set roofline in Nsight Compute</text>
+
+    <!-- STEP 5 diamond -->
+    <polygon points="410,404 520,436 410,468 300,436" fill="rgba(255,215,0,0.12)" stroke="#ffd700" stroke-width="2"/>
+    <text x="410" y="431" text-anchor="middle" fill="#ffd700" font-size="10" font-weight="700">STEP 5</text>
+    <text x="410" y="446" text-anchor="middle" fill="#e6edf3" font-size="9">I/O stall in Nsight?</text>
+
+    <!-- YES right -->
+    <line x1="520" y1="436" x2="620" y2="436" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr5g)"/>
+    <text x="568" y="429" text-anchor="middle" fill="#3fb950" font-size="9">YES</text>
+    <rect x="620" y="408" width="186" height="60" rx="5" fill="rgba(255,215,0,0.08)" stroke="#ffd700" stroke-width="1"/>
+    <text x="713" y="424" text-anchor="middle" fill="#ffd700" font-size="9" font-weight="700">I/O Bound</text>
+    <text x="713" y="437" text-anchor="middle" fill="#8b949e" font-size="7">Fix: ↑ DataLoader workers,</text>
+    <text x="713" y="449" text-anchor="middle" fill="#8b949e" font-size="7">pre-tokenize dataset,</text>
+    <text x="713" y="461" text-anchor="middle" fill="#8b949e" font-size="7">use local NVMe cache</text>
+
+    <!-- NO down to final -->
+    <line x1="410" y1="468" x2="410" y2="488" stroke="#f78166" stroke-width="1.5" marker-end="url(#arr5y)"/>
+    <text x="420" y="482" fill="#f78166" font-size="9">NO</text>
+
+    <!-- Final terminal box -->
+    <rect x="210" y="488" width="400" height="90" rx="6" fill="rgba(247,129,102,0.1)" stroke="#f78166" stroke-width="2"/>
+    <text x="410" y="506" text-anchor="middle" fill="#f78166" font-size="10" font-weight="700">Profile at Kernel Level — Nsight Compute</text>
+    <text x="410" y="522" text-anchor="middle" fill="#8b949e" font-size="9">ncu --set full --target-processes all python train.py</text>
+    <text x="410" y="538" text-anchor="middle" fill="#8b949e" font-size="8">Look for: register spills  ·  SMEM bank conflicts</text>
+    <text x="410" y="552" text-anchor="middle" fill="#8b949e" font-size="8">unrolling opportunities  ·  instruction mix anomalies</text>
+    <text x="410" y="566" text-anchor="middle" fill="#8b949e" font-size="7">Also check: ncu --query-metrics | grep sm__throughput</text>
+
+    <!-- Legend -->
+    <rect x="30" y="594" width="480" height="72" rx="5" fill="rgba(22,27,34,0.7)" stroke="#21262d" stroke-width="1"/>
+    <text x="270" y="612" text-anchor="middle" fill="#e6edf3" font-size="9" font-weight="700">DECISION NODE LEGEND</text>
+    <polygon points="52,640 70,626 88,640 70,654" fill="rgba(255,215,0,0.12)" stroke="#ffd700" stroke-width="1.5"/>
+    <text x="108" y="642" fill="#8b949e" font-size="9">Decision / question</text>
+    <rect x="200" y="628" width="80" height="26" rx="4" fill="rgba(63,185,80,0.12)" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="240" y="645" text-anchor="middle" fill="#3fb950" font-size="9">Terminal — fix</text>
+    <rect x="320" y="628" width="80" height="26" rx="4" fill="rgba(88,166,255,0.12)" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="360" y="645" text-anchor="middle" fill="#58a6ff" font-size="9">Start / info</text>
+    <text x="430" y="642" fill="#f78166" font-size="9">Red = YES branch</text>
+    <text x="430" y="656" fill="#3fb950" font-size="9">Green = NO / healthy</text>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 31 -->
+<div class="diagram-card" id="d31">
+  <div class="diagram-header">
+    <span class="diagram-num">31</span>
+    <span class="diagram-title">MoE Routing Architecture — Token Dispatch, Expert Parallelism &amp; All-to-All</span>
+  </div>
+  <svg viewBox="0 0 820 580" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="580" fill="#0d1117"/>
+
+    <defs>
+      <marker id="arr6" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#8b949e"/>
+      </marker>
+      <marker id="arr6o" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#f78166"/>
+      </marker>
+      <marker id="arr6b" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#58a6ff"/>
+      </marker>
+    </defs>
+
+    <!-- INPUT -->
+    <rect x="270" y="12" width="280" height="36" rx="5" fill="rgba(88,166,255,0.1)" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="410" y="27" text-anchor="middle" fill="#58a6ff" font-size="11" font-weight="700">Token Embeddings</text>
+    <text x="410" y="42" text-anchor="middle" fill="#8b949e" font-size="9">[B×T, D]   enters FFN MoE layer</text>
+
+    <line x1="410" y1="48" x2="410" y2="68" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arr6)"/>
+
+    <!-- ROUTER -->
+    <rect x="240" y="68" width="340" height="66" rx="6" fill="rgba(255,215,0,0.07)" stroke="#ffd700" stroke-width="1.5"/>
+    <text x="410" y="86" text-anchor="middle" fill="#ffd700" font-size="11" font-weight="700">ROUTER</text>
+    <text x="410" y="100" text-anchor="middle" fill="#8b949e" font-size="9">Linear [D → num_experts]  →  Softmax  →  Top-K selection (K=2)</text>
+    <text x="410" y="114" text-anchor="middle" fill="#8b949e" font-size="9">Token-to-expert assignment matrix  |  Load-balance auxiliary loss</text>
+    <rect x="614" y="82" width="138" height="24" rx="3" fill="rgba(247,129,102,0.1)" stroke="#f78166" stroke-width="1"/>
+    <text x="683" y="98" text-anchor="middle" fill="#f78166" font-size="8">⚠ load imbalance → auxiliary loss</text>
+
+    <line x1="410" y1="134" x2="410" y2="154" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arr6)"/>
+
+    <!-- DISPATCH label -->
+    <text x="410" y="150" text-anchor="middle" fill="#f78166" font-size="10" font-weight="700">DISPATCH  —  All-to-All (tokens fan out to expert GPUs)</text>
+
+    <!-- GPU boxes with experts -->
+    <!-- GPU 0 -->
+    <rect x="20" y="164" width="170" height="120" rx="6" fill="rgba(88,166,255,0.06)" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="105" y="180" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">GPU 0</text>
+    <rect x="30"  y="186" width="64" height="42" rx="4" fill="rgba(63,185,80,0.15)" stroke="#3fb950" stroke-width="1"/>
+    <text x="62"  y="204" text-anchor="middle" fill="#3fb950" font-size="8" font-weight="700">Expert 0</text>
+    <text x="62"  y="216" text-anchor="middle" fill="#8b949e" font-size="7">FFN (D→4D→D)</text>
+    <text x="62"  y="226" text-anchor="middle" fill="#8b949e" font-size="7">active tokens: ←</text>
+    <rect x="100" y="186" width="64" height="42" rx="4" fill="rgba(63,185,80,0.15)" stroke="#3fb950" stroke-width="1"/>
+    <text x="132" y="204" text-anchor="middle" fill="#3fb950" font-size="8" font-weight="700">Expert 1</text>
+    <text x="132" y="216" text-anchor="middle" fill="#8b949e" font-size="7">FFN (D→4D→D)</text>
+    <text x="132" y="226" text-anchor="middle" fill="#8b949e" font-size="7">active tokens: ←</text>
+    <text x="105" y="268" text-anchor="middle" fill="#8b949e" font-size="7">NVLink ↔ GPU 1  (fast)</text>
+    <text x="105" y="280" text-anchor="middle" fill="#8b949e" font-size="7">IB ↔ GPU 2,3  (slower)</text>
+
+    <!-- GPU 1 -->
+    <rect x="210" y="164" width="170" height="120" rx="6" fill="rgba(88,166,255,0.06)" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="295" y="180" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">GPU 1</text>
+    <rect x="220" y="186" width="64" height="42" rx="4" fill="rgba(57,208,216,0.15)" stroke="#39d0d8" stroke-width="1"/>
+    <text x="252" y="204" text-anchor="middle" fill="#39d0d8" font-size="8" font-weight="700">Expert 2</text>
+    <text x="252" y="216" text-anchor="middle" fill="#8b949e" font-size="7">FFN</text>
+    <rect x="290" y="186" width="64" height="42" rx="4" fill="rgba(57,208,216,0.15)" stroke="#39d0d8" stroke-width="1"/>
+    <text x="322" y="204" text-anchor="middle" fill="#39d0d8" font-size="8" font-weight="700">Expert 3</text>
+    <text x="322" y="216" text-anchor="middle" fill="#8b949e" font-size="7">FFN</text>
+
+    <!-- GPU 2 -->
+    <rect x="400" y="164" width="170" height="120" rx="6" fill="rgba(88,166,255,0.06)" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="485" y="180" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">GPU 2</text>
+    <rect x="410" y="186" width="64" height="42" rx="4" fill="rgba(188,140,255,0.15)" stroke="#bc8cff" stroke-width="1"/>
+    <text x="442" y="204" text-anchor="middle" fill="#bc8cff" font-size="8" font-weight="700">Expert 4</text>
+    <text x="442" y="216" text-anchor="middle" fill="#8b949e" font-size="7">FFN</text>
+    <rect x="480" y="186" width="64" height="42" rx="4" fill="rgba(188,140,255,0.15)" stroke="#bc8cff" stroke-width="1"/>
+    <text x="512" y="204" text-anchor="middle" fill="#bc8cff" font-size="8" font-weight="700">Expert 5</text>
+    <text x="512" y="216" text-anchor="middle" fill="#8b949e" font-size="7">FFN</text>
+
+    <!-- GPU 3 -->
+    <rect x="590" y="164" width="170" height="120" rx="6" fill="rgba(88,166,255,0.06)" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="675" y="180" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">GPU 3</text>
+    <rect x="600" y="186" width="64" height="42" rx="4" fill="rgba(255,215,0,0.12)" stroke="#ffd700" stroke-width="1"/>
+    <text x="632" y="204" text-anchor="middle" fill="#ffd700" font-size="8" font-weight="700">Expert 6</text>
+    <text x="632" y="216" text-anchor="middle" fill="#8b949e" font-size="7">FFN</text>
+    <rect x="670" y="186" width="64" height="42" rx="4" fill="rgba(255,215,0,0.12)" stroke="#ffd700" stroke-width="1"/>
+    <text x="702" y="204" text-anchor="middle" fill="#ffd700" font-size="8" font-weight="700">Expert 7</text>
+    <text x="702" y="216" text-anchor="middle" fill="#8b949e" font-size="7">FFN</text>
+
+    <!-- All-to-All arrows (fan from router) -->
+    <line x1="360" y1="154" x2="105" y2="164" stroke="#f78166" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr6o)"/>
+    <line x1="390" y1="154" x2="295" y2="164" stroke="#f78166" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr6o)"/>
+    <line x1="430" y1="154" x2="485" y2="164" stroke="#f78166" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr6o)"/>
+    <line x1="460" y1="154" x2="675" y2="164" stroke="#f78166" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr6o)"/>
+
+    <!-- Bandwidth annotation -->
+    <rect x="140" y="302" width="190" height="28" rx="3" fill="rgba(57,208,216,0.08)" stroke="#39d0d8" stroke-width="1"/>
+    <text x="235" y="318" text-anchor="middle" fill="#39d0d8" font-size="8">Within node: NVLink 900 GB/s</text>
+    <rect x="490" y="302" width="190" height="28" rx="3" fill="rgba(247,129,102,0.08)" stroke="#f78166" stroke-width="1"/>
+    <text x="585" y="318" text-anchor="middle" fill="#f78166" font-size="8">Cross-node: InfiniBand 400 Gb/s</text>
+
+    <!-- Combine arrow back up -->
+    <text x="410" y="348" text-anchor="middle" fill="#58a6ff" font-size="10" font-weight="700">COMBINE  —  All-to-All Return + Weighted Sum</text>
+    <line x1="105" y1="338" x2="370" y2="358" stroke="#58a6ff" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr6b)"/>
+    <line x1="295" y1="338" x2="390" y2="358" stroke="#58a6ff" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr6b)"/>
+    <line x1="485" y1="338" x2="430" y2="358" stroke="#58a6ff" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr6b)"/>
+    <line x1="675" y1="338" x2="450" y2="358" stroke="#58a6ff" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr6b)"/>
+
+    <rect x="250" y="358" width="320" height="36" rx="5" fill="rgba(88,166,255,0.1)" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="410" y="373" text-anchor="middle" fill="#58a6ff" font-size="10" font-weight="700">Weighted combine: output = Σ router_score_k × expert_k_output</text>
+    <text x="410" y="388" text-anchor="middle" fill="#8b949e" font-size="9">[B×T, D]  →  next sub-layer  (shape preserved)</text>
+
+    <!-- DeepSeek numbers -->
+    <rect x="20" y="412" width="780" height="148" rx="6" fill="rgba(22,27,34,0.7)" stroke="#21262d" stroke-width="1"/>
+    <text x="410" y="430" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">DeepSeek-V3 MoE Numbers</text>
+
+    <rect x="30" y="440" width="180" height="108" rx="5" fill="rgba(88,166,255,0.06)" stroke="#58a6ff" stroke-width="1"/>
+    <text x="120" y="456" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">Architecture</text>
+    <text x="120" y="472" text-anchor="middle" fill="#8b949e" font-size="9">Total params: 671B</text>
+    <text x="120" y="486" text-anchor="middle" fill="#8b949e" font-size="9">Experts: 256 total</text>
+    <text x="120" y="500" text-anchor="middle" fill="#8b949e" font-size="9">K = 8 (top-8 active)</text>
+    <text x="120" y="514" text-anchor="middle" fill="#8b949e" font-size="9">+ 1 shared expert</text>
+
+    <rect x="220" y="440" width="180" height="108" rx="5" fill="rgba(63,185,80,0.06)" stroke="#3fb950" stroke-width="1"/>
+    <text x="310" y="456" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">Active Parameters</text>
+    <text x="310" y="472" text-anchor="middle" fill="#8b949e" font-size="9">Active/token: ~37B</text>
+    <text x="310" y="486" text-anchor="middle" fill="#8b949e" font-size="9">~5.5% of params active</text>
+    <text x="310" y="500" text-anchor="middle" fill="#8b949e" font-size="9">Compute = 37B dense</text>
+    <text x="310" y="514" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="600">Quality ≈ 671B dense</text>
+
+    <rect x="410" y="440" width="180" height="108" rx="5" fill="rgba(255,215,0,0.06)" stroke="#ffd700" stroke-width="1"/>
+    <text x="500" y="456" text-anchor="middle" fill="#ffd700" font-size="9" font-weight="700">Training Cost</text>
+    <text x="500" y="472" text-anchor="middle" fill="#8b949e" font-size="9">~2.788M H800 GPU-hours</text>
+    <text x="500" y="486" text-anchor="middle" fill="#8b949e" font-size="9">~$5.5M estimated</text>
+    <text x="500" y="500" text-anchor="middle" fill="#8b949e" font-size="9">vs GPT-4: ~$100M+</text>
+    <text x="500" y="514" text-anchor="middle" fill="#ffd700" font-size="9" font-weight="600">20× cost reduction via MoE</text>
+
+    <rect x="600" y="440" width="190" height="108" rx="5" fill="rgba(247,129,102,0.06)" stroke="#f78166" stroke-width="1"/>
+    <text x="695" y="456" text-anchor="middle" fill="#f78166" font-size="9" font-weight="700">All-to-All Overhead</text>
+    <text x="695" y="472" text-anchor="middle" fill="#8b949e" font-size="9">2× AllToAll per MoE layer</text>
+    <text x="695" y="486" text-anchor="middle" fill="#8b949e" font-size="9">cross-node → IB bottleneck</text>
+    <text x="695" y="500" text-anchor="middle" fill="#8b949e" font-size="9">Mitigation: EP within node</text>
+    <text x="695" y="514" text-anchor="middle" fill="#f78166" font-size="9" font-weight="600">Expert parallelism = critical</text>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 32 -->
+<div class="diagram-card" id="d32">
+  <div class="diagram-header">
+    <span class="diagram-num">32</span>
+    <span class="diagram-title">Fat-Tree Network Topology — 3-Tier, 64-GPU Cluster, Rail-Optimized</span>
+  </div>
+  <svg viewBox="0 0 820 600" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="600" fill="#0d1117"/>
+
+    <defs>
+      <marker id="arr7" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+        <path d="M0,0 L5,2.5 L0,5 Z" fill="#21262d"/>
+      </marker>
+    </defs>
+
+    <!-- ── TIER 3: Core Switches ── -->
+    <text x="410" y="26" text-anchor="middle" fill="#8b949e" font-size="9" font-weight="600">TIER 3 — CORE SWITCHES  (full bisection bandwidth)</text>
+    <rect x="140" y="36" width="80" height="32" rx="5" fill="rgba(247,129,102,0.2)" stroke="#f78166" stroke-width="2"/>
+    <text x="180" y="51" text-anchor="middle" fill="#f78166" font-size="9" font-weight="700">Core SW 0</text>
+    <text x="180" y="63" text-anchor="middle" fill="#8b949e" font-size="7">NDR 32-port</text>
+    <rect x="300" y="36" width="80" height="32" rx="5" fill="rgba(247,129,102,0.2)" stroke="#f78166" stroke-width="2"/>
+    <text x="340" y="51" text-anchor="middle" fill="#f78166" font-size="9" font-weight="700">Core SW 1</text>
+    <text x="340" y="63" text-anchor="middle" fill="#8b949e" font-size="7">NDR 32-port</text>
+    <rect x="460" y="36" width="80" height="32" rx="5" fill="rgba(247,129,102,0.2)" stroke="#f78166" stroke-width="2"/>
+    <text x="500" y="51" text-anchor="middle" fill="#f78166" font-size="9" font-weight="700">Core SW 2</text>
+    <text x="500" y="63" text-anchor="middle" fill="#8b949e" font-size="7">NDR 32-port</text>
+    <rect x="620" y="36" width="80" height="32" rx="5" fill="rgba(247,129,102,0.2)" stroke="#f78166" stroke-width="2"/>
+    <text x="660" y="51" text-anchor="middle" fill="#f78166" font-size="9" font-weight="700">Core SW 3</text>
+    <text x="660" y="63" text-anchor="middle" fill="#8b949e" font-size="7">NDR 32-port</text>
+
+    <!-- ── TIER 2: Aggregation Switches ── -->
+    <text x="410" y="112" text-anchor="middle" fill="#8b949e" font-size="9" font-weight="600">TIER 2 — AGGREGATION SWITCHES</text>
+
+    <!-- 4 agg switches shown (representing 8 total) -->
+    <rect x="40"  y="120" width="86" height="30" rx="4" fill="rgba(57,208,216,0.15)" stroke="#39d0d8" stroke-width="1.5"/>
+    <text x="83"  y="139" text-anchor="middle" fill="#39d0d8" font-size="8" font-weight="600">Agg SW 0</text>
+    <rect x="200" y="120" width="86" height="30" rx="4" fill="rgba(57,208,216,0.15)" stroke="#39d0d8" stroke-width="1.5"/>
+    <text x="243" y="139" text-anchor="middle" fill="#39d0d8" font-size="8" font-weight="600">Agg SW 1</text>
+    <rect x="360" y="120" width="86" height="30" rx="4" fill="rgba(57,208,216,0.15)" stroke="#39d0d8" stroke-width="1.5"/>
+    <text x="403" y="139" text-anchor="middle" fill="#39d0d8" font-size="8" font-weight="600">Agg SW 2</text>
+    <rect x="520" y="120" width="86" height="30" rx="4" fill="rgba(57,208,216,0.15)" stroke="#39d0d8" stroke-width="1.5"/>
+    <text x="563" y="139" text-anchor="middle" fill="#39d0d8" font-size="8" font-weight="600">Agg SW 3</text>
+    <!-- ghost agg switches -->
+    <rect x="680" y="120" width="120" height="30" rx="4" fill="rgba(57,208,216,0.06)" stroke="#39d0d8" stroke-width="0.7" stroke-dasharray="3,2"/>
+    <text x="740" y="139" text-anchor="middle" fill="#8b949e" font-size="8">Agg SW 4–7 (not shown)</text>
+
+    <!-- Uplinks: Agg → Core -->
+    <!-- Agg0 → Core0 and Core1 -->
+    <line x1="83"  y1="120" x2="180" y2="68" stroke="#39d0d8" stroke-width="0.9" opacity="0.6"/>
+    <line x1="95"  y1="120" x2="340" y2="68" stroke="#39d0d8" stroke-width="0.9" opacity="0.6"/>
+    <!-- Agg1 → Core0 and Core1 -->
+    <line x1="230" y1="120" x2="190" y2="68" stroke="#39d0d8" stroke-width="0.9" opacity="0.6"/>
+    <line x1="250" y1="120" x2="350" y2="68" stroke="#39d0d8" stroke-width="0.9" opacity="0.6"/>
+    <!-- Agg2 → Core2 and Core3 -->
+    <line x1="390" y1="120" x2="490" y2="68" stroke="#39d0d8" stroke-width="0.9" opacity="0.6"/>
+    <line x1="410" y1="120" x2="650" y2="68" stroke="#39d0d8" stroke-width="0.9" opacity="0.6"/>
+    <!-- Agg3 → Core2 and Core3 -->
+    <line x1="545" y1="120" x2="505" y2="68" stroke="#39d0d8" stroke-width="0.9" opacity="0.6"/>
+    <line x1="565" y1="120" x2="655" y2="68" stroke="#39d0d8" stroke-width="0.9" opacity="0.6"/>
+
+    <!-- ── TIER 1: Edge/ToR Switches ── -->
+    <text x="410" y="192" text-anchor="middle" fill="#8b949e" font-size="9" font-weight="600">TIER 1 — EDGE / ToR SWITCHES  (Top of Rack)</text>
+
+    <!-- 8 ToR switches (representing 16) -->
+    <rect x="20"  y="200" width="68" height="26" rx="3" fill="rgba(188,140,255,0.15)" stroke="#bc8cff" stroke-width="1"/>
+    <text x="54"  y="217" text-anchor="middle" fill="#bc8cff" font-size="8">ToR 0</text>
+    <rect x="106" y="200" width="68" height="26" rx="3" fill="rgba(188,140,255,0.15)" stroke="#bc8cff" stroke-width="1"/>
+    <text x="140" y="217" text-anchor="middle" fill="#bc8cff" font-size="8">ToR 1</text>
+    <rect x="192" y="200" width="68" height="26" rx="3" fill="rgba(188,140,255,0.15)" stroke="#bc8cff" stroke-width="1"/>
+    <text x="226" y="217" text-anchor="middle" fill="#bc8cff" font-size="8">ToR 2</text>
+    <rect x="278" y="200" width="68" height="26" rx="3" fill="rgba(188,140,255,0.15)" stroke="#bc8cff" stroke-width="1"/>
+    <text x="312" y="217" text-anchor="middle" fill="#bc8cff" font-size="8">ToR 3</text>
+    <rect x="364" y="200" width="68" height="26" rx="3" fill="rgba(188,140,255,0.15)" stroke="#bc8cff" stroke-width="1"/>
+    <text x="398" y="217" text-anchor="middle" fill="#bc8cff" font-size="8">ToR 4</text>
+    <rect x="450" y="200" width="68" height="26" rx="3" fill="rgba(188,140,255,0.15)" stroke="#bc8cff" stroke-width="1"/>
+    <text x="484" y="217" text-anchor="middle" fill="#bc8cff" font-size="8">ToR 5</text>
+    <rect x="536" y="200" width="68" height="26" rx="3" fill="rgba(188,140,255,0.15)" stroke="#bc8cff" stroke-width="1"/>
+    <text x="570" y="217" text-anchor="middle" fill="#bc8cff" font-size="8">ToR 6</text>
+    <rect x="622" y="200" width="68" height="26" rx="3" fill="rgba(188,140,255,0.15)" stroke="#bc8cff" stroke-width="1"/>
+    <text x="656" y="217" text-anchor="middle" fill="#bc8cff" font-size="8">ToR 7</text>
+    <rect x="708" y="200" width="90" height="26" rx="3" fill="rgba(188,140,255,0.06)" stroke="#bc8cff" stroke-width="0.6" stroke-dasharray="3,2"/>
+    <text x="753" y="217" text-anchor="middle" fill="#8b949e" font-size="8">ToR 8–15 …</text>
+
+    <!-- Downlinks: ToR → Agg -->
+    <line x1="54"  y1="200" x2="65"  y2="150" stroke="#bc8cff" stroke-width="0.8" opacity="0.5"/>
+    <line x1="140" y1="200" x2="95"  y2="150" stroke="#bc8cff" stroke-width="0.8" opacity="0.5"/>
+    <line x1="226" y1="200" x2="220" y2="150" stroke="#bc8cff" stroke-width="0.8" opacity="0.5"/>
+    <line x1="312" y1="200" x2="256" y2="150" stroke="#bc8cff" stroke-width="0.8" opacity="0.5"/>
+    <line x1="398" y1="200" x2="375" y2="150" stroke="#bc8cff" stroke-width="0.8" opacity="0.5"/>
+    <line x1="484" y1="200" x2="440" y2="150" stroke="#bc8cff" stroke-width="0.8" opacity="0.5"/>
+    <line x1="570" y1="200" x2="545" y2="150" stroke="#bc8cff" stroke-width="0.8" opacity="0.5"/>
+    <line x1="656" y1="200" x2="590" y2="150" stroke="#bc8cff" stroke-width="0.8" opacity="0.5"/>
+
+    <!-- ── GPU SERVERS ── -->
+    <text x="410" y="272" text-anchor="middle" fill="#8b949e" font-size="9" font-weight="600">GPU SERVERS  (4 GPUs each  →  8 servers shown, 64 GPU total)</text>
+
+    <!-- 8 server boxes each with 4 GPU squares -->
+    <g id="servers">
+      <!-- Server 0 (ToR0) — NVLink bubble -->
+      <rect x="14"  y="280" width="80" height="68" rx="4" fill="rgba(63,185,80,0.08)" stroke="#3fb950" stroke-width="1.5"/>
+      <text x="54"  y="294" text-anchor="middle" fill="#3fb950" font-size="7" font-weight="700">SRV 0</text>
+      <rect x="18" y="298" width="16" height="16" rx="2" fill="rgba(63,185,80,0.3)" stroke="#3fb950"/><text x="26" y="310" text-anchor="middle" fill="#3fb950" font-size="6">G0</text>
+      <rect x="38" y="298" width="16" height="16" rx="2" fill="rgba(63,185,80,0.3)" stroke="#3fb950"/><text x="46" y="310" text-anchor="middle" fill="#3fb950" font-size="6">G1</text>
+      <rect x="58" y="298" width="16" height="16" rx="2" fill="rgba(63,185,80,0.3)" stroke="#3fb950"/><text x="66" y="310" text-anchor="middle" fill="#3fb950" font-size="6">G2</text>
+      <rect x="78" y="298" width="12" height="16" rx="2" fill="rgba(63,185,80,0.3)" stroke="#3fb950"/><text x="84" y="310" text-anchor="middle" fill="#3fb950" font-size="6">G3</text>
+      <text x="54" y="332" text-anchor="middle" fill="#ffd700" font-size="6">NVLink 900GB/s</text>
+      <!-- NVLink bubble -->
+      <ellipse cx="54" cy="338" rx="38" ry="8" fill="rgba(255,215,0,0.08)" stroke="#ffd700" stroke-width="0.8" stroke-dasharray="2,2"/>
+
+      <!-- Server 1 -->
+      <rect x="100" y="280" width="80" height="68" rx="4" fill="rgba(88,166,255,0.07)" stroke="#58a6ff" stroke-width="1"/>
+      <text x="140" y="294" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="700">SRV 1</text>
+      <rect x="104" y="298" width="16" height="16" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff"/><text x="112" y="310" text-anchor="middle" fill="#58a6ff" font-size="6">G4</text>
+      <rect x="124" y="298" width="16" height="16" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff"/><text x="132" y="310" text-anchor="middle" fill="#58a6ff" font-size="6">G5</text>
+      <rect x="144" y="298" width="16" height="16" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff"/><text x="152" y="310" text-anchor="middle" fill="#58a6ff" font-size="6">G6</text>
+      <rect x="164" y="298" width="12" height="16" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff"/><text x="170" y="310" text-anchor="middle" fill="#58a6ff" font-size="6">G7</text>
+
+      <!-- Server 2 -->
+      <rect x="186" y="280" width="80" height="68" rx="4" fill="rgba(88,166,255,0.07)" stroke="#58a6ff" stroke-width="1"/>
+      <text x="226" y="294" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="700">SRV 2</text>
+      <rect x="190" y="298" width="16" height="16" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff"/><text x="198" y="310" text-anchor="middle" fill="#58a6ff" font-size="6">G8</text>
+      <rect x="210" y="298" width="16" height="16" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff"/><text x="218" y="310" text-anchor="middle" fill="#58a6ff" font-size="6">G9</text>
+      <rect x="230" y="298" width="16" height="16" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff"/><text x="238" y="310" text-anchor="middle" fill="#58a6ff" font-size="6">G10</text>
+      <rect x="250" y="298" width="12" height="16" rx="2" fill="rgba(88,166,255,0.25)" stroke="#58a6ff"/><text x="256" y="310" text-anchor="middle" fill="#58a6ff" font-size="6">G11</text>
+
+      <!-- Servers 3–7 simplified -->
+      <rect x="272" y="280" width="80" height="68" rx="4" fill="rgba(88,166,255,0.07)" stroke="#58a6ff" stroke-width="1"/>
+      <text x="312" y="314" text-anchor="middle" fill="#58a6ff" font-size="7">SRV 3 (G12-15)</text>
+      <rect x="358" y="280" width="80" height="68" rx="4" fill="rgba(88,166,255,0.07)" stroke="#58a6ff" stroke-width="1"/>
+      <text x="398" y="314" text-anchor="middle" fill="#58a6ff" font-size="7">SRV 4 (G16-19)</text>
+      <rect x="444" y="280" width="80" height="68" rx="4" fill="rgba(88,166,255,0.07)" stroke="#58a6ff" stroke-width="1"/>
+      <text x="484" y="314" text-anchor="middle" fill="#58a6ff" font-size="7">SRV 5 (G20-23)</text>
+      <rect x="530" y="280" width="80" height="68" rx="4" fill="rgba(88,166,255,0.07)" stroke="#58a6ff" stroke-width="1"/>
+      <text x="570" y="314" text-anchor="middle" fill="#58a6ff" font-size="7">SRV 6 (G24-27)</text>
+      <rect x="616" y="280" width="80" height="68" rx="4" fill="rgba(88,166,255,0.07)" stroke="#58a6ff" stroke-width="1"/>
+      <text x="656" y="314" text-anchor="middle" fill="#58a6ff" font-size="7">SRV 7 (G28-31)</text>
+      <rect x="702" y="280" width="100" height="68" rx="4" fill="rgba(88,166,255,0.03)" stroke="#21262d" stroke-width="0.7" stroke-dasharray="3,2"/>
+      <text x="752" y="308" text-anchor="middle" fill="#8b949e" font-size="7">SRV 8–15</text>
+      <text x="752" y="322" text-anchor="middle" fill="#8b949e" font-size="7">G32–G63 …</text>
+    </g>
+
+    <!-- Server → ToR links -->
+    <line x1="54"  y1="280" x2="54"  y2="226" stroke="#8b949e" stroke-width="0.8" opacity="0.4"/>
+    <line x1="140" y1="280" x2="108" y2="226" stroke="#8b949e" stroke-width="0.8" opacity="0.4"/>
+    <line x1="226" y1="280" x2="195" y2="226" stroke="#8b949e" stroke-width="0.8" opacity="0.4"/>
+    <line x1="312" y1="280" x2="280" y2="226" stroke="#8b949e" stroke-width="0.8" opacity="0.4"/>
+    <line x1="398" y1="280" x2="367" y2="226" stroke="#8b949e" stroke-width="0.8" opacity="0.4"/>
+    <line x1="484" y1="280" x2="453" y2="226" stroke="#8b949e" stroke-width="0.8" opacity="0.4"/>
+    <line x1="570" y1="280" x2="539" y2="226" stroke="#8b949e" stroke-width="0.8" opacity="0.4"/>
+    <line x1="656" y1="280" x2="625" y2="226" stroke="#8b949e" stroke-width="0.8" opacity="0.4"/>
+
+    <!-- ── Annotations panel ── -->
+    <rect x="14" y="372" width="795" height="214" rx="6" fill="rgba(22,27,34,0.7)" stroke="#21262d" stroke-width="1"/>
+    <text x="410" y="390" text-anchor="middle" fill="#e6edf3" font-size="10" font-weight="700">FAT-TREE PROPERTIES &amp; DESIGN RULES</text>
+
+    <!-- 4 annotation boxes -->
+    <rect x="24"  y="398" width="186" height="176" rx="4" fill="rgba(88,166,255,0.05)" stroke="#21262d" stroke-width="1"/>
+    <text x="117" y="414" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">Bisection BW</text>
+    <text x="117" y="428" text-anchor="middle" fill="#8b949e" font-size="8">= N/2 × link_BW</text>
+    <text x="117" y="442" text-anchor="middle" fill="#8b949e" font-size="8">N=64, link=400Gb/s NDR</text>
+    <text x="117" y="456" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="600">= 12.8 Tb/s bisection</text>
+    <text x="117" y="472" text-anchor="middle" fill="#8b949e" font-size="8">Full-bisection = 1:1 ratio</text>
+    <text x="117" y="486" text-anchor="middle" fill="#8b949e" font-size="8">2:1 oversubscription at agg</text>
+    <text x="117" y="500" text-anchor="middle" fill="#8b949e" font-size="8">is common + cost-effective</text>
+    <text x="117" y="516" text-anchor="middle" fill="#8b949e" font-size="7">Budget 1:1 for training,</text>
+    <text x="117" y="528" text-anchor="middle" fill="#8b949e" font-size="7">2:1 ok for inference</text>
+    <text x="117" y="542" text-anchor="middle" fill="#8b949e" font-size="7">4:1 edge for cold storage</text>
+    <text x="117" y="556" text-anchor="middle" fill="#8b949e" font-size="7">cluster or eval nodes</text>
+
+    <rect x="218" y="398" width="186" height="176" rx="4" fill="rgba(57,208,216,0.05)" stroke="#21262d" stroke-width="1"/>
+    <text x="311" y="414" text-anchor="middle" fill="#39d0d8" font-size="9" font-weight="700">Rail Optimization</text>
+    <text x="311" y="430" text-anchor="middle" fill="#8b949e" font-size="8">GPU i on SRV A always</text>
+    <text x="311" y="444" text-anchor="middle" fill="#8b949e" font-size="8">connects to same ToR as</text>
+    <text x="311" y="458" text-anchor="middle" fill="#8b949e" font-size="8">GPU i on SRV B</text>
+    <text x="311" y="476" text-anchor="middle" fill="#39d0d8" font-size="8" font-weight="600">→ TP traffic stays intra-rail</text>
+    <text x="311" y="492" text-anchor="middle" fill="#8b949e" font-size="7">Reduces cross-rail hops</text>
+    <text x="311" y="506" text-anchor="middle" fill="#8b949e" font-size="7">for TP collective traffic</text>
+    <text x="311" y="522" text-anchor="middle" fill="#8b949e" font-size="7">PP &amp; DP can cross rails</text>
+    <text x="311" y="536" text-anchor="middle" fill="#8b949e" font-size="7">at ToR → Agg → Core</text>
+    <text x="311" y="552" text-anchor="middle" fill="#ffd700" font-size="7">⚡ Used by Meta, NVIDIA</text>
+
+    <rect x="412" y="398" width="186" height="176" rx="4" fill="rgba(255,215,0,0.05)" stroke="#21262d" stroke-width="1"/>
+    <text x="505" y="414" text-anchor="middle" fill="#ffd700" font-size="9" font-weight="700">NVLink Domain</text>
+    <text x="505" y="430" text-anchor="middle" fill="#8b949e" font-size="8">8 GPUs / server connected</text>
+    <text x="505" y="444" text-anchor="middle" fill="#8b949e" font-size="8">via NVSwitch fabric</text>
+    <text x="505" y="460" text-anchor="middle" fill="#ffd700" font-size="9" font-weight="600">900 GB/s bisection BW</text>
+    <text x="505" y="476" text-anchor="middle" fill="#8b949e" font-size="8">Keep Tensor Parallelism</text>
+    <text x="505" y="490" text-anchor="middle" fill="#8b949e" font-size="8">within this NVLink domain</text>
+    <text x="505" y="506" text-anchor="middle" fill="#8b949e" font-size="7">TP=8 → all intra-node</text>
+    <text x="505" y="520" text-anchor="middle" fill="#8b949e" font-size="7">TP=16 → crosses IB (slow)</text>
+    <text x="505" y="536" text-anchor="middle" fill="#8b949e" font-size="7">Rule: TP ≤ GPUs/node</text>
+    <text x="505" y="550" text-anchor="middle" fill="#8b949e" font-size="7">for maximum bandwidth</text>
+
+    <rect x="606" y="398" width="195" height="176" rx="4" fill="rgba(247,129,102,0.05)" stroke="#21262d" stroke-width="1"/>
+    <text x="703" y="414" text-anchor="middle" fill="#f78166" font-size="9" font-weight="700">Fault Tolerance</text>
+    <text x="703" y="430" text-anchor="middle" fill="#8b949e" font-size="8">ECMP across core switches</text>
+    <text x="703" y="444" text-anchor="middle" fill="#8b949e" font-size="8">Multiple paths = redundancy</text>
+    <text x="703" y="460" text-anchor="middle" fill="#f78166" font-size="8" font-weight="600">1 core down → 25% BW</text>
+    <text x="703" y="476" text-anchor="middle" fill="#8b949e" font-size="8">degrade, not failure</text>
+    <text x="703" y="492" text-anchor="middle" fill="#8b949e" font-size="7">Fat-tree: O(N log N) paths</text>
+    <text x="703" y="506" text-anchor="middle" fill="#8b949e" font-size="7">vs single-plane torus</text>
+    <text x="703" y="522" text-anchor="middle" fill="#8b949e" font-size="7">Monitor with:</text>
+    <text x="703" y="536" text-anchor="middle" fill="#8b949e" font-size="7">ibstat / nccl-tests / iperf3</text>
+    <text x="703" y="552" text-anchor="middle" fill="#8b949e" font-size="7">perfquery for IB port stats</text>
+  </svg>
+</div>
+
+</main>
+
+<footer style="background:#161b22; border-top:1px solid #21262d; padding:30px 60px; text-align:center; font-family:'IBM Plex Mono',monospace;">
+  <div style="font-size:10px; color:#8b949e; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px;">
+    Making AI Go Fast · AI/ML Infrastructure: Silicon to Scale
+  </div>
+  <div style="font-size:11px; color:#58a6ff;">
+    Diagram Pack 3 of 3 · Diagrams 23–32 · Pack 1 (D1–12) · Pack 2 (D13–22)
+  </div>
+  <div style="font-size:9px; color:#8b949e; margin-top:6px;">
+    H100 SXM5 · Transformer Arch · SIMT Model · CUDA Hierarchy · torch.compile · CUDA Streams · MoE · Fat-Tree · Profiling
+  </div>
+</footer>
+
+</body>
+</html>

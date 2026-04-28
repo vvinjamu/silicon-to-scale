@@ -9,7 +9,7 @@
 
 ## 🌐 Read Online
 
-**[silicon-to-scale.github.io](https://YOUR_USERNAME.github.io/silicon-to-scale)**
+**[silicon-to-scale.github.io](https://vvinjamu.github.io/silicon-to-scale)**
 
 No signup. No account. Open the link and start reading.
 
@@ -137,7 +137,7 @@ Open any diagram directly in a browser — no server required.
 ```bash
 # On GitHub: create a new public repo named "silicon-to-scale"
 # Then locally:
-git clone https://github.com/YOUR_USERNAME/silicon-to-scale.git
+git clone https://github.com/vvinjamu/silicon-to-scale.git
 cd silicon-to-scale
 ```
 
@@ -165,7 +165,7 @@ git push origin main
 2. Click **Settings** → **Pages** (left sidebar)
 3. Under **Source**, select: `main` branch, `/ (root)` folder
 4. Click **Save**
-5. Your site will be live at: `https://YOUR_USERNAME.github.io/silicon-to-scale`
+5. Your site will be live at: `https://vvinjamu.github.io/silicon-to-scale`
 
 > ⏱ GitHub Pages usually goes live within 1–5 minutes after enabling.
 
@@ -175,16 +175,16 @@ Open `index.html` and replace these two placeholders:
 
 ```html
 <!-- Line ~240: replace with your actual GitHub URL -->
-href="https://github.com/YOUR_USERNAME/silicon-to-scale"
+href="https://github.com/vvinjamu/silicon-to-scale"
 
 <!-- Line ~490: same -->
-href="https://github.com/YOUR_USERNAME/silicon-to-scale"
+href="https://github.com/vvinjamu/silicon-to-scale"
 
 <!-- Line ~492: your LinkedIn -->
-href="https://www.linkedin.com/in/venkatvinjam/"
+href="https://www.linkedin.com/in/vinjam-venkateswarlu-a751332/"
 
 <!-- Line ~494: your email -->
-href="mailto:your@email.com"
+href="mailto:vinjam5678@gmail.com"
 ```
 
 ---
@@ -284,8 +284,8 @@ MFU target:  45–60% for H100 cluster (< 40% = investigate)
 
 Found an error? Have a suggestion? 
 
-- **GitHub Issues:** [Open an issue](https://github.com/YOUR_USERNAME/silicon-to-scale/issues)
-- **LinkedIn:** [Venkat Vinjam](https://www.linkedin.com/in/venkatvinjam/)
+- **GitHub Issues:** [Open an issue](https://github.com/vvinjamu/silicon-to-scale/issues)
+- **LinkedIn:** [Venkat Vinjam](https://www.linkedin.com/in/vinjam-venkateswarlu-a751332/)
 
 If this book helped you prepare for an interview, understand a system, or ship a production ML workload — a ⭐ star on GitHub is appreciated and helps others find the resource.
 

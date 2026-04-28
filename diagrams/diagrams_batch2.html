@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Making AI Go Fast — Diagram Reference Pack 2</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #21262d;
+    --blue: #58a6ff;
+    --green: #3fb950;
+    --orange: #f78166;
+    --gold: #ffd700;
+    --teal: #39d0d8;
+    --purple: #bc8cff;
+    --muted: #8b949e;
+    --text: #e6edf3;
+    --red: #ff4d6d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', monospace;
+    min-height: 100vh;
+  }
+  header {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 60px 30px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(88,166,255,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(63,185,80,0.05) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .book-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: var(--blue);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    opacity: 0.8;
+  }
+  header h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: clamp(22px, 3vw, 36px);
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+  header h1 span { color: var(--blue); }
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 60px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  nav a {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+  nav a:hover { color: var(--blue); border-color: var(--blue); }
+  main {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 50px 60px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(820px, 1fr));
+    gap: 50px;
+  }
+  .diagram-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .diagram-card:hover { border-color: #30363d; }
+  .diagram-header {
+    padding: 16px 24px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+  .diagram-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--blue);
+    background: rgba(88,166,255,0.1);
+    border: 1px solid rgba(88,166,255,0.25);
+    border-radius: 4px;
+    padding: 2px 8px;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+  .diagram-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.3px;
+  }
+  .diagram-card svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  @media (max-width: 900px) {
+    main { padding: 24px; grid-template-columns: 1fr; }
+    nav { padding: 10px 24px; }
+    header { padding: 28px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="book-label">Making AI Go Fast · Diagram Reference Pack 2</div>
+  <h1><span>//</span> AI/ML Infrastructure: Silicon to Scale</h1>
+  <div class="subtitle">10 technical diagrams · HBM3e · NVLink · MI300X · Pipeline Parallel · TCO &amp; more</div>
+</header>
+
+<nav>
+  <a href="#d13">13 HBM3e Stack</a>
+  <a href="#d14">14 NVLink Topology</a>
+  <a href="#d15">15 MI300X Die</a>
+  <a href="#d16">16 Pipeline Schedules</a>
+  <a href="#d17">17 FLOP Budget</a>
+  <a href="#d18">18 Quant Error</a>
+  <a href="#d19">19 vLLM Lifecycle</a>
+  <a href="#d20">20 Disagg. Prefill</a>
+  <a href="#d21">21 Op Fusion</a>
+  <a href="#d22">22 TCO Breakdown</a>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 13 -->
+<div class="diagram-card" id="d13">
+  <div class="diagram-header">
+    <span class="diagram-num">13</span>
+    <span class="diagram-title">HBM3e Die Stacking Cross-Section vs GDDR6X</span>
+  </div>
+  <svg viewBox="0 0 820 520" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="520" fill="#0d1117"/>
+
+    <!-- Title -->
+    <text x="410" y="34" text-anchor="middle" fill="#e6edf3" font-size="13" font-weight="700">HBM3e: wide bus + short distance = high BW + low power</text>
+
+    <!-- ── HBM3e stack (left side) ── -->
+    <!-- Base die (logic layer) -->
+    <rect x="60" y="420" width="280" height="40" rx="3" fill="#1a2744" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="200" y="436" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">BASE DIE (LOGIC LAYER)</text>
+    <text x="200" y="451" text-anchor="middle" fill="#8b949e" font-size="8">memory controller + PHY</text>
+
+    <!-- DRAM die 1 -->
+    <rect x="60" y="358" width="280" height="52" rx="3" fill="#0f2d1a" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="200" y="375" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">DRAM DIE 1</text>
+    <text x="200" y="389" text-anchor="middle" fill="#8b949e" font-size="8">16 Gb · 1024-bit</text>
+    <text x="200" y="402" text-anchor="middle" fill="#8b949e" font-size="8">64 banks · burst=4</text>
+
+    <!-- DRAM die 2 -->
+    <rect x="60" y="296" width="280" height="52" rx="3" fill="#0f2d1a" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="200" y="313" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">DRAM DIE 2</text>
+    <text x="200" y="327" text-anchor="middle" fill="#8b949e" font-size="8">16 Gb · 1024-bit</text>
+    <text x="200" y="340" text-anchor="middle" fill="#8b949e" font-size="8">64 banks · burst=4</text>
+
+    <!-- DRAM die 3 -->
+    <rect x="60" y="234" width="280" height="52" rx="3" fill="#0f2d1a" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="200" y="251" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">DRAM DIE 3</text>
+    <text x="200" y="265" text-anchor="middle" fill="#8b949e" font-size="8">16 Gb · 1024-bit</text>
+    <text x="200" y="278" text-anchor="middle" fill="#8b949e" font-size="8">64 banks · burst=4</text>
+
+    <!-- DRAM die 4 -->
+    <rect x="60" y="172" width="280" height="52" rx="3" fill="#0f2d1a" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="200" y="189" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">DRAM DIE 4 (TOP)</text>
+    <text x="200" y="203" text-anchor="middle" fill="#8b949e" font-size="8">16 Gb · 1024-bit</text>
+    <text x="200" y="216" text-anchor="middle" fill="#8b949e" font-size="8">64 banks · burst=4</text>
+
+    <!-- TSV lines (Through-Silicon Vias) -->
+    <!-- Multiple thin vertical lines through dies -->
+    <g stroke="#ffd700" stroke-width="1" opacity="0.7">
+      <line x1="110" y1="172" x2="110" y2="420"/>
+      <line x1="130" y1="172" x2="130" y2="420"/>
+      <line x1="150" y1="172" x2="150" y2="420"/>
+      <line x1="170" y1="172" x2="170" y2="420"/>
+      <line x1="190" y1="172" x2="190" y2="420"/>
+      <line x1="210" y1="172" x2="210" y2="420"/>
+      <line x1="230" y1="172" x2="230" y2="420"/>
+      <line x1="250" y1="172" x2="250" y2="420"/>
+      <line x1="270" y1="172" x2="270" y2="420"/>
+      <line x1="290" y1="172" x2="290" y2="420"/>
+    </g>
+
+    <!-- TSV label -->
+    <text x="340" y="300" fill="#ffd700" font-size="9" font-weight="600">TSVs</text>
+    <text x="340" y="313" fill="#8b949e" font-size="8">(Through-Silicon</text>
+    <text x="340" y="326" fill="#8b949e" font-size="8"> Vias)</text>
+    <line x1="337" y1="295" x2="298" y2="295" stroke="#ffd700" stroke-width="1" marker-end="url(#arrow-gold)"/>
+
+    <!-- Micro-bump dots between dies -->
+    <g fill="#39d0d8">
+      <circle cx="112" cy="358" r="2.5"/>
+      <circle cx="132" cy="358" r="2.5"/>
+      <circle cx="152" cy="358" r="2.5"/>
+      <circle cx="172" cy="358" r="2.5"/>
+      <circle cx="192" cy="358" r="2.5"/>
+      <circle cx="212" cy="358" r="2.5"/>
+      <circle cx="232" cy="358" r="2.5"/>
+      <circle cx="252" cy="358" r="2.5"/>
+      <circle cx="272" cy="358" r="2.5"/>
+      <circle cx="292" cy="358" r="2.5"/>
+
+      <circle cx="112" cy="296" r="2.5"/>
+      <circle cx="152" cy="296" r="2.5"/>
+      <circle cx="192" cy="296" r="2.5"/>
+      <circle cx="232" cy="296" r="2.5"/>
+      <circle cx="272" cy="296" r="2.5"/>
+
+      <circle cx="112" cy="234" r="2.5"/>
+      <circle cx="152" cy="234" r="2.5"/>
+      <circle cx="192" cy="234" r="2.5"/>
+      <circle cx="232" cy="234" r="2.5"/>
+      <circle cx="272" cy="234" r="2.5"/>
+    </g>
+
+    <!-- Micro-bump label -->
+    <text x="52" y="356" text-anchor="end" fill="#39d0d8" font-size="8" font-weight="600">micro-bumps</text>
+    <line x1="55" y1="355" x2="108" y2="355" stroke="#39d0d8" stroke-width="0.8" stroke-dasharray="3,2"/>
+
+    <!-- 1024-bit bus bracket -->
+    <line x1="60" y1="470" x2="340" y2="470" stroke="#58a6ff" stroke-width="1.5"/>
+    <line x1="60" y1="465" x2="60" y2="475" stroke="#58a6ff" stroke-width="1.5"/>
+    <line x1="340" y1="465" x2="340" y2="475" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="200" y="485" text-anchor="middle" fill="#58a6ff" font-size="10" font-weight="700">1024-bit wide bus</text>
+    <text x="200" y="499" text-anchor="middle" fill="#8b949e" font-size="8">~1 μm trace length</text>
+
+    <!-- Height label -->
+    <line x1="52" y1="172" x2="52" y2="460" stroke="#8b949e" stroke-width="0.8"/>
+    <line x1="47" y1="172" x2="57" y2="172" stroke="#8b949e" stroke-width="0.8"/>
+    <line x1="47" y1="460" x2="57" y2="460" stroke="#8b949e" stroke-width="0.8"/>
+    <text x="40" y="320" text-anchor="middle" fill="#8b949e" font-size="8" transform="rotate(-90,40,320)">~720 μm stack</text>
+
+    <!-- HBM3e label -->
+    <text x="200" y="155" text-anchor="middle" fill="#3fb950" font-size="12" font-weight="700">HBM3e Stack</text>
+    <text x="200" y="170" text-anchor="middle" fill="#8b949e" font-size="8">4.8 TB/s · 24 GB per stack</text>
+
+    <!-- Divider -->
+    <line x1="430" y1="55" x2="430" y2="510" stroke="#21262d" stroke-width="1.5" stroke-dasharray="6,4"/>
+
+    <!-- ── GDDR6X (right side) ── -->
+    <!-- GPU die -->
+    <rect x="470" y="330" width="160" height="60" rx="3" fill="#2d1a0f" stroke="#f78166" stroke-width="1.5"/>
+    <text x="550" y="357" text-anchor="middle" fill="#f78166" font-size="9" font-weight="700">GPU DIE</text>
+    <text x="550" y="371" text-anchor="middle" fill="#8b949e" font-size="8">memory controller</text>
+
+    <!-- PCB traces — long winding lines -->
+    <path d="M470,360 C430,360 420,390 470,400 C520,410 540,430 520,440 C500,450 480,445 470,455" fill="none" stroke="#f78166" stroke-width="1.5" opacity="0.6"/>
+    <path d="M630,360 C670,360 680,390 630,400 C580,410 560,430 580,440 C600,450 620,445 630,455" fill="none" stroke="#f78166" stroke-width="1.5" opacity="0.6"/>
+
+    <!-- GDDR6X chips -->
+    <rect x="480" y="160" width="60" height="35" rx="3" fill="#2d1a0f" stroke="#f78166" stroke-width="1"/>
+    <text x="510" y="175" text-anchor="middle" fill="#f78166" font-size="8">GDDR6X</text>
+    <text x="510" y="188" text-anchor="middle" fill="#8b949e" font-size="7">chip 1</text>
+
+    <rect x="560" y="160" width="60" height="35" rx="3" fill="#2d1a0f" stroke="#f78166" stroke-width="1"/>
+    <text x="590" y="175" text-anchor="middle" fill="#f78166" font-size="8">GDDR6X</text>
+    <text x="590" y="188" text-anchor="middle" fill="#8b949e" font-size="7">chip 2</text>
+
+    <rect x="460" y="240" width="60" height="35" rx="3" fill="#2d1a0f" stroke="#f78166" stroke-width="1"/>
+    <text x="490" y="255" text-anchor="middle" fill="#f78166" font-size="8">GDDR6X</text>
+    <text x="490" y="268" text-anchor="middle" fill="#8b949e" font-size="7">chip 3</text>
+
+    <rect x="580" y="240" width="60" height="35" rx="3" fill="#2d1a0f" stroke="#f78166" stroke-width="1"/>
+    <text x="610" y="255" text-anchor="middle" fill="#f78166" font-size="8">GDDR6X</text>
+    <text x="610" y="268" text-anchor="middle" fill="#8b949e" font-size="7">chip 4</text>
+
+    <!-- Long PCB trace lines -->
+    <line x1="510" y1="195" x2="510" y2="330" stroke="#f78166" stroke-width="1" stroke-dasharray="4,3" opacity="0.7"/>
+    <line x1="590" y1="195" x2="590" y2="330" stroke="#f78166" stroke-width="1" stroke-dasharray="4,3" opacity="0.7"/>
+    <line x1="490" y1="275" x2="490" y2="330" stroke="#f78166" stroke-width="1" stroke-dasharray="4,3" opacity="0.7"/>
+    <line x1="610" y1="275" x2="610" y2="330" stroke="#f78166" stroke-width="1" stroke-dasharray="4,3" opacity="0.7"/>
+
+    <!-- PCB trace label -->
+    <text x="660" y="265" fill="#f78166" font-size="8">long PCB</text>
+    <text x="660" y="277" fill="#f78166" font-size="8">traces</text>
+    <text x="660" y="289" fill="#8b949e" font-size="7">~cm length</text>
+
+    <!-- Bus width label -->
+    <text x="550" y="138" text-anchor="middle" fill="#f78166" font-size="9" font-weight="600">32-bit per chip</text>
+    <text x="550" y="151" text-anchor="middle" fill="#8b949e" font-size="8">× 12 chips = 384-bit total</text>
+
+    <!-- GDDR6 title -->
+    <text x="550" y="120" text-anchor="middle" fill="#f78166" font-size="12" font-weight="700">GDDR6X</text>
+
+    <!-- Bandwidth comparison boxes -->
+    <rect x="50" y="60" width="155" height="48" rx="5" fill="rgba(63,185,80,0.1)" stroke="#3fb950" stroke-width="1"/>
+    <text x="128" y="80" text-anchor="middle" fill="#3fb950" font-size="11" font-weight="700">HBM3e</text>
+    <text x="128" y="96" text-anchor="middle" fill="#e6edf3" font-size="13" font-weight="700">4.8 TB/s</text>
+
+    <rect x="240" y="60" width="155" height="48" rx="5" fill="rgba(247,129,102,0.1)" stroke="#f78166" stroke-width="1"/>
+    <text x="318" y="80" text-anchor="middle" fill="#f78166" font-size="11" font-weight="700">GDDR6X</text>
+    <text x="318" y="96" text-anchor="middle" fill="#e6edf3" font-size="13" font-weight="700">1.0 TB/s</text>
+
+    <!-- 4.8x label -->
+    <text x="200" y="78" text-anchor="middle" fill="#ffd700" font-size="10" font-weight="700">4.8×</text>
+    <text x="200" y="91" text-anchor="middle" fill="#8b949e" font-size="8">more BW</text>
+
+    <!-- Arrow definitions -->
+    <defs>
+      <marker id="arrow-gold" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#ffd700"/>
+      </marker>
+    </defs>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 14 -->
+<div class="diagram-card" id="d14">
+  <div class="diagram-header">
+    <span class="diagram-num">14</span>
+    <span class="diagram-title">NVLink Domain Topology — DGX H100 (8× GPU + 3× NVSwitch)</span>
+  </div>
+  <svg viewBox="0 0 820 520" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="520" fill="#0d1117"/>
+    <defs>
+      <marker id="arr-blue" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#58a6ff"/>
+      </marker>
+      <marker id="arr-green" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#3fb950"/>
+      </marker>
+      <marker id="arr-muted" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+        <path d="M0,0 L5,2.5 L0,5 Z" fill="#8b949e"/>
+      </marker>
+    </defs>
+
+    <!-- Background for NVLink domain -->
+    <rect x="80" y="60" width="580" height="400" rx="16" fill="rgba(88,166,255,0.03)" stroke="rgba(88,166,255,0.15)" stroke-width="1" stroke-dasharray="8,4"/>
+    <text x="370" y="82" text-anchor="middle" fill="rgba(88,166,255,0.5)" font-size="9" font-weight="600" letter-spacing="2">NVLink Domain</text>
+
+    <!-- 3 NVSwitches — center triangle -->
+    <!-- NVSwitch 1 (top center) -->
+    <rect x="320" y="115" width="100" height="38" rx="6" fill="#1a1a2e" stroke="#bc8cff" stroke-width="2"/>
+    <text x="370" y="130" text-anchor="middle" fill="#bc8cff" font-size="9" font-weight="700">NVSwitch 1</text>
+    <text x="370" y="143" text-anchor="middle" fill="#8b949e" font-size="7">3.6 TB/s</text>
+
+    <!-- NVSwitch 2 (bottom left) -->
+    <rect x="220" y="330" width="100" height="38" rx="6" fill="#1a1a2e" stroke="#bc8cff" stroke-width="2"/>
+    <text x="270" y="345" text-anchor="middle" fill="#bc8cff" font-size="9" font-weight="700">NVSwitch 2</text>
+    <text x="270" y="358" text-anchor="middle" fill="#8b949e" font-size="7">3.6 TB/s</text>
+
+    <!-- NVSwitch 3 (bottom right) -->
+    <rect x="420" y="330" width="100" height="38" rx="6" fill="#1a1a2e" stroke="#bc8cff" stroke-width="2"/>
+    <text x="470" y="345" text-anchor="middle" fill="#bc8cff" font-size="9" font-weight="700">NVSwitch 3</text>
+    <text x="470" y="358" text-anchor="middle" fill="#8b949e" font-size="7">3.6 TB/s</text>
+
+    <!-- 8 GPUs in octagon arrangement -->
+    <!-- GPU 0 top-left -->
+    <rect x="115" y="110" width="72" height="44" rx="5" fill="#0d2137" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="151" y="128" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">GPU 0</text>
+    <text x="151" y="142" text-anchor="middle" fill="#8b949e" font-size="7">H100 SXM5</text>
+
+    <!-- GPU 1 top-right -->
+    <rect x="553" y="110" width="72" height="44" rx="5" fill="#0d2137" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="589" y="128" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">GPU 1</text>
+    <text x="589" y="142" text-anchor="middle" fill="#8b949e" font-size="7">H100 SXM5</text>
+
+    <!-- GPU 2 mid-left top -->
+    <rect x="100" y="210" width="72" height="44" rx="5" fill="#0d2137" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="136" y="228" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">GPU 2</text>
+    <text x="136" y="242" text-anchor="middle" fill="#8b949e" font-size="7">H100 SXM5</text>
+
+    <!-- GPU 3 mid-right top -->
+    <rect x="568" y="210" width="72" height="44" rx="5" fill="#0d2137" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="604" y="228" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">GPU 3</text>
+    <text x="604" y="242" text-anchor="middle" fill="#8b949e" font-size="7">H100 SXM5</text>
+
+    <!-- GPU 4 mid-left bottom -->
+    <rect x="100" y="300" width="72" height="44" rx="5" fill="#0d2137" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="136" y="318" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">GPU 4</text>
+    <text x="136" y="332" text-anchor="middle" fill="#8b949e" font-size="7">H100 SXM5</text>
+
+    <!-- GPU 5 mid-right bottom -->
+    <rect x="568" y="300" width="72" height="44" rx="5" fill="#0d2137" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="604" y="318" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">GPU 5</text>
+    <text x="604" y="332" text-anchor="middle" fill="#8b949e" font-size="7">H100 SXM5</text>
+
+    <!-- GPU 6 bottom-left -->
+    <rect x="115" y="395" width="72" height="44" rx="5" fill="#0d2137" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="151" y="413" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">GPU 6</text>
+    <text x="151" y="427" text-anchor="middle" fill="#8b949e" font-size="7">H100 SXM5</text>
+
+    <!-- GPU 7 bottom-right -->
+    <rect x="553" y="395" width="72" height="44" rx="5" fill="#0d2137" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="589" y="413" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">GPU 7</text>
+    <text x="589" y="427" text-anchor="middle" fill="#8b949e" font-size="7">H100 SXM5</text>
+
+    <!-- NVLink connections: each GPU → each NVSwitch (thin lines) -->
+    <g stroke="#58a6ff" stroke-width="0.8" opacity="0.35">
+      <!-- GPU0 → SW1,SW2,SW3 -->
+      <line x1="187" y1="132" x2="320" y2="134"/>
+      <line x1="170" y1="154" x2="240" y2="330"/>
+      <line x1="187" y1="154" x2="420" y2="348"/>
+      <!-- GPU1 → SW1,SW2,SW3 -->
+      <line x1="553" y1="132" x2="420" y2="134"/>
+      <line x1="553" y1="148" x2="320" y2="345"/>
+      <line x1="570" y1="154" x2="520" y2="330"/>
+      <!-- GPU2 → SW1,SW2,SW3 -->
+      <line x1="172" y1="220" x2="320" y2="140"/>
+      <line x1="172" y1="232" x2="220" y2="340"/>
+      <line x1="172" y1="240" x2="420" y2="340"/>
+      <!-- GPU3 → SW1,SW2,SW3 -->
+      <line x1="568" y1="220" x2="420" y2="140"/>
+      <line x1="568" y1="235" x2="320" y2="345"/>
+      <line x1="568" y1="245" x2="520" y2="340"/>
+      <!-- GPU4 → SW1,SW2,SW3 -->
+      <line x1="172" y1="310" x2="330" y2="153"/>
+      <line x1="172" y1="322" x2="220" y2="345"/>
+      <line x1="172" y1="332" x2="420" y2="350"/>
+      <!-- GPU5 → SW1,SW2,SW3 -->
+      <line x1="568" y1="310" x2="410" y2="153"/>
+      <line x1="568" y1="322" x2="320" y2="350"/>
+      <line x1="568" y1="332" x2="520" y2="345"/>
+      <!-- GPU6 → SW1,SW2,SW3 -->
+      <line x1="187" y1="405" x2="350" y2="153"/>
+      <line x1="187" y1="415" x2="235" y2="330"/>
+      <line x1="187" y1="425" x2="420" y2="360"/>
+      <!-- GPU7 → SW1,SW2,SW3 -->
+      <line x1="553" y1="405" x2="390" y2="153"/>
+      <line x1="553" y1="415" x2="320" y2="360"/>
+      <line x1="553" y1="425" x2="505" y2="330"/>
+    </g>
+
+    <!-- Bandwidth annotation -->
+    <rect x="290" y="215" width="160" height="60" rx="6" fill="rgba(63,185,80,0.08)" stroke="#3fb950" stroke-width="1"/>
+    <text x="370" y="233" text-anchor="middle" fill="#3fb950" font-size="8" font-weight="700">per GPU BW</text>
+    <text x="370" y="248" text-anchor="middle" fill="#e6edf3" font-size="12" font-weight="700">900 GB/s</text>
+    <text x="370" y="263" text-anchor="middle" fill="#8b949e" font-size="7">bidirectional · 18 NVLink 4.0</text>
+
+    <!-- TP=8 label -->
+    <rect x="300" y="282" width="140" height="28" rx="4" fill="rgba(255,215,0,0.08)" stroke="#ffd700" stroke-width="1"/>
+    <text x="370" y="293" text-anchor="middle" fill="#ffd700" font-size="8" font-weight="700">TP=8 zero bottleneck</text>
+    <text x="370" y="305" text-anchor="middle" fill="#8b949e" font-size="7">all-reduce stays in NVLink domain</text>
+
+    <!-- IB comparison (outside) -->
+    <rect x="700" y="200" width="100" height="70" rx="5" fill="rgba(247,129,102,0.08)" stroke="#f78166" stroke-width="1"/>
+    <text x="750" y="218" text-anchor="middle" fill="#f78166" font-size="8" font-weight="700">InfiniBand</text>
+    <text x="750" y="233" text-anchor="middle" fill="#f78166" font-size="11" font-weight="700">50 GB/s</text>
+    <text x="750" y="247" text-anchor="middle" fill="#8b949e" font-size="7">HDR 200Gb/s</text>
+    <text x="750" y="260" text-anchor="middle" fill="#8b949e" font-size="7">inter-node only</text>
+    <!-- thin arrow showing IB -->
+    <line x1="700" y1="235" x2="660" y2="235" stroke="#f78166" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr-muted)"/>
+    <text x="678" y="226" text-anchor="middle" fill="#8b949e" font-size="7">18×</text>
+    <text x="678" y="238" text-anchor="middle" fill="#8b949e" font-size="7">slower</text>
+
+    <!-- Aggregate BW -->
+    <text x="370" y="485" text-anchor="middle" fill="#8b949e" font-size="9">aggregate bisection bandwidth: </text>
+    <text x="530" y="485" fill="#58a6ff" font-size="9" font-weight="700">130 TB/s</text>
+    <text x="370" y="498" text-anchor="middle" fill="#8b949e" font-size="8">3 NVSwitches × 3.6 TB/s × 2 directions = non-blocking full mesh</text>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 15 -->
+<div class="diagram-card" id="d15">
+  <div class="diagram-header">
+    <span class="diagram-num">15</span>
+    <span class="diagram-title">AMD MI300X Die Stack — 6 XCDs + 4 MCDs + 8 HBM3 Stacks</span>
+  </div>
+  <svg viewBox="0 0 820 520" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="520" fill="#0d1117"/>
+    <defs>
+      <marker id="arr-teal" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#39d0d8"/>
+      </marker>
+    </defs>
+
+    <!-- Package outline -->
+    <rect x="140" y="60" width="400" height="380" rx="8" fill="rgba(188,140,255,0.03)" stroke="#bc8cff" stroke-width="2"/>
+    <text x="340" y="48" text-anchor="middle" fill="#bc8cff" font-size="11" font-weight="700">MI300X Package (top-down view)</text>
+    <text x="340" y="460" text-anchor="middle" fill="#8b949e" font-size="8">NOT 3 chiplets — 10 dies total (6 XCDs + 4 MCDs)</text>
+
+    <!-- 4 MCDs in center -->
+    <!-- MCD 1 -->
+    <rect x="240" y="170" width="90" height="55" rx="4" fill="#1a2744" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="285" y="191" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">MCD 1</text>
+    <text x="285" y="205" text-anchor="middle" fill="#8b949e" font-size="7">Mem Ctrl + PHY</text>
+    <text x="285" y="217" text-anchor="middle" fill="#39d0d8" font-size="7">48 GB HBM3</text>
+
+    <!-- MCD 2 -->
+    <rect x="350" y="170" width="90" height="55" rx="4" fill="#1a2744" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="395" y="191" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">MCD 2</text>
+    <text x="395" y="205" text-anchor="middle" fill="#8b949e" font-size="7">Mem Ctrl + PHY</text>
+    <text x="395" y="217" text-anchor="middle" fill="#39d0d8" font-size="7">48 GB HBM3</text>
+
+    <!-- MCD 3 -->
+    <rect x="240" y="255" width="90" height="55" rx="4" fill="#1a2744" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="285" y="276" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">MCD 3</text>
+    <text x="285" y="290" text-anchor="middle" fill="#8b949e" font-size="7">Mem Ctrl + PHY</text>
+    <text x="285" y="302" text-anchor="middle" fill="#39d0d8" font-size="7">48 GB HBM3</text>
+
+    <!-- MCD 4 -->
+    <rect x="350" y="255" width="90" height="55" rx="4" fill="#1a2744" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="395" y="276" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">MCD 4</text>
+    <text x="395" y="290" text-anchor="middle" fill="#8b949e" font-size="7">Mem Ctrl + PHY</text>
+    <text x="395" y="302" text-anchor="middle" fill="#39d0d8" font-size="7">48 GB HBM3</text>
+
+    <!-- 6 XCDs around perimeter -->
+    <!-- XCD 0 top-left -->
+    <rect x="155" y="75" width="85" height="70" rx="4" fill="#0d2d1a" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="197" y="97" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">XCD 0</text>
+    <text x="197" y="111" text-anchor="middle" fill="#8b949e" font-size="7">Compute Die</text>
+    <text x="197" y="125" text-anchor="middle" fill="#8b949e" font-size="7">38 CUs</text>
+    <text x="197" y="138" text-anchor="middle" fill="#ffd700" font-size="7">228 TFLOPS</text>
+
+    <!-- XCD 1 top-center -->
+    <rect x="295" y="75" width="90" height="70" rx="4" fill="#0d2d1a" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="340" y="97" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">XCD 1</text>
+    <text x="340" y="111" text-anchor="middle" fill="#8b949e" font-size="7">Compute Die</text>
+    <text x="340" y="125" text-anchor="middle" fill="#8b949e" font-size="7">38 CUs</text>
+    <text x="340" y="138" text-anchor="middle" fill="#ffd700" font-size="7">228 TFLOPS</text>
+
+    <!-- XCD 2 top-right -->
+    <rect x="440" y="75" width="85" height="70" rx="4" fill="#0d2d1a" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="482" y="97" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">XCD 2</text>
+    <text x="482" y="111" text-anchor="middle" fill="#8b949e" font-size="7">Compute Die</text>
+    <text x="482" y="125" text-anchor="middle" fill="#8b949e" font-size="7">38 CUs</text>
+    <text x="482" y="138" text-anchor="middle" fill="#ffd700" font-size="7">228 TFLOPS</text>
+
+    <!-- XCD 3 bottom-left -->
+    <rect x="155" y="335" width="85" height="70" rx="4" fill="#0d2d1a" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="197" y="357" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">XCD 3</text>
+    <text x="197" y="371" text-anchor="middle" fill="#8b949e" font-size="7">Compute Die</text>
+    <text x="197" y="385" text-anchor="middle" fill="#8b949e" font-size="7">38 CUs</text>
+    <text x="197" y="398" text-anchor="middle" fill="#ffd700" font-size="7">228 TFLOPS</text>
+
+    <!-- XCD 4 bottom-center -->
+    <rect x="295" y="335" width="90" height="70" rx="4" fill="#0d2d1a" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="340" y="357" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">XCD 4</text>
+    <text x="340" y="371" text-anchor="middle" fill="#8b949e" font-size="7">Compute Die</text>
+    <text x="340" y="385" text-anchor="middle" fill="#8b949e" font-size="7">38 CUs</text>
+    <text x="340" y="398" text-anchor="middle" fill="#ffd700" font-size="7">228 TFLOPS</text>
+
+    <!-- XCD 5 bottom-right -->
+    <rect x="440" y="335" width="85" height="70" rx="4" fill="#0d2d1a" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="482" y="357" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">XCD 5</text>
+    <text x="482" y="371" text-anchor="middle" fill="#8b949e" font-size="7">Compute Die</text>
+    <text x="482" y="385" text-anchor="middle" fill="#8b949e" font-size="7">38 CUs</text>
+    <text x="482" y="398" text-anchor="middle" fill="#ffd700" font-size="7">228 TFLOPS</text>
+
+    <!-- Infinity Fabric connections (XCD → MCD) -->
+    <g stroke="#ffd700" stroke-width="0.8" opacity="0.5" stroke-dasharray="3,2">
+      <line x1="240" y1="145" x2="275" y2="170"/>
+      <line x1="340" y1="145" x2="310" y2="170"/>
+      <line x1="440" y1="145" x2="415" y2="170"/>
+      <line x1="240" y1="335" x2="275" y2="310"/>
+      <line x1="340" y1="335" x2="310" y2="310"/>
+      <line x1="440" y1="335" x2="415" y2="310"/>
+    </g>
+    <!-- MCD to MCD Infinity Fabric -->
+    <g stroke="#ffd700" stroke-width="1" opacity="0.7">
+      <line x1="330" y1="197" x2="350" y2="197"/>
+      <line x1="285" y1="225" x2="285" y2="255"/>
+      <line x1="395" y1="225" x2="395" y2="255"/>
+      <line x1="330" y1="282" x2="350" y2="282"/>
+    </g>
+
+    <!-- Infinity Fabric label -->
+    <text x="340" y="242" text-anchor="middle" fill="#ffd700" font-size="8" font-weight="600">Infinity Fabric</text>
+
+    <!-- HBM3 stacks (outside package, connected via lines) -->
+    <!-- 8 HBM stacks - 2 per MCD -->
+    <!-- Top HBM stacks -->
+    <g fill="#0d1a2d" stroke="#39d0d8" stroke-width="1.2">
+      <rect x="170" y="20" width="45" height="25" rx="3"/>
+      <rect x="225" y="20" width="45" height="25" rx="3"/>
+      <rect x="410" y="20" width="45" height="25" rx="3"/>
+      <rect x="465" y="20" width="45" height="25" rx="3"/>
+    </g>
+    <text x="192" y="36" text-anchor="middle" fill="#39d0d8" font-size="7">HBM3</text>
+    <text x="248" y="36" text-anchor="middle" fill="#39d0d8" font-size="7">HBM3</text>
+    <text x="432" y="36" text-anchor="middle" fill="#39d0d8" font-size="7">HBM3</text>
+    <text x="488" y="36" text-anchor="middle" fill="#39d0d8" font-size="7">HBM3</text>
+    <!-- Bottom HBM stacks -->
+    <g fill="#0d1a2d" stroke="#39d0d8" stroke-width="1.2">
+      <rect x="170" y="475" width="45" height="25" rx="3"/>
+      <rect x="225" y="475" width="45" height="25" rx="3"/>
+      <rect x="410" y="475" width="45" height="25" rx="3"/>
+      <rect x="465" y="475" width="45" height="25" rx="3"/>
+    </g>
+    <text x="192" y="491" text-anchor="middle" fill="#39d0d8" font-size="7">HBM3</text>
+    <text x="248" y="491" text-anchor="middle" fill="#39d0d8" font-size="7">HBM3</text>
+    <text x="432" y="491" text-anchor="middle" fill="#39d0d8" font-size="7">HBM3</text>
+    <text x="488" y="491" text-anchor="middle" fill="#39d0d8" font-size="7">HBM3</text>
+
+    <!-- Connect HBM stacks to MCDs -->
+    <g stroke="#39d0d8" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.6">
+      <line x1="192" y1="45" x2="265" y2="170"/>
+      <line x1="248" y1="45" x2="285" y2="170"/>
+      <line x1="432" y1="45" x2="395" y2="170"/>
+      <line x1="488" y1="45" x2="415" y2="170"/>
+      <line x1="192" y1="475" x2="265" y2="310"/>
+      <line x1="248" y1="475" x2="285" y2="310"/>
+      <line x1="432" y1="475" x2="395" y2="310"/>
+      <line x1="488" y1="475" x2="415" y2="310"/>
+    </g>
+
+    <!-- Key specs panel -->
+    <rect x="580" y="80" width="210" height="195" rx="6" fill="rgba(63,185,80,0.07)" stroke="#3fb950" stroke-width="1"/>
+    <text x="685" y="100" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="700">MI300X Specs</text>
+    <line x1="590" y1="107" x2="780" y2="107" stroke="rgba(63,185,80,0.3)" stroke-width="0.8"/>
+
+    <text x="595" y="125" fill="#8b949e" font-size="8">Total XCDs:</text>
+    <text x="780" y="125" text-anchor="end" fill="#e6edf3" font-size="8" font-weight="600">6 × 38 CUs</text>
+
+    <text x="595" y="142" fill="#8b949e" font-size="8">Total FP16:</text>
+    <text x="780" y="142" text-anchor="end" fill="#ffd700" font-size="8" font-weight="600">1.37 PFLOPS</text>
+
+    <text x="595" y="159" fill="#8b949e" font-size="8">HBM3 capacity:</text>
+    <text x="780" y="159" text-anchor="end" fill="#39d0d8" font-size="8" font-weight="600">192 GB</text>
+
+    <text x="595" y="176" fill="#8b949e" font-size="8">Memory BW:</text>
+    <text x="780" y="176" text-anchor="end" fill="#39d0d8" font-size="8" font-weight="600">5.3 TB/s</text>
+
+    <text x="595" y="193" fill="#8b949e" font-size="8">TDP:</text>
+    <text x="780" y="193" text-anchor="end" fill="#f78166" font-size="8" font-weight="600">750W</text>
+
+    <text x="595" y="210" fill="#8b949e" font-size="8">Package:</text>
+    <text x="780" y="210" text-anchor="end" fill="#e6edf3" font-size="8" font-weight="600">OAM (BGA)</text>
+
+    <rect x="590" y="222" width="182" height="40" rx="4" fill="rgba(57,208,216,0.08)" stroke="#39d0d8" stroke-width="0.8"/>
+    <text x="681" y="237" text-anchor="middle" fill="#39d0d8" font-size="8" font-weight="700">fits 70B BF16 model</text>
+    <text x="681" y="252" text-anchor="middle" fill="#8b949e" font-size="7">140 GB needed · 192 GB available</text>
+
+    <!-- Die count callout -->
+    <rect x="580" y="300" width="210" height="55" rx="6" fill="rgba(247,129,102,0.08)" stroke="#f78166" stroke-width="1"/>
+    <text x="685" y="320" text-anchor="middle" fill="#f78166" font-size="9" font-weight="700">⚠ Common misconception</text>
+    <text x="685" y="336" text-anchor="middle" fill="#8b949e" font-size="8">NOT "3 chiplets" = 10 dies total</text>
+    <text x="685" y="350" text-anchor="middle" fill="#8b949e" font-size="8">6 XCDs + 4 MCDs on one interposer</text>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 16 -->
+<div class="diagram-card" id="d16">
+  <div class="diagram-header">
+    <span class="diagram-num">16</span>
+    <span class="diagram-title">Pipeline Parallel Schedules — GPipe vs 1F1B vs Interleaved 1F1B</span>
+  </div>
+  <svg viewBox="0 0 820 520" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="520" fill="#0d1117"/>
+
+    <!-- Colors: forward=blue, backward=green, bubble=red/dark -->
+
+    <!-- ── Schedule labels ── -->
+    <text x="25" y="80" fill="#e6edf3" font-size="10" font-weight="700">GPipe</text>
+    <text x="25" y="93" fill="#8b949e" font-size="7">(naive)</text>
+
+    <text x="25" y="195" fill="#e6edf3" font-size="10" font-weight="700">1F1B</text>
+    <text x="25" y="208" fill="#8b949e" font-size="7">(steady state)</text>
+
+    <text x="25" y="340" fill="#e6edf3" font-size="10" font-weight="700">Interleaved</text>
+    <text x="25" y="353" fill="#e6edf3" font-size="10" font-weight="700">1F1B</text>
+    <text x="25" y="366" fill="#8b949e" font-size="7">(chunked)</text>
+
+    <!-- Stage labels (left) -->
+    <g fill="#8b949e" font-size="8">
+      <text x="108" y="50">Stage 0</text>
+      <text x="108" y="65">Stage 1</text>
+      <text x="108" y="80">Stage 2</text>
+      <text x="108" y="95">Stage 3</text>
+    </g>
+
+    <!-- ── GPipe schedule ── -->
+    <!-- Time axis -->
+    <line x1="155" y1="100" x2="780" y2="100" stroke="#21262d" stroke-width="0.8"/>
+    <!-- 4 stages stacked, 4 microbatches each, forward then backward -->
+    <!-- Forward microbatches: M0,M1,M2,M3 -->
+    <!-- Stage 0: F0,F1,F2,F3 at t=0..15, then B3,B2,B1,B0 at t=16..31 -->
+    <!-- Using pixel columns: each time step = 30px, total 32 steps -->
+    <!-- Actually let me use compact layout: each cell = 35px, total = 35*16 = 560, fit in 620px -->
+
+    <!-- Stage 0 forward -->
+    <rect x="155" y="52" width="32" height="18" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="171" y="64" text-anchor="middle" fill="#58a6ff" font-size="7">F0</text>
+    <rect x="190" y="52" width="32" height="18" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="206" y="64" text-anchor="middle" fill="#58a6ff" font-size="7">F1</text>
+    <rect x="225" y="52" width="32" height="18" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="241" y="64" text-anchor="middle" fill="#58a6ff" font-size="7">F2</text>
+    <rect x="260" y="52" width="32" height="18" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="276" y="64" text-anchor="middle" fill="#58a6ff" font-size="7">F3</text>
+    <!-- Stage 0 backward -->
+    <rect x="415" y="52" width="32" height="18" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+    <text x="431" y="64" text-anchor="middle" fill="#3fb950" font-size="7">B3</text>
+    <rect x="450" y="52" width="32" height="18" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+    <text x="466" y="64" text-anchor="middle" fill="#3fb950" font-size="7">B2</text>
+    <rect x="485" y="52" width="32" height="18" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+    <text x="501" y="64" text-anchor="middle" fill="#3fb950" font-size="7">B1</text>
+    <rect x="520" y="52" width="32" height="18" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+    <text x="536" y="64" text-anchor="middle" fill="#3fb950" font-size="7">B0</text>
+
+    <!-- Stage 1 forward (shifted by 1) -->
+    <rect x="190" y="72" width="32" height="18" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="206" y="84" text-anchor="middle" fill="#58a6ff" font-size="7">F0</text>
+    <rect x="225" y="72" width="32" height="18" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="241" y="84" text-anchor="middle" fill="#58a6ff" font-size="7">F1</text>
+    <rect x="260" y="72" width="32" height="18" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="276" y="84" text-anchor="middle" fill="#58a6ff" font-size="7">F2</text>
+    <rect x="295" y="72" width="32" height="18" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="311" y="84" text-anchor="middle" fill="#58a6ff" font-size="7">F3</text>
+    <!-- Stage 1 backward -->
+    <rect x="380" y="72" width="32" height="18" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+    <text x="396" y="84" text-anchor="middle" fill="#3fb950" font-size="7">B3</text>
+    <rect x="415" y="72" width="32" height="18" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+    <text x="431" y="84" text-anchor="middle" fill="#3fb950" font-size="7">B2</text>
+    <rect x="450" y="72" width="32" height="18" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+    <text x="466" y="84" text-anchor="middle" fill="#3fb950" font-size="7">B1</text>
+    <rect x="485" y="72" width="32" height="18" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+    <text x="501" y="84" text-anchor="middle" fill="#3fb950" font-size="7">B0</text>
+
+    <!-- Stage 2 -->
+    <rect x="225" y="52" width="0" height="0"/> <!-- already drawn above -->
+    <rect x="225" y="92" width="32" height="18" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="241" y="104" text-anchor="middle" fill="#58a6ff" font-size="7">F0</text>
+    <rect x="260" y="92" width="32" height="18" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="276" y="104" text-anchor="middle" fill="#58a6ff" font-size="7">F1</text>
+    <rect x="295" y="92" width="32" height="18" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="311" y="104" text-anchor="middle" fill="#58a6ff" font-size="7">F2</text>
+    <rect x="330" y="92" width="32" height="18" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="346" y="104" text-anchor="middle" fill="#58a6ff" font-size="7">F3</text>
+    <!-- Stage 2 backward -->
+    <rect x="345" y="92" width="32" height="18" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+    <text x="361" y="104" text-anchor="middle" fill="#3fb950" font-size="7">B3</text>
+    <rect x="380" y="92" width="32" height="18" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+    <text x="396" y="104" text-anchor="middle" fill="#3fb950" font-size="7">B2</text>
+    <rect x="415" y="92" width="32" height="18" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+    <text x="431" y="104" text-anchor="middle" fill="#3fb950" font-size="7">B1</text>
+    <rect x="450" y="92" width="32" height="18" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+    <text x="466" y="104" text-anchor="middle" fill="#3fb950" font-size="7">B0</text>
+
+    <!-- Stage 3 -->
+    <rect x="260" y="112" width="32" height="18" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="276" y="124" text-anchor="middle" fill="#58a6ff" font-size="7">F0</text>
+    <rect x="295" y="112" width="32" height="18" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="311" y="124" text-anchor="middle" fill="#58a6ff" font-size="7">F1</text>
+    <rect x="330" y="112" width="32" height="18" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="346" y="124" text-anchor="middle" fill="#58a6ff" font-size="7">F2</text>
+    <rect x="365" y="112" width="32" height="18" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="381" y="124" text-anchor="middle" fill="#58a6ff" font-size="7">F3</text>
+    <rect x="400" y="112" width="32" height="18" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+    <text x="416" y="124" text-anchor="middle" fill="#3fb950" font-size="7">B3</text>
+    <rect x="435" y="112" width="32" height="18" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+    <text x="451" y="124" text-anchor="middle" fill="#3fb950" font-size="7">B2</text>
+    <rect x="470" y="112" width="32" height="18" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+    <text x="486" y="124" text-anchor="middle" fill="#3fb950" font-size="7">B1</text>
+    <rect x="505" y="112" width="32" height="18" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+    <text x="521" y="124" text-anchor="middle" fill="#3fb950" font-size="7">B0</text>
+
+    <!-- GPipe bubble -->
+    <rect x="300" y="52" width="112" height="18" rx="2" fill="rgba(255,77,109,0.15)" stroke="#ff4d6d" stroke-width="1" stroke-dasharray="3,2"/>
+    <text x="356" y="64" text-anchor="middle" fill="#ff4d6d" font-size="7">← BUBBLE →</text>
+    <text x="600" y="64" fill="#ff4d6d" font-size="8">bubble = (P-1)/(P-1+M)</text>
+    <text x="600" y="76" fill="#8b949e" font-size="7">= 3/(3+4) = 43% idle</text>
+
+    <!-- ── 1F1B schedule ── -->
+    <text x="155" y="155" fill="#8b949e" font-size="8">Stage 0</text>
+    <text x="155" y="168" fill="#8b949e" font-size="8">Stage 1</text>
+    <text x="155" y="181" fill="#8b949e" font-size="8">Stage 2</text>
+    <text x="155" y="194" fill="#8b949e" font-size="8">Stage 3</text>
+
+    <!-- 1F1B Stage 0: F0 F1 F2 F3 ... B3 B2 B1 B0 -->
+    <g>
+      <!-- Warm-up phase -->
+      <rect x="200" y="145" width="28" height="16" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="214" y="157" text-anchor="middle" fill="#58a6ff" font-size="7">F0</text>
+      <rect x="230" y="145" width="28" height="16" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="244" y="157" text-anchor="middle" fill="#58a6ff" font-size="7">F1</text>
+      <rect x="260" y="145" width="28" height="16" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="274" y="157" text-anchor="middle" fill="#58a6ff" font-size="7">F2</text>
+      <rect x="290" y="145" width="28" height="16" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="304" y="157" text-anchor="middle" fill="#58a6ff" font-size="7">F3</text>
+      <!-- Steady state -->
+      <rect x="320" y="145" width="28" height="16" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="334" y="157" text-anchor="middle" fill="#3fb950" font-size="7">B0</text>
+      <rect x="380" y="145" width="28" height="16" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="394" y="157" text-anchor="middle" fill="#3fb950" font-size="7">B1</text>
+      <rect x="440" y="145" width="28" height="16" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="454" y="157" text-anchor="middle" fill="#3fb950" font-size="7">B2</text>
+      <rect x="500" y="145" width="28" height="16" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="514" y="157" text-anchor="middle" fill="#3fb950" font-size="7">B3</text>
+    </g>
+    <!-- Stage 1 1F1B -->
+    <g>
+      <rect x="230" y="162" width="28" height="16" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="244" y="174" text-anchor="middle" fill="#58a6ff" font-size="7">F0</text>
+      <rect x="260" y="162" width="28" height="16" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="274" y="174" text-anchor="middle" fill="#58a6ff" font-size="7">F1</text>
+      <rect x="320" y="162" width="28" height="16" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="334" y="174" text-anchor="middle" fill="#58a6ff" font-size="7">F2</text>
+      <rect x="350" y="162" width="28" height="16" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="364" y="174" text-anchor="middle" fill="#3fb950" font-size="7">B0</text>
+      <rect x="380" y="162" width="28" height="16" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="394" y="174" text-anchor="middle" fill="#58a6ff" font-size="7">F3</text>
+      <rect x="410" y="162" width="28" height="16" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="424" y="174" text-anchor="middle" fill="#3fb950" font-size="7">B1</text>
+      <rect x="470" y="162" width="28" height="16" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="484" y="174" text-anchor="middle" fill="#3fb950" font-size="7">B2</text>
+      <rect x="530" y="162" width="28" height="16" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="544" y="174" text-anchor="middle" fill="#3fb950" font-size="7">B3</text>
+    </g>
+    <!-- Stage 2 1F1B -->
+    <g>
+      <rect x="260" y="179" width="28" height="16" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="274" y="191" text-anchor="middle" fill="#58a6ff" font-size="7">F0</text>
+      <rect x="320" y="179" width="28" height="16" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="334" y="191" text-anchor="middle" fill="#58a6ff" font-size="7">F1</text>
+      <rect x="380" y="179" width="28" height="16" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="394" y="191" text-anchor="middle" fill="#3fb950" font-size="7">B0</text>
+      <rect x="410" y="179" width="28" height="16" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="424" y="191" text-anchor="middle" fill="#58a6ff" font-size="7">F2</text>
+      <rect x="440" y="179" width="28" height="16" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="454" y="191" text-anchor="middle" fill="#3fb950" font-size="7">B1</text>
+      <rect x="470" y="179" width="28" height="16" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="484" y="191" text-anchor="middle" fill="#58a6ff" font-size="7">F3</text>
+      <rect x="500" y="179" width="28" height="16" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="514" y="191" text-anchor="middle" fill="#3fb950" font-size="7">B2</text>
+      <rect x="560" y="179" width="28" height="16" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="574" y="191" text-anchor="middle" fill="#3fb950" font-size="7">B3</text>
+    </g>
+    <!-- Stage 3 1F1B -->
+    <g>
+      <rect x="290" y="196" width="28" height="16" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="304" y="208" text-anchor="middle" fill="#58a6ff" font-size="7">F0</text>
+      <rect x="350" y="196" width="28" height="16" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="364" y="208" text-anchor="middle" fill="#3fb950" font-size="7">B0</text>
+      <rect x="380" y="196" width="28" height="16" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="394" y="208" text-anchor="middle" fill="#58a6ff" font-size="7">F1</text>
+      <rect x="410" y="196" width="28" height="16" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="424" y="208" text-anchor="middle" fill="#3fb950" font-size="7">B1</text>
+      <rect x="440" y="196" width="28" height="16" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="454" y="208" text-anchor="middle" fill="#58a6ff" font-size="7">F2</text>
+      <rect x="470" y="196" width="28" height="16" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="484" y="208" text-anchor="middle" fill="#3fb950" font-size="7">B2</text>
+      <rect x="500" y="196" width="28" height="16" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="514" y="208" text-anchor="middle" fill="#58a6ff" font-size="7">F3</text>
+      <rect x="530" y="196" width="28" height="16" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="544" y="208" text-anchor="middle" fill="#3fb950" font-size="7">B3</text>
+    </g>
+
+    <!-- 1F1B bubble (small) -->
+    <rect x="200" y="196" width="87" height="16" rx="2" fill="rgba(255,77,109,0.12)" stroke="#ff4d6d" stroke-width="0.8" stroke-dasharray="3,2"/>
+    <text x="243" y="208" text-anchor="middle" fill="#ff4d6d" font-size="7">bubble</text>
+    <text x="600" y="165" fill="#3fb950" font-size="8" font-weight="600">Same bubble fraction</text>
+    <text x="600" y="177" fill="#8b949e" font-size="7">but lower peak memory</text>
+    <text x="600" y="189" fill="#8b949e" font-size="7">(no need to store all activations)</text>
+
+    <!-- ── Interleaved 1F1B ── -->
+    <text x="155" y="310" fill="#8b949e" font-size="8">Stage 0</text>
+    <text x="155" y="325" fill="#8b949e" font-size="8">Stage 1</text>
+    <text x="155" y="340" fill="#8b949e" font-size="8">Stage 2</text>
+    <text x="155" y="355" fill="#8b949e" font-size="8">Stage 3</text>
+
+    <!-- Interleaved 1F1B (2 chunks per stage — more fine-grained) -->
+    <!-- Stage 0: smaller cells, more interleaved -->
+    <g>
+      <rect x="200" y="301" width="22" height="14" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="211" y="311" text-anchor="middle" fill="#58a6ff" font-size="6">F0</text>
+      <rect x="224" y="301" width="22" height="14" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="235" y="311" text-anchor="middle" fill="#58a6ff" font-size="6">F2</text>
+      <rect x="248" y="301" width="22" height="14" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="259" y="311" text-anchor="middle" fill="#3fb950" font-size="6">B0</text>
+      <rect x="272" y="301" width="22" height="14" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="283" y="311" text-anchor="middle" fill="#58a6ff" font-size="6">F1</text>
+      <rect x="296" y="301" width="22" height="14" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="307" y="311" text-anchor="middle" fill="#58a6ff" font-size="6">F3</text>
+      <rect x="320" y="301" width="22" height="14" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="331" y="311" text-anchor="middle" fill="#3fb950" font-size="6">B2</text>
+      <rect x="344" y="301" width="22" height="14" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="355" y="311" text-anchor="middle" fill="#3fb950" font-size="6">B1</text>
+      <rect x="368" y="301" width="22" height="14" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="379" y="311" text-anchor="middle" fill="#3fb950" font-size="6">B3</text>
+    </g>
+    <!-- Stage 1 interleaved -->
+    <g>
+      <rect x="224" y="317" width="22" height="14" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="235" y="327" text-anchor="middle" fill="#58a6ff" font-size="6">F0</text>
+      <rect x="248" y="317" width="22" height="14" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="259" y="327" text-anchor="middle" fill="#58a6ff" font-size="6">F2</text>
+      <rect x="272" y="317" width="22" height="14" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="283" y="327" text-anchor="middle" fill="#3fb950" font-size="6">B0</text>
+      <rect x="296" y="317" width="22" height="14" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="307" y="327" text-anchor="middle" fill="#58a6ff" font-size="6">F1</text>
+      <rect x="320" y="317" width="22" height="14" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="331" y="327" text-anchor="middle" fill="#3fb950" font-size="6">B2</text>
+      <rect x="344" y="317" width="22" height="14" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="355" y="327" text-anchor="middle" fill="#58a6ff" font-size="6">F3</text>
+      <rect x="368" y="317" width="22" height="14" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="379" y="327" text-anchor="middle" fill="#3fb950" font-size="6">B1</text>
+      <rect x="392" y="317" width="22" height="14" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="403" y="327" text-anchor="middle" fill="#3fb950" font-size="6">B3</text>
+    </g>
+    <!-- Stage 2 interleaved -->
+    <g>
+      <rect x="248" y="333" width="22" height="14" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="259" y="343" text-anchor="middle" fill="#58a6ff" font-size="6">F0</text>
+      <rect x="272" y="333" width="22" height="14" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="283" y="343" text-anchor="middle" fill="#58a6ff" font-size="6">F2</text>
+      <rect x="296" y="333" width="22" height="14" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="307" y="343" text-anchor="middle" fill="#3fb950" font-size="6">B0</text>
+      <rect x="320" y="333" width="22" height="14" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="331" y="343" text-anchor="middle" fill="#58a6ff" font-size="6">F1</text>
+      <rect x="344" y="333" width="22" height="14" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="355" y="343" text-anchor="middle" fill="#3fb950" font-size="6">B2</text>
+      <rect x="368" y="333" width="22" height="14" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="379" y="343" text-anchor="middle" fill="#58a6ff" font-size="6">F3</text>
+      <rect x="392" y="333" width="22" height="14" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="403" y="343" text-anchor="middle" fill="#3fb950" font-size="6">B1</text>
+      <rect x="416" y="333" width="22" height="14" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="427" y="343" text-anchor="middle" fill="#3fb950" font-size="6">B3</text>
+    </g>
+    <!-- Stage 3 interleaved -->
+    <g>
+      <rect x="272" y="349" width="22" height="14" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="283" y="359" text-anchor="middle" fill="#58a6ff" font-size="6">F0</text>
+      <rect x="296" y="349" width="22" height="14" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="307" y="359" text-anchor="middle" fill="#3fb950" font-size="6">B0</text>
+      <rect x="320" y="349" width="22" height="14" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="331" y="359" text-anchor="middle" fill="#58a6ff" font-size="6">F2</text>
+      <rect x="344" y="349" width="22" height="14" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="355" y="359" text-anchor="middle" fill="#3fb950" font-size="6">B2</text>
+      <rect x="368" y="349" width="22" height="14" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="379" y="359" text-anchor="middle" fill="#58a6ff" font-size="6">F1</text>
+      <rect x="392" y="349" width="22" height="14" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="403" y="359" text-anchor="middle" fill="#3fb950" font-size="6">B1</text>
+      <rect x="416" y="349" width="22" height="14" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+      <text x="427" y="359" text-anchor="middle" fill="#58a6ff" font-size="6">F3</text>
+      <rect x="440" y="349" width="22" height="14" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+      <text x="451" y="359" text-anchor="middle" fill="#3fb950" font-size="6">B3</text>
+    </g>
+
+    <!-- Tiny bubble for interleaved -->
+    <rect x="200" y="349" width="70" height="14" rx="2" fill="rgba(255,77,109,0.1)" stroke="#ff4d6d" stroke-width="0.8" stroke-dasharray="2,2"/>
+    <text x="235" y="359" text-anchor="middle" fill="#ff4d6d" font-size="6">tiny bubble</text>
+
+    <!-- Formula comparison -->
+    <text x="600" y="320" fill="#39d0d8" font-size="8" font-weight="600">bubble ≈ (P-1) / (M×c)</text>
+    <text x="600" y="333" fill="#8b949e" font-size="7">c = chunks per stage</text>
+    <text x="600" y="346" fill="#8b949e" font-size="7">c=2: bubble = 3/8 = 37.5%</text>
+    <text x="600" y="359" fill="#8b949e" font-size="7">c=8: bubble = 3/32 = 9.4%</text>
+
+    <!-- Legend -->
+    <rect x="470" y="445" width="50" height="12" rx="2" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="495" y="455" text-anchor="middle" fill="#58a6ff" font-size="7">Forward</text>
+    <rect x="540" y="445" width="50" height="12" rx="2" fill="#0d2d0d" stroke="#3fb950" stroke-width="1"/>
+    <text x="565" y="455" text-anchor="middle" fill="#3fb950" font-size="7">Backward</text>
+    <rect x="610" y="445" width="50" height="12" rx="2" fill="rgba(255,77,109,0.12)" stroke="#ff4d6d" stroke-width="0.8" stroke-dasharray="3,2"/>
+    <text x="635" y="455" text-anchor="middle" fill="#ff4d6d" font-size="7">Bubble</text>
+    <text x="410" y="455" fill="#8b949e" font-size="7">legend:</text>
+
+    <!-- Summary table -->
+    <rect x="90" y="390" width="530" height="60" rx="5" fill="rgba(255,255,255,0.02)" stroke="#21262d" stroke-width="1"/>
+    <text x="105" y="407" fill="#8b949e" font-size="8" font-weight="600">Schedule</text>
+    <text x="240" y="407" fill="#8b949e" font-size="8" font-weight="600">Bubble Ratio</text>
+    <text x="380" y="407" fill="#8b949e" font-size="8" font-weight="600">Peak Memory</text>
+    <text x="510" y="407" fill="#8b949e" font-size="8" font-weight="600">Comm Overhead</text>
+    <line x1="105" y1="412" x2="605" y2="412" stroke="#21262d" stroke-width="0.5"/>
+    <text x="105" y="425" fill="#f78166" font-size="8">GPipe</text>
+    <text x="240" y="425" fill="#e6edf3" font-size="8">(P-1)/(P-1+M)</text>
+    <text x="380" y="425" fill="#f78166" font-size="8">High (all acts)</text>
+    <text x="510" y="425" fill="#e6edf3" font-size="8">Low</text>
+    <text x="105" y="438" fill="#3fb950" font-size="8">1F1B</text>
+    <text x="240" y="438" fill="#e6edf3" font-size="8">(P-1)/(P-1+M)</text>
+    <text x="380" y="438" fill="#3fb950" font-size="8">Low (1 stage)</text>
+    <text x="510" y="438" fill="#e6edf3" font-size="8">Low</text>
+    <text x="105" y="451" fill="#39d0d8" font-size="8">Interleaved 1F1B</text>
+    <text x="240" y="451" fill="#e6edf3" font-size="8">(P-1)/(M×chunks)</text>
+    <text x="380" y="451" fill="#39d0d8" font-size="8">Low (1 stage)</text>
+    <text x="510" y="451" fill="#f78166" font-size="8">Higher (×chunks)</text>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 17 -->
+<div class="diagram-card" id="d17">
+  <div class="diagram-header">
+    <span class="diagram-num">17</span>
+    <span class="diagram-title">Transformer FLOP Budget Pie — LLaMA-3 70B per Token</span>
+  </div>
+  <svg viewBox="0 0 820 480" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="480" fill="#0d1117"/>
+    <defs>
+      <filter id="glow-green">
+        <feGaussianBlur stdDeviation="3" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+
+    <!-- Title -->
+    <text x="410" y="36" text-anchor="middle" fill="#e6edf3" font-size="14" font-weight="700">GEMM dominates — 99.8% of compute is matrix multiply</text>
+    <text x="410" y="54" text-anchor="middle" fill="#8b949e" font-size="10">Optimizing non-GEMM ops ≈ rounding error</text>
+
+    <!-- Pie chart centered at 260,270 r=170 -->
+    <!-- FFN: 67% = 241.2°, start 0° = top (−90°) → start=-90°, end=151.2° -->
+    <!-- SVG arc: start at top (-90°) clockwise -->
+
+    <!-- FFN slice: 67% = 241.2° -->
+    <!-- start angle: -90°, end angle: -90+241.2 = 151.2° -->
+    <!-- in radians: start=-π/2, end=151.2*π/180 -->
+    <!-- center 260,265, r=165 -->
+    <!-- start point: 260+165*cos(-π/2)=260+0=260, 265+165*sin(-π/2)=265-165=100 -->
+    <!-- end point: 260+165*cos(151.2°)=260+165*(-0.874)=260-144=116, 265+165*sin(151.2°)=265+165*(0.485)=265+80=345 -->
+    <path d="M260,265 L260,100 A165,165 0 1,1 116.4,344.8 Z" fill="rgba(63,185,80,0.85)" stroke="#0d1117" stroke-width="2"/>
+
+    <!-- Attention QKV+O: 33% = 118.8° -->
+    <!-- start: 151.2°, end: 151.2+118.8=270° (bottom, pointing down) -->
+    <!-- start point: 116.4,344.8 -->
+    <!-- end point: 260+165*cos(270°-90°)=260+165*cos(180°)=260-165=95, 265+165*sin(180°)=265 -->
+    <!-- wait: SVG angle is from 3-o'clock. I'll recalc using standard SVG coords -->
+    <!-- Let me use: angle 0 = right (3 o'clock), going clockwise -->
+    <!-- FFN: starts at -90° (top), sweeps 241.2°, ends at 151.2° from 3-o'clock -->
+    <!-- For SVG, cos(deg*π/180) and sin(deg*π/180) where 0=right, going clockwise y flips -->
+    <!-- I'll just hardcode the paths with approximate coords -->
+
+    <!-- Attention projections: 33% = 118.8° (from 151.2° to 270°) -->
+    <!-- start: 260+165*cos(151.2°)=260-144.2=115.8, 265+165*sin(151.2°)=265+79.8=344.8 -->
+    <!-- end: 260+165*cos(270°)=260+0=260, 265+165*sin(270°)=265-165=100 ... wait that's full circle -->
+    <!-- Let me use: 270° = bottom-center = (260, 265+165=430) -->
+    <!-- end at 270° from 3-o'clock: cos(270°)=0, sin(270°)=-1 → (260,265-165=100) — this is the start of FFN -->
+    <!-- Hmm let me redo. Standard math circle: 0=right, 90=up (but SVG y-axis is down) -->
+    <!-- For SVG: 0=right, +angle = clockwise. So 270° clockwise from 3-o'clock = pointing UP = (0,-1) -->
+    <!-- But I want pie starting from TOP (12 o'clock), going clockwise. Top = 270° in standard or -90°. -->
+    <!-- Let angle be measured clockwise from top (12 o'clock) -->
+    <!-- point(a) = cx + r*sin(a), cy - r*cos(a) -->
+    <!-- FFN (0° to 241.2°): start=(260,100), end=(260+165*sin(241.2°), 265-165*cos(241.2°)) -->
+    <!--   sin(241.2°)=-0.874, cos(241.2°)=-0.485 → (260-144.2, 265+80.0) = (115.8, 345) ✓ -->
+    <!-- Attn QKV+O (241.2° to 360°): start=(115.8,345), end=(260,100) but that's a 118.8° arc. -->
+    <!-- Let me split into Attn+small slices -->
+
+    <!-- Attention QKV+O: 33% = 118.8° (241.2° to 360°) -->
+    <!-- end at 360°=0°: (260, 100) same as FFN start -->
+    <path d="M260,265 L115.8,345 A165,165 0 0,1 260,100 Z" fill="rgba(88,166,255,0.85)" stroke="#0d1117" stroke-width="2"/>
+
+    <!-- For remaining tiny slices, show them as thin wedges near the join point -->
+    <!-- Attention scores: 0.5% = 1.8° (inside attn projection) — too tiny to show separately -->
+    <!-- Just add tiny arc labels -->
+    <!-- LayerNorm: 0.1% | Other: 0.1% — shown as a thin strip at bottom of attn -->
+
+    <!-- Overlay tiny slice near the 360° point (top-right area) -->
+    <!-- 0.5% teal + 0.2% gray in top region -->
+    <path d="M260,265 L260,100 A165,165 0 0,1 267,100.1 Z" fill="#39d0d8" stroke="#0d1117" stroke-width="1"/>
+    <path d="M260,265 L267,100.1 A165,165 0 0,1 270.5,100.5 Z" fill="#444c56" stroke="#0d1117" stroke-width="1"/>
+
+    <!-- Labels -->
+    <!-- FFN label (large, center of 241° arc) -->
+    <!-- Center of FFN arc at ~120° from top → sin(120°)*120+260, cos(120°)*... -->
+    <text x="190" y="240" text-anchor="middle" fill="#0d1117" font-size="13" font-weight="700">FFN</text>
+    <text x="190" y="257" text-anchor="middle" fill="#0d1117" font-size="11" font-weight="700">up+gate+down</text>
+    <text x="190" y="273" text-anchor="middle" fill="#0d1117" font-size="15" font-weight="700">67%</text>
+
+    <!-- Attn label (right side) -->
+    <text x="345" y="200" text-anchor="middle" fill="#0d1117" font-size="10" font-weight="700">Attn</text>
+    <text x="345" y="215" text-anchor="middle" fill="#0d1117" font-size="9" font-weight="700">QKV + O</text>
+    <text x="345" y="230" text-anchor="middle" fill="#0d1117" font-size="13" font-weight="700">33%</text>
+
+    <!-- Leader lines for tiny slices -->
+    <line x1="270" y1="100" x2="320" y2="70" stroke="#39d0d8" stroke-width="1"/>
+    <text x="325" y="68" fill="#39d0d8" font-size="9" font-weight="600">Attn scores+weighted sum: 0.5%</text>
+    <line x1="270" y1="100" x2="330" y2="52" stroke="#8b949e" stroke-width="1"/>
+    <text x="335" y="50" fill="#8b949e" font-size="9">LayerNorm / Other: 0.2%</text>
+
+    <!-- Right side stats panel -->
+    <rect x="480" y="80" width="300" height="290" rx="8" fill="rgba(255,255,255,0.02)" stroke="#21262d" stroke-width="1"/>
+    <text x="630" y="103" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">LLaMA-3 70B · Per Token FLOPs</text>
+    <line x1="495" y1="110" x2="765" y2="110" stroke="#21262d" stroke-width="0.8"/>
+
+    <!-- Bar chart for each category -->
+    <!-- FFN: 67% -->
+    <rect x="500" y="120" width="201" height="20" rx="3" fill="rgba(63,185,80,0.8)"/>
+    <text x="712" y="135" fill="#3fb950" font-size="9" font-weight="700"> 67%</text>
+    <text x="500" y="116" fill="#8b949e" font-size="8">FFN (gate+up+down projections)</text>
+
+    <!-- Attn QKV+O: 33% -->
+    <rect x="500" y="155" width="99" height="20" rx="3" fill="rgba(88,166,255,0.8)"/>
+    <text x="610" y="170" fill="#58a6ff" font-size="9" font-weight="700"> 33%</text>
+    <text x="500" y="151" fill="#8b949e" font-size="8">Attention projections (QKV + O)</text>
+
+    <!-- Attn scores: 0.5% -->
+    <rect x="500" y="190" width="2" height="20" rx="1" fill="rgba(57,208,216,0.8)"/>
+    <text x="514" y="205" fill="#39d0d8" font-size="9" font-weight="700"> 0.5%</text>
+    <text x="500" y="186" fill="#8b949e" font-size="8">Attention scores + weighted sum</text>
+
+    <!-- LayerNorm: 0.1% -->
+    <rect x="500" y="225" width="1" height="14" rx="1" fill="#8b949e"/>
+    <text x="514" y="237" fill="#8b949e" font-size="9"> 0.1%</text>
+    <text x="500" y="221" fill="#8b949e" font-size="8">LayerNorm / RMSNorm</text>
+
+    <!-- Other: 0.1% -->
+    <rect x="500" y="252" width="1" height="14" rx="1" fill="#444c56"/>
+    <text x="514" y="264" fill="#8b949e" font-size="9"> 0.1%</text>
+    <text x="500" y="248" fill="#8b949e" font-size="8">Other (embeddings, softmax…)</text>
+
+    <!-- Key insight boxes -->
+    <rect x="495" y="285" width="260" height="35" rx="5" fill="rgba(63,185,80,0.1)" stroke="#3fb950" stroke-width="1"/>
+    <text x="625" y="299" text-anchor="middle" fill="#3fb950" font-size="8" font-weight="700">GEMM = 99.8% of FLOPs</text>
+    <text x="625" y="313" text-anchor="middle" fill="#8b949e" font-size="7">Flash Attention matters for memory, not FLOPs</text>
+
+    <rect x="495" y="328" width="260" height="28" rx="5" fill="rgba(88,166,255,0.08)" stroke="#58a6ff" stroke-width="1"/>
+    <text x="625" y="340" text-anchor="middle" fill="#58a6ff" font-size="8" font-weight="600">Total: ~18.4 TFLOP per token</text>
+    <text x="625" y="352" text-anchor="middle" fill="#8b949e" font-size="7">≈ 2×params (BF16 forward pass)</text>
+
+    <!-- Model params breakdown -->
+    <text x="105" y="440" fill="#8b949e" font-size="8" text-anchor="middle">70B model · 80 layers · 8192 d_model · 28672 FFN dim · GQA heads</text>
+    <text x="105" y="454" fill="#8b949e" font-size="8" text-anchor="middle">profiling: ncu + torch.profiler on H100</text>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 18 -->
+<div class="diagram-card" id="d18">
+  <div class="diagram-header">
+    <span class="diagram-num">18</span>
+    <span class="diagram-title">Quantization Error Visualization — BF16 → FP8 → INT4 → INT4-AWQ</span>
+  </div>
+  <svg viewBox="0 0 820 500" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="500" fill="#0d1117"/>
+    <defs>
+      <clipPath id="clip-bf16"><rect x="40" y="70" width="175" height="160"/></clipPath>
+      <clipPath id="clip-fp8"><rect x="230" y="70" width="175" height="160"/></clipPath>
+      <clipPath id="clip-int4n"><rect x="420" y="70" width="175" height="160"/></clipPath>
+      <clipPath id="clip-int4a"><rect x="610" y="70" width="175" height="160"/></clipPath>
+    </defs>
+
+    <!-- Grid lines (subtle) -->
+    <g stroke="#21262d" stroke-width="0.5">
+      <line x1="40" y1="100" x2="800" y2="100"/>
+      <line x1="40" y1="130" x2="800" y2="130"/>
+      <line x1="40" y1="160" x2="800" y2="160"/>
+      <line x1="40" y1="190" x2="800" y2="190"/>
+    </g>
+
+    <!-- ── Column headers ── -->
+    <text x="127" y="52" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">BF16</text>
+    <text x="127" y="66" text-anchor="middle" fill="#3fb950" font-size="8">full precision</text>
+    <text x="317" y="52" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">FP8 (E4M3)</text>
+    <text x="317" y="66" text-anchor="middle" fill="#58a6ff" font-size="8">slight rounding</text>
+    <text x="507" y="52" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">INT4 Naive</text>
+    <text x="507" y="66" text-anchor="middle" fill="#f78166" font-size="8">heavy clipping</text>
+    <text x="697" y="52" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">INT4 AWQ</text>
+    <text x="697" y="66" text-anchor="middle" fill="#ffd700" font-size="8">outlier-aware</text>
+
+    <!-- ── BF16 Bell Curve — full distribution ── -->
+    <!-- Bell curve: center 127, peak at y=80, σ≈25px wide, range x=40..215 -->
+    <path d="M42,230 C50,230 60,225 70,205 C80,182 90,145 100,120 C107,105 115,80 127,73 C139,80 147,105 154,120 C164,145 174,182 184,205 C194,225 204,230 212,230" fill="rgba(63,185,80,0.15)" stroke="#3fb950" stroke-width="2" clip-path="url(#clip-bf16)"/>
+    <!-- Clip marks - no clipping for BF16 -->
+    <text x="127" y="248" text-anchor="middle" fill="#3fb950" font-size="8">clip range: ±448</text>
+    <text x="127" y="260" text-anchor="middle" fill="#8b949e" font-size="7">all values preserved</text>
+
+    <!-- ── FP8 Bell Curve — slight clip at tails ── -->
+    <!-- Same curve but clipped at ±3σ equivalent, slight staircase effect -->
+    <path d="M232,230 C240,230 250,225 260,205 C270,182 280,145 290,120 C297,105 305,80 317,73 C329,80 337,105 344,120 C354,145 364,182 374,205 C384,225 394,228 402,228" fill="rgba(88,166,255,0.15)" stroke="#58a6ff" stroke-width="2" clip-path="url(#clip-fp8)"/>
+    <!-- slight staircase overlay -->
+    <path d="M232,230 C240,230 250,226 258,208 C262,200 264,195 268,186 C270,179 272,173 276,165 C280,155 283,147 287,138 C290,128 293,121 296,115 C299,108 303,101 307,95 C311,89 315,82 317,74 C319,82 323,89 327,95 C331,101 335,108 338,115 C341,121 344,128 347,138 C351,147 354,155 358,165 C362,173 364,179 366,186 C370,195 372,200 376,208 C380,220 388,226 398,228" fill="none" stroke="rgba(88,166,255,0.4)" stroke-width="1" stroke-dasharray="3,2" clip-path="url(#clip-fp8)"/>
+    <!-- Clip lines -->
+    <line x1="236" y1="70" x2="236" y2="235" stroke="#58a6ff" stroke-width="0.8" stroke-dasharray="3,2" opacity="0.5"/>
+    <line x1="398" y1="70" x2="398" y2="235" stroke="#58a6ff" stroke-width="0.8" stroke-dasharray="3,2" opacity="0.5"/>
+    <text x="317" y="248" text-anchor="middle" fill="#58a6ff" font-size="8">clip range: ±448</text>
+    <text x="317" y="260" text-anchor="middle" fill="#8b949e" font-size="7">slight rounding, tails clipped</text>
+
+    <!-- ── INT4 Naive — wide clip, coarse buckets ── -->
+    <!-- Severely quantized: only 16 values, heavy clipping, flat distribution -->
+    <!-- Show histogram bars instead of curve -->
+    <path d="M422,230 C425,230 426,228 428,220 C430,208 432,190 436,166 C440,141 445,118 452,103 C458,90 465,82 475,76 C478,74 483,72 490,71 C496,72 500,73 507,74 C514,74 520,75 527,78 C537,83 543,92 549,106 C555,120 560,142 564,167 C568,193 570,210 572,222 C574,226 576,229 578,230" fill="rgba(247,129,102,0.12)" stroke="rgba(247,129,102,0.4)" stroke-width="1" clip-path="url(#clip-int4n)"/>
+    <!-- Coarse staircase (only 16 levels) -->
+    <g stroke="#f78166" stroke-width="1.5" opacity="0.7" clip-path="url(#clip-int4n)">
+      <polyline points="422,230 432,230 432,210 442,210 442,180 452,180 452,148 462,148 462,118 472,118 472,98 482,98 482,82 492,82 492,72 502,72 502,78 512,78 512,95 522,95 522,120 532,120 532,148 542,148 542,178 552,178 552,208 562,208 562,227 572,227 572,230 578,230" fill="none"/>
+    </g>
+    <!-- Severe clip lines closer in -->
+    <line x1="440" y1="70" x2="440" y2="235" stroke="#f78166" stroke-width="1.2" stroke-dasharray="3,2"/>
+    <line x1="572" y1="70" x2="572" y2="235" stroke="#f78166" stroke-width="1.2" stroke-dasharray="3,2"/>
+    <text x="440" y="67" text-anchor="middle" fill="#f78166" font-size="7">clip</text>
+    <text x="572" y="67" text-anchor="middle" fill="#f78166" font-size="7">clip</text>
+    <!-- Missing tails annotation -->
+    <rect x="422" y="85" width="16" height="80" rx="1" fill="rgba(255,77,109,0.2)" stroke="none"/>
+    <rect x="576" y="85" width="17" height="80" rx="1" fill="rgba(255,77,109,0.2)" stroke="none"/>
+    <text x="507" y="248" text-anchor="middle" fill="#f78166" font-size="8">clip range: ±1.0 (narrow)</text>
+    <text x="507" y="260" text-anchor="middle" fill="#8b949e" font-size="7">outliers saturate → large error</text>
+
+    <!-- ── INT4 AWQ — protected outliers ── -->
+    <!-- Better distribution, outliers managed via per-channel scale -->
+    <path d="M612,230 C617,230 622,228 628,218 C634,207 640,190 647,171 C654,151 661,128 668,109 C673,97 679,86 687,79 C691,75 694,73 697,72 C700,73 703,75 707,79 C715,86 721,97 726,109 C733,128 740,151 747,171 C754,190 760,207 766,218 C772,228 777,230 782,230" fill="rgba(255,215,0,0.12)" stroke="#ffd700" stroke-width="2" clip-path="url(#clip-int4a)"/>
+    <!-- Slightly coarse but tails preserved -->
+    <g stroke="#ffd700" stroke-width="1" opacity="0.5" clip-path="url(#clip-int4a)">
+      <polyline points="612,230 617,229 622,224 628,213 634,198 640,180 646,160 652,140 658,122 664,107 670,95 676,84 682,77 688,73 694,72 697,72 700,72 706,73 712,77 718,84 724,95 730,107 736,122 742,140 748,160 754,180 760,198 766,213 772,224 778,229 783,230" fill="none"/>
+    </g>
+    <!-- Clip lines match BF16 range (protected) -->
+    <line x1="620" y1="70" x2="620" y2="235" stroke="#ffd700" stroke-width="0.8" stroke-dasharray="3,2" opacity="0.6"/>
+    <line x1="775" y1="70" x2="775" y2="235" stroke="#ffd700" stroke-width="0.8" stroke-dasharray="3,2" opacity="0.6"/>
+    <!-- Outlier protection dots -->
+    <circle cx="617" cy="215" r="3" fill="#ffd700" opacity="0.7"/>
+    <circle cx="779" cy="215" r="3" fill="#ffd700" opacity="0.7"/>
+    <text x="697" y="248" text-anchor="middle" fill="#ffd700" font-size="8">clip range: ±448 (per-ch scaled)</text>
+    <text x="697" y="260" text-anchor="middle" fill="#8b949e" font-size="7">outlier channels scaled then quantized</text>
+
+    <!-- X axis labels -->
+    <text x="127" y="240" text-anchor="middle" fill="#8b949e" font-size="7">← weight magnitude →</text>
+    <text x="317" y="240" text-anchor="middle" fill="#8b949e" font-size="7">← weight magnitude →</text>
+    <text x="507" y="240" text-anchor="middle" fill="#8b949e" font-size="7">← weight magnitude →</text>
+    <text x="697" y="240" text-anchor="middle" fill="#8b949e" font-size="7">← weight magnitude →</text>
+
+    <!-- Baseline: MMLU quality numbers -->
+    <rect x="40" y="285" width="740" height="175" rx="6" fill="rgba(255,255,255,0.02)" stroke="#21262d" stroke-width="1"/>
+    <text x="410" y="307" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">Quality Impact (LLaMA-3 70B · MMLU 5-shot)</text>
+    <line x1="55" y1="315" x2="765" y2="315" stroke="#21262d" stroke-width="0.8"/>
+
+    <!-- Header row -->
+    <text x="130" y="330" text-anchor="middle" fill="#8b949e" font-size="9" font-weight="600">Format</text>
+    <text x="260" y="330" text-anchor="middle" fill="#8b949e" font-size="9" font-weight="600">Bits/Weight</text>
+    <text x="390" y="330" text-anchor="middle" fill="#8b949e" font-size="9" font-weight="600">MMLU Score</text>
+    <text x="530" y="330" text-anchor="middle" fill="#8b949e" font-size="9" font-weight="600">Relative Size</text>
+    <text x="680" y="330" text-anchor="middle" fill="#8b949e" font-size="9" font-weight="600">Throughput (vs BF16)</text>
+
+    <!-- BF16 -->
+    <text x="130" y="352" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">BF16</text>
+    <text x="260" y="352" text-anchor="middle" fill="#e6edf3" font-size="9">16 bits</text>
+    <rect x="315" y="342" width="145" height="12" rx="2" fill="rgba(63,185,80,0.3)"/>
+    <text x="392" y="352" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">82.6%</text>
+    <text x="530" y="352" text-anchor="middle" fill="#e6edf3" font-size="9">140 GB (baseline)</text>
+    <text x="680" y="352" text-anchor="middle" fill="#e6edf3" font-size="9">1.0×</text>
+
+    <!-- FP8 -->
+    <text x="130" y="374" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">FP8 E4M3</text>
+    <text x="260" y="374" text-anchor="middle" fill="#e6edf3" font-size="9">8 bits</text>
+    <rect x="315" y="364" width="142" height="12" rx="2" fill="rgba(88,166,255,0.3)"/>
+    <text x="392" y="374" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">82.3%</text>
+    <text x="530" y="374" text-anchor="middle" fill="#e6edf3" font-size="9">70 GB (0.5×)</text>
+    <text x="680" y="374" text-anchor="middle" fill="#3fb950" font-size="9">2.0×</text>
+
+    <!-- INT4 Naive -->
+    <text x="130" y="396" text-anchor="middle" fill="#f78166" font-size="9" font-weight="700">INT4 Naive</text>
+    <text x="260" y="396" text-anchor="middle" fill="#e6edf3" font-size="9">4 bits</text>
+    <rect x="315" y="386" width="98" height="12" rx="2" fill="rgba(247,129,102,0.3)"/>
+    <text x="392" y="396" text-anchor="middle" fill="#f78166" font-size="9" font-weight="700">56.1%</text>
+    <text x="530" y="396" text-anchor="middle" fill="#e6edf3" font-size="9">35 GB (0.25×)</text>
+    <text x="680" y="396" text-anchor="middle" fill="#3fb950" font-size="9">3.8×</text>
+
+    <!-- INT4 AWQ -->
+    <text x="130" y="418" text-anchor="middle" fill="#ffd700" font-size="9" font-weight="700">INT4 AWQ</text>
+    <text x="260" y="418" text-anchor="middle" fill="#e6edf3" font-size="9">4 bits*</text>
+    <rect x="315" y="408" width="140" height="12" rx="2" fill="rgba(255,215,0,0.25)"/>
+    <text x="392" y="418" text-anchor="middle" fill="#ffd700" font-size="9" font-weight="700">81.9%</text>
+    <text x="530" y="418" text-anchor="middle" fill="#e6edf3" font-size="9">37 GB (~0.26×)</text>
+    <text x="680" y="418" text-anchor="middle" fill="#3fb950" font-size="9">3.5×</text>
+
+    <text x="410" y="448" text-anchor="middle" fill="#8b949e" font-size="8">* INT4 AWQ keeps BF16 for 1% most salient channels · activation-aware weight quantization · per-group scale</text>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 19 -->
+<div class="diagram-card" id="d19">
+  <div class="diagram-header">
+    <span class="diagram-num">19</span>
+    <span class="diagram-title">vLLM Request Lifecycle — API to Token Stream</span>
+  </div>
+  <svg viewBox="0 0 820 500" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="500" fill="#0d1117"/>
+    <defs>
+      <marker id="arr-b2" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z" fill="#58a6ff"/>
+      </marker>
+      <marker id="arr-g2" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z" fill="#3fb950"/>
+      </marker>
+      <marker id="arr-o2" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z" fill="#f78166"/>
+      </marker>
+      <marker id="arr-t2" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z" fill="#39d0d8"/>
+      </marker>
+    </defs>
+
+    <!-- Main flow: left to right, two rows -->
+    <!-- Row 1: Client → API Server → LLMEngine → Scheduler -->
+    <!-- Row 2: Worker ← ModelRunner ← Scheduler (down arrow) -->
+    <!-- Row 3: GPU → KV Cache → token output -->
+
+    <!-- ── Component Boxes ── -->
+    <!-- Client -->
+    <rect x="30" y="60" width="90" height="48" rx="6" fill="#1a1a2e" stroke="#bc8cff" stroke-width="1.5"/>
+    <text x="75" y="79" text-anchor="middle" fill="#bc8cff" font-size="9" font-weight="700">Client</text>
+    <text x="75" y="92" text-anchor="middle" fill="#8b949e" font-size="7">HTTP POST</text>
+    <text x="75" y="103" text-anchor="middle" fill="#8b949e" font-size="7">/v1/completions</text>
+
+    <!-- API Server -->
+    <rect x="160" y="60" width="100" height="48" rx="6" fill="#0d2137" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="210" y="79" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">API Server</text>
+    <text x="210" y="92" text-anchor="middle" fill="#8b949e" font-size="7">FastAPI · async</text>
+    <text x="210" y="103" text-anchor="middle" fill="#8b949e" font-size="7">tokenize + validate</text>
+
+    <!-- LLMEngine -->
+    <rect x="305" y="60" width="110" height="48" rx="6" fill="#1a2744" stroke="#58a6ff" stroke-width="2"/>
+    <text x="360" y="79" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">LLMEngine</text>
+    <text x="360" y="92" text-anchor="middle" fill="#8b949e" font-size="7">step() loop · async</text>
+    <text x="360" y="103" text-anchor="middle" fill="#8b949e" font-size="7">orchestrate</text>
+
+    <!-- Scheduler -->
+    <rect x="460" y="60" width="110" height="48" rx="6" fill="#1a2744" stroke="#ffd700" stroke-width="2"/>
+    <text x="515" y="79" text-anchor="middle" fill="#ffd700" font-size="9" font-weight="700">Scheduler</text>
+    <text x="515" y="92" text-anchor="middle" fill="#8b949e" font-size="7">FCFS / priority</text>
+    <text x="515" y="103" text-anchor="middle" fill="#8b949e" font-size="7">allocate KV pages</text>
+
+    <!-- Arrows row 1 -->
+    <line x1="120" y1="84" x2="158" y2="84" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arr-b2)"/>
+    <text x="139" y="78" text-anchor="middle" fill="#8b949e" font-size="7">request</text>
+
+    <line x1="260" y1="84" x2="303" y2="84" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arr-b2)"/>
+    <text x="281" y="78" text-anchor="middle" fill="#8b949e" font-size="7">SequenceGroup</text>
+
+    <line x1="415" y1="84" x2="458" y2="84" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arr-b2)"/>
+    <text x="436" y="78" text-anchor="middle" fill="#8b949e" font-size="7">add to queue</text>
+
+    <!-- Down arrow from Scheduler to ModelRunner -->
+    <line x1="515" y1="108" x2="515" y2="175" stroke="#ffd700" stroke-width="1.5" marker-end="url(#arr-b2)"/>
+    <text x="525" y="147" fill="#8b949e" font-size="7">SchedulerOutput</text>
+    <text x="525" y="158" fill="#8b949e" font-size="7">(blocks assigned)</text>
+
+    <!-- ModelRunner -->
+    <rect x="460" y="177" width="110" height="48" rx="6" fill="#1a2744" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="515" y="196" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">ModelRunner</text>
+    <text x="515" y="209" text-anchor="middle" fill="#8b949e" font-size="7">prepare inputs</text>
+    <text x="515" y="220" text-anchor="middle" fill="#8b949e" font-size="7">build attn metadata</text>
+
+    <!-- Arrow left from ModelRunner to Worker -->
+    <line x1="458" y1="201" x2="382" y2="201" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr-g2)"/>
+    <text x="420" y="195" text-anchor="middle" fill="#8b949e" font-size="7">execute_model()</text>
+
+    <!-- Worker -->
+    <rect x="290" y="177" width="90" height="48" rx="6" fill="#0d2d1a" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="335" y="196" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">Worker</text>
+    <text x="335" y="209" text-anchor="middle" fill="#8b949e" font-size="7">GPU process</text>
+    <text x="335" y="220" text-anchor="middle" fill="#8b949e" font-size="7">CacheEngine</text>
+
+    <!-- Arrow down to GPU -->
+    <line x1="335" y1="225" x2="335" y2="295" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr-g2)"/>
+    <text x="345" y="265" fill="#8b949e" font-size="7">forward()</text>
+
+    <!-- GPU -->
+    <rect x="285" y="297" width="100" height="48" rx="6" fill="#1a0d2e" stroke="#bc8cff" stroke-width="2"/>
+    <text x="335" y="316" text-anchor="middle" fill="#bc8cff" font-size="9" font-weight="700">GPU Kernels</text>
+    <text x="335" y="329" text-anchor="middle" fill="#8b949e" font-size="7">GEMM · FlashAttn</text>
+    <text x="335" y="340" text-anchor="middle" fill="#8b949e" font-size="7">PagedAttn</text>
+
+    <!-- KV Cache Manager -->
+    <rect x="140" y="297" width="120" height="48" rx="6" fill="#0d2d1a" stroke="#39d0d8" stroke-width="1.5"/>
+    <text x="200" y="316" text-anchor="middle" fill="#39d0d8" font-size="9" font-weight="700">KV Cache Mgr</text>
+    <text x="200" y="329" text-anchor="middle" fill="#8b949e" font-size="7">PagedAttn blocks</text>
+    <text x="200" y="340" text-anchor="middle" fill="#8b949e" font-size="7">HBM page pool</text>
+
+    <!-- Arrow GPU ↔ KV Cache -->
+    <line x1="283" y1="321" x2="262" y2="321" stroke="#39d0d8" stroke-width="1.5" marker-end="url(#arr-t2)"/>
+    <text x="272" y="315" text-anchor="middle" fill="#8b949e" font-size="7">R/W</text>
+
+    <!-- Token output from GPU upward right -->
+    <line x1="385" y1="321" x2="500" y2="321" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr-g2)"/>
+    <text x="442" y="315" text-anchor="middle" fill="#8b949e" font-size="7">sampled token</text>
+
+    <!-- Detokenizer -->
+    <rect x="500" y="297" width="100" height="48" rx="6" fill="#0d2d1a" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="550" y="316" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">Detokenizer</text>
+    <text x="550" y="329" text-anchor="middle" fill="#8b949e" font-size="7">token → string</text>
+    <text x="550" y="340" text-anchor="middle" fill="#8b949e" font-size="7">stream SSE</text>
+
+    <!-- Arrow back to client -->
+    <line x1="600" y1="321" x2="680" y2="321" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr-g2)"/>
+    <!-- Client response box -->
+    <rect x="682" y="297" width="100" height="48" rx="6" fill="#1a1a2e" stroke="#bc8cff" stroke-width="1.5"/>
+    <text x="732" y="316" text-anchor="middle" fill="#bc8cff" font-size="9" font-weight="700">Client</text>
+    <text x="732" y="329" text-anchor="middle" fill="#8b949e" font-size="7">SSE stream</text>
+    <text x="732" y="340" text-anchor="middle" fill="#8b949e" font-size="7">data: {...}</text>
+
+    <!-- Preemption path -->
+    <rect x="130" y="177" width="130" height="48" rx="6" fill="rgba(247,129,102,0.08)" stroke="#f78166" stroke-width="1.5" stroke-dasharray="5,3"/>
+    <text x="195" y="196" text-anchor="middle" fill="#f78166" font-size="9" font-weight="700">Preemption</text>
+    <text x="195" y="209" text-anchor="middle" fill="#8b949e" font-size="7">KV pages full →</text>
+    <text x="195" y="220" text-anchor="middle" fill="#8b949e" font-size="7">swap to CPU / requeue</text>
+
+    <!-- Arrow from Scheduler to Preemption -->
+    <line x1="460" y1="95" x2="265" y2="95" stroke="#f78166" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arr-o2)"/>
+    <line x1="265" y1="95" x2="265" y2="185" stroke="#f78166" stroke-width="1" stroke-dasharray="4,3"/>
+    <line x1="265" y1="190" x2="262" y2="195" stroke="#f78166" stroke-width="1" marker-end="url(#arr-o2)"/>
+    <text x="360" y="90" text-anchor="middle" fill="#f78166" font-size="7">KV full → preempt</text>
+
+    <!-- Legend / annotations -->
+    <rect x="30" y="390" width="760" height="90" rx="6" fill="rgba(255,255,255,0.02)" stroke="#21262d" stroke-width="1"/>
+    <text x="410" y="410" text-anchor="middle" fill="#e6edf3" font-size="10" font-weight="700">Key Design Principles</text>
+
+    <text x="55" y="430" fill="#ffd700" font-size="8" font-weight="700">Scheduler:</text>
+    <text x="120" y="430" fill="#8b949e" font-size="8">Tracks every KV page (16 tokens). Decides which requests run each step.</text>
+
+    <text x="55" y="448" fill="#39d0d8" font-size="8" font-weight="700">KV Cache:</text>
+    <text x="120" y="448" fill="#8b949e" font-size="8">Non-contiguous pages in HBM. Allows sharing across beam/prefix. Zero copy on reuse.</text>
+
+    <text x="55" y="466" fill="#f78166" font-size="8" font-weight="700">Preemption:</text>
+    <text x="120" y="466" fill="#8b949e" font-size="8">If OOM: swap KV to CPU RAM (slow) or abort + recompute. Default: swap for short seqs.</text>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 20 -->
+<div class="diagram-card" id="d20">
+  <div class="diagram-header">
+    <span class="diagram-num">20</span>
+    <span class="diagram-title">Disaggregated Prefill-Decode Architecture (Mooncake / PD Disagg)</span>
+  </div>
+  <svg viewBox="0 0 820 500" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="500" fill="#0d1117"/>
+    <defs>
+      <marker id="arr-b3" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z" fill="#58a6ff"/>
+      </marker>
+      <marker id="arr-g3" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z" fill="#3fb950"/>
+      </marker>
+      <marker id="arr-t3" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z" fill="#39d0d8"/>
+      </marker>
+    </defs>
+
+    <!-- Load Balancer -->
+    <rect x="325" y="30" width="170" height="44" rx="6" fill="#1a1a2e" stroke="#bc8cff" stroke-width="2"/>
+    <text x="410" y="50" text-anchor="middle" fill="#bc8cff" font-size="10" font-weight="700">Load Balancer</text>
+    <text x="410" y="65" text-anchor="middle" fill="#8b949e" font-size="8">route requests → prefill pool</text>
+
+    <!-- User requests coming in -->
+    <text x="410" y="22" text-anchor="middle" fill="#8b949e" font-size="9">Client Requests (prompts)</text>
+    <line x1="410" y1="24" x2="410" y2="28" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arr-b3)"/>
+
+    <!-- ── Left Pool: Prefill GPUs ── -->
+    <rect x="30" y="105" width="320" height="265" rx="10" fill="rgba(88,166,255,0.04)" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="190" y="125" text-anchor="middle" fill="#58a6ff" font-size="11" font-weight="700">Prefill Pool</text>
+    <text x="190" y="140" text-anchor="middle" fill="#8b949e" font-size="9">H100 SXM5 · compute optimized</text>
+
+    <!-- GPU cards in prefill pool -->
+    <rect x="50" y="155" width="120" height="70" rx="5" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="110" y="175" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">H100 GPU 0</text>
+    <text x="110" y="190" text-anchor="middle" fill="#8b949e" font-size="7">989 TFLOPS BF16</text>
+    <text x="110" y="203" text-anchor="middle" fill="#8b949e" font-size="7">3.35 TB/s HBM3e</text>
+    <text x="110" y="215" text-anchor="middle" fill="#3fb950" font-size="7">RUNNING PREFILL</text>
+
+    <rect x="185" y="155" width="120" height="70" rx="5" fill="#0d2137" stroke="#58a6ff" stroke-width="1"/>
+    <text x="245" y="175" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">H100 GPU 1</text>
+    <text x="245" y="190" text-anchor="middle" fill="#8b949e" font-size="7">989 TFLOPS BF16</text>
+    <text x="245" y="203" text-anchor="middle" fill="#8b949e" font-size="7">3.35 TB/s HBM3e</text>
+    <text x="245" y="215" text-anchor="middle" fill="#3fb950" font-size="7">RUNNING PREFILL</text>
+
+    <rect x="50" y="240" width="120" height="70" rx="5" fill="#0d2137" stroke="#58a6ff" stroke-width="1" opacity="0.6"/>
+    <text x="110" y="260" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">H100 GPU 2</text>
+    <text x="110" y="277" text-anchor="middle" fill="#8b949e" font-size="7">compute-bound</text>
+    <text x="110" y="290" text-anchor="middle" fill="#8b949e" font-size="7">MFU ~55-65%</text>
+    <text x="110" y="303" text-anchor="middle" fill="#3fb950" font-size="7">RUNNING PREFILL</text>
+
+    <rect x="185" y="240" width="120" height="70" rx="5" fill="#0d2137" stroke="#58a6ff" stroke-width="1" opacity="0.6"/>
+    <text x="245" y="260" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">H100 GPU 3</text>
+    <text x="245" y="277" text-anchor="middle" fill="#8b949e" font-size="7">compute-bound</text>
+    <text x="245" y="290" text-anchor="middle" fill="#8b949e" font-size="7">MFU ~55-65%</text>
+    <text x="245" y="303" text-anchor="middle" fill="#3fb950" font-size="7">RUNNING PREFILL</text>
+
+    <!-- What prefill does -->
+    <rect x="48" y="325" width="280" height="32" rx="4" fill="rgba(63,185,80,0.08)" stroke="rgba(63,185,80,0.3)" stroke-width="0.8"/>
+    <text x="188" y="337" text-anchor="middle" fill="#3fb950" font-size="7" font-weight="700">Receives full prompt → runs prefill pass → generates KV cache</text>
+    <text x="188" y="350" text-anchor="middle" fill="#8b949e" font-size="7">1 step · compute bound · arithmetic intensity ~100–10000</text>
+
+    <!-- ── Right Pool: Decode GPUs ── -->
+    <rect x="470" y="105" width="320" height="265" rx="10" fill="rgba(57,208,216,0.04)" stroke="#39d0d8" stroke-width="1.5"/>
+    <text x="630" y="125" text-anchor="middle" fill="#39d0d8" font-size="11" font-weight="700">Decode Pool</text>
+    <text x="630" y="140" text-anchor="middle" fill="#8b949e" font-size="9">H200 SXM5 · memory BW optimized</text>
+
+    <!-- GPU cards in decode pool -->
+    <rect x="490" y="155" width="120" height="70" rx="5" fill="#0d1a2d" stroke="#39d0d8" stroke-width="1"/>
+    <text x="550" y="175" text-anchor="middle" fill="#39d0d8" font-size="9" font-weight="700">H200 GPU 0</text>
+    <text x="550" y="190" text-anchor="middle" fill="#8b949e" font-size="7">989 TFLOPS BF16</text>
+    <text x="550" y="203" text-anchor="middle" fill="#8b949e" font-size="7">4.8 TB/s HBM3e</text>
+    <text x="550" y="215" text-anchor="middle" fill="#ffd700" font-size="7">RUNNING DECODE</text>
+
+    <rect x="625" y="155" width="120" height="70" rx="5" fill="#0d1a2d" stroke="#39d0d8" stroke-width="1"/>
+    <text x="685" y="175" text-anchor="middle" fill="#39d0d8" font-size="9" font-weight="700">H200 GPU 1</text>
+    <text x="685" y="190" text-anchor="middle" fill="#8b949e" font-size="7">989 TFLOPS BF16</text>
+    <text x="685" y="203" text-anchor="middle" fill="#8b949e" font-size="7">4.8 TB/s HBM3e</text>
+    <text x="685" y="215" text-anchor="middle" fill="#ffd700" font-size="7">RUNNING DECODE</text>
+
+    <rect x="490" y="240" width="120" height="70" rx="5" fill="#0d1a2d" stroke="#39d0d8" stroke-width="1" opacity="0.6"/>
+    <text x="550" y="260" text-anchor="middle" fill="#39d0d8" font-size="9" font-weight="700">H200 GPU 2</text>
+    <text x="550" y="277" text-anchor="middle" fill="#8b949e" font-size="7">BW-bound decode</text>
+    <text x="550" y="290" text-anchor="middle" fill="#8b949e" font-size="7">MFU ~45-55%</text>
+    <text x="550" y="303" text-anchor="middle" fill="#ffd700" font-size="7">RUNNING DECODE</text>
+
+    <rect x="625" y="240" width="120" height="70" rx="5" fill="#0d1a2d" stroke="#39d0d8" stroke-width="1" opacity="0.6"/>
+    <text x="685" y="260" text-anchor="middle" fill="#39d0d8" font-size="9" font-weight="700">H200 GPU 3</text>
+    <text x="685" y="277" text-anchor="middle" fill="#8b949e" font-size="7">BW-bound decode</text>
+    <text x="685" y="290" text-anchor="middle" fill="#8b949e" font-size="7">MFU ~45-55%</text>
+    <text x="685" y="303" text-anchor="middle" fill="#ffd700" font-size="7">RUNNING DECODE</text>
+
+    <!-- What decode does -->
+    <rect x="487" y="325" width="288" height="32" rx="4" fill="rgba(255,215,0,0.08)" stroke="rgba(255,215,0,0.3)" stroke-width="0.8"/>
+    <text x="631" y="337" text-anchor="middle" fill="#ffd700" font-size="7" font-weight="700">Receives KV via IB → runs decode step × N tokens</text>
+    <text x="631" y="350" text-anchor="middle" fill="#8b949e" font-size="7">memory bound · arithmetic intensity ~1–10 · bottleneck = HBM BW</text>
+
+    <!-- KV Transfer arrow -->
+    <rect x="350" y="215" width="120" height="55" rx="6" fill="rgba(57,208,216,0.08)" stroke="#39d0d8" stroke-width="1.5"/>
+    <text x="410" y="235" text-anchor="middle" fill="#39d0d8" font-size="9" font-weight="700">KV Transfer</text>
+    <text x="410" y="249" text-anchor="middle" fill="#8b949e" font-size="7">via InfiniBand</text>
+    <text x="410" y="262" text-anchor="middle" fill="#f78166" font-size="8" font-weight="600">5–20 ms overhead</text>
+
+    <!-- Arrows: Prefill → KV Transfer -->
+    <line x1="350" y1="242" x2="305" y2="242" stroke="#39d0d8" stroke-width="2" marker-end="url(#arr-t3)"/>
+    <text x="328" y="237" text-anchor="middle" fill="#8b949e" font-size="7">KV cache</text>
+
+    <!-- Arrows: KV Transfer → Decode -->
+    <line x1="470" y1="242" x2="490" y2="242" stroke="#39d0d8" stroke-width="2" marker-end="url(#arr-t3)"/>
+    <text x="480" y="237" text-anchor="middle" fill="#8b949e" font-size="7">KV copy</text>
+
+    <!-- LB → Prefill Pool -->
+    <line x1="325" y1="63" x2="215" y2="103" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arr-b3)"/>
+    <text x="259" y="82" text-anchor="middle" fill="#8b949e" font-size="7">prompt</text>
+
+    <!-- Token stream back to client -->
+    <line x1="630" y1="370" x2="630" y2="430" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr-g3)"/>
+    <rect x="555" y="432" width="150" height="30" rx="5" fill="#0d2d1a" stroke="#3fb950" stroke-width="1"/>
+    <text x="630" y="444" text-anchor="middle" fill="#3fb950" font-size="8" font-weight="700">Token stream → Client</text>
+    <text x="630" y="456" text-anchor="middle" fill="#8b949e" font-size="7">SSE / WebSocket</text>
+
+    <!-- Cost benefit box -->
+    <rect x="50" y="395" width="290" height="75" rx="6" fill="rgba(63,185,80,0.07)" stroke="#3fb950" stroke-width="1"/>
+    <text x="195" y="415" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="700">Benefits of Disaggregation</text>
+    <text x="65" y="432" fill="#e6edf3" font-size="8">✓ Prefill GPUs stay compute-saturated</text>
+    <text x="65" y="446" fill="#e6edf3" font-size="8">✓ Decode GPUs optimized for BW (H200)</text>
+    <text x="65" y="460" fill="#e6edf3" font-size="8">✓ 30–50% cost reduction vs coupled serving</text>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 21 -->
+<div class="diagram-card" id="d21">
+  <div class="diagram-header">
+    <span class="diagram-num">21</span>
+    <span class="diagram-title">Operator Fusion: HBM Traffic Waterfall — Unfused vs Fused Kernel</span>
+  </div>
+  <svg viewBox="0 0 820 500" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="500" fill="#0d1117"/>
+    <defs>
+      <marker id="arr-dn" markerWidth="7" markerHeight="7" refX="3.5" refY="6" orient="auto">
+        <path d="M0,0 L7,0 L3.5,7 Z" fill="#f78166"/>
+      </marker>
+      <marker id="arr-up" markerWidth="7" markerHeight="7" refX="3.5" refY="1" orient="auto">
+        <path d="M0,7 L7,7 L3.5,0 Z" fill="#3fb950"/>
+      </marker>
+      <marker id="arr-dn-b" markerWidth="7" markerHeight="7" refX="3.5" refY="6" orient="auto">
+        <path d="M0,0 L7,0 L3.5,7 Z" fill="#8b949e"/>
+      </marker>
+    </defs>
+
+    <!-- Column headers -->
+    <rect x="40" y="28" width="330" height="28" rx="5" fill="rgba(247,129,102,0.1)" stroke="#f78166" stroke-width="1"/>
+    <text x="205" y="47" text-anchor="middle" fill="#f78166" font-size="11" font-weight="700">UNFUSED — 6 HBM Round-Trips</text>
+
+    <rect x="450" y="28" width="330" height="28" rx="5" fill="rgba(63,185,80,0.1)" stroke="#3fb950" stroke-width="1"/>
+    <text x="615" y="47" text-anchor="middle" fill="#3fb950" font-size="11" font-weight="700">FUSED — 1 HBM Round-Trip</text>
+
+    <!-- HBM bars (bottom) -->
+    <rect x="40" y="420" width="330" height="40" rx="5" fill="rgba(88,166,255,0.08)" stroke="#58a6ff" stroke-width="1"/>
+    <text x="205" y="437" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">HBM (GPU Memory)</text>
+    <text x="205" y="451" text-anchor="middle" fill="#8b949e" font-size="7">3.35 TB/s — bottleneck for memory-bound ops</text>
+
+    <rect x="450" y="420" width="330" height="40" rx="5" fill="rgba(88,166,255,0.08)" stroke="#58a6ff" stroke-width="1"/>
+    <text x="615" y="437" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">HBM (GPU Memory)</text>
+    <text x="615" y="451" text-anchor="middle" fill="#8b949e" font-size="7">3.35 TB/s — single write then done</text>
+
+    <!-- ── Unfused: 6 kernel boxes with HBM arrows between ── -->
+    <!-- GEMM 1 -->
+    <rect x="55" y="80" width="300" height="36" rx="4" fill="#0d2137" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="205" y="96" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">GEMM Kernel</text>
+    <text x="205" y="110" text-anchor="middle" fill="#8b949e" font-size="7">reads weights + input from HBM → computes</text>
+
+    <!-- Write to HBM -->
+    <line x1="205" y1="116" x2="205" y2="148" stroke="#f78166" stroke-width="1.5" marker-end="url(#arr-dn)"/>
+    <text x="270" y="136" fill="#f78166" font-size="8">① write output → HBM</text>
+
+    <!-- LayerNorm kernel -->
+    <rect x="55" y="150" width="300" height="36" rx="4" fill="#0d2137" stroke="#bc8cff" stroke-width="1.5"/>
+    <text x="205" y="166" text-anchor="middle" fill="#bc8cff" font-size="9" font-weight="700">LayerNorm Kernel</text>
+    <text x="205" y="180" text-anchor="middle" fill="#8b949e" font-size="7">reads GEMM result from HBM</text>
+
+    <!-- Read from HBM -->
+    <line x1="205" y1="148" x2="205" y2="150" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr-up)"/>
+    <!-- arrow already shows read -->
+
+    <!-- Write to HBM again -->
+    <line x1="205" y1="186" x2="205" y2="218" stroke="#f78166" stroke-width="1.5" marker-end="url(#arr-dn)"/>
+    <text x="270" y="206" fill="#f78166" font-size="8">② write output → HBM</text>
+
+    <!-- SiLU/GELU Kernel -->
+    <rect x="55" y="220" width="300" height="36" rx="4" fill="#0d2137" stroke="#39d0d8" stroke-width="1.5"/>
+    <text x="205" y="236" text-anchor="middle" fill="#39d0d8" font-size="9" font-weight="700">SiLU Activation Kernel</text>
+    <text x="205" y="250" text-anchor="middle" fill="#8b949e" font-size="7">reads LayerNorm output from HBM</text>
+
+    <!-- Write to HBM -->
+    <line x1="205" y1="256" x2="205" y2="288" stroke="#f78166" stroke-width="1.5" marker-end="url(#arr-dn)"/>
+    <text x="270" y="276" fill="#f78166" font-size="8">③ write output → HBM</text>
+
+    <!-- GEMM 2 -->
+    <rect x="55" y="290" width="300" height="36" rx="4" fill="#0d2137" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="205" y="306" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">GEMM Kernel 2</text>
+    <text x="205" y="320" text-anchor="middle" fill="#8b949e" font-size="7">reads SiLU output from HBM</text>
+
+    <!-- Write to HBM -->
+    <line x1="205" y1="326" x2="205" y2="420" stroke="#f78166" stroke-width="1.5" marker-end="url(#arr-dn)"/>
+    <text x="270" y="380" fill="#f78166" font-size="8">④ write to HBM</text>
+
+    <!-- HBM round-trip count -->
+    <rect x="55" y="360" width="160" height="35" rx="4" fill="rgba(247,129,102,0.1)" stroke="#f78166" stroke-width="1"/>
+    <text x="135" y="376" text-anchor="middle" fill="#f78166" font-size="10" font-weight="700">6 HBM round-trips</text>
+    <text x="135" y="388" text-anchor="middle" fill="#8b949e" font-size="7">read+write each time</text>
+
+    <!-- ── SRAM / register annotations ── -->
+    <!-- On left -->
+    <text x="46" y="130" fill="#8b949e" font-size="7">SRAM</text>
+    <text x="46" y="140" fill="#8b949e" font-size="7">evicted</text>
+    <text x="46" y="200" fill="#8b949e" font-size="7">SRAM</text>
+    <text x="46" y="210" fill="#8b949e" font-size="7">evicted</text>
+    <text x="46" y="270" fill="#8b949e" font-size="7">SRAM</text>
+    <text x="46" y="280" fill="#8b949e" font-size="7">evicted</text>
+
+    <!-- ── Fused side ── -->
+    <!-- Single fused kernel box (tall) -->
+    <rect x="465" y="80" width="300" height="185" rx="6" fill="rgba(63,185,80,0.06)" stroke="#3fb950" stroke-width="2"/>
+    <text x="615" y="105" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="700">Fused Kernel</text>
+    <text x="615" y="120" text-anchor="middle" fill="#3fb950" font-size="8">GEMM + LayerNorm + SiLU</text>
+
+    <!-- Inside: SRAM operations -->
+    <rect x="480" y="130" width="270" height="28" rx="3" fill="rgba(88,166,255,0.1)" stroke="#58a6ff" stroke-width="0.8"/>
+    <text x="615" y="144" text-anchor="middle" fill="#58a6ff" font-size="8">GEMM → result stays in SRAM/registers</text>
+    <text x="615" y="156" text-anchor="middle" fill="#8b949e" font-size="7">→ no HBM write</text>
+
+    <rect x="480" y="163" width="270" height="28" rx="3" fill="rgba(188,140,255,0.1)" stroke="#bc8cff" stroke-width="0.8"/>
+    <text x="615" y="177" text-anchor="middle" fill="#bc8cff" font-size="8">LayerNorm → fused into same kernel</text>
+    <text x="615" y="189" text-anchor="middle" fill="#8b949e" font-size="7">→ reads from registers, not HBM</text>
+
+    <rect x="480" y="196" width="270" height="28" rx="3" fill="rgba(57,208,216,0.1)" stroke="#39d0d8" stroke-width="0.8"/>
+    <text x="615" y="210" text-anchor="middle" fill="#39d0d8" font-size="8">SiLU → applied in-flight</text>
+    <text x="615" y="222" text-anchor="middle" fill="#8b949e" font-size="7">→ no additional kernel launch</text>
+
+    <text x="615" y="248" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">↓ single write to HBM ↓</text>
+
+    <!-- Single arrow down to HBM -->
+    <line x1="615" y1="265" x2="615" y2="418" stroke="#3fb950" stroke-width="2" marker-end="url(#arr-g2)"/>
+
+    <!-- GEMM 2 fused -->
+    <rect x="465" y="310" width="300" height="36" rx="4" fill="#0d2137" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="615" y="326" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">GEMM Kernel 2 (next op)</text>
+    <text x="615" y="340" text-anchor="middle" fill="#8b949e" font-size="7">reads once from HBM — runs normally</text>
+
+    <!-- Only 1 HBM trip -->
+    <rect x="465" y="360" width="160" height="35" rx="4" fill="rgba(63,185,80,0.12)" stroke="#3fb950" stroke-width="1"/>
+    <text x="545" y="376" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="700">1 HBM round-trip</text>
+    <text x="545" y="388" text-anchor="middle" fill="#8b949e" font-size="7">5× less traffic</text>
+
+    <!-- Center comparison -->
+    <rect x="330" y="195" width="120" height="60" rx="6" fill="rgba(255,215,0,0.08)" stroke="#ffd700" stroke-width="1"/>
+    <text x="390" y="216" text-anchor="middle" fill="#ffd700" font-size="11" font-weight="700">5× less</text>
+    <text x="390" y="232" text-anchor="middle" fill="#ffd700" font-size="11" font-weight="700">HBM traffic</text>
+    <text x="390" y="248" text-anchor="middle" fill="#8b949e" font-size="8">= faster, less power</text>
+
+    <!-- Footer note -->
+    <text x="410" y="480" text-anchor="middle" fill="#8b949e" font-size="8">Triton / CUDA: write fused kernels with tiled SRAM blocking. Torch.compile auto-fuses pointwise + normalization ops.</text>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIAGRAM 22 -->
+<div class="diagram-card" id="d22">
+  <div class="diagram-header">
+    <span class="diagram-num">22</span>
+    <span class="diagram-title">TCO Breakdown — 3-Year, 1000× H100 Cluster ($387M Total)</span>
+  </div>
+  <svg viewBox="0 0 820 520" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <rect width="820" height="520" fill="#0d1117"/>
+
+    <!-- Title -->
+    <text x="410" y="36" text-anchor="middle" fill="#e6edf3" font-size="13" font-weight="700">3-Year TCO · 1,000× H100 SXM5 Cluster</text>
+    <text x="410" y="52" text-anchor="middle" fill="#8b949e" font-size="9">Total: ~$387M · Amortized over 3 years · Includes all costs to serve</text>
+
+    <!-- Stacked bar chart -->
+    <!-- Total bar width: 680px (x: 100 to 780) -->
+    <!-- Heights proportional to % -->
+    <!-- Each segment labeled with name and % -->
+
+    <!-- GPU Hardware: 58% = 394px -->
+    <rect x="100" y="75" width="394" height="55" rx="0" fill="rgba(88,166,255,0.75)"/>
+    <text x="297" y="98" text-anchor="middle" fill="#0d1117" font-size="10" font-weight="700">GPU Hardware</text>
+    <text x="297" y="114" text-anchor="middle" fill="#0d1117" font-size="9">$225M · 58%</text>
+
+    <!-- Colocation/Facility: 9% = 61px -->
+    <rect x="494" y="75" width="61" height="55" rx="0" fill="rgba(63,185,80,0.75)"/>
+    <text x="524" y="98" text-anchor="middle" fill="#0d1117" font-size="8" font-weight="700">Colo</text>
+    <text x="524" y="111" text-anchor="middle" fill="#0d1117" font-size="7">9%</text>
+
+    <!-- Power+Cooling: 7% = 48px -->
+    <rect x="555" y="75" width="48" height="55" rx="0" fill="rgba(247,129,102,0.8)"/>
+    <text x="579" y="98" text-anchor="middle" fill="#0d1117" font-size="7" font-weight="700">Pwr</text>
+    <text x="579" y="111" text-anchor="middle" fill="#0d1117" font-size="7">7%</text>
+
+    <!-- Engineering: 6% = 41px -->
+    <rect x="603" y="75" width="41" height="55" rx="0" fill="rgba(188,140,255,0.75)"/>
+    <text x="623" y="98" text-anchor="middle" fill="#0d1117" font-size="7" font-weight="700">Eng</text>
+    <text x="623" y="111" text-anchor="middle" fill="#0d1117" font-size="7">6%</text>
+
+    <!-- Networking: 4% = 27px -->
+    <rect x="644" y="75" width="27" height="55" rx="0" fill="rgba(57,208,216,0.75)"/>
+    <text x="657" y="105" text-anchor="middle" fill="#0d1117" font-size="7" font-weight="700">Net</text>
+
+    <!-- Storage: 3% = 20px -->
+    <rect x="671" y="75" width="20" height="55" rx="0" fill="rgba(255,215,0,0.75)"/>
+
+    <!-- Support: 3% = 20px -->
+    <rect x="691" y="75" width="20" height="55" rx="0" fill="rgba(139,148,158,0.75)"/>
+
+    <!-- Other: 10% = 68px -->
+    <rect x="711" y="75" width="68" height="55" rx="0" fill="rgba(30,40,50,0.9)" stroke="#21262d" stroke-width="0.8"/>
+    <text x="745" y="98" text-anchor="middle" fill="#8b949e" font-size="7">Other</text>
+    <text x="745" y="111" text-anchor="middle" fill="#8b949e" font-size="7">10%</text>
+
+    <!-- Legend -->
+    <g font-size="9">
+      <!-- Row 1 -->
+      <rect x="100" y="148" width="14" height="10" rx="2" fill="rgba(88,166,255,0.75)"/>
+      <text x="118" y="158" fill="#e6edf3">GPU Hardware</text>
+      <text x="220" y="158" fill="#58a6ff" font-weight="700">$225M · 58%</text>
+
+      <rect x="290" y="148" width="14" height="10" rx="2" fill="rgba(63,185,80,0.75)"/>
+      <text x="308" y="158" fill="#e6edf3">Colocation / Facility</text>
+      <text x="428" y="158" fill="#3fb950" font-weight="700">$36M · 9%</text>
+
+      <rect x="510" y="148" width="14" height="10" rx="2" fill="rgba(247,129,102,0.8)"/>
+      <text x="528" y="158" fill="#e6edf3">Power + Cooling</text>
+      <text x="636" y="158" fill="#f78166" font-weight="700">$26M · 7%</text>
+
+      <!-- Row 2 -->
+      <rect x="100" y="168" width="14" height="10" rx="2" fill="rgba(188,140,255,0.75)"/>
+      <text x="118" y="178" fill="#e6edf3">Engineering</text>
+      <text x="220" y="178" fill="#bc8cff" font-weight="700">$24M · 6%</text>
+
+      <rect x="290" y="168" width="14" height="10" rx="2" fill="rgba(57,208,216,0.75)"/>
+      <text x="308" y="178" fill="#e6edf3">Networking (IB + Ethernet)</text>
+      <text x="428" y="178" fill="#39d0d8" font-weight="700">$15M · 4%</text>
+
+      <rect x="510" y="168" width="14" height="10" rx="2" fill="rgba(255,215,0,0.75)"/>
+      <text x="528" y="178" fill="#e6edf3">Storage (NFS + NVMe)</text>
+      <text x="636" y="178" fill="#ffd700" font-weight="700">$12M · 3%</text>
+
+      <!-- Row 3 -->
+      <rect x="100" y="188" width="14" height="10" rx="2" fill="rgba(139,148,158,0.75)"/>
+      <text x="118" y="198" fill="#e6edf3">Support / Maintenance</text>
+      <text x="220" y="198" fill="#8b949e" font-weight="700">$10.5M · 3%</text>
+
+      <rect x="290" y="188" width="14" height="10" rx="2" fill="rgba(30,40,50,0.9)" stroke="#21262d" stroke-width="0.8"/>
+      <text x="308" y="198" fill="#e6edf3">Other (misc ops, licenses)</text>
+      <text x="428" y="198" fill="#8b949e" font-weight="700">~$38M · 10%</text>
+    </g>
+
+    <!-- Insight boxes -->
+    <text x="410" y="230" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">Key Cost Levers</text>
+    <line x1="100" y1="237" x2="720" y2="237" stroke="#21262d" stroke-width="0.8"/>
+
+    <!-- Box 1: MFU -->
+    <rect x="100" y="248" width="190" height="75" rx="6" fill="rgba(63,185,80,0.08)" stroke="#3fb950" stroke-width="1"/>
+    <text x="195" y="268" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700">MFU Improvement</text>
+    <text x="195" y="284" text-anchor="middle" fill="#e6edf3" font-size="10" font-weight="700">10% MFU gain</text>
+    <text x="195" y="298" text-anchor="middle" fill="#e6edf3" font-size="10" font-weight="700">= $36M saved</text>
+    <text x="195" y="312" text-anchor="middle" fill="#8b949e" font-size="7">over 3 years (10% of GPU cost)</text>
+
+    <!-- Box 2: FP8 -->
+    <rect x="310" y="248" width="190" height="75" rx="6" fill="rgba(88,166,255,0.08)" stroke="#58a6ff" stroke-width="1"/>
+    <text x="405" y="268" text-anchor="middle" fill="#58a6ff" font-size="9" font-weight="700">Quantization (FP8)</text>
+    <text x="405" y="284" text-anchor="middle" fill="#e6edf3" font-size="10" font-weight="700">FP8 vs BF16</text>
+    <text x="405" y="298" text-anchor="middle" fill="#e6edf3" font-size="10" font-weight="700">= 2× throughput</text>
+    <text x="405" y="312" text-anchor="middle" fill="#8b949e" font-size="7">same hardware cost, 2× capacity</text>
+
+    <!-- Box 3: Cost per token -->
+    <rect x="520" y="248" width="200" height="75" rx="6" fill="rgba(255,215,0,0.08)" stroke="#ffd700" stroke-width="1"/>
+    <text x="620" y="268" text-anchor="middle" fill="#ffd700" font-size="9" font-weight="700">Unit Economics</text>
+    <text x="620" y="284" text-anchor="middle" fill="#e6edf3" font-size="9" font-weight="600">Cost / Token =</text>
+    <text x="620" y="298" text-anchor="middle" fill="#ffd700" font-size="9" font-weight="700">TCO / tokens_served</text>
+    <text x="620" y="312" text-anchor="middle" fill="#8b949e" font-size="7">maximize denominator (tokens)</text>
+
+    <!-- Per-GPU cost breakdown -->
+    <rect x="100" y="340" width="620" height="140" rx="6" fill="rgba(255,255,255,0.02)" stroke="#21262d" stroke-width="1"/>
+    <text x="410" y="360" text-anchor="middle" fill="#e6edf3" font-size="10" font-weight="700">Per-GPU Unit Cost Decomposition (1000× H100, 3-Year)</text>
+    <line x1="115" y1="368" x2="705" y2="368" stroke="#21262d" stroke-width="0.8"/>
+
+    <!-- headers -->
+    <text x="130" y="383" fill="#8b949e" font-size="8" font-weight="600">Cost Category</text>
+    <text x="330" y="383" fill="#8b949e" font-size="8" font-weight="600">Total ($M)</text>
+    <text x="440" y="383" fill="#8b949e" font-size="8" font-weight="600">Per GPU ($K)</text>
+    <text x="560" y="383" fill="#8b949e" font-size="8" font-weight="600">Per GPU/hr ($)</text>
+    <text x="670" y="383" fill="#8b949e" font-size="8" font-weight="600">% TCO</text>
+
+    <text x="130" y="400" fill="#58a6ff" font-size="8">GPU Hardware (H100 SXM5)</text>
+    <text x="330" y="400" fill="#e6edf3" font-size="8">$225</text>
+    <text x="440" y="400" fill="#e6edf3" font-size="8">$225K</text>
+    <text x="560" y="400" fill="#e6edf3" font-size="8">$8.56</text>
+    <text x="670" y="400" fill="#58a6ff" font-size="8" font-weight="600">58%</text>
+
+    <text x="130" y="416" fill="#3fb950" font-size="8">Colocation + Power + Cooling</text>
+    <text x="330" y="416" fill="#e6edf3" font-size="8">$62</text>
+    <text x="440" y="416" fill="#e6edf3" font-size="8">$62K</text>
+    <text x="560" y="416" fill="#e6edf3" font-size="8">$2.36</text>
+    <text x="670" y="416" fill="#3fb950" font-size="8" font-weight="600">16%</text>
+
+    <text x="130" y="432" fill="#bc8cff" font-size="8">Engineering + Ops (amortized)</text>
+    <text x="330" y="432" fill="#e6edf3" font-size="8">$24</text>
+    <text x="440" y="432" fill="#e6edf3" font-size="8">$24K</text>
+    <text x="560" y="432" fill="#e6edf3" font-size="8">$0.91</text>
+    <text x="670" y="432" fill="#bc8cff" font-size="8" font-weight="600">6%</text>
+
+    <text x="130" y="448" fill="#8b949e" font-size="8">Networking + Storage + Other</text>
+    <text x="330" y="448" fill="#e6edf3" font-size="8">$76</text>
+    <text x="440" y="448" fill="#e6edf3" font-size="8">$76K</text>
+    <text x="560" y="448" fill="#e6edf3" font-size="8">$2.89</text>
+    <text x="670" y="448" fill="#8b949e" font-size="8" font-weight="600">20%</text>
+
+    <line x1="115" y1="455" x2="705" y2="455" stroke="#21262d" stroke-width="0.8"/>
+    <text x="130" y="470" fill="#ffd700" font-size="8" font-weight="700">TOTAL</text>
+    <text x="330" y="470" fill="#ffd700" font-size="8" font-weight="700">$387M</text>
+    <text x="440" y="470" fill="#ffd700" font-size="8" font-weight="700">$387K / GPU</text>
+    <text x="560" y="470" fill="#ffd700" font-size="8" font-weight="700">$14.73 / GPU-hr</text>
+    <text x="670" y="470" fill="#ffd700" font-size="8" font-weight="700">100%</text>
+
+    <!-- Tokens per dollar -->
+    <text x="410" y="494" text-anchor="middle" fill="#8b949e" font-size="8">At 50% MFU, H100 generates ~2,000 tokens/s/GPU. At $14.73/hr → ~$0.002 per 1K tokens (before margin)</text>
+  </svg>
+</div>
+
+</main>
+</body>
+</html>

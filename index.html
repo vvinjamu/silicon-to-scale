@@ -555,13 +555,14 @@ footer a:hover { text-decoration: underline; }
     <div class="stat"><span class="stat-num">18</span><div class="stat-label">Chapters</div></div>
     <div class="stat"><span class="stat-num">6</span><div class="stat-label">Parts</div></div>
     <div class="stat"><span class="stat-num">72+</span><div class="stat-label">Review Questions</div></div>
-    <div class="stat"><span class="stat-num">8</span><div class="stat-label">Architecture Diagrams</div></div>
+    <div class="stat"><span class="stat-num">40</span><div class="stat-label">Architecture Diagrams</div></div>
     <div class="stat"><span class="stat-num">580</span><div class="stat-label">Target Pages</div></div>
     <div class="stat"><span class="stat-num">Free</span><div class="stat-label">Open Access</div></div>
   </div>
 
   <div class="hero-cta">
     <a href="#chapters" class="btn btn-primary">📖 Read Now</a>
+    <a href="#diagrams" class="btn btn-secondary">🖼️ View Diagrams</a>
     <a href="https://github.com/vvinjamu/silicon-to-scale" class="btn btn-secondary" target="_blank">⭐ Star on GitHub</a>
   </div>
 
@@ -631,9 +632,26 @@ footer a:hover { text-decoration: underline; }
 
   <!-- ═══ CHAPTERS ═══ -->
   <div id="chapters" class="section-header fade-in">
-    <span class="section-num">01–18</span>
+    <span class="section-num">00–18</span>
     <div class="section-title">Chapters</div>
     <div class="section-desc">Click any chapter to open the PDF</div>
+  </div>
+
+  <!-- FRONT MATTER -->
+  <div class="chapters-grid fade-in" style="margin-bottom:32px;">
+    <a href="pdfs/ch00_front_matter.pdf" class="chapter-card" style="border-color:var(--gold);background:linear-gradient(135deg,#1a1400 0%,var(--bg2) 100%);">
+      <span class="ch-num" style="border-color:var(--gold);color:var(--gold2);">Ch 00</span>
+      <div class="ch-body">
+        <div class="ch-title" style="color:var(--gold2);">Front Matter — Preface &amp; How to Use This Book</div>
+        <div class="ch-desc">Author's note, four reading paths (Silicon-Up / Inference Fast-Track / Training Specialist / Interview Prep), 12-month learning curriculum, complete table of contents</div>
+        <div class="ch-tags">
+          <span class="ch-tag career">start here</span>
+          <span class="ch-tag career">reading paths</span>
+          <span class="ch-tag career">curriculum</span>
+        </div>
+      </div>
+      <span class="ch-action" style="color:var(--gold2);">PDF ↗</span>
+    </a>
   </div>
 
   <!-- PART I -->
@@ -919,67 +937,390 @@ footer a:hover { text-decoration: underline; }
   </div>
 
   <!-- ═══ DIAGRAMS ═══ -->
-  <div class="section-header fade-in">
+  <div id="diagrams" class="section-header fade-in">
     <span class="section-num">Fig</span>
     <div class="section-title">Architecture Diagrams</div>
-    <div class="section-desc">Open in browser · Print to PDF</div>
+    <div class="section-desc">40 diagrams total · Open in browser · Print to PDF</div>
   </div>
 
-  <div class="diagrams-grid fade-in">
+  <!-- ── BATCH COLLECTION CARDS ── -->
+  <p class="fade-in" style="font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;">
+    ▸ Full Collection Pages — all diagrams in one scrollable file
+  </p>
+
+  <div class="fade-in" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:40px;">
+
+    <a href="diagrams/diagrams_batch1.html" class="chapter-card" target="_blank" style="border-color:#f7c948;background:linear-gradient(135deg,#1a1600 0%,var(--bg2) 100%);">
+      <span class="ch-num" style="border-color:#f7c948;color:#f7c948;font-size:18px;padding:6px 10px;">📐</span>
+      <div class="ch-body">
+        <div class="ch-title" style="color:#f7c948;">Diagram Collection — Pack 1</div>
+        <div class="ch-desc" style="margin-bottom:10px;">12 diagrams · Roofline · Memory Hierarchy · SM Block · 4D Parallelism · FlashAttention · Ring AllReduce · Prefill/Decode · KV Cache · Continuous Batching · Mixed Precision · ZeRO-3 · Speculative Decoding</div>
+        <div class="ch-tags">
+          <span class="ch-tag compute">Figs 01–12</span>
+          <span class="ch-tag memory">Ch01–Ch13</span>
+          <span class="ch-tag compute">open all →</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="diagrams/diagrams_batch2.html" class="chapter-card" target="_blank" style="border-color:#58a6ff;background:linear-gradient(135deg,#001630 0%,var(--bg2) 100%);">
+      <span class="ch-num" style="border-color:#58a6ff;color:#58a6ff;font-size:18px;padding:6px 10px;">📐</span>
+      <div class="ch-body">
+        <div class="ch-title" style="color:#58a6ff;">Diagram Collection — Pack 2</div>
+        <div class="ch-desc" style="margin-bottom:10px;">10 diagrams · HBM Die Stacking · NVLink Topology · MI300X Die · Pipeline Schedules · FLOP Budget Pie · Quantization Error · vLLM Lifecycle · P-D Disaggregation · Operator Fusion · TCO Breakdown</div>
+        <div class="ch-tags">
+          <span class="ch-tag compute">Figs 13–22</span>
+          <span class="ch-tag inference">Ch03–Ch11</span>
+          <span class="ch-tag compute">open all →</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="diagrams/diagrams_batch3.html" class="chapter-card" target="_blank" style="border-color:#3fb950;background:linear-gradient(135deg,#001a06 0%,var(--bg2) 100%);">
+      <span class="ch-num" style="border-color:#3fb950;color:#3fb950;font-size:18px;padding:6px 10px;">📐</span>
+      <div class="ch-body">
+        <div class="ch-title" style="color:#3fb950;">Diagram Collection — Pack 3</div>
+        <div class="ch-desc" style="margin-bottom:10px;">10 diagrams · Transformer Decoder · Attention Variants (MHA/GQA/MLA) · GPU vs CPU · SIMT Warp · CUDA Thread Hierarchy · torch.compile Pipeline · Training Timeline · Profiling Decision Tree · MoE Routing · Fat-Tree Topology</div>
+        <div class="ch-tags">
+          <span class="ch-tag compute">Figs 23–32</span>
+          <span class="ch-tag training">Ch02–Ch14</span>
+          <span class="ch-tag compute">open all →</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- ── INDIVIDUAL DIAGRAMS — BY CHAPTER GROUP ── -->
+  <p class="fade-in" style="font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;">
+    ▸ Individual Diagrams — browse by chapter
+  </p>
+
+  <!-- GROUP: Foundations (Ch01–Ch03) -->
+  <div class="fade-in" style="margin-bottom:6px;padding:8px 14px;background:var(--bg3);border-left:3px solid var(--gold);border-radius:0 4px 4px 0;font-family:var(--mono);font-size:11px;color:var(--gold);">
+    FOUNDATIONS &amp; GPU ARCHITECTURE · Ch01 – Ch03
+  </div>
+  <div class="diagrams-grid fade-in" style="margin-bottom:28px;">
+    <a href="diagrams/diagrams_batch1.html#d1" class="diagram-card" target="_blank">
+      <div class="diagram-icon">📈</div>
+      <div>
+        <div class="diagram-title">Roofline Model — H100 SXM5</div>
+        <div class="diagram-ch">Fig 01 · Pack 1 · Ch01 / Ch12</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch1.html#d3" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🔬</div>
+      <div>
+        <div class="diagram-title">H100 SM Internal Block Diagram</div>
+        <div class="diagram-ch">Fig 03 · Pack 1 · Ch03A</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch2.html#d14" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🔗</div>
+      <div>
+        <div class="diagram-title">NVLink Domain — DGX H100 + NVSwitch</div>
+        <div class="diagram-ch">Fig 14 · Pack 2 · Ch03A / Ch14</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch2.html#d15" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🧮</div>
+      <div>
+        <div class="diagram-title">AMD MI300X Die Stack — 6 XCDs + HBM3</div>
+        <div class="diagram-ch">Fig 15 · Pack 2 · Ch03B</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch3.html#d25" class="diagram-card" target="_blank">
+      <div class="diagram-icon">⚖️</div>
+      <div>
+        <div class="diagram-title">GPU vs CPU Architecture Comparison</div>
+        <div class="diagram-ch">Fig 25 · Pack 3 · Ch03A</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch3.html#d26" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🧵</div>
+      <div>
+        <div class="diagram-title">SIMT Warp Execution — Divergence &amp; Occupancy</div>
+        <div class="diagram-ch">Fig 26 · Pack 3 · Ch07</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch3.html#d27" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🧵</div>
+      <div>
+        <div class="diagram-title">CUDA Thread Hierarchy — Grid → Block → Warp</div>
+        <div class="diagram-ch">Fig 27 · Pack 3 · Ch07</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- GROUP: Memory & Hardware (Ch04–Ch05) -->
+  <div class="fade-in" style="margin-bottom:6px;padding:8px 14px;background:var(--bg3);border-left:3px solid var(--purple);border-radius:0 4px 4px 0;font-family:var(--mono);font-size:11px;color:var(--purple);">
+    MEMORY HIERARCHY &amp; HARDWARE PERFORMANCE · Ch04 – Ch05
+  </div>
+  <div class="diagrams-grid fade-in" style="margin-bottom:28px;">
     <a href="diagrams/diagram_01_memory_hierarchy.html" class="diagram-card" target="_blank">
       <div class="diagram-icon">🏔️</div>
       <div>
-        <div class="diagram-title">Memory Hierarchy — H100 SXM5</div>
-        <div class="diagram-ch">Fig 4.1 · Chapter 04</div>
+        <div class="diagram-title">Memory Hierarchy Pyramid — H100 SXM5</div>
+        <div class="diagram-ch">Fig 4.1 · Standalone · Ch04</div>
       </div>
     </a>
-    <a href="diagrams/diagram_02_kv_cache.html" class="diagram-card" target="_blank">
-      <div class="diagram-icon">💾</div>
+    <a href="diagrams/diagrams_batch1.html#d2" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🏔️</div>
       <div>
-        <div class="diagram-title">KV Cache — PagedAttention & Cascade Cliff</div>
-        <div class="diagram-ch">Fig 11.1 · Chapter 11</div>
+        <div class="diagram-title">GPU Memory Hierarchy — Bandwidth View</div>
+        <div class="diagram-ch">Fig 02 · Pack 1 · Ch04</div>
       </div>
     </a>
+    <a href="diagrams/diagrams_batch2.html#d13" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🔩</div>
+      <div>
+        <div class="diagram-title">HBM3e Die Stacking vs GDDR6X</div>
+        <div class="diagram-ch">Fig 13 · Pack 2 · Ch04</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch2.html#d22" class="diagram-card" target="_blank">
+      <div class="diagram-icon">💰</div>
+      <div>
+        <div class="diagram-title">TCO Breakdown — 3-Year, 1000× H100 Cluster</div>
+        <div class="diagram-ch">Fig 22 · Pack 2 · Ch05</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- GROUP: Transformer Architecture (Ch02) -->
+  <div class="fade-in" style="margin-bottom:6px;padding:8px 14px;background:var(--bg3);border-left:3px solid var(--accent);border-radius:0 4px 4px 0;font-family:var(--mono);font-size:11px;color:var(--accent);">
+    TRANSFORMER ARCHITECTURE · Ch02
+  </div>
+  <div class="diagrams-grid fade-in" style="margin-bottom:28px;">
     <a href="diagrams/diagram_03_transformer_pipeline.html" class="diagram-card" target="_blank">
       <div class="diagram-icon">🔄</div>
       <div>
-        <div class="diagram-title">Transformer Block — Performance View</div>
-        <div class="diagram-ch">Fig 2.1 · Chapter 02</div>
+        <div class="diagram-title">Transformer Block — Performance Engineer's View</div>
+        <div class="diagram-ch">Fig 2.1 · Standalone · Ch02</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch3.html#d23" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🏗️</div>
+      <div>
+        <div class="diagram-title">Decoder Block — Pre-Norm vs Post-Norm</div>
+        <div class="diagram-ch">Fig 23 · Pack 3 · Ch02</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch3.html#d24" class="diagram-card" target="_blank">
+      <div class="diagram-icon">👁️</div>
+      <div>
+        <div class="diagram-title">Attention Variants — MHA vs GQA vs MLA</div>
+        <div class="diagram-ch">Fig 24 · Pack 3 · Ch02 / Ch11</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch2.html#d17" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🥧</div>
+      <div>
+        <div class="diagram-title">Transformer FLOP Budget Pie — LLaMA-3 70B</div>
+        <div class="diagram-ch">Fig 17 · Pack 2 · Ch02</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- GROUP: LLM Inference (Ch06–Ch09) -->
+  <div class="fade-in" style="margin-bottom:6px;padding:8px 14px;background:var(--bg3);border-left:3px solid var(--yellow);border-radius:0 4px 4px 0;font-family:var(--mono);font-size:11px;color:var(--yellow);">
+    LLM INFERENCE — SERVING, KERNELS &amp; OPTIMIZATION · Ch06 – Ch09
+  </div>
+  <div class="diagrams-grid fade-in" style="margin-bottom:28px;">
+    <a href="diagrams/diagrams_batch1.html#d7" class="diagram-card" target="_blank">
+      <div class="diagram-icon">⚡</div>
+      <div>
+        <div class="diagram-title">Prefill vs Decode — Bottleneck Comparison</div>
+        <div class="diagram-ch">Fig 07 · Pack 1 · Ch06</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch1.html#d9" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🔁</div>
+      <div>
+        <div class="diagram-title">Continuous Batching — Iteration-Level Scheduling</div>
+        <div class="diagram-ch">Fig 09 · Pack 1 · Ch06</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch2.html#d19" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🚦</div>
+      <div>
+        <div class="diagram-title">vLLM Request Lifecycle — API to Token Stream</div>
+        <div class="diagram-ch">Fig 19 · Pack 2 · Ch06</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch2.html#d20" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🔀</div>
+      <div>
+        <div class="diagram-title">Disaggregated Prefill-Decode Architecture</div>
+        <div class="diagram-ch">Fig 20 · Pack 2 · Ch06 / Ch11</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch1.html#d5" class="diagram-card" target="_blank">
+      <div class="diagram-icon">⚡</div>
+      <div>
+        <div class="diagram-title">FlashAttention Tiling — SRAM-Resident Computation</div>
+        <div class="diagram-ch">Fig 05 · Pack 1 · Ch07</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch2.html#d18" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🎚️</div>
+      <div>
+        <div class="diagram-title">Quantization Error — BF16 → FP8 → INT4 → AWQ</div>
+        <div class="diagram-ch">Fig 18 · Pack 2 · Ch08</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch2.html#d21" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🌊</div>
+      <div>
+        <div class="diagram-title">Operator Fusion — HBM Traffic Waterfall</div>
+        <div class="diagram-ch">Fig 21 · Pack 2 · Ch09</div>
       </div>
     </a>
     <a href="diagrams/diagram_04_compiler_stack.html" class="diagram-card" target="_blank">
       <div class="diagram-icon">⚙️</div>
       <div>
-        <div class="diagram-title">PyTorch 2.x Compiler Stack</div>
-        <div class="diagram-ch">Fig 9.1 · Chapter 09</div>
+        <div class="diagram-title">PyTorch 2.x Compiler Stack — Dynamo to PTX</div>
+        <div class="diagram-ch">Fig 9.1 · Standalone · Ch09</div>
       </div>
     </a>
+    <a href="diagrams/diagrams_batch3.html#d28" class="diagram-card" target="_blank">
+      <div class="diagram-icon">⚙️</div>
+      <div>
+        <div class="diagram-title">torch.compile Pipeline — Full 4-Layer Flow</div>
+        <div class="diagram-ch">Fig 28 · Pack 3 · Ch09</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- GROUP: Distributed Training (Ch10–Ch12) -->
+  <div class="fade-in" style="margin-bottom:6px;padding:8px 14px;background:var(--bg3);border-left:3px solid var(--green);border-radius:0 4px 4px 0;font-family:var(--mono);font-size:11px;color:var(--green);">
+    DISTRIBUTED TRAINING · Ch10 – Ch12
+  </div>
+  <div class="diagrams-grid fade-in" style="margin-bottom:28px;">
     <a href="diagrams/diagram_05_parallelism_topology.html" class="diagram-card" target="_blank">
       <div class="diagram-icon">🌐</div>
       <div>
         <div class="diagram-title">4D Parallelism — Physical Hardware Mapping</div>
-        <div class="diagram-ch">Fig 10.1 · Chapter 10</div>
+        <div class="diagram-ch">Fig 10.1 · Standalone · Ch10</div>
       </div>
     </a>
+    <a href="diagrams/diagrams_batch1.html#d4" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🌐</div>
+      <div>
+        <div class="diagram-title">4D Parallelism — 2 Racks × 2 Nodes × 8 GPUs</div>
+        <div class="diagram-ch">Fig 04 · Pack 1 · Ch10</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch2.html#d16" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🔧</div>
+      <div>
+        <div class="diagram-title">Pipeline Schedules — GPipe vs 1F1B vs Interleaved</div>
+        <div class="diagram-ch">Fig 16 · Pack 2 · Ch10</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch1.html#d11" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🔀</div>
+      <div>
+        <div class="diagram-title">ZeRO Stage 3 — Fully Sharded Model Parallelism</div>
+        <div class="diagram-ch">Fig 11 · Pack 1 · Ch10</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch1.html#d10" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🎯</div>
+      <div>
+        <div class="diagram-title">Mixed Precision Training Flow — One Step</div>
+        <div class="diagram-ch">Fig 10 · Pack 1 · Ch10</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch3.html#d29" class="diagram-card" target="_blank">
+      <div class="diagram-icon">⏱️</div>
+      <div>
+        <div class="diagram-title">Training Step Timeline — CUDA Stream Overlap</div>
+        <div class="diagram-ch">Fig 29 · Pack 3 · Ch10 / Ch14</div>
+      </div>
+    </a>
+    <a href="diagrams/diagram_02_kv_cache.html" class="diagram-card" target="_blank">
+      <div class="diagram-icon">💾</div>
+      <div>
+        <div class="diagram-title">KV Cache — PagedAttention &amp; Cascade Cliff</div>
+        <div class="diagram-ch">Fig 11.1 · Standalone · Ch11</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch1.html#d8" class="diagram-card" target="_blank">
+      <div class="diagram-icon">💾</div>
+      <div>
+        <div class="diagram-title">KV Cache PagedAttention — Virtual Memory View</div>
+        <div class="diagram-ch">Fig 08 · Pack 1 · Ch11</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch3.html#d30" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🌳</div>
+      <div>
+        <div class="diagram-title">5-Step GPU Profiling Decision Tree</div>
+        <div class="diagram-ch">Fig 30 · Pack 3 · Ch12</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- GROUP: Advanced Techniques (Ch13–Ch14) -->
+  <div class="fade-in" style="margin-bottom:6px;padding:8px 14px;background:var(--bg3);border-left:3px solid var(--orange);border-radius:0 4px 4px 0;font-family:var(--mono);font-size:11px;color:var(--orange);">
+    ADVANCED TECHNIQUES &amp; NETWORKING · Ch13 – Ch14
+  </div>
+  <div class="diagrams-grid fade-in" style="margin-bottom:28px;">
     <a href="diagrams/diagram_06_speculative_decoding.html" class="diagram-card" target="_blank">
       <div class="diagram-icon">⚡</div>
       <div>
-        <div class="diagram-title">Speculative Decoding — Draft, Verify, Accept</div>
-        <div class="diagram-ch">Fig 13.1 · Chapter 13</div>
+        <div class="diagram-title">Speculative Decoding — Draft, Verify, Accept/Reject</div>
+        <div class="diagram-ch">Fig 13.1 · Standalone · Ch13</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch1.html#d12" class="diagram-card" target="_blank">
+      <div class="diagram-icon">⚡</div>
+      <div>
+        <div class="diagram-title">Speculative Decoding — Draft + Target Verification</div>
+        <div class="diagram-ch">Fig 12 · Pack 1 · Ch13</div>
       </div>
     </a>
     <a href="diagrams/diagram_07_moe_routing.html" class="diagram-card" target="_blank">
       <div class="diagram-icon">🧩</div>
       <div>
-        <div class="diagram-title">Mixture of Experts — Router & All-to-All</div>
-        <div class="diagram-ch">Fig 13.2 · Chapter 13</div>
+        <div class="diagram-title">MoE — Router, Expert Dispatch &amp; All-to-All</div>
+        <div class="diagram-ch">Fig 13.2 · Standalone · Ch13</div>
       </div>
     </a>
+    <a href="diagrams/diagrams_batch3.html#d31" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🧩</div>
+      <div>
+        <div class="diagram-title">MoE Routing — Expert Parallelism &amp; All-to-All</div>
+        <div class="diagram-ch">Fig 31 · Pack 3 · Ch13</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch1.html#d6" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🔁</div>
+      <div>
+        <div class="diagram-title">Ring AllReduce — 4 GPUs, 3 Steps</div>
+        <div class="diagram-ch">Fig 06 · Pack 1 · Ch14</div>
+      </div>
+    </a>
+    <a href="diagrams/diagrams_batch3.html#d32" class="diagram-card" target="_blank">
+      <div class="diagram-icon">🕸️</div>
+      <div>
+        <div class="diagram-title">Fat-Tree Network Topology — Rail-Optimized</div>
+        <div class="diagram-ch">Fig 32 · Pack 3 · Ch14</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- GROUP: Operations & Observability (Ch17) -->
+  <div class="fade-in" style="margin-bottom:6px;padding:8px 14px;background:var(--bg3);border-left:3px solid var(--red);border-radius:0 4px 4px 0;font-family:var(--mono);font-size:11px;color:var(--red);">
+    CLUSTER OPERATIONS &amp; OBSERVABILITY · Ch17
+  </div>
+  <div class="diagrams-grid fade-in" style="margin-bottom:40px;">
     <a href="diagrams/diagram_08_observability_stack.html" class="diagram-card" target="_blank">
       <div class="diagram-icon">📊</div>
       <div>
         <div class="diagram-title">Observability — Seven-Layer Architecture</div>
-        <div class="diagram-ch">Fig 17.1 · Chapter 17</div>
+        <div class="diagram-ch">Fig 17.1 · Standalone · Ch17</div>
       </div>
     </a>
   </div>
