@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ch00 — Front Matter | AI/ML Infrastructure from Silicon to Scale</title>
+<meta name="description" content="Front matter for AI/ML Infrastructure from Silicon to Scale: preface, audience, confidence labels, reader paths, 12-month curriculum, and final table of contents.">
+<meta name="author" content="Venkat Vinjam">
+<meta property="og:title" content="Ch00 — Front Matter">
+<meta property="og:description" content="Front matter for AI/ML Infrastructure from Silicon to Scale: preface, audience, confidence labels, reader paths, 12-month curriculum, and final table of contents.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c10;
+  --bg2: #0d1117;
+  --bg3: #161b22;
+  --bg4: #1c2128;
+  --border: #21262d;
+  --border2: #30363d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #6e7681;
+  --accent: #58a6ff;
+  --gold: #d4a017;
+  --gold2: #f0c040;
+  --green: #3fb950;
+  --purple: #bc8cff;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.65;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(88,166,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(88,166,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(13,17,23,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 22px;
+}
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.brand a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+}
+.brand span {
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.topnav {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.topnav a {
+  color: var(--accent);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.topnav a:hover {
+  border-color: var(--accent);
+  background: rgba(88,166,255,0.08);
+}
+.layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 300px minmax(0, 900px);
+  gap: 36px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 36px 24px 80px;
+}
+.sidebar {
+  position: sticky;
+  top: 76px;
+  align-self: start;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+}
+.sidebar h2 {
+  margin: 0 0 12px;
+  font-family: var(--mono);
+  color: var(--gold2);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+.sidebar a {
+  display: block;
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 13px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.35);
+}
+.sidebar a:hover {
+  color: var(--accent);
+}
+.sidebar .toc-l3 {
+  padding-left: 14px;
+  font-size: 12px;
+  color: var(--text3);
+}
+.content {
+  background: rgba(13,17,23,0.72);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 38px 44px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+}
+.content h1 {
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -1.4px;
+  margin: 0 0 18px;
+}
+.content h2 {
+  margin-top: 46px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 25px;
+  letter-spacing: -0.5px;
+}
+.content h3 {
+  margin-top: 30px;
+  color: var(--accent);
+  font-size: 18px;
+}
+.content h4 {
+  margin-top: 24px;
+  color: var(--gold2);
+}
+.anchor {
+  margin-left: 8px;
+  color: var(--text3);
+  opacity: 0;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 0.8em;
+}
+h1:hover .anchor, h2:hover .anchor, h3:hover .anchor, h4:hover .anchor {
+  opacity: 1;
+}
+p {
+  color: var(--text);
+  font-size: 16px;
+}
+blockquote {
+  margin: 24px 0;
+  padding: 18px 22px;
+  border-left: 4px solid var(--gold2);
+  background: rgba(212,160,23,0.08);
+  color: var(--text);
+  border-radius: 0 10px 10px 0;
+  font-size: 17px;
+}
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 28px 0;
+}
+ul, ol {
+  padding-left: 24px;
+}
+li {
+  margin: 6px 0;
+}
+code {
+  font-family: var(--mono);
+  background: var(--bg4);
+  color: var(--gold2);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-size: 0.92em;
+}
+.code-block {
+  background: #05080c;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 18px 0;
+}
+.code-block code {
+  background: transparent;
+  border: 0;
+  color: #d8dee9;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.table-wrap {
+  overflow-x: auto;
+  margin: 22px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 620px;
+  background: var(--bg3);
+}
+th {
+  background: var(--bg4);
+  color: var(--accent);
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.2px;
+}
+th, td {
+  padding: 11px 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+td {
+  color: var(--text2);
+  font-size: 14px;
+}
+tr:last-child td {
+  border-bottom: 0;
+}
+.callout {
+  border-left: 4px solid var(--green);
+  background: rgba(63,185,80,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.nav-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 44px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+.nav-row a {
+  flex: 1;
+  text-decoration: none;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--text);
+}
+.nav-row a:hover {
+  border-color: var(--accent);
+}
+.nav-row small {
+  display: block;
+  color: var(--text3);
+  font-family: var(--mono);
+  margin-bottom: 4px;
+}
+.nav-row strong {
+  color: var(--accent);
+}
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 22px 16px 60px;
+  }
+  .sidebar {
+    position: static;
+    max-height: none;
+  }
+  .content {
+    padding: 26px 20px;
+  }
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (max-width: 640px) {
+  .nav-row {
+    flex-direction: column;
+  }
+  p {
+    font-size: 15px;
+  }
+}
+@media print {
+  body {
+    background: #fff;
+    color: #111;
+  }
+  body::before, .topbar, .sidebar, .anchor {
+    display: none !important;
+  }
+  .layout {
+    display: block;
+    max-width: none;
+    padding: 0;
+  }
+  .content {
+    box-shadow: none;
+    border: 0;
+    padding: 0;
+  }
+  .content h1, .content h2, .content h3, .content h4, p, li, td, th, blockquote {
+    color: #111 !important;
+  }
+  .code-block, code, table, blockquote {
+    border-color: #999;
+  }
+  a {
+    color: #111;
+    text-decoration: none;
+  }
+  table, pre, blockquote {
+    break-inside: avoid;
+  }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <a href="../index.html">AI/ML Infrastructure from Silicon to Scale</a>
+    <span>Ch00 · Front Matter</span>
+  </div>
+  <nav class="topnav" aria-label="Top navigation">
+    <a href="../index.html">Home</a>
+    <a href="../pdfs/ch00_front_matter.pdf">PDF</a>
+    <a href="ch01_performance_architecture_mindset.html">Next: Ch01</a>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" aria-label="Chapter table of contents">
+    <h2>Front Matter</h2>
+    <a class="toc-l1" href="#aiml-infrastructure-from-silicon-to-scale">AI/ML Infrastructure from Silicon to Scale</a>
+<a class="toc-l2" href="#the-principal-performance-architects-complete-guide-to-designing-optimizing-and-operating-ai-systems-from-gpu-microarchitecture-to-hundred-thousand-gpu-clusters">The Principal Performance Architect’s Complete Guide to Designing, Optimizing, and Operating AI Systems — from GPU Microarchitecture to Hundred-Thousand-GPU Clusters</a>
+<a class="toc-l2" href="#copyright-and-edition-note">Copyright and Edition Note</a>
+<a class="toc-l2" href="#epigraph">Epigraph</a>
+<a class="toc-l1" href="#note-on-accuracy-and-currency">Note on Accuracy and Currency</a>
+<a class="toc-l2" href="#confidence-label-system">Confidence Label System</a>
+<a class="toc-l2" href="#code-and-configuration-labels">Code and Configuration Labels</a>
+<a class="toc-l2" href="#the-most-important-accuracy-rule">The Most Important Accuracy Rule</a>
+<a class="toc-l1" href="#preface">Preface</a>
+<a class="toc-l2" href="#why-this-book-exists">Why This Book Exists</a>
+<a class="toc-l2" href="#who-this-book-is-for">Who This Book Is For</a>
+<a class="toc-l3" href="#1-systems-performance-engineers-moving-into-aiml">1. Systems Performance Engineers Moving into AI/ML</a>
+<a class="toc-l3" href="#2-gpu-accelerator-engineers-expanding-up-the-stack">2. GPU / Accelerator Engineers Expanding Up the Stack</a>
+<a class="toc-l3" href="#3-ml-infrastructure-engineers-seeking-deeper-performance-intuition">3. ML Infrastructure Engineers Seeking Deeper Performance Intuition</a>
+<a class="toc-l3" href="#4-senior-staff-and-principal-engineers-preparing-for-interviews">4. Senior, Staff, and Principal Engineers Preparing for Interviews</a>
+<a class="toc-l3" href="#5-technical-leaders-making-ai-infrastructure-decisions">5. Technical Leaders Making AI Infrastructure Decisions</a>
+<a class="toc-l2" href="#what-this-book-is-not">What This Book Is Not</a>
+<a class="toc-l3" href="#this-is-not-an-introduction-to-machine-learning">This Is Not an Introduction to Machine Learning</a>
+<a class="toc-l3" href="#this-is-not-a-cuda-programming-tutorial">This Is Not a CUDA Programming Tutorial</a>
+<a class="toc-l3" href="#this-is-not-a-paper-survey">This Is Not a Paper Survey</a>
+<a class="toc-l3" href="#this-is-not-vendor-marketing">This Is Not Vendor Marketing</a>
+<a class="toc-l3" href="#this-is-not-a-static-benchmark-book">This Is Not a Static Benchmark Book</a>
+<a class="toc-l1" href="#what-makes-this-book-different">What Makes This Book Different</a>
+<a class="toc-l2" href="#1-silicon-to-scale-literally">1. Silicon to Scale, Literally</a>
+<a class="toc-l2" href="#2-formulas-diagrams-and-production-numbers">2. Formulas, Diagrams, and Production Numbers</a>
+<a class="toc-l2" href="#3-a-confidence-label-system">3. A Confidence Label System</a>
+<a class="toc-l2" href="#4-vertical-integration">4. Vertical Integration</a>
+<a class="toc-l2" href="#5-interview-preparation-built-in">5. Interview Preparation Built In</a>
+<a class="toc-l1" href="#the-central-identity-this-book-builds">The Central Identity This Book Builds</a>
+<a class="toc-l1" href="#how-to-use-this-book">How to Use This Book</a>
+<a class="toc-l2" href="#path-1-the-interview-focused-reader">Path 1 — The Interview-Focused Reader</a>
+<a class="toc-l3" href="#situation">Situation</a>
+<a class="toc-l3" href="#goal">Goal</a>
+<a class="toc-l3" href="#two-week-plan">Two-Week Plan</a>
+<a class="toc-l3" href="#most-important-practice">Most Important Practice</a>
+<a class="toc-l2" href="#path-2-the-practicing-inference-engineer">Path 2 — The Practicing Inference Engineer</a>
+<a class="toc-l3" href="#situation-2">Situation</a>
+<a class="toc-l3" href="#goal-2">Goal</a>
+<a class="toc-l3" href="#recommended-path">Recommended Path</a>
+<a class="toc-l3" href="#one-project-to-complete">One Project to Complete</a>
+<a class="toc-l2" href="#path-3-the-training-infrastructure-architect">Path 3 — The Training Infrastructure Architect</a>
+<a class="toc-l3" href="#situation-3">Situation</a>
+<a class="toc-l3" href="#goal-3">Goal</a>
+<a class="toc-l3" href="#recommended-path-2">Recommended Path</a>
+<a class="toc-l3" href="#one-project-to-complete-2">One Project to Complete</a>
+<a class="toc-l2" href="#path-4-the-deep-learner-full-stack-transition">Path 4 — The Deep Learner / Full-Stack Transition</a>
+<a class="toc-l3" href="#situation-4">Situation</a>
+<a class="toc-l3" href="#goal-4">Goal</a>
+<a class="toc-l3" href="#recommended-path-3">Recommended Path</a>
+<a class="toc-l1" href="#quick-reference-by-time-budget">Quick Reference by Time Budget</a>
+<a class="toc-l1" href="#the-12-month-principal-level-curriculum">The 12-Month Principal-Level Curriculum</a>
+<a class="toc-l2" href="#months-12-foundations">Months 1–2 — Foundations</a>
+<a class="toc-l3" href="#goal-5">Goal</a>
+<a class="toc-l3" href="#read-deeply">Read Deeply</a>
+<a class="toc-l3" href="#hands-on-project">Hands-On Project</a>
+<a class="toc-l3" href="#papers-references">Papers / References</a>
+<a class="toc-l3" href="#benchmark">Benchmark</a>
+<a class="toc-l3" href="#communication-deliverable">Communication Deliverable</a>
+<a class="toc-l2" href="#months-34-hardware-deep-dive">Months 3–4 — Hardware Deep Dive</a>
+<a class="toc-l3" href="#goal-6">Goal</a>
+<a class="toc-l3" href="#read-deeply-2">Read Deeply</a>
+<a class="toc-l3" href="#hands-on-project-2">Hands-On Project</a>
+<a class="toc-l3" href="#papers-references-2">Papers / References</a>
+<a class="toc-l3" href="#benchmark-2">Benchmark</a>
+<a class="toc-l3" href="#communication-deliverable-2">Communication Deliverable</a>
+<a class="toc-l2" href="#months-56-optimization-techniques">Months 5–6 — Optimization Techniques</a>
+<a class="toc-l3" href="#goal-7">Goal</a>
+<a class="toc-l3" href="#read-deeply-3">Read Deeply</a>
+<a class="toc-l3" href="#hands-on-project-3">Hands-On Project</a>
+<a class="toc-l3" href="#papers-references-3">Papers / References</a>
+<a class="toc-l3" href="#benchmark-3">Benchmark</a>
+<a class="toc-l3" href="#communication-deliverable-3">Communication Deliverable</a>
+<a class="toc-l2" href="#months-78-training-and-serving-systems">Months 7–8 — Training and Serving Systems</a>
+<a class="toc-l3" href="#goal-8">Goal</a>
+<a class="toc-l3" href="#read-deeply-4">Read Deeply</a>
+<a class="toc-l3" href="#hands-on-project-4">Hands-On Project</a>
+<a class="toc-l3" href="#papers-references-4">Papers / References</a>
+<a class="toc-l3" href="#benchmark-4">Benchmark</a>
+<a class="toc-l3" href="#communication-deliverable-4">Communication Deliverable</a>
+<a class="toc-l2" href="#months-910-infrastructure-at-scale">Months 9–10 — Infrastructure at Scale</a>
+<a class="toc-l3" href="#goal-9">Goal</a>
+<a class="toc-l3" href="#read-deeply-5">Read Deeply</a>
+<a class="toc-l3" href="#hands-on-project-5">Hands-On Project</a>
+<a class="toc-l3" href="#papers-references-5">Papers / References</a>
+<a class="toc-l3" href="#benchmark-5">Benchmark</a>
+<a class="toc-l3" href="#communication-deliverable-5">Communication Deliverable</a>
+<a class="toc-l2" href="#months-1112-architecture-synthesis-and-principal-identity">Months 11–12 — Architecture Synthesis and Principal Identity</a>
+<a class="toc-l3" href="#goal-10">Goal</a>
+<a class="toc-l3" href="#read-deeply-6">Read Deeply</a>
+<a class="toc-l3" href="#hands-on-project-6">Hands-On Project</a>
+<a class="toc-l3" href="#papers-references-6">Papers / References</a>
+<a class="toc-l3" href="#benchmark-6">Benchmark</a>
+<a class="toc-l3" href="#communication-deliverable-6">Communication Deliverable</a>
+<a class="toc-l1" href="#curriculum-summary">Curriculum Summary</a>
+<a class="toc-l1" href="#final-table-of-contents">Final Table of Contents</a>
+<a class="toc-l2" href="#front-matter">Front Matter</a>
+<a class="toc-l1" href="#part-i-foundations">Part I — Foundations</a>
+<a class="toc-l2" href="#chapter-1-the-aiml-performance-architecture-mindset">Chapter 1 — The AI/ML Performance Architecture Mindset</a>
+<a class="toc-l2" href="#chapter-2-the-transformer-architecture-a-performance-engineers-deep-dive">Chapter 2 — The Transformer Architecture: A Performance Engineer’s Deep Dive</a>
+<a class="toc-l2" href="#chapter-3a-gpu-and-accelerator-architecture-fundamentals">Chapter 3A — GPU and Accelerator Architecture Fundamentals</a>
+<a class="toc-l2" href="#chapter-3b-gpu-architecture-roadmap">Chapter 3B — GPU Architecture Roadmap</a>
+<a class="toc-l1" href="#part-ii-hardware-performance">Part II — Hardware Performance</a>
+<a class="toc-l2" href="#chapter-4-memory-hierarchy-and-hbm-deep-dive">Chapter 4 — Memory Hierarchy and HBM Deep Dive</a>
+<a class="toc-l2" href="#chapter-5-thermal-design-power-management-and-tco">Chapter 5 — Thermal Design, Power Management, and TCO</a>
+<a class="toc-l1" href="#part-iii-llm-inference-kernels-and-optimization">Part III — LLM Inference, Kernels, and Optimization</a>
+<a class="toc-l2" href="#chapter-6-llm-inference-systems-architecture">Chapter 6 — LLM Inference Systems Architecture</a>
+<a class="toc-l2" href="#chapter-7-gpu-kernels-and-cuda-optimization">Chapter 7 — GPU Kernels and CUDA Optimization</a>
+<a class="toc-l2" href="#chapter-8-quantization-and-precision-optimization">Chapter 8 — Quantization and Precision Optimization</a>
+<a class="toc-l2" href="#chapter-9-operator-fusion-and-compiler-optimization">Chapter 9 — Operator Fusion and Compiler Optimization</a>
+<a class="toc-l1" href="#part-iv-training-and-serving-systems">Part IV — Training and Serving Systems</a>
+<a class="toc-l2" href="#chapter-10-training-systems-architecture-at-scale">Chapter 10 — Training Systems Architecture at Scale</a>
+<a class="toc-l2" href="#chapter-11-kv-cache-the-heart-of-llm-serving">Chapter 11 — KV Cache: The Heart of LLM Serving</a>
+<a class="toc-l2" href="#chapter-12-benchmarking-and-performance-measurement">Chapter 12 — Benchmarking and Performance Measurement</a>
+<a class="toc-l1" href="#part-v-advanced-techniques-and-cluster-operations">Part V — Advanced Techniques and Cluster Operations</a>
+<a class="toc-l2" href="#chapter-13-speculative-decoding-and-mixture-of-experts-infrastructure">Chapter 13 — Speculative Decoding and Mixture-of-Experts Infrastructure</a>
+<a class="toc-l2" href="#chapter-14-networking-and-collective-communication">Chapter 14 — Networking and Collective Communication</a>
+<a class="toc-l2" href="#chapter-15-storage-data-pipelines-and-io-performance">Chapter 15 — Storage, Data Pipelines, and I/O Performance</a>
+<a class="toc-l2" href="#chapter-16-cluster-management-and-multi-tenant-systems">Chapter 16 — Cluster Management and Multi-Tenant Systems</a>
+<a class="toc-l2" href="#chapter-17-telemetry-observability-and-profiling-tools">Chapter 17 — Telemetry, Observability, and Profiling Tools</a>
+<a class="toc-l1" href="#part-vi-principal-architect">Part VI — Principal Architect</a>
+<a class="toc-l2" href="#chapter-18-the-principal-architect-career-interviews-and-professional-development">Chapter 18 — The Principal Architect: Career, Interviews, and Professional Development</a>
+<a class="toc-l1" href="#back-matter">Back Matter</a>
+<a class="toc-l2" href="#appendix-a-hardware-reference-tables">Appendix A — Hardware Reference Tables</a>
+<a class="toc-l2" href="#appendix-b-profiling-tool-quick-reference">Appendix B — Profiling Tool Quick Reference</a>
+<a class="toc-l2" href="#appendix-c-glossary">Appendix C — Glossary</a>
+<a class="toc-l1" href="#closing-note-to-the-reader">Closing Note to the Reader</a>
+  </aside>
+
+  <main class="content">
+    <h1 id="ch00-front-matter">Ch00 — Front Matter<a class="anchor" href="#ch00-front-matter" aria-label="Link to this section">#</a></h1>
+<h1 id="aiml-infrastructure-from-silicon-to-scale">AI/ML Infrastructure from Silicon to Scale<a class="anchor" href="#aiml-infrastructure-from-silicon-to-scale" aria-label="Link to this section">#</a></h1>
+<h2 id="the-principal-performance-architects-complete-guide-to-designing-optimizing-and-operating-ai-systems-from-gpu-microarchitecture-to-hundred-thousand-gpu-clusters">The Principal Performance Architect’s Complete Guide to Designing, Optimizing, and Operating AI Systems — from GPU Microarchitecture to Hundred-Thousand-GPU Clusters<a class="anchor" href="#the-principal-performance-architects-complete-guide-to-designing-optimizing-and-operating-ai-systems-from-gpu-microarchitecture-to-hundred-thousand-gpu-clusters" aria-label="Link to this section">#</a></h2>
+<p><strong>Author:</strong> Venkat Vinjam <strong>Role:</strong> AI/ML Performance Architect · AMD · Ex-Intel <strong>Edition:</strong> First Edition · 2026 <strong>Format:</strong> Production v1.0 Source Draft <strong>Coverage:</strong> 6 Parts · 18 Chapters · 3 Appendices <strong>Hardware Generation:</strong> NVIDIA H100/H200/B100/GB200, AMD MI300X/MI350, Intel Gaudi 3 <strong>Software Stack:</strong> CUDA · PyTorch 2.x · Triton · vLLM · TensorRT-LLM · Megatron-LM · NCCL/RCCL · SLURM · Kubernetes</p>
+<hr>
+<h2 id="copyright-and-edition-note">Copyright and Edition Note<a class="anchor" href="#copyright-and-edition-note" aria-label="Link to this section">#</a></h2>
+<p>© 2026 Venkat Vinjam. All rights reserved.</p>
+<p>No part of this publication may be reproduced, distributed, stored, transmitted, or used in derivative works without written permission from the author, except for brief quotations used in reviews, commentary, or educational discussion.</p>
+<p>This book is provided as a technical and educational reference. Hardware specifications, software APIs, performance numbers, pricing, and cloud infrastructure details change rapidly. Readers should validate implementation-specific decisions against current vendor documentation, measured benchmarks, and their own production environment.</p>
+<p><strong>Edition:</strong> First Edition <strong>Production Branch:</strong> <code>production-v1.0</code> <strong>Intended Outputs:</strong> Online HTML book · Digital PDF · Print-ready edition</p>
+<hr>
+<h2 id="epigraph">Epigraph<a class="anchor" href="#epigraph" aria-label="Link to this section">#</a></h2>
+<blockquote>“Performance engineering is not about making one function faster. It is about understanding the whole system — from transistors to tokens — and knowing exactly where the bottleneck lives before you touch anything.”</blockquote>
+<p>— Venkat Vinjam</p>
+<hr>
+<h1 id="note-on-accuracy-and-currency">Note on Accuracy and Currency<a class="anchor" href="#note-on-accuracy-and-currency" aria-label="Link to this section">#</a></h1>
+<p>AI infrastructure evolves faster than most technical books can track.</p>
+<p>A GPU specification can change across SKUs. A compiler backend can improve between PyTorch releases. A serving framework can change default behavior in a minor version. A vendor may announce hardware months before broad production availability. A benchmark can be accurate for one cluster and misleading for another.</p>
+<p class="callout">For that reason, this book uses <strong>confidence labels</strong> for quantitative claims and examples.</p>
+<h2 id="confidence-label-system">Confidence Label System<a class="anchor" href="#confidence-label-system" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Label</th><th>Meaning</th><th>How to Use It</th></tr></thead><tbody><tr><td><code>[SHIPPED]</code></td><td>Verified shipping hardware or software capability from public vendor documentation or generally available releases</td><td>Use for stable hardware specifications, released software features, and known APIs</td></tr><tr><td><code>[ANNOUNCED]</code></td><td>Vendor-disclosed but not necessarily broadly shipping or independently measured</td><td>Treat as directional until verified in production</td></tr><tr><td><code>[DERIVED FROM SHIPPED]</code></td><td>Calculated from shipped values, such as ridge points derived from peak FLOPs and bandwidth</td><td>Trust the method, but verify the input numbers</td></tr><tr><td><code>[ESTIMATED]</code></td><td>Calculated or inferred from first principles, simplified formulas, or partial information</td><td>Use for mental models and planning, not final procurement decisions</td></tr><tr><td><code>[REPRESENTATIVE]</code></td><td>Illustrative example using plausible values</td><td>Useful for learning; not a universal claim</td></tr><tr><td><code>[ENV-SPECIFIC]</code></td><td>Cluster-, framework-, model-, or workload-dependent</td><td>Measure in your environment before making decisions</td></tr></tbody></table></div>
+<h2 id="code-and-configuration-labels">Code and Configuration Labels<a class="anchor" href="#code-and-configuration-labels" aria-label="Link to this section">#</a></h2>
+<p>Code blocks and configuration examples follow the same philosophy.</p>
+<p>A snippet may be:</p>
+<ul>
+<li>Conceptual pseudocode</li>
+<li>A representative command</li>
+<li>A version-specific example</li>
+<li>A production-oriented pattern</li>
+<li>A simplified teaching example</li>
+</ul>
+<p>When exact behavior matters, confirm against the current documentation for the framework, accelerator, driver, runtime, scheduler, or cloud provider you are using.</p>
+<h2 id="the-most-important-accuracy-rule">The Most Important Accuracy Rule<a class="anchor" href="#the-most-important-accuracy-rule" aria-label="Link to this section">#</a></h2>
+<p>The methods in this book are more stable than the numbers.</p>
+<p>Arithmetic intensity, memory bandwidth, communication volume, roofline analysis, MFU, HFU, queueing behavior, and bottleneck classification remain useful across hardware generations.</p>
+<p>Specific numbers require periodic refresh.</p>
+<hr>
+<h1 id="preface">Preface<a class="anchor" href="#preface" aria-label="Link to this section">#</a></h1>
+<h2 id="why-this-book-exists">Why This Book Exists<a class="anchor" href="#why-this-book-exists" aria-label="Link to this section">#</a></h2>
+<p>This book was written for a specific engineer at a specific career inflection point.</p>
+<p>You may have spent years — perhaps a decade or more — mastering performance engineering in systems you understand deeply: CPU microarchitecture, firmware, Linux, HPC clusters, cloud infrastructure, networking, storage, embedded systems, or application-level optimization.</p>
+<p>You know how to profile. You know how to reason about bottlenecks. You know how to debug difficult systems. You understand latency, throughput, utilization, tradeoffs, and measurement discipline.</p>
+<p>But the center of gravity in performance engineering has shifted.</p>
+<p>The dominant computing problem of the next decade is not only web-scale distributed systems or traditional HPC simulation. It is the training and serving of large AI models on accelerated infrastructure.</p>
+<p>The strongest principal-level roles in this space require a rare combination:</p>
+<ul>
+<li>GPU and accelerator architecture depth</li>
+<li>Transformer and LLM performance intuition</li>
+<li>Kernel and compiler awareness</li>
+<li>Distributed training and serving systems knowledge</li>
+<li>Networking and storage reasoning</li>
+<li>Observability and fleet operations discipline</li>
+<li>Business-level cost and TCO communication</li>
+<li>The ability to explain quantitative tradeoffs to hardware, software, product, and leadership teams</li>
+</ul>
+<p>This book is designed to help you make that transition.</p>
+<p>It assumes you can already think in systems.</p>
+<p>It teaches you the AI/ML infrastructure domain.</p>
+<hr>
+<h2 id="who-this-book-is-for">Who This Book Is For<a class="anchor" href="#who-this-book-is-for" aria-label="Link to this section">#</a></h2>
+<p>This book is for engineers who want to become stronger AI/ML infrastructure performance architects.</p>
+<p>It is especially useful for:</p>
+<h3 id="1-systems-performance-engineers-moving-into-aiml">1. Systems Performance Engineers Moving into AI/ML<a class="anchor" href="#1-systems-performance-engineers-moving-into-aiml" aria-label="Link to this section">#</a></h3>
+<p>You already understand low-level performance concepts, but you want to connect them to GPUs, transformers, training, inference, and LLM serving.</p>
+<p>You may come from:</p>
+<ul>
+<li>CPU performance</li>
+<li>HPC</li>
+<li>Linux systems</li>
+<li>Embedded systems</li>
+<li>Firmware</li>
+<li>Cloud infrastructure</li>
+<li>Storage</li>
+<li>Networking</li>
+<li>Distributed systems</li>
+</ul>
+<p>This book gives you the AI-specific mental models.</p>
+<h3 id="2-gpu-accelerator-engineers-expanding-up-the-stack">2. GPU / Accelerator Engineers Expanding Up the Stack<a class="anchor" href="#2-gpu-accelerator-engineers-expanding-up-the-stack" aria-label="Link to this section">#</a></h3>
+<p>You understand hardware or kernels, but you want to reason about the full stack:</p>
+<pre class="code-block"><code>model → framework → compiler/runtime → kernels → collectives → scheduler → cluster → product KPI</code></pre>
+<p>This book helps you connect local optimizations to system-level outcomes.</p>
+<h3 id="3-ml-infrastructure-engineers-seeking-deeper-performance-intuition">3. ML Infrastructure Engineers Seeking Deeper Performance Intuition<a class="anchor" href="#3-ml-infrastructure-engineers-seeking-deeper-performance-intuition" aria-label="Link to this section">#</a></h3>
+<p>You may already run vLLM, TensorRT-LLM, SGLang, Kubernetes, SLURM, or distributed training jobs.</p>
+<p>This book helps explain why systems behave the way they do:</p>
+<ul>
+<li>Why decode is often memory-bound</li>
+<li>Why KV cache dominates serving capacity</li>
+<li>Why AllReduce can limit scaling</li>
+<li>Why MFU falls as clusters grow</li>
+<li>Why faster GPUs do not always improve throughput</li>
+<li>Why P99 latency and average throughput can disagree</li>
+</ul>
+<h3 id="4-senior-staff-and-principal-engineers-preparing-for-interviews">4. Senior, Staff, and Principal Engineers Preparing for Interviews<a class="anchor" href="#4-senior-staff-and-principal-engineers-preparing-for-interviews" aria-label="Link to this section">#</a></h3>
+<p>This book is directly useful for principal-level system design and performance interviews.</p>
+<p>It helps you answer questions like:</p>
+<ul>
+<li>How would you design an LLM inference serving system?</li>
+<li>How would you debug low MFU in a 1,000-GPU training job?</li>
+<li>How would you choose between H100, H200, MI300X, or future accelerators?</li>
+<li>How would you explain a memory-bound workload?</li>
+<li>How would you reason about cost per token?</li>
+<li>How would you build observability for a GPU fleet?</li>
+</ul>
+<h3 id="5-technical-leaders-making-ai-infrastructure-decisions">5. Technical Leaders Making AI Infrastructure Decisions<a class="anchor" href="#5-technical-leaders-making-ai-infrastructure-decisions" aria-label="Link to this section">#</a></h3>
+<p>If you need to influence hardware roadmaps, cluster purchases, serving architecture, benchmarking strategy, or production operations, this book gives you the language and quantitative frameworks to communicate those decisions.</p>
+<hr>
+<h2 id="what-this-book-is-not">What This Book Is Not<a class="anchor" href="#what-this-book-is-not" aria-label="Link to this section">#</a></h2>
+<p>This book is intentionally not several things.</p>
+<h3 id="this-is-not-an-introduction-to-machine-learning">This Is Not an Introduction to Machine Learning<a class="anchor" href="#this-is-not-an-introduction-to-machine-learning" aria-label="Link to this section">#</a></h3>
+<p>It does not teach what a neural network is from scratch.</p>
+<p>It does not walk you through training your first model.</p>
+<p>It does not explain gradient descent as if the reader has never seen ML before.</p>
+<p>There are excellent resources for that. This is not one of them.</p>
+<h3 id="this-is-not-a-cuda-programming-tutorial">This Is Not a CUDA Programming Tutorial<a class="anchor" href="#this-is-not-a-cuda-programming-tutorial" aria-label="Link to this section">#</a></h3>
+<p>You will not finish this book and immediately become a production CUDA kernel engineer.</p>
+<p>Chapter 7 gives you the mental model and vocabulary to reason about kernel performance, tiling, memory coalescing, Tensor Core usage, FlashAttention, Triton, and profiling.</p>
+<p>But high-performance GPU kernel engineering is a craft that takes focused practice.</p>
+<p>This book respects that boundary.</p>
+<h3 id="this-is-not-a-paper-survey">This Is Not a Paper Survey<a class="anchor" href="#this-is-not-a-paper-survey" aria-label="Link to this section">#</a></h3>
+<p>Relevant papers are referenced and summarized, but the goal is not to catalog every research contribution.</p>
+<p class="callout">The goal is to extract the engineering insight.</p>
+<h3 id="this-is-not-vendor-marketing">This Is Not Vendor Marketing<a class="anchor" href="#this-is-not-vendor-marketing" aria-label="Link to this section">#</a></h3>
+<p>The book discusses NVIDIA, AMD, Intel, CUDA, ROCm, PyTorch, Triton, vLLM, TensorRT-LLM, NCCL, RCCL, SLURM, Kubernetes, and related systems.</p>
+<p class="callout">The goal is not to promote one vendor or framework.</p>
+<p class="callout">The goal is to teach reasoning that survives hardware and software generations.</p>
+<h3 id="this-is-not-a-static-benchmark-book">This Is Not a Static Benchmark Book<a class="anchor" href="#this-is-not-a-static-benchmark-book" aria-label="Link to this section">#</a></h3>
+<p>Numbers are useful, but numbers age.</p>
+<p>Methods last longer.</p>
+<p>The book gives both, but the method is the durable part.</p>
+<hr>
+<h1 id="what-makes-this-book-different">What Makes This Book Different<a class="anchor" href="#what-makes-this-book-different" aria-label="Link to this section">#</a></h1>
+<p>There are GPU programming guides. There are distributed systems books. There are ML papers. There are blog posts on vLLM, FlashAttention, Megatron-LM, NCCL, and inference serving. There are vendor whitepapers. There are interview-preparation notes.</p>
+<p>What is harder to find is one unified guide that connects all of these into a practical performance architecture framework.</p>
+<p>This book is different in five ways.</p>
+<hr>
+<h2 id="1-silicon-to-scale-literally">1. Silicon to Scale, Literally<a class="anchor" href="#1-silicon-to-scale-literally" aria-label="Link to this section">#</a></h2>
+<p>The book starts near the hardware:</p>
+<ul>
+<li>SMs</li>
+<li>Tensor Cores</li>
+<li>HBM</li>
+<li>NVLink</li>
+<li>PCIe</li>
+<li>Memory hierarchy</li>
+<li>Roofline analysis</li>
+</ul>
+<p>It ends at production-scale architecture:</p>
+<ul>
+<li>Distributed training</li>
+<li>LLM serving</li>
+<li>Cluster scheduling</li>
+<li>Networking</li>
+<li>Storage</li>
+<li>Observability</li>
+<li>Cost per token</li>
+<li>Principal-level system design</li>
+</ul>
+<p>The connecting thread is always:</p>
+<pre class="code-block"><code>arithmetic intensity → memory bandwidth → communication volume → system efficiency</code></pre>
+<hr>
+<h2 id="2-formulas-diagrams-and-production-numbers">2. Formulas, Diagrams, and Production Numbers<a class="anchor" href="#2-formulas-diagrams-and-production-numbers" aria-label="Link to this section">#</a></h2>
+<p>Every performance claim should connect to a model, measurement, or system behavior.</p>
+<p>The book uses:</p>
+<ul>
+<li>Formulas</li>
+<li>Diagrams</li>
+<li>Worked examples</li>
+<li>Capacity-planning calculations</li>
+<li>Hardware reference tables</li>
+<li>Measurement workflows</li>
+<li>Production anti-patterns</li>
+<li>Principal-level interview explanations</li>
+</ul>
+<p class="callout">The goal is not only to know terminology.</p>
+<p class="callout">The goal is to reason.</p>
+<hr>
+<h2 id="3-a-confidence-label-system">3. A Confidence Label System<a class="anchor" href="#3-a-confidence-label-system" aria-label="Link to this section">#</a></h2>
+<p>AI hardware and software move quickly.</p>
+<p>The confidence-label system makes the book more honest and more useful.</p>
+<p>You should always know whether you are reading:</p>
+<ul>
+<li>A shipped hardware specification</li>
+<li>A vendor announcement</li>
+<li>A derived calculation</li>
+<li>A representative example</li>
+<li>An environment-specific observation</li>
+</ul>
+<p>This helps the reader avoid overgeneralizing.</p>
+<hr>
+<h2 id="4-vertical-integration">4. Vertical Integration<a class="anchor" href="#4-vertical-integration" aria-label="Link to this section">#</a></h2>
+<p>The book connects ideas across layers.</p>
+<p>For example:</p>
+<ul>
+<li>Transformer attention explains why KV cache exists.</li>
+<li>KV cache explains why PagedAttention matters.</li>
+<li>PagedAttention explains why serving capacity depends on memory layout.</li>
+<li>Memory layout explains why HBM capacity and bandwidth shape cost per token.</li>
+<li>Cost per token explains why architecture choices matter to the business.</li>
+</ul>
+<p>The reader learns to reason across layers, not only within one layer.</p>
+<hr>
+<h2 id="5-interview-preparation-built-in">5. Interview Preparation Built In<a class="anchor" href="#5-interview-preparation-built-in" aria-label="Link to this section">#</a></h2>
+<p>The book is technical, but it is also designed to help engineers communicate at principal level.</p>
+<p>Each major concept is framed so the reader can explain it in:</p>
+<ul>
+<li>Architecture reviews</li>
+<li>Debug investigations</li>
+<li>Interview system design rounds</li>
+<li>Hardware/software tradeoff discussions</li>
+<li>Leadership updates</li>
+<li>Written design documents</li>
+</ul>
+<p>Chapter 18 turns the technical content into principal-level communication patterns, STAR+Impact stories, and system design walkthroughs.</p>
+<hr>
+<h1 id="the-central-identity-this-book-builds">The Central Identity This Book Builds<a class="anchor" href="#the-central-identity-this-book-builds" aria-label="Link to this section">#</a></h1>
+<p>The strongest AI/ML Principal Performance Architect identity is not:</p>
+<blockquote>“I optimized a CUDA kernel.”</blockquote>
+<p>It is:</p>
+<blockquote>“I understand the AI system as a whole — from GPU execution units and HBM bandwidth to cluster topology, serving latency, observability, and cost per token — and I can reason quantitatively about tradeoffs across every layer.”</blockquote>
+<p>That is the engineer this book is written for.</p>
+<p>That is the engineer this book helps you become.</p>
+<hr>
+<h1 id="how-to-use-this-book">How to Use This Book<a class="anchor" href="#how-to-use-this-book" aria-label="Link to this section">#</a></h1>
+<p>This book can be read front-to-back, and that is the best path for complete mastery.</p>
+<p>But most readers come with a specific goal:</p>
+<ul>
+<li>An interview is coming.</li>
+<li>A serving system is slow.</li>
+<li>A training cluster is underutilized.</li>
+<li>A hardware decision must be made.</li>
+<li>A career transition is underway.</li>
+<li>A principal-level architecture story must be built.</li>
+</ul>
+<p>Use the path that matches your goal.</p>
+<hr>
+<h2 id="path-1-the-interview-focused-reader">Path 1 — The Interview-Focused Reader<a class="anchor" href="#path-1-the-interview-focused-reader" aria-label="Link to this section">#</a></h2>
+<h3 id="situation">Situation<a class="anchor" href="#situation" aria-label="Link to this section">#</a></h3>
+<p>You have an interview at a company building or operating AI/ML infrastructure at scale.</p>
+<p>You may be preparing for roles involving:</p>
+<ul>
+<li>LLM inference performance</li>
+<li>GPU cluster health</li>
+<li>Distributed training</li>
+<li>Performance and efficiency</li>
+<li>AI infrastructure architecture</li>
+<li>Systems debugging</li>
+<li>Principal/staff-level technical leadership</li>
+</ul>
+<p>You have limited time.</p>
+<h3 id="goal">Goal<a class="anchor" href="#goal" aria-label="Link to this section">#</a></h3>
+<p>Build enough depth to answer system design and performance questions at senior/staff/principal level.</p>
+<p>You do not need to become a CUDA expert in two weeks.</p>
+<p>You need to be analytically dangerous.</p>
+<h3 id="two-week-plan">Two-Week Plan<a class="anchor" href="#two-week-plan" aria-label="Link to this section">#</a></h3>
+<h4 id="week-1-analytical-foundation">Week 1 — Analytical Foundation<a class="anchor" href="#week-1-analytical-foundation" aria-label="Link to this section">#</a></h4>
+<div class="table-wrap"><table><thead><tr><th>Day</th><th>Focus</th><th>Chapters</th></tr></thead><tbody><tr><td>Day 1–2</td><td>Roofline, arithmetic intensity, MFU, bottleneck thinking</td><td>Ch01</td></tr><tr><td>Day 3</td><td>Transformer performance shapes</td><td>Ch02</td></tr><tr><td>Day 4</td><td>GPU architecture and memory hierarchy</td><td>Ch03A, Ch04</td></tr><tr><td>Day 5</td><td>Inference regimes: prefill vs decode</td><td>Ch06</td></tr><tr><td>Day 6</td><td>KV cache sizing and PagedAttention</td><td>Ch11</td></tr><tr><td>Day 7</td><td>Review formulas and build cheat sheet</td><td>Ch01, Ch06, Ch11</td></tr></tbody></table></div>
+<h4 id="week-2-scale-and-system-design">Week 2 — Scale and System Design<a class="anchor" href="#week-2-scale-and-system-design" aria-label="Link to this section">#</a></h4>
+<div class="table-wrap"><table><thead><tr><th>Day</th><th>Focus</th><th>Chapters</th></tr></thead><tbody><tr><td>Day 8</td><td>Distributed training parallelism</td><td>Ch10</td></tr><tr><td>Day 9</td><td>Networking and collectives</td><td>Ch14</td></tr><tr><td>Day 10</td><td>Observability and profiling tools</td><td>Ch17</td></tr><tr><td>Day 11</td><td>Benchmarking and regression thinking</td><td>Ch12</td></tr><tr><td>Day 12</td><td>Principal architect communication</td><td>Ch18</td></tr><tr><td>Day 13</td><td>Mock design: LLM inference serving</td><td>Ch18</td></tr><tr><td>Day 14</td><td>Mock design: distributed training system</td><td>Ch18</td></tr></tbody></table></div>
+<h3 id="most-important-practice">Most Important Practice<a class="anchor" href="#most-important-practice" aria-label="Link to this section">#</a></h3>
+<p>Run two timed mock interviews:</p>
+<ol>
+<li>LLM inference serving at scale</li>
+<li>Distributed LLM training cluster</li>
+</ol>
+<p>Set a timer for 45 minutes.</p>
+<p>Do not read from the chapter during the mock.</p>
+<p>Afterward, compare your answer to the book and fix the gaps.</p>
+<hr>
+<h2 id="path-2-the-practicing-inference-engineer">Path 2 — The Practicing Inference Engineer<a class="anchor" href="#path-2-the-practicing-inference-engineer" aria-label="Link to this section">#</a></h2>
+<h3 id="situation-2">Situation<a class="anchor" href="#situation-2" aria-label="Link to this section">#</a></h3>
+<p>You are actively building or operating LLM inference systems.</p>
+<p>You may be using:</p>
+<ul>
+<li>vLLM</li>
+<li>TensorRT-LLM</li>
+<li>SGLang</li>
+<li>Triton</li>
+<li>Ray Serve</li>
+<li>Kubernetes</li>
+<li>Custom model-serving infrastructure</li>
+</ul>
+<p>You understand the basics, but you want stronger performance intuition.</p>
+<h3 id="goal-2">Goal<a class="anchor" href="#goal-2" aria-label="Link to this section">#</a></h3>
+<p>Optimize serving systems with quantitative reasoning instead of trial-and-error tuning.</p>
+<h3 id="recommended-path">Recommended Path<a class="anchor" href="#recommended-path" aria-label="Link to this section">#</a></h3>
+<div class="table-wrap"><table><thead><tr><th>Phase</th><th>Chapters</th><th>Focus</th></tr></thead><tbody><tr><td>Start</td><td>Ch01</td><td>Roofline and bottleneck classification</td></tr><tr><td>Core inference</td><td>Ch06</td><td>Prefill, decode, batching, TTFT, TPOT</td></tr><tr><td>Memory pressure</td><td>Ch11</td><td>KV cache, PagedAttention, prefix caching, tiering</td></tr><tr><td>Precision</td><td>Ch08</td><td>Quantization and KV precision</td></tr><tr><td>Kernels</td><td>Ch07</td><td>FlashAttention, fused kernels, profiling</td></tr><tr><td>Compiler/runtime</td><td>Ch09</td><td>torch.compile, Triton, TensorRT</td></tr><tr><td>Operations</td><td>Ch17</td><td>Telemetry, alerts, fail-slow detection</td></tr><tr><td>Cost</td><td>Ch05</td><td>Cost per token and TCO</td></tr></tbody></table></div>
+<h3 id="one-project-to-complete">One Project to Complete<a class="anchor" href="#one-project-to-complete" aria-label="Link to this section">#</a></h3>
+<p>Profile a real or representative vLLM deployment during a mixed prefill/decode workload.</p>
+<p>Measure:</p>
+<ul>
+<li>TTFT</li>
+<li>TPOT</li>
+<li>GPU utilization</li>
+<li>HBM bandwidth</li>
+<li>KV cache usage</li>
+<li>Queue depth</li>
+<li>Number of preemptions</li>
+<li>Prefix cache hit rate</li>
+<li>P50/P95/P99 latency</li>
+</ul>
+<p>Then answer:</p>
+<blockquote>Is the serving system compute-bound, memory-bound, scheduler-bound, or queue-bound?</blockquote>
+<hr>
+<h2 id="path-3-the-training-infrastructure-architect">Path 3 — The Training Infrastructure Architect<a class="anchor" href="#path-3-the-training-infrastructure-architect" aria-label="Link to this section">#</a></h2>
+<h3 id="situation-3">Situation<a class="anchor" href="#situation-3" aria-label="Link to this section">#</a></h3>
+<p>You are designing, procuring, or operating GPU training clusters.</p>
+<p>You need to reason about:</p>
+<ul>
+<li>4D parallelism</li>
+<li>Network topology</li>
+<li>Storage pipelines</li>
+<li>Fault tolerance</li>
+<li>Cluster utilization</li>
+<li>MFU</li>
+<li>TCO</li>
+<li>Power and thermal limits</li>
+</ul>
+<h3 id="goal-3">Goal<a class="anchor" href="#goal-3" aria-label="Link to this section">#</a></h3>
+<p>Design and operate large-scale AI training infrastructure with quantitative confidence.</p>
+<h3 id="recommended-path-2">Recommended Path<a class="anchor" href="#recommended-path-2" aria-label="Link to this section">#</a></h3>
+<div class="table-wrap"><table><thead><tr><th>Phase</th><th>Chapters</th><th>Focus</th></tr></thead><tbody><tr><td>Foundation</td><td>Ch01, Ch02</td><td>Performance mindset and transformer compute</td></tr><tr><td>Hardware</td><td>Ch03A, Ch03B, Ch04, Ch05</td><td>GPUs, HBM, power, TCO</td></tr><tr><td>Training systems</td><td>Ch10</td><td>TP, PP, DP, CP, ZeRO, FSDP</td></tr><tr><td>Measurement</td><td>Ch12</td><td>Benchmarking and regression detection</td></tr><tr><td>Networking</td><td>Ch14</td><td>NCCL, InfiniBand, topology, collectives</td></tr><tr><td>Storage</td><td>Ch15</td><td>Data pipelines and checkpointing</td></tr><tr><td>Cluster management</td><td>Ch16</td><td>SLURM, Kubernetes, scheduling, tenancy</td></tr><tr><td>Observability</td><td>Ch17</td><td>Fleet health, telemetry, stragglers</td></tr></tbody></table></div>
+<h3 id="one-project-to-complete-2">One Project to Complete<a class="anchor" href="#one-project-to-complete-2" aria-label="Link to this section">#</a></h3>
+<p>Build a TCO model for one of these decisions:</p>
+<ul>
+<li>256× H100 SXM vs 512× A100</li>
+<li>H100 vs H200 for serving</li>
+<li>H100 vs MI300X for memory-heavy inference</li>
+<li>Smaller fast cluster vs larger cheaper cluster</li>
+<li>Cloud rental vs owned cluster</li>
+</ul>
+<p>Include:</p>
+<ul>
+<li>Capex</li>
+<li>Opex</li>
+<li>Power</li>
+<li>Cooling</li>
+<li>Network</li>
+<li>Storage</li>
+<li>Expected MFU</li>
+<li>Cost per token or cost per training run</li>
+</ul>
+<p>Present the recommendation as if to a VP of Engineering.</p>
+<hr>
+<h2 id="path-4-the-deep-learner-full-stack-transition">Path 4 — The Deep Learner / Full-Stack Transition<a class="anchor" href="#path-4-the-deep-learner-full-stack-transition" aria-label="Link to this section">#</a></h2>
+<h3 id="situation-4">Situation<a class="anchor" href="#situation-4" aria-label="Link to this section">#</a></h3>
+<p>You are transitioning into AI/ML infrastructure from an adjacent field.</p>
+<p>You have time.</p>
+<p>You want the full principal-level knowledge base.</p>
+<h3 id="goal-4">Goal<a class="anchor" href="#goal-4" aria-label="Link to this section">#</a></h3>
+<p>Build durable, full-stack AI infrastructure performance capability.</p>
+<h3 id="recommended-path-3">Recommended Path<a class="anchor" href="#recommended-path-3" aria-label="Link to this section">#</a></h3>
+<p>Read the book in order:</p>
+<pre class="code-block"><code>Part I → Part II → Part III → Part IV → Part V → Part VI</code></pre>
+<p>For each chapter:</p>
+<ol>
+<li>Read fully.</li>
+<li>Rewrite the key formulas by hand.</li>
+<li>Recreate the diagrams in your own notes.</li>
+<li>Answer the review questions without looking.</li>
+<li>Run a small benchmark if possible.</li>
+<li>Add one page to your personal reference sheet.</li>
+<li>Practice explaining the chapter in five minutes.</li>
+</ol>
+<p>After each part:</p>
+<ul>
+<li>Run one mock architecture question.</li>
+<li>Identify what you still cannot explain clearly.</li>
+<li>Return to the relevant chapter and repair the gap.</li>
+</ul>
+<hr>
+<h1 id="quick-reference-by-time-budget">Quick Reference by Time Budget<a class="anchor" href="#quick-reference-by-time-budget" aria-label="Link to this section">#</a></h1>
+<div class="table-wrap"><table><thead><tr><th>Time Budget</th><th>Goal</th><th>Priority Chapters</th></tr></thead><tbody><tr><td>2 hours</td><td>Emergency interview prep</td><td>Ch01, Ch06, Ch11, Ch14, Ch18</td></tr><tr><td>8 hours</td><td>Solid interview foundation</td><td>Ch01, Ch02, Ch03A, Ch06, Ch10, Ch11, Ch14</td></tr><tr><td>Weekend</td><td>Thorough interview prep</td><td>Ch01, Ch02, Ch06, Ch07, Ch10, Ch11, Ch13, Ch14, Ch18</td></tr><tr><td>2 weeks</td><td>Principal interview readiness</td><td>Ch01, Ch02, Ch03A, Ch04, Ch06, Ch10, Ch11, Ch14, Ch17, Ch18</td></tr><tr><td>4 weeks</td><td>Systematic study</td><td>Parts I–IV plus Ch14 and Ch17</td></tr><tr><td>8–12 weeks</td><td>Complete mastery pass</td><td>All chapters and appendices</td></tr><tr><td>12 months</td><td>Principal-level transformation</td><td>Full curriculum below</td></tr></tbody></table></div>
+<hr>
+<h1 id="the-12-month-principal-level-curriculum">The 12-Month Principal-Level Curriculum<a class="anchor" href="#the-12-month-principal-level-curriculum" aria-label="Link to this section">#</a></h1>
+<p>This curriculum is for engineers who want to build the full principal AI/ML infrastructure identity, not only prepare for an interview.</p>
+<p>Each two-month block includes:</p>
+<ul>
+<li>Chapters to read deeply</li>
+<li>A hands-on project</li>
+<li>Papers or technical references to study</li>
+<li>A benchmark or measurement task</li>
+<li>A communication deliverable</li>
+</ul>
+<p>The recommended pace is 10–15 hours per week.</p>
+<hr>
+<h2 id="months-12-foundations">Months 1–2 — Foundations<a class="anchor" href="#months-12-foundations" aria-label="Link to this section">#</a></h2>
+<h3 id="goal-5">Goal<a class="anchor" href="#goal-5" aria-label="Link to this section">#</a></h3>
+<p>You can explain roofline analysis, transformer architecture, and GPU memory hierarchy from first principles.</p>
+<h3 id="read-deeply">Read Deeply<a class="anchor" href="#read-deeply" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>Ch01 — AI/ML Performance Architecture Mindset</li>
+<li>Ch02 — Transformer Architecture Deep Dive</li>
+</ul>
+<h3 id="hands-on-project">Hands-On Project<a class="anchor" href="#hands-on-project" aria-label="Link to this section">#</a></h3>
+<p>Implement and profile a minimal transformer forward pass in PyTorch.</p>
+<p>Measure:</p>
+<ul>
+<li>GEMM time</li>
+<li>Attention time</li>
+<li>Normalization time</li>
+<li>Memory use</li>
+<li>Achieved TFLOPS</li>
+<li>HBM bandwidth if available</li>
+</ul>
+<p>Then classify the operations using arithmetic intensity.</p>
+<h3 id="papers-references">Papers / References<a class="anchor" href="#papers-references" aria-label="Link to this section">#</a></h3>
+<ul>
+<li><em>Attention Is All You Need</em></li>
+<li>Original Roofline paper</li>
+<li>Transformer scaling laws or FLOPs references</li>
+</ul>
+<h3 id="benchmark">Benchmark<a class="anchor" href="#benchmark" aria-label="Link to this section">#</a></h3>
+<p>Run a matrix multiplication benchmark and compare achieved TFLOPS to theoretical GPU peak.</p>
+<h3 id="communication-deliverable">Communication Deliverable<a class="anchor" href="#communication-deliverable" aria-label="Link to this section">#</a></h3>
+<p>Write a one-page explanation:</p>
+<blockquote>Why transformer performance is mostly a question of GEMM, memory bandwidth, and attention data movement.</blockquote>
+<hr>
+<h2 id="months-34-hardware-deep-dive">Months 3–4 — Hardware Deep Dive<a class="anchor" href="#months-34-hardware-deep-dive" aria-label="Link to this section">#</a></h2>
+<h3 id="goal-6">Goal<a class="anchor" href="#goal-6" aria-label="Link to this section">#</a></h3>
+<p>You can reason about accelerator selection, HBM bandwidth, memory capacity, and power constraints.</p>
+<h3 id="read-deeply-2">Read Deeply<a class="anchor" href="#read-deeply-2" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>Ch03A — GPU and Accelerator Architecture Fundamentals</li>
+<li>Ch03B — GPU Architecture Roadmap</li>
+<li>Ch04 — Memory Hierarchy and HBM Deep Dive</li>
+<li>Ch05 — Thermal Design, Power Management, and TCO</li>
+</ul>
+<h3 id="hands-on-project-2">Hands-On Project<a class="anchor" href="#hands-on-project-2" aria-label="Link to this section">#</a></h3>
+<p>Measure memory bandwidth and compute throughput on your available GPU.</p>
+<p>Compare:</p>
+<ul>
+<li>Vector operation</li>
+<li>GEMM</li>
+<li>Attention-like workload</li>
+<li>Reduction or normalization</li>
+</ul>
+<p>Plot each on a roofline chart.</p>
+<h3 id="papers-references-2">Papers / References<a class="anchor" href="#papers-references-2" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>NVIDIA H100 architecture documentation</li>
+<li>AMD CDNA / MI300X architecture material</li>
+<li>GPU microbenchmarking references</li>
+</ul>
+<h3 id="benchmark-2">Benchmark<a class="anchor" href="#benchmark-2" aria-label="Link to this section">#</a></h3>
+<p>Run memory bandwidth and GEMM benchmarks.</p>
+<h3 id="communication-deliverable-2">Communication Deliverable<a class="anchor" href="#communication-deliverable-2" aria-label="Link to this section">#</a></h3>
+<p>Write a hardware recommendation memo:</p>
+<blockquote>Which accelerator would you choose for a memory-heavy LLM serving workload and why?</blockquote>
+<hr>
+<h2 id="months-56-optimization-techniques">Months 5–6 — Optimization Techniques<a class="anchor" href="#months-56-optimization-techniques" aria-label="Link to this section">#</a></h2>
+<h3 id="goal-7">Goal<a class="anchor" href="#goal-7" aria-label="Link to this section">#</a></h3>
+<p>You can identify kernel, compiler, fusion, and quantization opportunities.</p>
+<h3 id="read-deeply-3">Read Deeply<a class="anchor" href="#read-deeply-3" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>Ch07 — GPU Kernels and CUDA Optimization</li>
+<li>Ch08 — Quantization</li>
+<li>Ch09 — Operator Fusion and Compiler Optimization</li>
+</ul>
+<h3 id="hands-on-project-3">Hands-On Project<a class="anchor" href="#hands-on-project-3" aria-label="Link to this section">#</a></h3>
+<p>Profile a transformer block before and after enabling compiler optimization or fused kernels.</p>
+<p>Measure:</p>
+<ul>
+<li>Kernel count</li>
+<li>Memory traffic</li>
+<li>Runtime</li>
+<li>Graph breaks</li>
+<li>Achieved throughput</li>
+</ul>
+<h3 id="papers-references-3">Papers / References<a class="anchor" href="#papers-references-3" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>FlashAttention</li>
+<li>FlashAttention-2</li>
+<li>Triton documentation</li>
+<li>PyTorch 2.x compile documentation</li>
+<li>Quantization references such as GPTQ/AWQ/SmoothQuant</li>
+</ul>
+<h3 id="benchmark-3">Benchmark<a class="anchor" href="#benchmark-3" aria-label="Link to this section">#</a></h3>
+<p>Run a forward pass with and without <code>torch.compile</code> or an equivalent optimization path.</p>
+<h3 id="communication-deliverable-3">Communication Deliverable<a class="anchor" href="#communication-deliverable-3" aria-label="Link to this section">#</a></h3>
+<p>Write a short optimization report:</p>
+<blockquote>Which operation was the bottleneck, what changed, and what metric improved?</blockquote>
+<hr>
+<h2 id="months-78-training-and-serving-systems">Months 7–8 — Training and Serving Systems<a class="anchor" href="#months-78-training-and-serving-systems" aria-label="Link to this section">#</a></h2>
+<h3 id="goal-8">Goal<a class="anchor" href="#goal-8" aria-label="Link to this section">#</a></h3>
+<p>You can reason about distributed training memory, serving capacity, and KV cache economics.</p>
+<h3 id="read-deeply-4">Read Deeply<a class="anchor" href="#read-deeply-4" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>Ch06 — Inference Systems Architecture</li>
+<li>Ch10 — Training Systems Architecture at Scale</li>
+<li>Ch11 — KV Cache: The Heart of LLM Serving</li>
+<li>Ch12 — Benchmarking and Performance Measurement</li>
+</ul>
+<h3 id="hands-on-project-4">Hands-On Project<a class="anchor" href="#hands-on-project-4" aria-label="Link to this section">#</a></h3>
+<p>Build a memory budget for a 70B model.</p>
+<p>Include:</p>
+<ul>
+<li>Weight memory</li>
+<li>Optimizer memory</li>
+<li>Gradient memory</li>
+<li>Activation memory</li>
+<li>KV cache memory</li>
+<li>Tensor parallelism assumptions</li>
+<li>ZeRO/FSDP assumptions</li>
+</ul>
+<h3 id="papers-references-4">Papers / References<a class="anchor" href="#papers-references-4" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>Megatron-LM</li>
+<li>ZeRO</li>
+<li>PagedAttention / vLLM</li>
+<li>MLPerf methodology</li>
+</ul>
+<h3 id="benchmark-4">Benchmark<a class="anchor" href="#benchmark-4" aria-label="Link to this section">#</a></h3>
+<p>Run an inference throughput benchmark over multiple batch sizes or sequence lengths.</p>
+<h3 id="communication-deliverable-4">Communication Deliverable<a class="anchor" href="#communication-deliverable-4" aria-label="Link to this section">#</a></h3>
+<p>Write a capacity-planning memo:</p>
+<blockquote>How many users can this serving system support under a 4K average context and 32K peak context?</blockquote>
+<hr>
+<h2 id="months-910-infrastructure-at-scale">Months 9–10 — Infrastructure at Scale<a class="anchor" href="#months-910-infrastructure-at-scale" aria-label="Link to this section">#</a></h2>
+<h3 id="goal-9">Goal<a class="anchor" href="#goal-9" aria-label="Link to this section">#</a></h3>
+<p>You can reason about network topology, collectives, storage pipelines, checkpointing, and observability.</p>
+<h3 id="read-deeply-5">Read Deeply<a class="anchor" href="#read-deeply-5" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>Ch14 — Networking and Collective Communication</li>
+<li>Ch15 — Storage, Data Pipelines, and I/O Performance</li>
+<li>Ch16 — Cluster Management and Multi-Tenant Systems</li>
+<li>Ch17 — Telemetry, Observability, and Profiling Tools</li>
+</ul>
+<h3 id="hands-on-project-5">Hands-On Project<a class="anchor" href="#hands-on-project-5" aria-label="Link to this section">#</a></h3>
+<p>Run or study a multi-GPU communication benchmark.</p>
+<p>Measure or model:</p>
+<ul>
+<li>AllReduce latency</li>
+<li>Bus bandwidth</li>
+<li>Message-size scaling</li>
+<li>Topology effects</li>
+<li>Communication/compute overlap</li>
+</ul>
+<h3 id="papers-references-5">Papers / References<a class="anchor" href="#papers-references-5" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>NCCL documentation</li>
+<li>InfiniBand/RDMA references</li>
+<li>Distributed training scaling papers</li>
+<li>Cluster observability references</li>
+</ul>
+<h3 id="benchmark-5">Benchmark<a class="anchor" href="#benchmark-5" aria-label="Link to this section">#</a></h3>
+<p>Run <code>nccl-tests</code> or equivalent.</p>
+<h3 id="communication-deliverable-5">Communication Deliverable<a class="anchor" href="#communication-deliverable-5" aria-label="Link to this section">#</a></h3>
+<p>Write an incident-style analysis:</p>
+<blockquote>A 512-GPU training job has low MFU. What telemetry do you collect, and how do you isolate the bottleneck?</blockquote>
+<hr>
+<h2 id="months-1112-architecture-synthesis-and-principal-identity">Months 11–12 — Architecture Synthesis and Principal Identity<a class="anchor" href="#months-1112-architecture-synthesis-and-principal-identity" aria-label="Link to this section">#</a></h2>
+<h3 id="goal-10">Goal<a class="anchor" href="#goal-10" aria-label="Link to this section">#</a></h3>
+<p>You can operate at principal level: synthesize tradeoffs, communicate clearly, and guide infrastructure decisions.</p>
+<h3 id="read-deeply-6">Read Deeply<a class="anchor" href="#read-deeply-6" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>Ch05 — TCO and Power</li>
+<li>Ch18 — Principal Architect Career, Interviews, and Professional Development</li>
+<li>Revisit Ch01, Ch10, Ch11, Ch14, and Ch17</li>
+</ul>
+<h3 id="hands-on-project-6">Hands-On Project<a class="anchor" href="#hands-on-project-6" aria-label="Link to this section">#</a></h3>
+<p>Create a complete architecture recommendation.</p>
+<p>Example topic:</p>
+<blockquote>Should we use 256× H100 SXM, 512× H100 PCIe, or a memory-rich accelerator tier for a 70B training and serving workload?</blockquote>
+<p>Include:</p>
+<ul>
+<li>FLOP budget</li>
+<li>Memory budget</li>
+<li>Network analysis</li>
+<li>Storage/checkpointing plan</li>
+<li>Observability plan</li>
+<li>Cost model</li>
+<li>Risks</li>
+<li>Recommendation</li>
+</ul>
+<h3 id="papers-references-6">Papers / References<a class="anchor" href="#papers-references-6" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>Large-model training system reports</li>
+<li>Frontier model infrastructure reports</li>
+<li>Vendor architecture guides</li>
+<li>Serving-system papers</li>
+</ul>
+<h3 id="benchmark-6">Benchmark<a class="anchor" href="#benchmark-6" aria-label="Link to this section">#</a></h3>
+<p>Run a timed system design mock interview.</p>
+<h3 id="communication-deliverable-6">Communication Deliverable<a class="anchor" href="#communication-deliverable-6" aria-label="Link to this section">#</a></h3>
+<p>Create a 3–5 page principal-level architecture memo suitable for review by engineering leadership.</p>
+<hr>
+<h1 id="curriculum-summary">Curriculum Summary<a class="anchor" href="#curriculum-summary" aria-label="Link to this section">#</a></h1>
+<div class="table-wrap"><table><thead><tr><th>Months</th><th>Focus</th><th>Chapters</th><th>Key Project</th></tr></thead><tbody><tr><td>1–2</td><td>Foundations</td><td>Ch01, Ch02</td><td>Transformer profiling from scratch</td></tr><tr><td>3–4</td><td>Hardware</td><td>Ch03A, Ch03B, Ch04, Ch05</td><td>Roofline and memory bandwidth measurement</td></tr><tr><td>5–6</td><td>Optimization</td><td>Ch07, Ch08, Ch09</td><td>Fusion / compiler / quantization experiment</td></tr><tr><td>7–8</td><td>Systems</td><td>Ch06, Ch10, Ch11, Ch12</td><td>70B memory and serving capacity budget</td></tr><tr><td>9–10</td><td>Infrastructure</td><td>Ch14, Ch15, Ch16, Ch17</td><td>Network, storage, and observability analysis</td></tr><tr><td>11–12</td><td>Synthesis</td><td>Ch05, Ch18, review core chapters</td><td>Principal architecture recommendation</td></tr></tbody></table></div>
+<hr>
+<h1 id="final-table-of-contents">Final Table of Contents<a class="anchor" href="#final-table-of-contents" aria-label="Link to this section">#</a></h1>
+<h2 id="front-matter">Front Matter<a class="anchor" href="#front-matter" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>Title Page</li>
+<li>Copyright and Edition Note</li>
+<li>Note on Accuracy and Currency</li>
+<li>Confidence Label System</li>
+<li>Preface</li>
+<li>Who This Book Is For</li>
+<li>What This Book Is Not</li>
+<li>What Makes This Book Different</li>
+<li>How to Use This Book</li>
+<li>Four Reader Paths</li>
+<li>Quick Reference by Time Budget</li>
+<li>12-Month Principal-Level Curriculum</li>
+<li>Table of Contents</li>
+</ul>
+<hr>
+<h1 id="part-i-foundations">Part I — Foundations<a class="anchor" href="#part-i-foundations" aria-label="Link to this section">#</a></h1>
+<p>The performance mindset, transformer architecture, and accelerator fundamentals that support the rest of the book.</p>
+<h2 id="chapter-1-the-aiml-performance-architecture-mindset">Chapter 1 — The AI/ML Performance Architecture Mindset<a class="anchor" href="#chapter-1-the-aiml-performance-architecture-mindset" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>The three quantities of AI performance</li>
+<li>Seven-layer performance stack</li>
+<li>Roofline analysis</li>
+<li>Arithmetic intensity</li>
+<li>H100 dense BF16 ridge point</li>
+<li>Three performance regimes</li>
+<li>MFU vs HFU</li>
+<li>Measurement discipline</li>
+<li>Hypothesis-driven profiling</li>
+<li>Principal interview framing</li>
+</ul>
+<h2 id="chapter-2-the-transformer-architecture-a-performance-engineers-deep-dive">Chapter 2 — The Transformer Architecture: A Performance Engineer’s Deep Dive<a class="anchor" href="#chapter-2-the-transformer-architecture-a-performance-engineers-deep-dive" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>Transformer as a GEMM machine</li>
+<li>Tokenization and embeddings</li>
+<li>Multi-head self-attention</li>
+<li>GQA, MQA, and MLA</li>
+<li>RoPE</li>
+<li>Feed-forward networks</li>
+<li>SwiGLU</li>
+<li>LayerNorm and RMSNorm</li>
+<li>Residual connections</li>
+<li>Decoder-only architecture</li>
+<li>FLOP budget analysis</li>
+<li>Memory footprint analysis</li>
+</ul>
+<h2 id="chapter-3a-gpu-and-accelerator-architecture-fundamentals">Chapter 3A — GPU and Accelerator Architecture Fundamentals<a class="anchor" href="#chapter-3a-gpu-and-accelerator-architecture-fundamentals" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>SMs, warps, and threads</li>
+<li>Tensor Cores</li>
+<li>GPU memory hierarchy</li>
+<li>NVLink and NVSwitch</li>
+<li>SXM vs PCIe</li>
+<li>TPUs, Gaudi, and custom silicon</li>
+<li>Accelerator selection</li>
+</ul>
+<h2 id="chapter-3b-gpu-architecture-roadmap">Chapter 3B — GPU Architecture Roadmap<a class="anchor" href="#chapter-3b-gpu-architecture-roadmap" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>NVIDIA Ampere, Hopper, Blackwell, Rubin</li>
+<li>AMD CDNA generations</li>
+<li>MI300X and future roadmap concepts</li>
+<li>Interconnect evolution</li>
+<li>HBM evolution</li>
+<li>Hardware roadmap interpretation</li>
+</ul>
+<hr>
+<h1 id="part-ii-hardware-performance">Part II — Hardware Performance<a class="anchor" href="#part-ii-hardware-performance" aria-label="Link to this section">#</a></h1>
+<p>The physical constraints that bound every optimization.</p>
+<h2 id="chapter-4-memory-hierarchy-and-hbm-deep-dive">Chapter 4 — Memory Hierarchy and HBM Deep Dive<a class="anchor" href="#chapter-4-memory-hierarchy-and-hbm-deep-dive" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>Why memory is often the bottleneck</li>
+<li>HBM physical architecture</li>
+<li>HBM bandwidth theory vs sustained reality</li>
+<li>ECC and reliability</li>
+<li>DRAM roofline</li>
+<li>Cache hierarchy</li>
+<li>Memory access patterns</li>
+<li>Capacity planning</li>
+</ul>
+<h2 id="chapter-5-thermal-design-power-management-and-tco">Chapter 5 — Thermal Design, Power Management, and TCO<a class="anchor" href="#chapter-5-thermal-design-power-management-and-tco" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>GPU power delivery</li>
+<li>TDP/TBP/sustained power</li>
+<li>Thermal resistance and junction temperature</li>
+<li>Air, liquid, and immersion cooling</li>
+<li>Power throttling</li>
+<li>Rack power budget</li>
+<li>Capex and opex</li>
+<li>Cost per token</li>
+<li>Carbon and sustainability considerations</li>
+</ul>
+<hr>
+<h1 id="part-iii-llm-inference-kernels-and-optimization">Part III — LLM Inference, Kernels, and Optimization<a class="anchor" href="#part-iii-llm-inference-kernels-and-optimization" aria-label="Link to this section">#</a></h1>
+<p>The serving, kernel, precision, and compiler techniques that convert hardware potential into useful throughput.</p>
+<h2 id="chapter-6-llm-inference-systems-architecture">Chapter 6 — LLM Inference Systems Architecture<a class="anchor" href="#chapter-6-llm-inference-systems-architecture" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>Prefill vs decode</li>
+<li>TTFT and TPOT</li>
+<li>Continuous batching</li>
+<li>Iteration-level scheduling</li>
+<li>Chunked prefill</li>
+<li>Disaggregated prefill/decode</li>
+<li>Tensor parallel inference</li>
+<li>vLLM, TensorRT-LLM, SGLang</li>
+<li>Multi-tenant serving</li>
+<li>Serving observability</li>
+<li>Production optimization hierarchy</li>
+</ul>
+<h2 id="chapter-7-gpu-kernels-and-cuda-optimization">Chapter 7 — GPU Kernels and CUDA Optimization<a class="anchor" href="#chapter-7-gpu-kernels-and-cuda-optimization" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>Kernel execution model</li>
+<li>Memory coalescing</li>
+<li>Shared memory and bank conflicts</li>
+<li>Warp divergence</li>
+<li>Occupancy</li>
+<li>Tensor Core programming</li>
+<li>GEMM tiling</li>
+<li>FlashAttention</li>
+<li>Triton</li>
+<li>Kernel profiling</li>
+</ul>
+<h2 id="chapter-8-quantization-and-precision-optimization">Chapter 8 — Quantization and Precision Optimization<a class="anchor" href="#chapter-8-quantization-and-precision-optimization" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>Why quantization works</li>
+<li>INT8</li>
+<li>FP8</li>
+<li>INT4</li>
+<li>GPTQ</li>
+<li>AWQ</li>
+<li>SmoothQuant</li>
+<li>Quantization-aware training</li>
+<li>KV cache quantization</li>
+<li>Accuracy degradation</li>
+<li>Production decision framework</li>
+</ul>
+<h2 id="chapter-9-operator-fusion-and-compiler-optimization">Chapter 9 — Operator Fusion and Compiler Optimization<a class="anchor" href="#chapter-9-operator-fusion-and-compiler-optimization" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>Why fusion exists</li>
+<li>Memory traffic reduction</li>
+<li>Fusion candidates</li>
+<li>PyTorch 2.x</li>
+<li>TorchDynamo</li>
+<li>AOTAutograd</li>
+<li>TorchInductor</li>
+<li>Triton</li>
+<li>XLA</li>
+<li>TensorRT</li>
+<li>Compile failures</li>
+<li>CUDA Graphs</li>
+</ul>
+<hr>
+<h1 id="part-iv-training-and-serving-systems">Part IV — Training and Serving Systems<a class="anchor" href="#part-iv-training-and-serving-systems" aria-label="Link to this section">#</a></h1>
+<p>The distributed systems architectures that scale AI from a single GPU to many thousands.</p>
+<h2 id="chapter-10-training-systems-architecture-at-scale">Chapter 10 — Training Systems Architecture at Scale<a class="anchor" href="#chapter-10-training-systems-architecture-at-scale" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>Training stack</li>
+<li>Data parallelism</li>
+<li>Tensor parallelism</li>
+<li>Pipeline parallelism</li>
+<li>Sequence and context parallelism</li>
+<li>4D parallelism decision tree</li>
+<li>ZeRO</li>
+<li>FSDP</li>
+<li>Gradient checkpointing</li>
+<li>Fault tolerance</li>
+<li>Training observability</li>
+</ul>
+<h2 id="chapter-11-kv-cache-the-heart-of-llm-serving">Chapter 11 — KV Cache: The Heart of LLM Serving<a class="anchor" href="#chapter-11-kv-cache-the-heart-of-llm-serving" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>KV cache memory math</li>
+<li>KV cache vs weight memory</li>
+<li>Context length explosion</li>
+<li>GQA and MQA reduction</li>
+<li>PagedAttention</li>
+<li>Fragmentation</li>
+<li>Prefix caching</li>
+<li>RadixAttention</li>
+<li>KV quantization</li>
+<li>KV tiering</li>
+<li>Multi-GPU KV cache</li>
+<li>Disaggregated prefill/decode</li>
+<li>MLA compression</li>
+<li>KV decision framework</li>
+</ul>
+<h2 id="chapter-12-benchmarking-and-performance-measurement">Chapter 12 — Benchmarking and Performance Measurement<a class="anchor" href="#chapter-12-benchmarking-and-performance-measurement" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>Benchmark design principles</li>
+<li>MLPerf inference</li>
+<li>MLPerf training</li>
+<li>Microbenchmarks</li>
+<li>End-to-end metrics</li>
+<li>Regression detection</li>
+<li>Capacity planning</li>
+<li>Benchmark harness design</li>
+<li>Regression CI</li>
+<li>Fleet health monitoring</li>
+</ul>
+<hr>
+<h1 id="part-v-advanced-techniques-and-cluster-operations">Part V — Advanced Techniques and Cluster Operations<a class="anchor" href="#part-v-advanced-techniques-and-cluster-operations" aria-label="Link to this section">#</a></h1>
+<p>The techniques and operational systems that make large-scale AI infrastructure reliable and efficient.</p>
+<h2 id="chapter-13-speculative-decoding-and-mixture-of-experts-infrastructure">Chapter 13 — Speculative Decoding and Mixture-of-Experts Infrastructure<a class="anchor" href="#chapter-13-speculative-decoding-and-mixture-of-experts-infrastructure" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>Speculative decoding theory</li>
+<li>Acceptance math</li>
+<li>Profitability analysis</li>
+<li>Draft model selection</li>
+<li>Deployment patterns</li>
+<li>MoE architecture</li>
+<li>Routing</li>
+<li>Expert parallelism</li>
+<li>All-to-All communication</li>
+<li>Load imbalance</li>
+<li>MoE operations</li>
+</ul>
+<h2 id="chapter-14-networking-and-collective-communication">Chapter 14 — Networking and Collective Communication<a class="anchor" href="#chapter-14-networking-and-collective-communication" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>Communication bottlenecks</li>
+<li>NVLink and NVSwitch</li>
+<li>NVLS</li>
+<li>InfiniBand</li>
+<li>RDMA</li>
+<li>SHARP</li>
+<li>GPUDirect RDMA</li>
+<li>NCCL</li>
+<li>RCCL</li>
+<li>AllReduce algorithms</li>
+<li>Topology sizing</li>
+<li>RoCEv2 and Ethernet AI fabrics</li>
+<li>Measurement workflow</li>
+</ul>
+<h2 id="chapter-15-storage-data-pipelines-and-io-performance">Chapter 15 — Storage, Data Pipelines, and I/O Performance<a class="anchor" href="#chapter-15-storage-data-pipelines-and-io-performance" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>Storage hierarchy</li>
+<li>Dataset pipeline architecture</li>
+<li>Data stalls</li>
+<li>Sequence packing</li>
+<li>Checkpoint storage</li>
+<li>Async checkpointing</li>
+<li>Parallel filesystems</li>
+<li>Object stores</li>
+<li>KV cache tiering to storage</li>
+<li>Storage specification framework</li>
+</ul>
+<h2 id="chapter-16-cluster-management-and-multi-tenant-systems">Chapter 16 — Cluster Management and Multi-Tenant Systems<a class="anchor" href="#chapter-16-cluster-management-and-multi-tenant-systems" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>SLURM vs Kubernetes</li>
+<li>Gang scheduling</li>
+<li>Fair-share and QOS</li>
+<li>GPU allocation</li>
+<li>MIG and vGPU</li>
+<li>Multi-tenant isolation</li>
+<li>SLA enforcement</li>
+<li>Preemption</li>
+<li>Autoscaling</li>
+<li>Cluster utilization</li>
+</ul>
+<h2 id="chapter-17-telemetry-observability-and-profiling-tools">Chapter 17 — Telemetry, Observability, and Profiling Tools<a class="anchor" href="#chapter-17-telemetry-observability-and-profiling-tools" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>Observability stack</li>
+<li>Prometheus</li>
+<li>Grafana</li>
+<li>DCGM</li>
+<li>XID errors</li>
+<li>Nsight Systems</li>
+<li>Nsight Compute</li>
+<li>ROCm tooling</li>
+<li>Tool selection decision tree</li>
+<li>SLA regression diagnosis</li>
+<li>Fail-slow GPU detection</li>
+<li>Performance regression CI</li>
+</ul>
+<hr>
+<h1 id="part-vi-principal-architect">Part VI — Principal Architect<a class="anchor" href="#part-vi-principal-architect" aria-label="Link to this section">#</a></h1>
+<p>The identity, communication, and interview patterns of the AI/ML Principal Performance Architect.</p>
+<h2 id="chapter-18-the-principal-architect-career-interviews-and-professional-development">Chapter 18 — The Principal Architect: Career, Interviews, and Professional Development<a class="anchor" href="#chapter-18-the-principal-architect-career-interviews-and-professional-development" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>What principal means in AI infrastructure</li>
+<li>The four superpowers</li>
+<li>Breadth vs depth</li>
+<li>STAR+Impact story framework</li>
+<li>Story bank</li>
+<li>Differentiating questions</li>
+<li>Written communication strategy</li>
+<li>Building a principal profile</li>
+<li>System design interview playbook</li>
+<li>LLM inference serving walkthrough</li>
+<li>Distributed training system walkthrough</li>
+<li>Reading roadmap and continued growth</li>
+</ul>
+<hr>
+<h1 id="back-matter">Back Matter<a class="anchor" href="#back-matter" aria-label="Link to this section">#</a></h1>
+<h2 id="appendix-a-hardware-reference-tables">Appendix A — Hardware Reference Tables<a class="anchor" href="#appendix-a-hardware-reference-tables" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>GPU specification comparison</li>
+<li>HBM bandwidth and capacity</li>
+<li>NVLink and NVSwitch reference</li>
+<li>InfiniBand reference</li>
+<li>Roofline ridge points by GPU model</li>
+</ul>
+<h2 id="appendix-b-profiling-tool-quick-reference">Appendix B — Profiling Tool Quick Reference<a class="anchor" href="#appendix-b-profiling-tool-quick-reference" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>Tool selection decision tree</li>
+<li>Nsight Systems workflow</li>
+<li>Nsight Compute counters</li>
+<li>DCGM field IDs</li>
+<li>NCCL debug variables</li>
+<li>vLLM metrics</li>
+<li>ROCm equivalents</li>
+<li><code>nccl-tests</code> interpretation</li>
+</ul>
+<h2 id="appendix-c-glossary">Appendix C — Glossary<a class="anchor" href="#appendix-c-glossary" aria-label="Link to this section">#</a></h2>
+<p>A practical glossary of AI/ML infrastructure and performance terms, from arithmetic intensity to ZeRO-3.</p>
+<hr>
+<h1 id="closing-note-to-the-reader">Closing Note to the Reader<a class="anchor" href="#closing-note-to-the-reader" aria-label="Link to this section">#</a></h1>
+<p class="callout">The goal of this book is not to make you memorize every number.</p>
+<p class="callout">The goal is to make you dangerous with first principles.</p>
+<p>When a new GPU appears, you should know how to estimate its ridge point. When a serving system slows down, you should know whether to inspect compute, memory, queueing, or KV cache pressure. When a training cluster underperforms, you should know how to separate kernels, communication, scheduling, storage, and stragglers. When leadership asks for a hardware recommendation, you should be able to explain the tradeoff in performance, risk, and cost.</p>
+<p>That is the AI/ML Performance Architecture Mindset.</p>
+<p>Welcome to <em>Silicon to Scale</em>.</p>
+
+    <nav class="nav-row" aria-label="Previous and next chapter navigation">
+      <a href="../index.html">
+        <small>Back</small>
+        <strong>Book Homepage</strong>
+      </a>
+      <a href="ch01_performance_architecture_mindset.html">
+        <small>Next Chapter</small>
+        <strong>Chapter 1 — Performance Architecture Mindset</strong>
+      </a>
+    </nav>
+  </main>
+</div>
+</body>
+</html>
