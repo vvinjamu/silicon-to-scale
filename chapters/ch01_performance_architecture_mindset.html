@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 1 — AI/ML Performance Architecture Mindset | Silicon to Scale</title>
+<meta name="description" content="Learn the core mental models of AI/ML performance engineering: roofline analysis, arithmetic intensity, memory bandwidth, communication volume, MFU, HFU, and profiling discipline.">
+<meta name="author" content="Venkat Vinjam">
+<meta property="og:title" content="Chapter 1 — AI/ML Performance Architecture Mindset">
+<meta property="og:description" content="Roofline analysis, arithmetic intensity, MFU/HFU, and the principal-level performance mindset for AI/ML infrastructure.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c10;
+  --bg2: #0d1117;
+  --bg3: #161b22;
+  --bg4: #1c2128;
+  --border: #21262d;
+  --border2: #30363d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #6e7681;
+  --accent: #58a6ff;
+  --gold: #d4a017;
+  --gold2: #f0c040;
+  --green: #3fb950;
+  --orange: #ff6b35;
+  --purple: #bc8cff;
+  --red: #f85149;
+  --yellow: #f7c948;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.65;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(88,166,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(88,166,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(13,17,23,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 22px;
+}
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.brand a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.brand span {
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.topnav {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.topnav a {
+  color: var(--accent);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.topnav a:hover {
+  border-color: var(--accent);
+  background: rgba(88,166,255,0.08);
+}
+.layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 290px minmax(0, 860px);
+  gap: 36px;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 36px 24px 80px;
+}
+.sidebar {
+  position: sticky;
+  top: 76px;
+  align-self: start;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+}
+.sidebar h2 {
+  margin: 0 0 12px;
+  font-family: var(--mono);
+  color: var(--gold2);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+.sidebar a {
+  display: block;
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 13px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.35);
+}
+.sidebar a:hover {
+  color: var(--accent);
+}
+.sidebar .toc-l3 {
+  padding-left: 14px;
+  font-size: 12px;
+  color: var(--text3);
+}
+.content {
+  background: rgba(13,17,23,0.72);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 38px 44px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+}
+.content h1 {
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -1.4px;
+  margin: 0 0 18px;
+}
+.content h2 {
+  margin-top: 46px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 25px;
+  letter-spacing: -0.5px;
+}
+.content h3 {
+  margin-top: 30px;
+  color: var(--accent);
+  font-size: 18px;
+}
+.content h4 {
+  margin-top: 24px;
+  color: var(--gold2);
+}
+.anchor {
+  margin-left: 8px;
+  color: var(--text3);
+  opacity: 0;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 0.8em;
+}
+h1:hover .anchor, h2:hover .anchor, h3:hover .anchor, h4:hover .anchor {
+  opacity: 1;
+}
+p {
+  color: var(--text);
+  font-size: 16px;
+}
+blockquote {
+  margin: 24px 0;
+  padding: 18px 22px;
+  border-left: 4px solid var(--gold2);
+  background: rgba(212,160,23,0.08);
+  color: var(--text);
+  border-radius: 0 10px 10px 0;
+  font-size: 17px;
+}
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 28px 0;
+}
+ul, ol {
+  padding-left: 24px;
+}
+li {
+  margin: 6px 0;
+}
+code {
+  font-family: var(--mono);
+  background: var(--bg4);
+  color: var(--gold2);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-size: 0.92em;
+}
+.code-block {
+  background: #05080c;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 18px 0;
+}
+.code-block code {
+  background: transparent;
+  border: 0;
+  color: #d8dee9;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.table-wrap {
+  overflow-x: auto;
+  margin: 22px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 620px;
+  background: var(--bg3);
+}
+th {
+  background: var(--bg4);
+  color: var(--accent);
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.2px;
+}
+th, td {
+  padding: 11px 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+td {
+  color: var(--text2);
+  font-size: 14px;
+}
+tr:last-child td {
+  border-bottom: 0;
+}
+.confidence {
+  border-left: 4px solid var(--green);
+  background: rgba(63,185,80,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.checkpoint {
+  border-left: 4px solid var(--purple);
+  background: rgba(188,140,255,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.figure-note {
+  color: var(--text2);
+  font-size: 14px;
+}
+.figure-placeholder {
+  margin: 28px 0;
+  background: linear-gradient(135deg, rgba(88,166,255,0.08), rgba(188,140,255,0.05));
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 20px;
+}
+.figure-kicker {
+  color: var(--gold2);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.figure-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.figure-body {
+  display: grid;
+  grid-template-columns: 72px minmax(0,1fr);
+  gap: 16px;
+  align-items: center;
+  background: rgba(13,17,23,0.65);
+  border: 1px dashed var(--border2);
+  border-radius: 12px;
+  padding: 18px;
+}
+.figure-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  font-size: 32px;
+  background: rgba(88,166,255,0.08);
+}
+.figure-path, .figure-status {
+  color: var(--text2);
+  margin: 6px 0;
+  font-size: 13px;
+}
+figcaption {
+  color: var(--text2);
+  font-size: 13px;
+  margin-top: 12px;
+}
+.nav-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 44px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+.nav-row a {
+  flex: 1;
+  text-decoration: none;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--text);
+}
+.nav-row a:hover {
+  border-color: var(--accent);
+}
+.nav-row small {
+  display: block;
+  color: var(--text3);
+  font-family: var(--mono);
+  margin-bottom: 4px;
+}
+.nav-row strong {
+  color: var(--accent);
+}
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 22px 16px 60px;
+  }
+  .sidebar {
+    position: static;
+    max-height: none;
+  }
+  .content {
+    padding: 26px 20px;
+  }
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (max-width: 640px) {
+  .figure-body {
+    grid-template-columns: 1fr;
+  }
+  .nav-row {
+    flex-direction: column;
+  }
+  p {
+    font-size: 15px;
+  }
+}
+@media print {
+  body {
+    background: #fff;
+    color: #111;
+  }
+  body::before, .topbar, .sidebar, .anchor {
+    display: none !important;
+  }
+  .layout {
+    display: block;
+    max-width: none;
+    padding: 0;
+  }
+  .content {
+    box-shadow: none;
+    border: 0;
+    padding: 0;
+  }
+  .content h1, .content h2, .content h3, .content h4, p, li, td, th, blockquote {
+    color: #111 !important;
+  }
+  .code-block, code, table, .figure-placeholder {
+    border-color: #999;
+  }
+  a {
+    color: #111;
+    text-decoration: none;
+  }
+  h2 {
+    page-break-before: auto;
+  }
+  .figure-placeholder, table, pre, blockquote {
+    break-inside: avoid;
+  }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <a href="../index.html">AI/ML Infrastructure from Silicon to Scale</a>
+    <span>Chapter 1 · Performance Architecture Mindset</span>
+  </div>
+  <nav class="topnav" aria-label="Top navigation">
+    <a href="../index.html">Home</a>
+    <a href="../pdfs/ch01_performance_mindset.pdf">PDF</a>
+    <a href="../diagrams/diagrams_batch1.html#d1">Roofline Diagram</a>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" aria-label="Chapter table of contents">
+    <h2>Chapter Contents</h2>
+    <a class="toc-l2" href="#chapter-overview">Chapter Overview</a>
+<a class="toc-l2" href="#10-the-one-sentence-model">1.0 The One-Sentence Model</a>
+<a class="toc-l2" href="#11-the-three-quantities-of-ai-performance">1.1 The Three Quantities of AI Performance</a>
+<a class="toc-l3" href="#figure-placeholder-fig-11">Figure Placeholder — Fig 1.1</a>
+<a class="toc-l2" href="#12-the-seven-layer-aiml-performance-stack">1.2 The Seven-Layer AI/ML Performance Stack</a>
+<a class="toc-l3" href="#figure-placeholder-fig-12">Figure Placeholder — Fig 1.2</a>
+<a class="toc-l3" href="#the-seven-layers">The Seven Layers</a>
+<a class="toc-l2" href="#13-roofline-analysis-the-universal-performance-model">1.3 Roofline Analysis: The Universal Performance Model</a>
+<a class="toc-l3" href="#confidence-label">Confidence Label</a>
+<a class="toc-l2" href="#14-the-h100-dense-bf16-ridge-point">1.4 The H100 Dense BF16 Ridge Point</a>
+<a class="toc-l3" href="#dense-vs-sparse-bf16">Dense vs Sparse BF16</a>
+<a class="toc-l2" href="#mental-math-checkpoint-1">Mental Math Checkpoint 1</a>
+<a class="toc-l3" href="#figure-placeholder-fig-13">Figure Placeholder — Fig 1.3</a>
+<a class="toc-l2" href="#table-11-h100-roofline-quick-reference">Table 1.1 — H100 Roofline Quick Reference</a>
+<a class="toc-l2" href="#15-arithmetic-intensity-the-master-classifier">1.5 Arithmetic Intensity: The Master Classifier</a>
+<a class="toc-l3" href="#example-1-low-arithmetic-intensity">Example 1 — Low Arithmetic Intensity</a>
+<a class="toc-l3" href="#example-2-high-arithmetic-intensity">Example 2 — High Arithmetic Intensity</a>
+<a class="toc-l3" href="#example-3-decode-attention">Example 3 — Decode Attention</a>
+<a class="toc-l2" href="#16-the-three-performance-regimes">1.6 The Three Performance Regimes</a>
+<a class="toc-l3" href="#figure-placeholder-fig-14">Figure Placeholder — Fig 1.4</a>
+<a class="toc-l2" href="#table-12-optimization-regime-decision-table">Table 1.2 — Optimization Regime Decision Table</a>
+<a class="toc-l2" href="#table-13-wrong-fix-vs-right-first-question">Table 1.3 — Wrong Fix vs Right First Question</a>
+<a class="toc-l2" href="#17-mfu-and-hfu-useful-work-vs-busy-hardware">1.7 MFU and HFU: Useful Work vs Busy Hardware</a>
+<a class="toc-l2" href="#table-14-mfu-vs-hfu">Table 1.4 — MFU vs HFU</a>
+<a class="toc-l3" href="#mfu">MFU</a>
+<a class="toc-l3" href="#hfu">HFU</a>
+<a class="toc-l2" href="#mental-math-checkpoint-2">Mental Math Checkpoint 2</a>
+<a class="toc-l3" href="#figure-placeholder-fig-15">Figure Placeholder — Fig 1.5</a>
+<a class="toc-l2" href="#18-flops-per-token-practical-approximations">1.8 FLOPs per Token: Practical Approximations</a>
+<a class="toc-l3" href="#why-inference-is-approximately-2n">Why Inference Is Approximately 2N</a>
+<a class="toc-l3" href="#why-training-is-approximately-6n">Why Training Is Approximately 6N</a>
+<a class="toc-l3" href="#important-assumptions">Important Assumptions</a>
+<a class="toc-l2" href="#19-measurement-discipline-profile-after-you-have-a-hypothesis">1.9 Measurement Discipline: Profile After You Have a Hypothesis</a>
+<a class="toc-l3" href="#figure-placeholder-fig-16">Figure Placeholder — Fig 1.6</a>
+<a class="toc-l2" href="#table-15-metrics-by-stack-layer">Table 1.5 — Metrics by Stack Layer</a>
+<a class="toc-l2" href="#110-communication-volume-the-cluster-scale-extension">1.10 Communication Volume: The Cluster-Scale Extension</a>
+<a class="toc-l2" href="#111-how-to-explain-this-in-a-principal-interview">1.11 How to Explain This in a Principal Interview</a>
+<a class="toc-l3" href="#scenario-1-gemm-is-40-slower-than-expected">Scenario 1 — GEMM Is 40% Slower Than Expected</a>
+<a class="toc-l3" href="#scenario-2-decode-throughput-is-poor">Scenario 2 — Decode Throughput Is Poor</a>
+<a class="toc-l3" href="#scenario-3-256-gpu-training-mfu-is-low">Scenario 3 — 256-GPU Training MFU Is Low</a>
+<a class="toc-l2" href="#112-chapter-cheat-sheet">1.12 Chapter Cheat Sheet</a>
+<a class="toc-l3" href="#core-formulas">Core Formulas</a>
+<a class="toc-l3" href="#h100-dense-bf16-numbers">H100 Dense BF16 Numbers</a>
+<a class="toc-l3" href="#the-five-questions">The Five Questions</a>
+<a class="toc-l2" href="#113-key-takeaways">1.13 Key Takeaways</a>
+<a class="toc-l2" href="#114-review-questions">1.14 Review Questions</a>
+<a class="toc-l3" href="#conceptual">Conceptual</a>
+<a class="toc-l3" href="#calculation">Calculation</a>
+<a class="toc-l3" href="#principal-level-interview-practice">Principal-Level Interview Practice</a>
+<a class="toc-l2" href="#115-bridge-to-chapter-2">1.15 Bridge to Chapter 2</a>
+  </aside>
+
+  <main class="content">
+    <h1 id="chapter-1-the-aiml-performance-architecture-mindset">Chapter 1 — The AI/ML Performance Architecture Mindset<a class="anchor" href="#chapter-1-the-aiml-performance-architecture-mindset" aria-label="Link to this section">#</a></h1>
+<blockquote>“Performance engineering is not about making one function faster. It is about understanding the whole system — from transistors to tokens — and knowing exactly where the bottleneck lives before you touch anything.”</blockquote>
+<hr>
+<h2 id="chapter-overview">Chapter Overview<a class="anchor" href="#chapter-overview" aria-label="Link to this section">#</a></h2>
+<p>This chapter is the analytical foundation for the rest of this book.</p>
+<p>The central idea is simple:</p>
+<blockquote>Every AI/ML performance problem is a question of <strong>compute</strong>, <strong>memory movement</strong>, <strong>communication</strong>, or <strong>overhead</strong>.</blockquote>
+<p>A principal AI/ML performance architect does not start by tuning random kernels, changing batch sizes, or adding GPUs. A principal architect first classifies the workload, estimates the bottleneck, chooses the right measurement, and only then proposes an optimization.</p>
+<p>This chapter teaches that mindset.</p>
+<p>By the end of this chapter, you should be able to:</p>
+<ul>
+<li>Explain why AI performance is not only about peak TFLOPS.</li>
+<li>Use arithmetic intensity to classify workloads.</li>
+<li>Apply the roofline model to reason about compute-bound and memory-bound behavior.</li>
+<li>Calculate the H100 dense BF16 ridge point from first principles.</li>
+<li>Distinguish MFU from HFU.</li>
+<li>Explain why a system can have busy GPUs but poor useful model progress.</li>
+<li>Use a hypothesis-driven profiling loop.</li>
+<li>Speak about performance like a principal architect in interviews and design reviews.</li>
+</ul>
+<hr>
+<h2 id="10-the-one-sentence-model">1.0 The One-Sentence Model<a class="anchor" href="#10-the-one-sentence-model" aria-label="Link to this section">#</a></h2>
+<p>The entire book can be summarized as:</p>
+<blockquote><strong>Every optimization decision in AI/ML infrastructure is a question of arithmetic intensity, memory bandwidth, communication volume, and system overhead.</strong></blockquote>
+<p>The first three quantities explain most of the physics. The fourth explains most of the production pain.</p>
+<p>A workload may be slow because:</p>
+<ol>
+<li>It does not have enough math per byte moved.</li>
+<li>It cannot feed the GPU fast enough from memory.</li>
+<li>It spends too much time communicating across devices or nodes.</li>
+<li>It has orchestration, scheduling, kernel-launch, I/O, or framework overhead.</li>
+</ol>
+<p>The skill is not memorizing every tool. The skill is knowing <strong>which question to ask first</strong>.</p>
+<hr>
+<h2 id="11-the-three-quantities-of-ai-performance">1.1 The Three Quantities of AI Performance<a class="anchor" href="#11-the-three-quantities-of-ai-performance" aria-label="Link to this section">#</a></h2>
+<p>Before looking at a profiler trace, ask:</p>
+<ol>
+<li><strong>How much math is required?</strong></li>
+<li><strong>How much data must move locally?</strong></li>
+<li><strong>How much data must move across devices, nodes, racks, or storage?</strong></li>
+</ol>
+<p>These map to three core quantities:</p>
+<div class="table-wrap"><table><thead><tr><th>Quantity</th><th>Meaning</th><th>Common Bottleneck</th></tr></thead><tbody><tr><td>Arithmetic intensity</td><td>FLOPs per byte moved</td><td>Low reuse, memory-bound kernels</td></tr><tr><td>Memory bandwidth</td><td>Bytes per second through HBM, cache, PCIe, or storage</td><td>HBM-bound decode, LayerNorm, embeddings</td></tr><tr><td>Communication volume</td><td>Bytes exchanged across GPUs or nodes</td><td>AllReduce, tensor parallel collectives, pipeline transfers</td></tr></tbody></table></div>
+<p>The most common mistake is to optimize the easiest layer to see rather than the layer that limits the system.</p>
+<p>A slow kernel is not always a kernel problem. A slow training step is not always a GPU problem. A slow inference request is not always a model problem.</p>
+<h3 id="figure-placeholder-fig-11">Figure Placeholder — Fig 1.1<a class="anchor" href="#figure-placeholder-fig-11" aria-label="Link to this section">#</a></h3>
+
+<figure class="figure-placeholder" id="fig-11-the-three-quantities-of-ai-performance">
+  <div class="figure-kicker">Fig 1.1</div>
+  <div class="figure-title">The Three Quantities of AI Performance</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>Arithmetic intensity, memory bandwidth, and communication volume form the core mental model for AI/ML performance engineering.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch01_fig_1_1_three_quantities.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+    </div>
+  </div>
+  <figcaption><strong>Fig 1.1 — The Three Quantities of AI Performance.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> Before looking at any profiler trace, a principal performance engineer asks a simpler question: what quantity is most likely limiting this workload? For a single kernel, the answer is often arithmetic intensity or memory bandwidth. For distributed training and serving, communication volume becomes just as important.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> A compute-bound GEMM needs better Tensor Core utilization. A memory-bound decode step needs less HBM traffic or better cache behavior. A communication-bound AllReduce needs overlap, topology awareness, or reduced synchronization volume. Chapter 1 teaches how to classify these cases before reaching for tools.</p>
+<blockquote><strong>Key Takeaway:</strong> Do not begin with “How do I make this faster?” Begin with “Which quantity is limiting the system: compute, memory movement, communication, or overhead?”</blockquote>
+<hr>
+<h2 id="12-the-seven-layer-aiml-performance-stack">1.2 The Seven-Layer AI/ML Performance Stack<a class="anchor" href="#12-the-seven-layer-aiml-performance-stack" aria-label="Link to this section">#</a></h2>
+<p>AI performance is not a single-layer problem.</p>
+<p>A model may run slowly because of:</p>
+<ul>
+<li>Tensor Core underutilization</li>
+<li>HBM bandwidth limits</li>
+<li>Poor memory access patterns</li>
+<li>Compiler graph breaks</li>
+<li>Too many small kernels</li>
+<li>Poor batching</li>
+<li>KV cache pressure</li>
+<li>NCCL communication bottlenecks</li>
+<li>Data-loader stalls</li>
+<li>Scheduler gaps</li>
+<li>Thermal throttling</li>
+<li>Network congestion</li>
+<li>Storage checkpoint stalls</li>
+<li>Fleet-level queueing</li>
+</ul>
+<p>A principal architect must reason across the entire stack.</p>
+<h3 id="figure-placeholder-fig-12">Figure Placeholder — Fig 1.2<a class="anchor" href="#figure-placeholder-fig-12" aria-label="Link to this section">#</a></h3>
+
+<figure class="figure-placeholder" id="fig-12-the-seven-layer-aiml-performance-stack">
+  <div class="figure-kicker">Fig 1.2</div>
+  <div class="figure-title">The Seven-Layer AI/ML Performance Stack</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A full-stack map from silicon and memory through kernels, compiler/runtime, model architecture, distributed systems, and fleet/TCO.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch01_fig_1_2_performance_stack.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+    </div>
+  </div>
+  <figcaption><strong>Fig 1.2 — The Seven-Layer AI/ML Performance Stack.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<h3 id="the-seven-layers">The Seven Layers<a class="anchor" href="#the-seven-layers" aria-label="Link to this section">#</a></h3>
+<div class="table-wrap"><table><thead><tr><th>Layer</th><th>Example Questions</th><th>Metrics / Tools</th></tr></thead><tbody><tr><td>1. Silicon / accelerator</td><td>Are Tensor Cores active? Is the GPU throttling?</td><td>SM utilization, clocks, power, temperature, DCGM</td></tr><tr><td>2. Memory hierarchy</td><td>Are we limited by HBM, L2, cache misses, or PCIe?</td><td>HBM bandwidth, cache hit rate, Nsight Compute</td></tr><tr><td>3. Kernel execution</td><td>Are kernels coalesced, tiled, fused, and occupancy-efficient?</td><td>Occupancy, stalls, Tensor Core utilization</td></tr><tr><td>4. Compiler / runtime</td><td>Are graph breaks or launch gaps hurting throughput?</td><td>torch.compile logs, PyTorch profiler, Nsight Systems</td></tr><tr><td>5. Model architecture</td><td>Is attention, FFN, KV cache, or MoE routing the limiter?</td><td>FLOPs, activation size, KV bytes, token latency</td></tr><tr><td>6. Distributed system</td><td>Is the bottleneck AllReduce, All-to-All, pipeline bubble, or topology?</td><td>NCCL busbw, overlap, IB counters</td></tr><tr><td>7. Fleet / product / cost</td><td>Are GPUs busy doing useful work? Is cost/token acceptable?</td><td>MFU, queue time, P99 latency, $/token</td></tr></tbody></table></div>
+<p>The stack is not a checklist to memorize. It is a routing system for diagnosis.</p>
+<p>If GPU utilization is low, do not immediately tune CUDA. First ask whether the GPU is idle because of data loading, communication, scheduling, or queueing.</p>
+<p>If a kernel is slow, do not immediately rewrite it. First ask whether it is memory-bound, compute-bound, or launch-overhead-bound.</p>
+<blockquote><strong>Key Takeaway:</strong> The best optimization is often not located where the symptom appears. Always map the symptom to a layer before choosing a fix.</blockquote>
+<hr>
+<h2 id="13-roofline-analysis-the-universal-performance-model">1.3 Roofline Analysis: The Universal Performance Model<a class="anchor" href="#13-roofline-analysis-the-universal-performance-model" aria-label="Link to this section">#</a></h2>
+<p>The roofline model is the first calculation every AI/ML performance engineer should learn.</p>
+<p>It answers:</p>
+<blockquote>Given the operation’s arithmetic intensity and the hardware’s peak compute and memory bandwidth, what is the maximum performance we should expect?</blockquote>
+<p>The roofline model is:</p>
+<pre class="code-block"><code>Achievable Performance &lt;= min(Peak_FLOPS, Arithmetic_Intensity × Peak_Memory_Bandwidth)</code></pre>
+<p>Where:</p>
+<pre class="code-block"><code>Arithmetic Intensity = FLOPs / Bytes Moved</code></pre>
+<p>For single-GPU analysis, “bytes moved” usually means HBM bytes. For distributed systems, the same idea can be applied to NVLink, PCIe, InfiniBand, storage, or any data-movement tier.</p>
+<h3 id="confidence-label">Confidence Label<a class="anchor" href="#confidence-label" aria-label="Link to this section">#</a></h3>
+<p class="confidence">[ESTIMATED] The roofline model estimates an upper bound. It is not a guarantee. Real performance also depends on instruction mix, kernel implementation, occupancy, cache behavior, launch overhead, compiler behavior, and scheduling.</p>
+<hr>
+<h2 id="14-the-h100-dense-bf16-ridge-point">1.4 The H100 Dense BF16 Ridge Point<a class="anchor" href="#14-the-h100-dense-bf16-ridge-point" aria-label="Link to this section">#</a></h2>
+<p>For Chapter 1, we use dense, non-sparse BF16 Tensor Core peak throughput.</p>
+<p class="confidence">[SHIPPED] H100 SXM5 dense BF16 Tensor Core peak:</p>
+<pre class="code-block"><code>Peak Compute = 989.4 TFLOP/s</code></pre>
+<p class="confidence">[SHIPPED] H100 SXM5 HBM bandwidth:</p>
+<pre class="code-block"><code>Peak HBM Bandwidth = 3.35 TB/s</code></pre>
+<p class="confidence">[DERIVED FROM SHIPPED] Ridge point:</p>
+<pre class="code-block"><code>Ridge Point = Peak Compute / Peak Memory Bandwidth
+
+Ridge Point = 989.4 TFLOP/s / 3.35 TB/s
+            = 295.34 FLOP/byte
+            ≈ 295 FLOP/byte</code></pre>
+<p>This means:</p>
+<ul>
+<li>Operations below ~295 FLOP/byte are usually memory-bandwidth-limited.</li>
+<li>Operations above ~295 FLOP/byte may become compute-limited if the kernel uses the hardware efficiently.</li>
+</ul>
+<h3 id="dense-vs-sparse-bf16">Dense vs Sparse BF16<a class="anchor" href="#dense-vs-sparse-bf16" aria-label="Link to this section">#</a></h3>
+<p>Be careful with H100 BF16 numbers.</p>
+<p>NVIDIA also lists a much higher BF16 Tensor Core number when structured sparsity is used. That value is approximately 1,979 TFLOPS. This book uses <strong>dense non-sparse BF16</strong> for standard roofline calculations unless explicitly discussing sparsity.</p>
+<div class="table-wrap"><table><thead><tr><th>H100 SXM5 Mode</th><th>Approximate BF16 Peak</th><th>Use in This Chapter</th></tr></thead><tbody><tr><td>Dense / non-sparse BF16</td><td>989.4 TFLOPS</td><td>Yes</td></tr><tr><td>BF16 with structured sparsity</td><td>~1,979 TFLOPS</td><td>Only when discussing sparsity</td></tr></tbody></table></div>
+<p>If you accidentally use sparse peak compute in a dense workload roofline, the ridge point changes:</p>
+<pre class="code-block"><code>Sparse ridge point ≈ 1,979 / 3.35 ≈ 591 FLOP/byte</code></pre>
+<p>That would give the reader the wrong intuition for dense model workloads.</p>
+<hr>
+<h2 id="mental-math-checkpoint-1">Mental Math Checkpoint 1<a class="anchor" href="#mental-math-checkpoint-1" aria-label="Link to this section">#</a></h2>
+<p class="checkpoint"><strong>Question:</strong> H100 SXM5 dense BF16 peak is 989.4 TFLOPS and HBM bandwidth is 3.35 TB/s. What is the ridge point?</p>
+<p class="checkpoint"><strong>Answer:</strong></p>
+<pre class="code-block"><code>989.4 / 3.35 = 295.34 FLOP/byte ≈ 295 FLOP/byte</code></pre>
+<p><strong>Interpretation:</strong> An operation with arithmetic intensity much lower than 295 FLOP/byte is likely memory-bound on H100. An operation much higher than 295 FLOP/byte has enough data reuse to become compute-bound.</p>
+<hr>
+<h3 id="figure-placeholder-fig-13">Figure Placeholder — Fig 1.3<a class="anchor" href="#figure-placeholder-fig-13" aria-label="Link to this section">#</a></h3>
+
+<figure class="figure-placeholder" id="fig-13-roofline-model-for-h100-sxm5">
+  <div class="figure-kicker">Fig 1.3</div>
+  <div class="figure-title">Roofline Model for H100 SXM5</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>The existing roofline diagram should be exported from the diagram pack and embedded here for both web and print.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/png_300dpi/ch01_fig_1_3_h100_roofline.png</code></p>
+      <p class="figure-status">Existing diagram; print export needed</p>
+    </div>
+  </div>
+  <figcaption><strong>Fig 1.3 — Roofline Model for H100 SXM5.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> The roofline model gives a visual answer to whether more compute will help. If the operation sits below the memory-bandwidth slope, it is limited by data movement. If it reaches the flat compute roof, further memory optimization may not help as much as improving compute utilization.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> Operations to the left of the ridge point are memory-bound. Operations to the right have enough reuse to become compute-bound. This does not mean every operation to the right automatically reaches peak TFLOPS. It means memory bandwidth is no longer the first-order limiter.</p>
+<blockquote><strong>Key Takeaway:</strong> The roofline model tells you whether more FLOPs will help. If the workload is below the ridge point, adding compute will not fix the bottleneck.</blockquote>
+<hr>
+<h2 id="table-11-h100-roofline-quick-reference">Table 1.1 — H100 Roofline Quick Reference<a class="anchor" href="#table-11-h100-roofline-quick-reference" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Quantity</th><th>Value</th><th>Confidence Label</th><th>Why It Matters</th></tr></thead><tbody><tr><td>H100 SXM5 dense BF16 peak</td><td>989.4 TFLOPS</td><td>[SHIPPED]</td><td>Compute roof for dense BF16</td></tr><tr><td>H100 SXM5 HBM bandwidth</td><td>3.35 TB/s</td><td>[SHIPPED]</td><td>Memory bandwidth roof</td></tr><tr><td>Dense BF16 ridge point</td><td>~295 FLOP/byte</td><td>[DERIVED FROM SHIPPED]</td><td>Separates memory-bound from compute-bound</td></tr><tr><td>Decode attention example</td><td>Very low arithmetic intensity</td><td>[REPRESENTATIVE]</td><td>Often HBM/KV-cache limited</td></tr><tr><td>LayerNorm / RMSNorm example</td><td>Low arithmetic intensity</td><td>[REPRESENTATIVE]</td><td>Often memory-bandwidth bound</td></tr><tr><td>Small-batch GEMM</td><td>Moderate arithmetic intensity</td><td>[REPRESENTATIVE]</td><td>May underutilize Tensor Cores</td></tr><tr><td>Large-batch GEMM</td><td>High arithmetic intensity</td><td>[REPRESENTATIVE]</td><td>Can become compute-bound</td></tr></tbody></table></div>
+<p>The exact arithmetic intensity depends on tensor shape, datatype, implementation, reuse, cache behavior, and fusion. The table is not meant to replace measurement. It is meant to build intuition before measurement.</p>
+<hr>
+<h2 id="15-arithmetic-intensity-the-master-classifier">1.5 Arithmetic Intensity: The Master Classifier<a class="anchor" href="#15-arithmetic-intensity-the-master-classifier" aria-label="Link to this section">#</a></h2>
+<p>Arithmetic intensity is:</p>
+<pre class="code-block"><code>AI = FLOPs / Bytes Moved</code></pre>
+<p>High arithmetic intensity means the operation performs a lot of math for every byte it moves. Low arithmetic intensity means the operation moves a lot of data for relatively little math.</p>
+<h3 id="example-1-low-arithmetic-intensity">Example 1 — Low Arithmetic Intensity<a class="anchor" href="#example-1-low-arithmetic-intensity" aria-label="Link to this section">#</a></h3>
+<p>A normalization kernel might read a tensor, compute a few statistics, scale values, and write the result.</p>
+<p>It performs some math, but it also streams through memory. If each element is touched once or twice with little reuse, the operation is usually memory-bound.</p>
+<h3 id="example-2-high-arithmetic-intensity">Example 2 — High Arithmetic Intensity<a class="anchor" href="#example-2-high-arithmetic-intensity" aria-label="Link to this section">#</a></h3>
+<p>A large GEMM reuses matrix tiles many times. A tile loaded into shared memory or cache can participate in many multiply-accumulate operations.</p>
+<p>That reuse increases arithmetic intensity. High arithmetic intensity is why GEMM can approach Tensor Core peak throughput.</p>
+<h3 id="example-3-decode-attention">Example 3 — Decode Attention<a class="anchor" href="#example-3-decode-attention" aria-label="Link to this section">#</a></h3>
+<p>Decode attention often reads a growing KV cache for each generated token. The amount of memory read grows with sequence length, while the amount of useful new computation per token is limited.</p>
+<p>This is why LLM decode can be memory-bandwidth-bound even on very powerful GPUs.</p>
+<p class="confidence">[REPRESENTATIVE] Decode bottlenecks vary by implementation, context length, model shape, KV precision, batching, and attention kernel.</p>
+<hr>
+<h2 id="16-the-three-performance-regimes">1.6 The Three Performance Regimes<a class="anchor" href="#16-the-three-performance-regimes" aria-label="Link to this section">#</a></h2>
+<p>Once you estimate arithmetic intensity, classify the workload.</p>
+<h3 id="figure-placeholder-fig-14">Figure Placeholder — Fig 1.4<a class="anchor" href="#figure-placeholder-fig-14" aria-label="Link to this section">#</a></h3>
+
+<figure class="figure-placeholder" id="fig-14-the-three-performance-regimes">
+  <div class="figure-kicker">Fig 1.4</div>
+  <div class="figure-title">The Three Performance Regimes</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A classification view for compute-bound, memory-bound, communication-bound, and overhead-bound behavior.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch01_fig_1_4_three_regimes.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+    </div>
+  </div>
+  <figcaption><strong>Fig 1.4 — The Three Performance Regimes.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> Not every slow workload should be optimized the same way. A compute-bound problem, a memory-bound problem, and a communication-bound problem require different fixes.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The purpose of classification is to prevent wrong-regime optimization. Optimizing a GEMM kernel will not fix a KV-cache memory bottleneck. Buying faster GPUs will not fix a saturated AllReduce. Increasing average throughput will not fix a P99 queueing issue.</p>
+<blockquote><strong>Key Takeaway:</strong> Classify first, optimize second. Wrong-regime optimization creates impressive local improvements that do not move system KPIs.</blockquote>
+<hr>
+<h2 id="table-12-optimization-regime-decision-table">Table 1.2 — Optimization Regime Decision Table<a class="anchor" href="#table-12-optimization-regime-decision-table" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Regime</th><th>Common Symptom</th><th>Metric to Check</th><th>First Tools</th><th>Likely Fix</th></tr></thead><tbody><tr><td>Compute-bound</td><td>High compute utilization but below peak</td><td>Achieved TFLOPS, Tensor Core utilization</td><td>Nsight Compute, rocprof-compute</td><td>Improve tiling, fusion, Tensor Core usage</td></tr><tr><td>Memory-bound</td><td>High HBM traffic, low FLOP utilization</td><td>HBM bandwidth, cache hit rate, arithmetic intensity</td><td>Nsight Compute, roofline</td><td>Reduce memory traffic, improve reuse, fuse ops</td></tr><tr><td>Communication-bound</td><td>Scaling drops with more GPUs</td><td>AllReduce time, busbw, overlap</td><td>Nsight Systems, NCCL tests, IB counters</td><td>Overlap communication, tune topology, reduce synchronization</td></tr><tr><td>Overhead-bound</td><td>GPU gaps, many short kernels</td><td>Kernel gaps, launch overhead, queue time</td><td>Nsight Systems, PyTorch profiler</td><td>CUDA Graphs, batching, scheduling fixes</td></tr><tr><td>I/O-bound</td><td>GPU waits for input data</td><td>DataLoader wait, storage throughput</td><td>PyTorch profiler, storage metrics</td><td>Prefetch, cache, parallelize data pipeline</td></tr></tbody></table></div>
+<p>This table is the operational form of the roofline mindset. It maps symptoms to metrics, tools, and likely fixes.</p>
+<hr>
+<h2 id="table-13-wrong-fix-vs-right-first-question">Table 1.3 — Wrong Fix vs Right First Question<a class="anchor" href="#table-13-wrong-fix-vs-right-first-question" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Common Wrong Fix</th><th>Right First Question</th></tr></thead><tbody><tr><td>Decode latency is high</td><td>Optimize GEMM kernel</td><td>Is decode memory-bandwidth-bound due to KV cache reads?</td></tr><tr><td>Training MFU is low</td><td>Tune one CUDA kernel</td><td>Is the GPU idle due to communication, data loading, or pipeline bubbles?</td></tr><tr><td>More GPUs do not improve throughput</td><td>Add faster GPUs</td><td>What percentage of step time is communication?</td></tr><tr><td>HBM OOM during serving</td><td>Reduce batch size only</td><td>Can KV cache be paged, quantized, shared, or tiered?</td></tr><tr><td>Kernel is slow</td><td>Rewrite in CUDA immediately</td><td>Is it memory-bound, compute-bound, or launch-overhead-bound?</td></tr><tr><td>P99 latency is high</td><td>Increase average throughput</td><td>Which queue or stage dominates tail latency?</td></tr></tbody></table></div>
+<blockquote><strong>Key Takeaway:</strong> Every symptom deserves a diagnostic question before an optimization proposal.</blockquote>
+<hr>
+<h2 id="17-mfu-and-hfu-useful-work-vs-busy-hardware">1.7 MFU and HFU: Useful Work vs Busy Hardware<a class="anchor" href="#17-mfu-and-hfu-useful-work-vs-busy-hardware" aria-label="Link to this section">#</a></h2>
+<p>GPU utilization alone is not enough.</p>
+<p>A system can have high GPU activity and still make poor model progress.</p>
+<p>That is why large-scale AI training discussions often use two related metrics:</p>
+<ul>
+<li><strong>MFU</strong> — Model FLOPs Utilization</li>
+<li><strong>HFU</strong> — Hardware FLOPs Utilization</li>
+</ul>
+<h2 id="table-14-mfu-vs-hfu">Table 1.4 — MFU vs HFU<a class="anchor" href="#table-14-mfu-vs-hfu" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Metric</th><th>Measures</th><th>Includes Recomputation?</th><th>Best Used For</th><th>Common Misread</th></tr></thead><tbody><tr><td>MFU</td><td>Useful model FLOPs / peak hardware FLOPs</td><td>Usually no</td><td>Training efficiency and scaling quality</td><td>Can look low even if hardware is busy with overhead</td></tr><tr><td>HFU</td><td>Actual hardware FLOPs / peak hardware FLOPs</td><td>Yes</td><td>Hardware saturation and kernel activity</td><td>Can look good while useful model progress is poor</td></tr></tbody></table></div>
+<h3 id="mfu">MFU<a class="anchor" href="#mfu" aria-label="Link to this section">#</a></h3>
+<p>MFU asks:</p>
+<blockquote>How much useful model progress did the system achieve relative to theoretical peak hardware capability?</blockquote>
+<p>A simplified definition is:</p>
+<pre class="code-block"><code>MFU = Useful Model FLOPs per second / Theoretical Peak FLOPs per second</code></pre>
+<h3 id="hfu">HFU<a class="anchor" href="#hfu" aria-label="Link to this section">#</a></h3>
+<p>HFU asks:</p>
+<blockquote>How much hardware work was executed relative to theoretical peak hardware capability?</blockquote>
+<p>A simplified definition is:</p>
+<pre class="code-block"><code>HFU = Actual Hardware FLOPs per second / Theoretical Peak FLOPs per second</code></pre>
+<p>HFU can be higher than MFU when the system performs recomputation, rematerialization, or extra implementation-specific work that keeps the GPU busy without increasing useful model progress.</p>
+<p class="confidence">[ENV-SPECIFIC] MFU and HFU depend on model size, sequence length, precision, hardware, framework, compiler, parallelism strategy, recomputation settings, and measurement methodology.</p>
+<hr>
+<h2 id="mental-math-checkpoint-2">Mental Math Checkpoint 2<a class="anchor" href="#mental-math-checkpoint-2" aria-label="Link to this section">#</a></h2>
+<p>Suppose an 8×H100 node has:</p>
+<pre class="code-block"><code>Dense BF16 peak per GPU = 989.4 TFLOPS
+Number of GPUs = 8
+Total peak = 8 × 989.4 = 7,915.2 TFLOPS</code></pre>
+<p>If the training job achieves 3,500 useful model TFLOPS:</p>
+<pre class="code-block"><code>MFU = 3,500 / 7,915.2 = 0.442 = 44.2%</code></pre>
+<p>Interpretation:</p>
+<ul>
+<li>This may be reasonable for a large distributed training job.</li>
+<li>But the number alone is not a diagnosis.</li>
+<li>You still need to determine whether the gap is due to memory, communication, pipeline bubbles, recomputation, data loading, or kernel inefficiency.</li>
+</ul>
+<p class="confidence">[ENV-SPECIFIC] Sustained MFU in the 40–60% range can indicate a reasonably efficient large-scale training system in many contexts, while higher values may reflect excellent tuning. These ranges are not universal.</p>
+<hr>
+<h3 id="figure-placeholder-fig-15">Figure Placeholder — Fig 1.5<a class="anchor" href="#figure-placeholder-fig-15" aria-label="Link to this section">#</a></h3>
+
+<figure class="figure-placeholder" id="fig-15-from-tokens-to-utilization-mfu-and-hfu-in-the-training-loop">
+  <div class="figure-kicker">Fig 1.5</div>
+  <div class="figure-title">From Tokens to Utilization: MFU and HFU in the Training Loop</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A training-loop visual showing useful model work, hardware work, recomputation, communication, and idle gaps.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch01_fig_1_5_mfu_hfu_system_view.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+    </div>
+  </div>
+  <figcaption><strong>Fig 1.5 — From Tokens to Utilization: MFU and HFU in the Training Loop.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> A training job is a repeated loop: forward pass, backward pass, gradient communication, optimizer update, checkpointing, and input pipeline. MFU and HFU summarize how effectively that loop uses hardware.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> When MFU is low, do not automatically assume a kernel is bad. The system may be losing time to AllReduce, pipeline bubbles, data loading, checkpointing, stragglers, or framework overhead.</p>
+<blockquote><strong>Key Takeaway:</strong> HFU asks “Are the GPUs busy?” MFU asks “Are the GPUs busy doing useful model work?”</blockquote>
+<hr>
+<h2 id="18-flops-per-token-practical-approximations">1.8 FLOPs per Token: Practical Approximations<a class="anchor" href="#18-flops-per-token-practical-approximations" aria-label="Link to this section">#</a></h2>
+<p>For dense decoder-only transformers, two common approximations are useful:</p>
+<p class="confidence">[ESTIMATED]</p>
+<pre class="code-block"><code>Inference FLOPs/token ≈ 2N
+Training FLOPs/token ≈ 6N</code></pre>
+<p>Where:</p>
+<pre class="code-block"><code>N = non-embedding parameter count</code></pre>
+<h3 id="why-inference-is-approximately-2n">Why Inference Is Approximately 2N<a class="anchor" href="#why-inference-is-approximately-2n" aria-label="Link to this section">#</a></h3>
+<p>A dense forward pass through model weights performs roughly one multiply and one add per parameter.</p>
+<p>That gives approximately:</p>
+<pre class="code-block"><code>2 FLOPs per parameter per token</code></pre>
+<p>So:</p>
+<pre class="code-block"><code>Inference FLOPs/token ≈ 2N</code></pre>
+<h3 id="why-training-is-approximately-6n">Why Training Is Approximately 6N<a class="anchor" href="#why-training-is-approximately-6n" aria-label="Link to this section">#</a></h3>
+<p>Training includes:</p>
+<ol>
+<li>Forward pass</li>
+<li>Backward pass for activations</li>
+<li>Backward pass for weights</li>
+</ol>
+<p>A rough mental model is:</p>
+<pre class="code-block"><code>Training FLOPs/token ≈ 3 × forward pass
+                          ≈ 3 × 2N
+                          ≈ 6N</code></pre>
+<h3 id="important-assumptions">Important Assumptions<a class="anchor" href="#important-assumptions" aria-label="Link to this section">#</a></h3>
+<p>These approximations are useful for back-of-the-envelope reasoning, but exact FLOPs depend on:</p>
+<ul>
+<li>Architecture</li>
+<li>Context length</li>
+<li>Attention implementation</li>
+<li>Vocabulary projection</li>
+<li>Embedding treatment</li>
+<li>Activation recomputation</li>
+<li>MoE sparsity</li>
+<li>Precision</li>
+<li>Kernel implementation</li>
+</ul>
+<p>Use these approximations to start a discussion, not to end one.</p>
+<hr>
+<h2 id="19-measurement-discipline-profile-after-you-have-a-hypothesis">1.9 Measurement Discipline: Profile After You Have a Hypothesis<a class="anchor" href="#19-measurement-discipline-profile-after-you-have-a-hypothesis" aria-label="Link to this section">#</a></h2>
+<p>A profiler is not a fishing tool.</p>
+<p>A profiler should confirm or reject a hypothesis.</p>
+<p>Bad workflow:</p>
+<pre class="code-block"><code>Open profiler → stare at timeline → chase the biggest bar → make random change</code></pre>
+<p>Better workflow:</p>
+<pre class="code-block"><code>Estimate → classify → hypothesize → measure → change one variable → validate → document</code></pre>
+<h3 id="figure-placeholder-fig-16">Figure Placeholder — Fig 1.6<a class="anchor" href="#figure-placeholder-fig-16" aria-label="Link to this section">#</a></h3>
+
+<figure class="figure-placeholder" id="fig-16-the-performance-engineers-hypothesis-loop">
+  <div class="figure-kicker">Fig 1.6</div>
+  <div class="figure-title">The Performance Engineer’s Hypothesis Loop</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A repeatable optimization loop: estimate, classify, hypothesize, measure, change one variable, validate, and document.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch01_fig_1_6_profiling_hypothesis_loop.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+    </div>
+  </div>
+  <figcaption><strong>Fig 1.6 — The Performance Engineer’s Hypothesis Loop.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> Profilers are powerful, but they should not be used as random search tools. A profiler should confirm or reject a hypothesis. The hypothesis loop turns optimization into a reproducible engineering process.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> This loop creates a written trail: what was expected, what was measured, what changed, and what moved. That trail matters in architecture reviews, incident reviews, hardware roadmap discussions, and interviews.</p>
+<blockquote><strong>Key Takeaway:</strong> The profiler confirms the hypothesis; it should not be the only source of the hypothesis.</blockquote>
+<hr>
+<h2 id="table-15-metrics-by-stack-layer">Table 1.5 — Metrics by Stack Layer<a class="anchor" href="#table-15-metrics-by-stack-layer" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Layer</th><th>Symptom</th><th>Metric</th><th>Tool</th></tr></thead><tbody><tr><td>Silicon / GPU</td><td>Low math throughput</td><td>SM utilization, Tensor Core utilization, clocks</td><td>DCGM, Nsight Compute</td></tr><tr><td>Memory</td><td>Low FLOPs, high traffic</td><td>HBM bandwidth, cache hit rate</td><td>Nsight Compute</td></tr><tr><td>Kernel</td><td>Slow operation</td><td>Kernel duration, occupancy, stalls</td><td>Nsight Compute, rocprof-compute</td></tr><tr><td>Runtime / compiler</td><td>Many tiny kernels or graph breaks</td><td>Launch gaps, graph breaks</td><td>Nsight Systems, PyTorch profiler</td></tr><tr><td>Distributed system</td><td>Poor scaling</td><td>AllReduce time, busbw, overlap</td><td>NCCL tests, Nsight Systems</td></tr><tr><td>Storage / input</td><td>GPU idle between steps</td><td>Data wait, loader time</td><td>PyTorch profiler, storage metrics</td></tr><tr><td>Fleet</td><td>Poor utilization or cost</td><td>MFU, queue time, P99, $/token</td><td>Prometheus, Grafana, cost model</td></tr></tbody></table></div>
+<p>Use the metric that matches the layer. A kernel profiler cannot fully explain a queueing, communication, or fleet-utilization problem.</p>
+<hr>
+<h2 id="110-communication-volume-the-cluster-scale-extension">1.10 Communication Volume: The Cluster-Scale Extension<a class="anchor" href="#110-communication-volume-the-cluster-scale-extension" aria-label="Link to this section">#</a></h2>
+<p>Roofline analysis teaches single-device reasoning. But modern AI systems often run across many GPUs.</p>
+<p>At scale, performance may be limited by:</p>
+<ul>
+<li>Gradient AllReduce</li>
+<li>Tensor-parallel collectives</li>
+<li>Pipeline stage transfers</li>
+<li>Expert-parallel All-to-All</li>
+<li>Checkpoint writes</li>
+<li>KV cache transfers</li>
+<li>Scheduler delays</li>
+<li>Cross-rack network topology</li>
+<li>Stragglers and fail-slow nodes</li>
+</ul>
+<p class="confidence">[REPRESENTATIVE] A workload can be highly optimized on one GPU and still scale poorly across hundreds or thousands of GPUs because communication volume grows, synchronization becomes more expensive, and idle time accumulates.</p>
+<p>The principal-level question becomes:</p>
+<blockquote>How much useful compute survives communication, synchronization, and orchestration overhead?</blockquote>
+<p>This is why Chapters 10, 14, 15, 16, and 17 build directly on Chapter 1.</p>
+<hr>
+<h2 id="111-how-to-explain-this-in-a-principal-interview">1.11 How to Explain This in a Principal Interview<a class="anchor" href="#111-how-to-explain-this-in-a-principal-interview" aria-label="Link to this section">#</a></h2>
+<p>In a principal-level interview, do not jump straight into tools.</p>
+<p>Start with classification.</p>
+<p>A strong answer sounds like this:</p>
+<blockquote>Before proposing an optimization, I classify the workload. I estimate arithmetic intensity, compare it to the hardware ridge point, and determine whether the workload is compute-bound, memory-bound, communication-bound, or overhead-bound. That tells me whether to optimize Tensor Core utilization, reduce HBM traffic, improve communication overlap, or eliminate scheduling gaps.</blockquote>
+<h3 id="scenario-1-gemm-is-40-slower-than-expected">Scenario 1 — GEMM Is 40% Slower Than Expected<a class="anchor" href="#scenario-1-gemm-is-40-slower-than-expected" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<blockquote>I would profile and optimize the kernel.</blockquote>
+<p>Better answer:</p>
+<blockquote>I would first estimate whether the GEMM shape has enough arithmetic intensity to be compute-bound. If yes, I would inspect Tensor Core utilization, tile shape, occupancy, memory layout, and whether the framework dispatched the expected kernel. If not, I would check memory movement, layout conversion, and launch overhead.</blockquote>
+<h3 id="scenario-2-decode-throughput-is-poor">Scenario 2 — Decode Throughput Is Poor<a class="anchor" href="#scenario-2-decode-throughput-is-poor" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<blockquote>I would use a faster GPU or optimize matmul.</blockquote>
+<p>Better answer:</p>
+<blockquote>Decode is often memory-bandwidth-sensitive because each generated token reads from the KV cache. I would check HBM bandwidth, KV precision, cache layout, batch scheduling, prefix reuse, and whether the serving system is limited by memory traffic rather than compute.</blockquote>
+<h3 id="scenario-3-256-gpu-training-mfu-is-low">Scenario 3 — 256-GPU Training MFU Is Low<a class="anchor" href="#scenario-3-256-gpu-training-mfu-is-low" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<blockquote>I would tune CUDA kernels.</blockquote>
+<p>Better answer:</p>
+<blockquote>At 256 GPUs, I would first break down step time into compute, communication, pipeline bubble, data loading, and checkpoint overhead. Low MFU could be caused by AllReduce serialization, poor overlap, stragglers, pipeline imbalance, or input stalls. I would use Nsight Systems, NCCL tests, framework timers, and fleet telemetry before touching individual kernels.</blockquote>
+<hr>
+<h2 id="112-chapter-cheat-sheet">1.12 Chapter Cheat Sheet<a class="anchor" href="#112-chapter-cheat-sheet" aria-label="Link to this section">#</a></h2>
+<h3 id="core-formulas">Core Formulas<a class="anchor" href="#core-formulas" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>Arithmetic Intensity = FLOPs / Bytes Moved</code></pre>
+<pre class="code-block"><code>Achievable Performance &lt;= min(Peak_FLOPS, AI × Peak_Memory_Bandwidth)</code></pre>
+<pre class="code-block"><code>Ridge Point = Peak_FLOPS / Peak_Memory_Bandwidth</code></pre>
+<pre class="code-block"><code>MFU = Useful Model FLOPs per second / Peak Hardware FLOPs per second</code></pre>
+<pre class="code-block"><code>HFU = Actual Hardware FLOPs per second / Peak Hardware FLOPs per second</code></pre>
+<pre class="code-block"><code>Inference FLOPs/token ≈ 2N
+Training FLOPs/token ≈ 6N</code></pre>
+<h3 id="h100-dense-bf16-numbers">H100 Dense BF16 Numbers<a class="anchor" href="#h100-dense-bf16-numbers" aria-label="Link to this section">#</a></h3>
+<p class="confidence">[SHIPPED]</p>
+<pre class="code-block"><code>H100 SXM5 dense BF16 peak ≈ 989.4 TFLOPS
+H100 SXM5 HBM bandwidth ≈ 3.35 TB/s</code></pre>
+<p class="confidence">[DERIVED FROM SHIPPED]</p>
+<pre class="code-block"><code>H100 dense BF16 ridge point ≈ 295 FLOP/byte</code></pre>
+<h3 id="the-five-questions">The Five Questions<a class="anchor" href="#the-five-questions" aria-label="Link to this section">#</a></h3>
+<p>Before optimizing, ask:</p>
+<ol>
+<li>Is it compute-bound?</li>
+<li>Is it memory-bound?</li>
+<li>Is it communication-bound?</li>
+<li>Is it overhead-bound?</li>
+<li>Which metric proves that?</li>
+</ol>
+<hr>
+<h2 id="113-key-takeaways">1.13 Key Takeaways<a class="anchor" href="#113-key-takeaways" aria-label="Link to this section">#</a></h2>
+<ol>
+<li>AI/ML performance engineering begins with classification, not tuning.</li>
+<li>Arithmetic intensity tells you how much compute exists per byte moved.</li>
+<li>The roofline model tells you whether memory bandwidth or compute peak is the likely limiter.</li>
+<li>H100 SXM5 dense BF16 ridge point is approximately 295 FLOP/byte.</li>
+<li>Dense and sparse BF16 peaks must not be mixed in the same roofline analysis.</li>
+<li>MFU measures useful model progress; HFU measures actual hardware work.</li>
+<li>Low MFU is a system symptom, not automatically a kernel problem.</li>
+<li>Communication volume becomes a first-order constraint at distributed scale.</li>
+<li>Profilers should confirm hypotheses, not replace them.</li>
+<li>Principal-level performance work connects measurements to architecture decisions.</li>
+</ol>
+<hr>
+<h2 id="114-review-questions">1.14 Review Questions<a class="anchor" href="#114-review-questions" aria-label="Link to this section">#</a></h2>
+<h3 id="conceptual">Conceptual<a class="anchor" href="#conceptual" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>What is arithmetic intensity, and why does it matter?</li>
+<li>Why is peak TFLOPS alone not enough to predict model performance?</li>
+<li>What is the ridge point in roofline analysis?</li>
+<li>Why should dense and sparse BF16 peaks not be mixed in the same calculation?</li>
+<li>What is the difference between MFU and HFU?</li>
+<li>Why can high HFU coexist with low MFU?</li>
+<li>What are three reasons a GPU may be idle even when the model has enough compute work?</li>
+<li>Why can a workload scale poorly even if single-GPU kernels are optimized?</li>
+</ol>
+<h3 id="calculation">Calculation<a class="anchor" href="#calculation" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>H100 SXM5 dense BF16 peak is 989.4 TFLOPS and HBM bandwidth is 3.35 TB/s. Calculate the ridge point.</li>
+<li>If an operation has arithmetic intensity of 50 FLOP/byte on H100, is it likely memory-bound or compute-bound?</li>
+<li>If an operation has arithmetic intensity of 400 FLOP/byte on H100, what else must be true for it to approach peak compute?</li>
+<li>An 8×H100 node has a dense BF16 peak of 7,915.2 TFLOPS. If useful model throughput is 4,000 TFLOPS, what is MFU?</li>
+<li>A dense 70B model uses the approximation <code>inference FLOPs/token ≈ 2N</code>. Estimate FLOPs per generated token.</li>
+</ol>
+<h3 id="principal-level-interview-practice">Principal-Level Interview Practice<a class="anchor" href="#principal-level-interview-practice" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>You observe low MFU on a 512-GPU training job. Walk through your first five diagnostic questions.</li>
+<li>A team says decode latency is high and proposes optimizing GEMM kernels. How would you respond?</li>
+<li>A model is memory-bound according to roofline analysis. Give three possible optimization strategies.</li>
+<li>A training workload becomes slower per GPU as GPU count increases. What measurements would you collect?</li>
+<li>Explain the roofline model to a senior engineering manager in two minutes.</li>
+</ol>
+<hr>
+<h2 id="115-bridge-to-chapter-2">1.15 Bridge to Chapter 2<a class="anchor" href="#115-bridge-to-chapter-2" aria-label="Link to this section">#</a></h2>
+<p>Chapter 1 gave the performance lens: compute, memory, communication, and overhead.</p>
+<p>Chapter 2 applies that lens to the transformer itself.</p>
+<p>The next question is:</p>
+<blockquote>What exactly happens inside a transformer block, and why do GEMM, attention, normalization, activation functions, and KV cache behavior create such different performance regimes?</blockquote>
+<p>That is where the AI/ML performance architect stops treating the model as a black box and starts reasoning from shapes, FLOPs, memory traffic, and data reuse.</p>
+
+    <nav class="nav-row" aria-label="Previous and next chapter navigation">
+      <a href="../index.html">
+        <small>Back</small>
+        <strong>Book Homepage</strong>
+      </a>
+      <a href="ch02_transformer_architecture.html">
+        <small>Next Chapter</small>
+        <strong>Chapter 2 — Transformer Architecture</strong>
+      </a>
+    </nav>
+  </main>
+</div>
+</body>
+</html>
