@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 2 — Transformer Architecture | Silicon to Scale</title>
+<meta name="description" content="A performance engineer’s deep dive into transformer architecture: Q/K/V shapes, scaled dot-product attention, MHA/MQA/GQA/MLA, RoPE, RMSNorm, SwiGLU, prefill vs decode, and transformer performance regimes.">
+<meta name="author" content="Venkat Vinjam">
+<meta property="og:title" content="Chapter 2 — The Transformer Architecture: A Performance Engineer’s Deep Dive">
+<meta property="og:description" content="Learn transformer architecture as a performance workload: attention shapes, KV-cache impact, FFN FLOPs, normalization, RoPE, FlashAttention, and serving/training bottlenecks.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c10;
+  --bg2: #0d1117;
+  --bg3: #161b22;
+  --bg4: #1c2128;
+  --border: #21262d;
+  --border2: #30363d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #6e7681;
+  --accent: #58a6ff;
+  --gold: #d4a017;
+  --gold2: #f0c040;
+  --green: #3fb950;
+  --orange: #ff6b35;
+  --purple: #bc8cff;
+  --red: #f85149;
+  --yellow: #f7c948;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.65;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(88,166,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(88,166,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(13,17,23,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 22px;
+}
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.brand a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.brand span {
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.topnav {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.topnav a {
+  color: var(--accent);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.topnav a:hover {
+  border-color: var(--accent);
+  background: rgba(88,166,255,0.08);
+}
+.layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 300px minmax(0, 900px);
+  gap: 36px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 36px 24px 80px;
+}
+.sidebar {
+  position: sticky;
+  top: 76px;
+  align-self: start;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+}
+.sidebar h2 {
+  margin: 0 0 12px;
+  font-family: var(--mono);
+  color: var(--gold2);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+.sidebar a {
+  display: block;
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 13px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.35);
+}
+.sidebar a:hover {
+  color: var(--accent);
+}
+.sidebar .toc-l3 {
+  padding-left: 14px;
+  font-size: 12px;
+  color: var(--text3);
+}
+.content {
+  background: rgba(13,17,23,0.72);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 38px 44px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+}
+.content h1 {
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -1.4px;
+  margin: 0 0 18px;
+}
+.content h2 {
+  margin-top: 46px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 25px;
+  letter-spacing: -0.5px;
+}
+.content h3 {
+  margin-top: 30px;
+  color: var(--accent);
+  font-size: 18px;
+}
+.content h4 {
+  margin-top: 24px;
+  color: var(--gold2);
+}
+.anchor {
+  margin-left: 8px;
+  color: var(--text3);
+  opacity: 0;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 0.8em;
+}
+h1:hover .anchor, h2:hover .anchor, h3:hover .anchor, h4:hover .anchor {
+  opacity: 1;
+}
+p {
+  color: var(--text);
+  font-size: 16px;
+}
+blockquote {
+  margin: 24px 0;
+  padding: 18px 22px;
+  border-left: 4px solid var(--gold2);
+  background: rgba(212,160,23,0.08);
+  color: var(--text);
+  border-radius: 0 10px 10px 0;
+  font-size: 17px;
+}
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 28px 0;
+}
+ul, ol {
+  padding-left: 24px;
+}
+li {
+  margin: 6px 0;
+}
+code {
+  font-family: var(--mono);
+  background: var(--bg4);
+  color: var(--gold2);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-size: 0.92em;
+}
+.code-block {
+  background: #05080c;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 18px 0;
+}
+.code-block code {
+  background: transparent;
+  border: 0;
+  color: #d8dee9;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.table-wrap {
+  overflow-x: auto;
+  margin: 22px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 660px;
+  background: var(--bg3);
+}
+th {
+  background: var(--bg4);
+  color: var(--accent);
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.2px;
+}
+th, td {
+  padding: 11px 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+td {
+  color: var(--text2);
+  font-size: 14px;
+}
+tr:last-child td {
+  border-bottom: 0;
+}
+.confidence {
+  border-left: 4px solid var(--green);
+  background: rgba(63,185,80,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.takeaway {
+  border-left: 4px solid var(--gold2);
+  background: rgba(212,160,23,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.figure-note {
+  color: var(--text2);
+  font-size: 14px;
+}
+.figure-placeholder {
+  margin: 28px 0;
+  background: linear-gradient(135deg, rgba(88,166,255,0.08), rgba(188,140,255,0.05));
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 20px;
+}
+.figure-kicker {
+  color: var(--gold2);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.figure-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.figure-body {
+  display: grid;
+  grid-template-columns: 72px minmax(0,1fr);
+  gap: 16px;
+  align-items: center;
+  background: rgba(13,17,23,0.65);
+  border: 1px dashed var(--border2);
+  border-radius: 12px;
+  padding: 18px;
+}
+.figure-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  font-size: 32px;
+  background: rgba(88,166,255,0.08);
+}
+.figure-path, .figure-status {
+  color: var(--text2);
+  margin: 6px 0;
+  font-size: 13px;
+}
+figcaption {
+  color: var(--text2);
+  font-size: 13px;
+  margin-top: 12px;
+}
+.nav-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 44px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+.nav-row a {
+  flex: 1;
+  text-decoration: none;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--text);
+}
+.nav-row a:hover {
+  border-color: var(--accent);
+}
+.nav-row small {
+  display: block;
+  color: var(--text3);
+  font-family: var(--mono);
+  margin-bottom: 4px;
+}
+.nav-row strong {
+  color: var(--accent);
+}
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 22px 16px 60px;
+  }
+  .sidebar {
+    position: static;
+    max-height: none;
+  }
+  .content {
+    padding: 26px 20px;
+  }
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (max-width: 640px) {
+  .figure-body {
+    grid-template-columns: 1fr;
+  }
+  .nav-row {
+    flex-direction: column;
+  }
+  p {
+    font-size: 15px;
+  }
+}
+@media print {
+  body {
+    background: #fff;
+    color: #111;
+  }
+  body::before, .topbar, .sidebar, .anchor {
+    display: none !important;
+  }
+  .layout {
+    display: block;
+    max-width: none;
+    padding: 0;
+  }
+  .content {
+    box-shadow: none;
+    border: 0;
+    padding: 0;
+  }
+  .content h1, .content h2, .content h3, .content h4, p, li, td, th, blockquote {
+    color: #111 !important;
+  }
+  .code-block, code, table, .figure-placeholder {
+    border-color: #999;
+  }
+  a {
+    color: #111;
+    text-decoration: none;
+  }
+  h2 {
+    page-break-before: auto;
+  }
+  .figure-placeholder, table, pre, blockquote {
+    break-inside: avoid;
+  }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <a href="../index.html">AI/ML Infrastructure from Silicon to Scale</a>
+    <span>Chapter 2 · Transformer Architecture</span>
+  </div>
+  <nav class="topnav" aria-label="Top navigation">
+    <a href="../index.html">Home</a>
+    <a href="ch01_performance_architecture_mindset.html">Previous: Ch01</a>
+    <a href="../pdfs/ch02_transformer_deep_dive.pdf">PDF</a>
+    <a href="../diagrams/diagram_03_transformer_pipeline.html">Transformer Diagram</a>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" aria-label="Chapter table of contents">
+    <h2>Chapter Contents</h2>
+    <a class="toc-l2" href="#chapter-overview">Chapter Overview</a>
+<a class="toc-l2" href="#20-the-transformer-as-a-workload">2.0 The Transformer as a Workload</a>
+<a class="toc-l2" href="#figure-placeholder-fig-21">Figure Placeholder — Fig 2.1</a>
+<a class="toc-l2" href="#21-notation-symbols-and-shapes">2.1 Notation: Symbols and Shapes</a>
+<a class="toc-l2" href="#table-21-transformer-symbols-and-shapes">Table 2.1 — Transformer Symbols and Shapes</a>
+<a class="toc-l2" href="#22-from-hidden-states-to-q-k-and-v">2.2 From Hidden States to Q, K, and V</a>
+<a class="toc-l2" href="#mental-shape-checkpoint-1">Mental Shape Checkpoint 1</a>
+<a class="toc-l2" href="#figure-placeholder-fig-22">Figure Placeholder — Fig 2.2</a>
+<a class="toc-l2" href="#23-scaled-dot-product-attention">2.3 Scaled Dot-Product Attention</a>
+<a class="toc-l3" href="#step-by-step">Step-by-Step</a>
+<a class="toc-l2" href="#24-why-attention-has-os²-behavior-during-training-and-prefill">2.4 Why Attention Has `O(S²)` Behavior During Training and Prefill</a>
+<a class="toc-l3" href="#example">Example</a>
+<a class="toc-l2" href="#25-why-decode-is-different-from-prefill">2.5 Why Decode Is Different from Prefill</a>
+<a class="toc-l2" href="#table-22-transformer-operations-as-performance-workloads">Table 2.2 — Transformer Operations as Performance Workloads</a>
+<a class="toc-l2" href="#26-multi-head-attention-mqa-gqa-and-mla">2.6 Multi-Head Attention, MQA, GQA, and MLA</a>
+<a class="toc-l3" href="#multi-head-attention-mha">Multi-Head Attention, MHA</a>
+<a class="toc-l3" href="#multi-query-attention-mqa">Multi-Query Attention, MQA</a>
+<a class="toc-l3" href="#grouped-query-attention-gqa">Grouped-Query Attention, GQA</a>
+<a class="toc-l3" href="#multi-head-latent-attention-mla">Multi-Head Latent Attention, MLA</a>
+<a class="toc-l2" href="#figure-placeholder-fig-24">Figure Placeholder — Fig 2.4</a>
+<a class="toc-l2" href="#table-23-attention-variant-kv-cache-comparison">Table 2.3 — Attention Variant KV Cache Comparison</a>
+<a class="toc-l2" href="#27-rope-rotary-position-embedding">2.7 RoPE: Rotary Position Embedding</a>
+<a class="toc-l3" href="#long-context-caution">Long-Context Caution</a>
+<a class="toc-l2" href="#28-rmsnorm-layernorm-pre-norm-and-post-norm">2.8 RMSNorm, LayerNorm, Pre-Norm, and Post-Norm</a>
+<a class="toc-l3" href="#layernorm">LayerNorm</a>
+<a class="toc-l3" href="#rmsnorm">RMSNorm</a>
+<a class="toc-l3" href="#pre-norm-vs-post-norm">Pre-Norm vs Post-Norm</a>
+<a class="toc-l2" href="#figure-placeholder-fig-23">Figure Placeholder — Fig 2.3</a>
+<a class="toc-l2" href="#29-ffn-and-swiglu-where-dense-transformer-flops-often-go">2.9 FFN and SwiGLU: Where Dense Transformer FLOPs Often Go</a>
+<a class="toc-l3" href="#why-ffn-matters-for-hardware">Why FFN Matters for Hardware</a>
+<a class="toc-l2" href="#figure-placeholder-fig-25">Figure Placeholder — Fig 2.5</a>
+<a class="toc-l2" href="#210-dense-transformer-flops-per-token">2.10 Dense Transformer FLOPs per Token</a>
+<a class="toc-l3" href="#inference-approximation">Inference Approximation</a>
+<a class="toc-l3" href="#training-approximation">Training Approximation</a>
+<a class="toc-l3" href="#assumptions">Assumptions</a>
+<a class="toc-l2" href="#211-prefill-vs-decode-same-transformer-different-bottleneck">2.11 Prefill vs Decode: Same Transformer, Different Bottleneck</a>
+<a class="toc-l2" href="#table-24-prefill-vs-decode-transformer-workload">Table 2.4 — Prefill vs Decode Transformer Workload</a>
+<a class="toc-l2" href="#212-flashattention-why-io-aware-attention-matters">2.12 FlashAttention: Why IO-Aware Attention Matters</a>
+<a class="toc-l2" href="#213-transformer-performance-engineering-map">2.13 Transformer Performance Engineering Map</a>
+<a class="toc-l2" href="#table-25-transformer-performance-engineering-map">Table 2.5 — Transformer Performance Engineering Map</a>
+<a class="toc-l2" href="#214-how-to-explain-the-transformer-as-a-workload-in-a-principal-interview">2.14 How to Explain the Transformer as a Workload in a Principal Interview</a>
+<a class="toc-l3" href="#scenario-1-why-is-transformer-training-gpu-friendly">Scenario 1 — Why Is Transformer Training GPU-Friendly?</a>
+<a class="toc-l3" href="#scenario-2-why-is-decode-different-from-prefill">Scenario 2 — Why Is Decode Different from Prefill?</a>
+<a class="toc-l3" href="#scenario-3-why-does-gqa-matter">Scenario 3 — Why Does GQA Matter?</a>
+<a class="toc-l3" href="#scenario-4-why-does-flashattention-help">Scenario 4 — Why Does FlashAttention Help?</a>
+<a class="toc-l3" href="#scenario-5-why-does-ffn-dominate-flops-but-decode-still-feels-memory-bound">Scenario 5 — Why Does FFN Dominate FLOPs but Decode Still Feels Memory-Bound?</a>
+<a class="toc-l2" href="#215-chapter-cheat-sheet">2.15 Chapter Cheat Sheet</a>
+<a class="toc-l3" href="#core-formula">Core Formula</a>
+<a class="toc-l3" href="#core-shapes">Core Shapes</a>
+<a class="toc-l3" href="#attention-scaling">Attention Scaling</a>
+<a class="toc-l3" href="#dense-transformer-flop-approximations">Dense Transformer FLOP Approximations</a>
+<a class="toc-l3" href="#kv-head-reduction">KV-Head Reduction</a>
+<a class="toc-l3" href="#performance-map">Performance Map</a>
+<a class="toc-l2" href="#216-key-takeaways">2.16 Key Takeaways</a>
+<a class="toc-l2" href="#217-review-questions">2.17 Review Questions</a>
+<a class="toc-l3" href="#conceptual">Conceptual</a>
+<a class="toc-l3" href="#calculation">Calculation</a>
+<a class="toc-l3" href="#principal-level-interview-practice">Principal-Level Interview Practice</a>
+<a class="toc-l2" href="#218-bridge-to-chapter-3a">2.18 Bridge to Chapter 3A</a>
+  </aside>
+
+  <main class="content">
+    <h1 id="chapter-2-the-transformer-architecture-a-performance-engineers-deep-dive">Chapter 2 — The Transformer Architecture: A Performance Engineer’s Deep Dive<a class="anchor" href="#chapter-2-the-transformer-architecture-a-performance-engineers-deep-dive" aria-label="Link to this section">#</a></h1>
+<blockquote>“The transformer architecture is not just the model you optimize. It is the workload specification that determines what your hardware must do.”</blockquote>
+<hr>
+<h2 id="chapter-overview">Chapter Overview<a class="anchor" href="#chapter-overview" aria-label="Link to this section">#</a></h2>
+<p>Chapter 1 introduced the AI/ML performance mindset: classify the workload before optimizing it.</p>
+<p>Chapter 2 applies that mindset to the transformer.</p>
+<p>The transformer is often introduced as a machine-learning architecture. That is true, but incomplete for performance engineers. From an infrastructure perspective, a transformer is a structured workload made of:</p>
+<ul>
+<li>Large matrix multiplications</li>
+<li>Attention data movement</li>
+<li>Softmax and elementwise operations</li>
+<li>Normalization</li>
+<li>Residual connections</li>
+<li>Feed-forward projections</li>
+<li>Position encoding</li>
+<li>Stateful KV cache behavior during inference</li>
+<li>Communication and partitioning challenges during distributed training</li>
+</ul>
+<p>This chapter explains the transformer from the point of view of the GPU, runtime, compiler, serving system, and distributed training stack.</p>
+<p>By the end of this chapter, you should be able to:</p>
+<ul>
+<li>Explain a transformer block as a sequence of performance workloads.</li>
+<li>Track tensor shapes through Q, K, and V projections.</li>
+<li>Derive the scaled dot-product attention formula.</li>
+<li>Explain why attention scales as <code>O(S²)</code> during training/prefill.</li>
+<li>Explain why decode behaves differently from prefill.</li>
+<li>Compare MHA, MQA, GQA, and MLA from a KV-cache perspective.</li>
+<li>Explain why FFN/SwiGLU layers often dominate dense transformer FLOPs.</li>
+<li>Explain why low-FLOP operations can still matter for latency.</li>
+<li>Describe RMSNorm, LayerNorm, Pre-Norm, and Post-Norm in performance terms.</li>
+<li>Explain the transformer as a workload in a principal-level interview.</li>
+</ul>
+<hr>
+<h2 id="20-the-transformer-as-a-workload">2.0 The Transformer as a Workload<a class="anchor" href="#20-the-transformer-as-a-workload" aria-label="Link to this section">#</a></h2>
+<p>A transformer block is not one operation.</p>
+<p>It is a pipeline of operations with very different performance regimes.</p>
+<p>Some operations are GEMM-heavy and use Tensor Cores well. Some are memory-bandwidth sensitive. Some create large intermediate tensors. Some are fusion targets. Some dominate training FLOPs. Some dominate inference memory pressure.</p>
+<p>The performance engineer’s job is to map each part of the transformer to the hardware resource it stresses.</p>
+<p>A simplified decoder-only transformer block looks like this:</p>
+<pre class="code-block"><code>Input hidden states
+    ↓
+RMSNorm / LayerNorm
+    ↓
+QKV projection
+    ↓
+Attention
+    ↓
+Output projection
+    ↓
+Residual add
+    ↓
+RMSNorm / LayerNorm
+    ↓
+FFN / SwiGLU
+    ↓
+Residual add
+    ↓
+Output hidden states</code></pre>
+<p>From a performance point of view:</p>
+<div class="table-wrap"><table><thead><tr><th>Component</th><th>What It Looks Like to Hardware</th></tr></thead><tbody><tr><td>QKV projection</td><td>GEMM / Tensor Core workload</td></tr><tr><td>Attention scores</td><td>Sequence-length-dependent compute and memory</td></tr><tr><td>Softmax</td><td>Memory/fusion-sensitive operation</td></tr><tr><td>Attention × V</td><td>GEMM-like attention operation</td></tr><tr><td>Output projection</td><td>GEMM</td></tr><tr><td>RMSNorm / LayerNorm</td><td>Memory-bandwidth-sensitive elementwise work</td></tr><tr><td>RoPE</td><td>Low-FLOP elementwise rotation, usually fusion-sensitive</td></tr><tr><td>FFN / SwiGLU</td><td>Large GEMMs, often dominant dense transformer FLOPs</td></tr><tr><td>Residual add</td><td>Memory-bandwidth-sensitive elementwise work</td></tr></tbody></table></div>
+<p>The rest of this chapter decomposes this pipeline.</p>
+<hr>
+<h2 id="figure-placeholder-fig-21">Figure Placeholder — Fig 2.1<a class="anchor" href="#figure-placeholder-fig-21" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-21-transformer-block-as-a-performance-workload">
+  <div class="figure-kicker">Fig 2.1</div>
+  <div class="figure-title">Transformer Block as a Performance Workload</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A transformer block decomposed into GEMM-heavy projections, attention data movement, normalization, FFN, residuals, and fusion-sensitive operations.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/png_300dpi/ch02_fig_2_1_transformer_block_performance_view.png</code></p>
+      <p class="figure-status">Existing diagram; print export needed</p>
+    </div>
+  </div>
+  <figcaption><strong>Fig 2.1 — Transformer Block as a Performance Workload.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> A transformer is not a black box. From a performance point of view, it is a structured pipeline of matrix multiplications, attention operations, normalization, activation functions, and residual updates. Before deriving formulas, it is useful to see the full block as a workload that the GPU must execute.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> Q/K/V projections and FFN layers are GEMM-heavy and can use Tensor Cores. Normalization, RoPE, softmax, and residual adds are often memory-bandwidth or fusion-sensitive. Attention changes character depending on whether the system is in training, prefill, or decode.</p>
+<blockquote><strong>Key Takeaway:</strong> A transformer block is not one workload. It is a mix of GEMM-dominated compute, memory-bound elementwise operations, attention data movement, and stateful KV-cache behavior.</blockquote>
+<hr>
+<h2 id="21-notation-symbols-and-shapes">2.1 Notation: Symbols and Shapes<a class="anchor" href="#21-notation-symbols-and-shapes" aria-label="Link to this section">#</a></h2>
+<p>Before deriving attention, we need consistent notation.</p>
+<p>The most important tensor in a transformer is the hidden-state tensor:</p>
+<pre class="code-block"><code>X ∈ [B, S, H]</code></pre>
+<p>Where:</p>
+<ul>
+<li><code>B</code> is batch size.</li>
+<li><code>S</code> is sequence length.</li>
+<li><code>H</code> is hidden dimension, also called <code>d_model</code>.</li>
+</ul>
+<p>Most transformer operations preserve <code>[B, S, H]</code>, temporarily reshape it into head dimensions, or expand it inside the feed-forward network.</p>
+<hr>
+<h2 id="table-21-transformer-symbols-and-shapes">Table 2.1 — Transformer Symbols and Shapes<a class="anchor" href="#table-21-transformer-symbols-and-shapes" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Symbol</th><th>Meaning</th><th>Typical Example</th></tr></thead><tbody><tr><td><code>B</code></td><td>Batch size</td><td>Number of sequences processed together</td></tr><tr><td><code>S</code></td><td>Sequence length / context length</td><td>2K, 4K, 8K, 32K tokens</td></tr><tr><td><code>H</code> or <code>d_model</code></td><td>Hidden dimension</td><td>4096, 8192</td></tr><tr><td><code>L</code></td><td>Number of transformer layers</td><td>32, 80</td></tr><tr><td><code>n_h</code></td><td>Number of query heads</td><td>32, 64</td></tr><tr><td><code>n_kv</code></td><td>Number of KV heads</td><td>1, 8, 16, or equal to <code>n_h</code></td></tr><tr><td><code>d_head</code></td><td>Per-head dimension</td><td>Often 64 or 128</td></tr><tr><td><code>d_ff</code></td><td>FFN intermediate dimension</td><td>Often 2.7×–4× <code>H</code>, depending on architecture</td></tr><tr><td><code>X</code></td><td>Input hidden states</td><td><code>[B, S, H]</code></td></tr><tr><td><code>Q</code>, <code>K</code>, <code>V</code></td><td>Query, Key, Value tensors</td><td>Logical shape depends on MHA/MQA/GQA/MLA</td></tr></tbody></table></div>
+<p>The exact memory layout may differ by framework. For example, one implementation may store heads before sequence length, while another stores sequence length before heads. What matters for performance reasoning is the logical shape and how much data must be computed, moved, cached, or communicated.</p>
+<blockquote><strong>Key Takeaway:</strong> Most transformer performance problems become easier once you can track how <code>[B, S, H]</code> changes through attention and FFN layers.</blockquote>
+<hr>
+<h2 id="22-from-hidden-states-to-q-k-and-v">2.2 From Hidden States to Q, K, and V<a class="anchor" href="#22-from-hidden-states-to-q-k-and-v" aria-label="Link to this section">#</a></h2>
+<p>The input to a transformer block is:</p>
+<pre class="code-block"><code>X [B, S, H]</code></pre>
+<p>The model applies learned projections to create three tensors:</p>
+<pre class="code-block"><code>Q = X W_Q
+K = X W_K
+V = X W_V</code></pre>
+<p>Where:</p>
+<pre class="code-block"><code>W_Q ∈ [H, n_h × d_head]
+W_K ∈ [H, n_kv × d_head]
+W_V ∈ [H, n_kv × d_head]</code></pre>
+<p>For standard multi-head attention:</p>
+<pre class="code-block"><code>n_kv = n_h</code></pre>
+<p>For grouped-query attention:</p>
+<pre class="code-block"><code>n_kv &lt; n_h</code></pre>
+<p>For multi-query attention:</p>
+<pre class="code-block"><code>n_kv = 1</code></pre>
+<p>After projection, the logical shapes are often represented as:</p>
+<pre class="code-block"><code>Q [B, n_h, S, d_head]
+K [B, n_kv, S, d_head]
+V [B, n_kv, S, d_head]</code></pre>
+<p class="confidence">[REPRESENTATIVE] Actual tensor layout may vary by framework or kernel. A kernel may prefer <code>[B, S, n_h, d_head]</code>, packed QKV, or specialized memory layouts for FlashAttention or paged KV cache.</p>
+<hr>
+<h2 id="mental-shape-checkpoint-1">Mental Shape Checkpoint 1<a class="anchor" href="#mental-shape-checkpoint-1" aria-label="Link to this section">#</a></h2>
+<p>Suppose:</p>
+<pre class="code-block"><code>B = 4
+S = 2048
+H = 8192
+n_h = 64
+n_kv = 8
+d_head = 128</code></pre>
+<p>Then:</p>
+<pre class="code-block"><code>X shape = [4, 2048, 8192]
+Q shape = [4, 64, 2048, 128]
+K shape = [4, 8, 2048, 128]
+V shape = [4, 8, 2048, 128]</code></pre>
+<p>This is GQA: many query heads, fewer KV heads.</p>
+<p>The KV cache stores K and V, not Q. That means reducing <code>n_kv</code> directly reduces KV-cache memory.</p>
+<hr>
+<h2 id="figure-placeholder-fig-22">Figure Placeholder — Fig 2.2<a class="anchor" href="#figure-placeholder-fig-22" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-22-qkv-projection-and-scaled-dot-product-attention-shapes">
+  <div class="figure-kicker">Fig 2.2</div>
+  <div class="figure-title">Q/K/V Projection and Scaled Dot-Product Attention Shapes</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A shape-flow view from hidden states X [B,S,H] into Q, K, V tensors, attention scores, softmax, and output.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch02_fig_2_2_qkv_attention_shapes.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+    </div>
+  </div>
+  <figcaption><strong>Fig 2.2 — Q/K/V Projection and Scaled Dot-Product Attention Shapes.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> The scaled dot-product attention formula is compact, but the performance implications are hidden in the tensor shapes. The reader should first see how <code>[B, S, H]</code> becomes Q, K, and V, and how the sequence-length dimension creates the attention score matrix.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The key performance issue is the <code>S × S</code> attention score matrix during training and prefill. As sequence length grows, the score matrix grows quadratically. In decode, the system processes one new token at a time but repeatedly attends to previous tokens through the KV cache.</p>
+<blockquote><strong>Key Takeaway:</strong> Attention complexity is not only about the formula. It is about tensor shape. The <code>S × S</code> score matrix drives prefill cost, while KV-cache reads drive decode cost.</blockquote>
+<hr>
+<h2 id="23-scaled-dot-product-attention">2.3 Scaled Dot-Product Attention<a class="anchor" href="#23-scaled-dot-product-attention" aria-label="Link to this section">#</a></h2>
+<p class="confidence">[SHIPPED] The standard scaled dot-product attention formula is:</p>
+<pre class="code-block"><code>Attention(Q, K, V) = softmax(QKᵀ / sqrt(d_k)) V</code></pre>
+<p>Where:</p>
+<ul>
+<li><code>Q</code> is the query tensor.</li>
+<li><code>K</code> is the key tensor.</li>
+<li><code>V</code> is the value tensor.</li>
+<li><code>d_k</code> is the key/head dimension.</li>
+</ul>
+<p>The scaling term:</p>
+<pre class="code-block"><code>1 / sqrt(d_k)</code></pre>
+<p>prevents dot products from becoming too large as head dimension increases. Without scaling, the softmax can saturate, making gradients less useful during training.</p>
+<h3 id="step-by-step">Step-by-Step<a class="anchor" href="#step-by-step" aria-label="Link to this section">#</a></h3>
+<p>For one batch element and one attention head:</p>
+<pre class="code-block"><code>Q [S, d_head]
+K [S, d_head]
+V [S, d_head]</code></pre>
+<p>Compute attention scores:</p>
+<pre class="code-block"><code>Scores = QKᵀ
+Scores shape = [S, S]</code></pre>
+<p>Scale and normalize:</p>
+<pre class="code-block"><code>Weights = softmax(Scores / sqrt(d_head))
+Weights shape = [S, S]</code></pre>
+<p>Apply to values:</p>
+<pre class="code-block"><code>Output = Weights V
+Output shape = [S, d_head]</code></pre>
+<p>For multiple heads, this happens across <code>n_h</code> query heads.</p>
+<hr>
+<h2 id="24-why-attention-has-os²-behavior-during-training-and-prefill">2.4 Why Attention Has <code>O(S²)</code> Behavior During Training and Prefill<a class="anchor" href="#24-why-attention-has-os²-behavior-during-training-and-prefill" aria-label="Link to this section">#</a></h2>
+<p class="confidence">[ESTIMATED] During training or prefill, each token can attend to many previous tokens. The attention score structure grows with sequence length:</p>
+<pre class="code-block"><code>Scores shape = [B, n_h, S, S]</code></pre>
+<p>The <code>S × S</code> term is why attention is often described as quadratic in sequence length.</p>
+<p>This does not mean attention is always the dominant cost. In many dense decoder-only transformers, FFN and projection GEMMs dominate total FLOPs. But attention becomes increasingly important as context length grows.</p>
+<h3 id="example">Example<a class="anchor" href="#example" aria-label="Link to this section">#</a></h3>
+<p>If sequence length doubles:</p>
+<pre class="code-block"><code>S → 2S</code></pre>
+<p>Then attention-score size grows as:</p>
+<pre class="code-block"><code>S² → (2S)² = 4S²</code></pre>
+<p>This quadratic scaling is one of the reasons long context is expensive.</p>
+<p class="confidence">[ESTIMATED] Exact attention FLOPs depend on batch size, number of heads, head dimension, causal masking, kernel implementation, and whether the system materializes intermediate attention matrices.</p>
+<hr>
+<h2 id="25-why-decode-is-different-from-prefill">2.5 Why Decode Is Different from Prefill<a class="anchor" href="#25-why-decode-is-different-from-prefill" aria-label="Link to this section">#</a></h2>
+<p>A common mistake is to treat every token the same.</p>
+<p>LLM inference has two distinct phases:</p>
+<ol>
+<li><strong>Prefill</strong> — process the full prompt.</li>
+<li><strong>Decode</strong> — generate one token at a time.</li>
+</ol>
+<p>During prefill, the model processes many prompt tokens in parallel. During decode, each step generates one new token and attends to previously cached K/V tensors.</p>
+<p class="confidence">[REPRESENTATIVE] For many LLM serving workloads, decode is sensitive to HBM bandwidth, KV-cache layout, KV precision, batching, and scheduler behavior.</p>
+<p>This is why transformer architecture choices such as GQA and MLA matter so much for serving infrastructure.</p>
+<hr>
+<h2 id="table-22-transformer-operations-as-performance-workloads">Table 2.2 — Transformer Operations as Performance Workloads<a class="anchor" href="#table-22-transformer-operations-as-performance-workloads" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Operation</th><th>Main Shape</th><th>Approximate Cost</th><th>Common Regime</th><th>Performance Note</th></tr></thead><tbody><tr><td>QKV projection</td><td><code>[B·S,H] × [H,projection]</code></td><td>High</td><td>Compute-bound if large enough</td><td>GEMM / Tensor Core friendly</td></tr><tr><td>Attention scores</td><td><code>QKᵀ → [S,S]</code></td><td>Grows with <code>S²</code></td><td>Compute/memory mixed</td><td>Prefill-sensitive</td></tr><tr><td>Softmax</td><td><code>[B,n_h,S,S]</code></td><td>Moderate</td><td>Memory/fusion-sensitive</td><td>Often fused in attention kernels</td></tr><tr><td>Attention × V</td><td><code>[S,S] × [S,d_head]</code></td><td>High for long <code>S</code></td><td>Compute/memory mixed</td><td>Avoid materializing full attention</td></tr><tr><td>Output projection</td><td><code>[B·S,H] × [H,H]</code></td><td>High</td><td>Compute-bound if large enough</td><td>GEMM</td></tr><tr><td>RMSNorm / LayerNorm</td><td><code>[B,S,H]</code></td><td>Low FLOP, high bytes</td><td>Memory-bound</td><td>Fusion target</td></tr><tr><td>RoPE</td><td>Q/K elementwise rotation</td><td>Low</td><td>Memory/fusion-sensitive</td><td>Should be fused when possible</td></tr><tr><td>FFN / SwiGLU</td><td><code>[B·S,H] × [H,d_ff]</code> and back</td><td>Very high</td><td>Compute-bound</td><td>Often dominant FLOPs</td></tr><tr><td>Residual add</td><td><code>[B,S,H]</code></td><td>Low</td><td>Memory-bound</td><td>Often fused</td></tr></tbody></table></div>
+<p>The transformer is a mixed-regime workload. GEMMs, attention, normalization, RoPE, and residuals have different bottlenecks and require different optimizations.</p>
+<blockquote><strong>Key Takeaway:</strong> Do not optimize “the transformer.” Optimize the specific operation and regime that limits the product metric.</blockquote>
+<hr>
+<h2 id="26-multi-head-attention-mqa-gqa-and-mla">2.6 Multi-Head Attention, MQA, GQA, and MLA<a class="anchor" href="#26-multi-head-attention-mqa-gqa-and-mla" aria-label="Link to this section">#</a></h2>
+<p>Attention variants differ primarily in how many K/V heads are stored and reused.</p>
+<p>This matters because decode reads K/V state repeatedly.</p>
+<h3 id="multi-head-attention-mha">Multi-Head Attention, MHA<a class="anchor" href="#multi-head-attention-mha" aria-label="Link to this section">#</a></h3>
+<p>In standard multi-head attention:</p>
+<pre class="code-block"><code>n_kv = n_h</code></pre>
+<p>Every query head has its own K and V head.</p>
+<p>This is the baseline design, but it creates large KV-cache memory requirements during inference.</p>
+<h3 id="multi-query-attention-mqa">Multi-Query Attention, MQA<a class="anchor" href="#multi-query-attention-mqa" aria-label="Link to this section">#</a></h3>
+<p>In multi-query attention:</p>
+<pre class="code-block"><code>n_kv = 1</code></pre>
+<p>All query heads share one K/V head.</p>
+<p>This gives the largest KV-cache reduction, but may introduce quality or training tradeoffs depending on the model.</p>
+<h3 id="grouped-query-attention-gqa">Grouped-Query Attention, GQA<a class="anchor" href="#grouped-query-attention-gqa" aria-label="Link to this section">#</a></h3>
+<p>In grouped-query attention:</p>
+<pre class="code-block"><code>1 &lt; n_kv &lt; n_h</code></pre>
+<p>Multiple query heads share each K/V head.</p>
+<p>GQA is a practical compromise: it reduces KV-cache memory and bandwidth pressure while preserving more capacity than MQA.</p>
+<p class="confidence">[SHIPPED] Meta’s Llama 3 70B model card describes the model as using Grouped-Query Attention and an 8K context length. Detailed calculations should be tied to the exact model configuration used.</p>
+<h3 id="multi-head-latent-attention-mla">Multi-Head Latent Attention, MLA<a class="anchor" href="#multi-head-latent-attention-mla" aria-label="Link to this section">#</a></h3>
+<p class="confidence">[REPRESENTATIVE] Multi-head Latent Attention, used in DeepSeek-style architectures, reduces inference-time KV-cache pressure by caching a compressed latent representation rather than full per-head K/V tensors.</p>
+<p>Do not treat MLA as a universal replacement for GQA. It is architecture-specific. The exact memory reduction depends on latent dimension, projection structure, and implementation.</p>
+<hr>
+<h2 id="figure-placeholder-fig-24">Figure Placeholder — Fig 2.4<a class="anchor" href="#figure-placeholder-fig-24" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-24-attention-variants-mha-mqa-gqa-and-mla">
+  <div class="figure-kicker">Fig 2.4</div>
+  <div class="figure-title">Attention Variants: MHA, MQA, GQA, and MLA</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A comparison of how attention variants store and share K/V state, with direct impact on KV-cache memory and decode bandwidth.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/png_300dpi/ch02_fig_2_4_attention_variants.png</code></p>
+      <p class="figure-status">Existing diagram; MQA supplement may be needed</p>
+    </div>
+  </div>
+  <figcaption><strong>Fig 2.4 — Attention Variants: MHA, MQA, GQA, and MLA.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> Multi-head attention is the baseline, but modern LLM serving is heavily shaped by how K and V tensors are stored. MQA, GQA, and MLA are not just model-quality choices; they are infrastructure choices because they change KV-cache size, memory bandwidth pressure, and maximum concurrency.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> MHA stores separate K/V heads for every query head. MQA shares one KV head across many query heads. GQA groups query heads into a smaller number of KV heads. MLA compresses KV state into a latent representation. These choices become especially important in long-context serving.</p>
+<blockquote><strong>Key Takeaway:</strong> Attention variants are serving-capacity decisions. Fewer KV heads usually mean less KV-cache memory and lower HBM bandwidth pressure during decode.</blockquote>
+<hr>
+<h2 id="table-23-attention-variant-kv-cache-comparison">Table 2.3 — Attention Variant KV Cache Comparison<a class="anchor" href="#table-23-attention-variant-kv-cache-comparison" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Variant</th><th>Query Heads</th><th>KV Heads</th><th>KV Cache Impact</th><th>Typical Tradeoff</th></tr></thead><tbody><tr><td>MHA</td><td><code>n_h</code></td><td><code>n_h</code></td><td>Baseline KV memory</td><td>Strong baseline quality, high KV cost</td></tr><tr><td>MQA</td><td><code>n_h</code></td><td>1</td><td>Large KV reduction</td><td>Maximum sharing, possible quality tradeoff</td></tr><tr><td>GQA</td><td><code>n_h</code></td><td><code>n_kv &lt; n_h</code></td><td>Moderate to large KV reduction</td><td>Practical compromise</td></tr><tr><td>MLA</td><td><code>n_h</code></td><td>Latent/compressed KV state</td><td>Architecture-specific reduction</td><td>More complex, model-specific design</td></tr></tbody></table></div>
+<p class="confidence">[ESTIMATED] For the same sequence length, layer count, head dimension, and datatype, KV-cache memory is approximately proportional to the number of KV heads.</p>
+<p>For a model with 64 query heads and 8 KV heads:</p>
+<pre class="code-block"><code>GQA KV reduction vs MHA = 64 / 8 = 8×</code></pre>
+<p>For MQA with 64 query heads and 1 KV head:</p>
+<pre class="code-block"><code>MQA KV reduction vs MHA = 64 / 1 = 64×</code></pre>
+<p>The reduction math is straightforward. The model-quality impact is empirical.</p>
+<blockquote><strong>Key Takeaway:</strong> KV-cache memory scales with KV heads, not query heads. GQA and MLA matter because they reduce the amount of state that must be stored and read during decode.</blockquote>
+<hr>
+<h2 id="27-rope-rotary-position-embedding">2.7 RoPE: Rotary Position Embedding<a class="anchor" href="#27-rope-rotary-position-embedding" aria-label="Link to this section">#</a></h2>
+<p>A transformer needs positional information. Without it, the model sees a sequence as a bag of tokens.</p>
+<p class="confidence">[SHIPPED] Rotary Position Embedding, or RoPE, injects positional information by applying position-dependent rotations to query and key representations.</p>
+<p>At a high level:</p>
+<pre class="code-block"><code>Q_rotated = rotate(Q, position)
+K_rotated = rotate(K, position)</code></pre>
+<p>The dot product between rotated Q and K then contains relative-position information.</p>
+<p>RoPE is attractive because it works naturally inside attention and does not require adding a learned positional embedding table to token embeddings.</p>
+<h3 id="long-context-caution">Long-Context Caution<a class="anchor" href="#long-context-caution" aria-label="Link to this section">#</a></h3>
+<p>Long-context behavior depends on:</p>
+<ul>
+<li>Model configuration</li>
+<li>RoPE base or theta</li>
+<li>RoPE scaling method</li>
+<li>Training context length</li>
+<li>Fine-tuning recipe</li>
+<li>Extrapolation method</li>
+<li>Inference implementation</li>
+</ul>
+<p class="confidence">[REPRESENTATIVE] Many modern decoder-only LLMs use RoPE or RoPE variants. Do not assume that one theta value universally maps to one exact context length without referencing the model configuration.</p>
+<blockquote><strong>Key Takeaway:</strong> RoPE is cheap compared with GEMM, but long context is not cheap. Longer context increases attention and KV-cache pressure even if the positional encoding itself is efficient.</blockquote>
+<hr>
+<h2 id="28-rmsnorm-layernorm-pre-norm-and-post-norm">2.8 RMSNorm, LayerNorm, Pre-Norm, and Post-Norm<a class="anchor" href="#28-rmsnorm-layernorm-pre-norm-and-post-norm" aria-label="Link to this section">#</a></h2>
+<p>Normalization helps stabilize training.</p>
+<p>Two common normalization choices are LayerNorm and RMSNorm.</p>
+<h3 id="layernorm">LayerNorm<a class="anchor" href="#layernorm" aria-label="Link to this section">#</a></h3>
+<p>LayerNorm subtracts the mean and divides by standard deviation-like statistics:</p>
+<pre class="code-block"><code>LayerNorm(x) = (x - mean(x)) / sqrt(var(x) + epsilon) * gamma + beta</code></pre>
+<h3 id="rmsnorm">RMSNorm<a class="anchor" href="#rmsnorm" aria-label="Link to this section">#</a></h3>
+<p class="confidence">[SHIPPED] RMSNorm normalizes by the root mean square and does not subtract the mean:</p>
+<pre class="code-block"><code>RMSNorm(x) = x / RMS(x) * gamma</code></pre>
+<p>Because it omits re-centering, RMSNorm is simpler than LayerNorm. It is commonly used in modern LLM architectures.</p>
+<p class="confidence">[ENV-SPECIFIC] Whether RMSNorm is faster in practice depends on kernel implementation, fusion, tensor shape, hardware, and framework.</p>
+<h3 id="pre-norm-vs-post-norm">Pre-Norm vs Post-Norm<a class="anchor" href="#pre-norm-vs-post-norm" aria-label="Link to this section">#</a></h3>
+<p>In Post-Norm, normalization is applied after the residual update.</p>
+<p>In Pre-Norm, normalization is applied before the attention and FFN sublayers.</p>
+<p class="confidence">[REPRESENTATIVE] Many modern decoder-only LLMs use Pre-Norm layouts, where normalization is applied before attention and FFN sublayers. This is commonly associated with improved stability in deep transformer training, but exact architecture choices are model-specific.</p>
+<hr>
+<h2 id="figure-placeholder-fig-23">Figure Placeholder — Fig 2.3<a class="anchor" href="#figure-placeholder-fig-23" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-23-transformer-decoder-block-architecture-pre-norm-vs-post-norm">
+  <div class="figure-kicker">Fig 2.3</div>
+  <div class="figure-title">Transformer Decoder Block Architecture: Pre-Norm vs Post-Norm</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A comparison of normalization placement in decoder blocks and why modern LLMs commonly use pre-norm patterns.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/png_300dpi/ch02_fig_2_3_prenorm_postnorm_decoder_block.png</code></p>
+      <p class="figure-status">Existing diagram; print export needed</p>
+    </div>
+  </div>
+  <figcaption><strong>Fig 2.3 — Transformer Decoder Block Architecture: Pre-Norm vs Post-Norm.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> Normalization and residual connections are not cosmetic implementation details. They affect gradient flow, training stability, and how very deep transformer stacks can be optimized.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> In a pre-norm block, the residual path provides a cleaner gradient highway through the network. From a performance perspective, normalization itself is usually memory-bound and often a fusion target.</p>
+<blockquote><strong>Key Takeaway:</strong> Pre-Norm is a stability-oriented architecture choice. Normalization is also a performance concern because it is often memory-bound and repeated in every layer.</blockquote>
+<hr>
+<h2 id="29-ffn-and-swiglu-where-dense-transformer-flops-often-go">2.9 FFN and SwiGLU: Where Dense Transformer FLOPs Often Go<a class="anchor" href="#29-ffn-and-swiglu-where-dense-transformer-flops-often-go" aria-label="Link to this section">#</a></h2>
+<p>A transformer block has two major sublayers:</p>
+<ol>
+<li>Attention</li>
+<li>Feed-forward network, FFN</li>
+</ol>
+<p>The FFN is often the dominant dense FLOP contributor because it uses large matrix multiplications applied to every token.</p>
+<p>A classic FFN looks like:</p>
+<pre class="code-block"><code>FFN(x) = W_2 activation(W_1 x)</code></pre>
+<p>A gated FFN, such as SwiGLU, often uses:</p>
+<pre class="code-block"><code>FFN(x) = W_down( activation(W_gate x) ⊙ (W_up x) )</code></pre>
+<p>This uses:</p>
+<ul>
+<li>An up projection</li>
+<li>A gate projection</li>
+<li>A down projection</li>
+</ul>
+<p class="confidence">[ESTIMATED] SwiGLU-style FFNs can improve model quality, but FLOP and parameter comparisons depend on the chosen intermediate dimension. A naive same-width gated FFN would add projection work, but many production architectures adjust intermediate width to manage total parameter and FLOP budget.</p>
+<h3 id="why-ffn-matters-for-hardware">Why FFN Matters for Hardware<a class="anchor" href="#why-ffn-matters-for-hardware" aria-label="Link to this section">#</a></h3>
+<p>FFN layers are usually large GEMMs.</p>
+<p>That means:</p>
+<ul>
+<li>They can use Tensor Cores effectively.</li>
+<li>They are often compute-bound when shapes are large enough.</li>
+<li>They are important for tensor parallelism.</li>
+<li>They strongly influence training FLOP budget.</li>
+<li>They can dominate dense transformer arithmetic even when attention dominates memory pressure at long sequence length.</li>
+</ul>
+<hr>
+<h2 id="figure-placeholder-fig-25">Figure Placeholder — Fig 2.5<a class="anchor" href="#figure-placeholder-fig-25" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-25-flop-distribution-inside-a-transformer-layer">
+  <div class="figure-kicker">Fig 2.5</div>
+  <div class="figure-title">FLOP Distribution Inside a Transformer Layer</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A visual showing how FFN and projection GEMMs can dominate arithmetic while lower-FLOP operations still affect memory traffic and latency.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch02_fig_2_5_transformer_flop_distribution.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+    </div>
+  </div>
+  <figcaption><strong>Fig 2.5 — FLOP Distribution Inside a Transformer Layer.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> A transformer contains many operations, but they do not contribute equally to FLOPs. Large GEMMs dominate the arithmetic count, while normalization, activation, RoPE, and residual operations may dominate memory traffic or kernel-launch overhead.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> Low-FLOP operations are not always irrelevant. They may not dominate total FLOPs, but they can hurt performance if they introduce extra memory traffic, graph breaks, or many small kernels.</p>
+<blockquote><strong>Key Takeaway:</strong> FLOP dominance and performance dominance are not always the same. FFN may dominate math, while memory-bound operations can still limit latency.</blockquote>
+<hr>
+<h2 id="210-dense-transformer-flops-per-token">2.10 Dense Transformer FLOPs per Token<a class="anchor" href="#210-dense-transformer-flops-per-token" aria-label="Link to this section">#</a></h2>
+<p>Two approximations are useful for dense decoder-only transformers.</p>
+<p class="confidence">[ESTIMATED]</p>
+<pre class="code-block"><code>Inference FLOPs/token ≈ 2N
+Training FLOPs/token ≈ 6N</code></pre>
+<p>Where:</p>
+<pre class="code-block"><code>N = non-embedding parameter count</code></pre>
+<h3 id="inference-approximation">Inference Approximation<a class="anchor" href="#inference-approximation" aria-label="Link to this section">#</a></h3>
+<p>A dense forward pass through model weights performs roughly one multiply and one add per parameter:</p>
+<pre class="code-block"><code>Inference FLOPs/token ≈ 2N</code></pre>
+<p>This is useful for estimating decode compute, especially when discussing model weight reads and dense matrix operations.</p>
+<h3 id="training-approximation">Training Approximation<a class="anchor" href="#training-approximation" aria-label="Link to this section">#</a></h3>
+<p>Training includes:</p>
+<ol>
+<li>Forward pass</li>
+<li>Backward pass through activations</li>
+<li>Backward pass for weights</li>
+</ol>
+<p>A common approximation is:</p>
+<pre class="code-block"><code>Training FLOPs/token ≈ 3 × forward pass
+                          ≈ 3 × 2N
+                          ≈ 6N</code></pre>
+<h3 id="assumptions">Assumptions<a class="anchor" href="#assumptions" aria-label="Link to this section">#</a></h3>
+<p>These are approximations. Exact FLOPs vary with:</p>
+<ul>
+<li>Architecture</li>
+<li>Embeddings</li>
+<li>Vocabulary projection</li>
+<li>Sequence length</li>
+<li>Attention implementation</li>
+<li>Activation recomputation</li>
+<li>MoE sparsity</li>
+<li>Tensor parallelism</li>
+<li>Precision</li>
+<li>Kernel implementation</li>
+</ul>
+<p>Use <code>2N</code> and <code>6N</code> to start a discussion, not to finish one.</p>
+<hr>
+<h2 id="211-prefill-vs-decode-same-transformer-different-bottleneck">2.11 Prefill vs Decode: Same Transformer, Different Bottleneck<a class="anchor" href="#211-prefill-vs-decode-same-transformer-different-bottleneck" aria-label="Link to this section">#</a></h2>
+<p>The same transformer block behaves differently in prefill and decode.</p>
+<h2 id="table-24-prefill-vs-decode-transformer-workload">Table 2.4 — Prefill vs Decode Transformer Workload<a class="anchor" href="#table-24-prefill-vs-decode-transformer-workload" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Dimension</th><th>Prefill</th><th>Decode</th></tr></thead><tbody><tr><td>Input shape</td><td>Many prompt tokens</td><td>One new token per step</td></tr><tr><td>Parallelism</td><td>High across sequence</td><td>Limited across time</td></tr><tr><td>Dominant work</td><td>GEMMs and attention over prompt</td><td>Weight reads and KV-cache reads</td></tr><tr><td>Attention behavior</td><td>Can be compute-heavy at long sequence</td><td>Often memory/KV bandwidth sensitive</td></tr><tr><td>Main metric</td><td>TTFT, prompt throughput</td><td>TPOT, tokens/sec, P99 latency</td></tr><tr><td>Typical bottleneck</td><td>Compute or attention memory depending on length</td><td>HBM bandwidth, KV layout, batching</td></tr><tr><td>Optimization examples</td><td>FlashAttention, chunked prefill, batching</td><td>KV quantization, GQA/MLA, continuous batching</td></tr></tbody></table></div>
+<p class="confidence">[REPRESENTATIVE] These regimes vary by model, hardware, precision, context length, batch size, and serving framework.</p>
+<p>This distinction is the bridge from Chapter 2 to Chapter 6 and Chapter 11. Chapter 6 covers serving architecture. Chapter 11 covers KV-cache math and memory management.</p>
+<blockquote><strong>Key Takeaway:</strong> Prefill and decode are different performance regimes. Do not optimize LLM serving as if every token behaves the same way.</blockquote>
+<hr>
+<h2 id="212-flashattention-why-io-aware-attention-matters">2.12 FlashAttention: Why IO-Aware Attention Matters<a class="anchor" href="#212-flashattention-why-io-aware-attention-matters" aria-label="Link to this section">#</a></h2>
+<p class="confidence">[SHIPPED] FlashAttention is an IO-aware exact attention algorithm. Its core idea is to reduce reads and writes between HBM and on-chip memory by tiling attention computation.</p>
+<p>Traditional attention may materialize large intermediate attention matrices in HBM:</p>
+<pre class="code-block"><code>Scores [B, n_h, S, S]
+Softmax output [B, n_h, S, S]</code></pre>
+<p>For long sequences, this becomes expensive.</p>
+<p>FlashAttention avoids materializing the full attention matrix in HBM. Instead, it computes attention in blocks, using on-chip memory more efficiently.</p>
+<p class="confidence">[ENV-SPECIFIC] Speedup depends on sequence length, head dimension, GPU architecture, kernel implementation, precision, masking, and workload shape.</p>
+<p>Do not say:</p>
+<pre class="code-block"><code>FlashAttention is mandatory above 2K.</code></pre>
+<p>Safer:</p>
+<pre class="code-block"><code>For long sequences, FlashAttention-style kernels are often critical because standard attention can become dominated by memory traffic and attention-matrix materialization.</code></pre>
+<hr>
+<h2 id="213-transformer-performance-engineering-map">2.13 Transformer Performance Engineering Map<a class="anchor" href="#213-transformer-performance-engineering-map" aria-label="Link to this section">#</a></h2>
+<p>The transformer is a bridge between model architecture and infrastructure architecture.</p>
+<h2 id="table-25-transformer-performance-engineering-map">Table 2.5 — Transformer Performance Engineering Map<a class="anchor" href="#table-25-transformer-performance-engineering-map" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Component</th><th>Stressed Resource</th><th>Common Regime</th><th>Optimization Families</th><th>Related Chapters</th></tr></thead><tbody><tr><td>QKV projection</td><td>Tensor Cores, HBM</td><td>Compute-bound if large enough</td><td>GEMM tuning, fusion, compiler</td><td>Ch07, Ch09</td></tr><tr><td>Attention scores</td><td>Compute + memory</td><td>Mixed</td><td>FlashAttention, tiling, sequence partitioning</td><td>Ch07</td></tr><tr><td>Softmax</td><td>HBM, cache</td><td>Memory/fusion-sensitive</td><td>Fused attention kernels</td><td>Ch07, Ch09</td></tr><tr><td>KV cache</td><td>HBM capacity and bandwidth</td><td>Memory-bound in decode</td><td>GQA, MLA, quantization, paging</td><td>Ch11</td></tr><tr><td>FFN / SwiGLU</td><td>Tensor Cores</td><td>Compute-bound</td><td>GEMM efficiency, tensor parallelism</td><td>Ch07, Ch10</td></tr><tr><td>Norms</td><td>HBM bandwidth</td><td>Memory-bound</td><td>Fusion, persistent kernels</td><td>Ch07, Ch09</td></tr><tr><td>RoPE</td><td>Elementwise memory traffic</td><td>Fusion-sensitive</td><td>Fuse with Q/K projection or attention</td><td>Ch07, Ch09</td></tr><tr><td>Residual adds</td><td>HBM bandwidth</td><td>Memory-bound</td><td>Fusion</td><td>Ch09</td></tr><tr><td>Long context</td><td>HBM, attention memory</td><td>Memory and scheduling sensitive</td><td>FlashAttention, chunked prefill, KV policies</td><td>Ch06, Ch11</td></tr><tr><td>Distributed transformer</td><td>Network, topology</td><td>Communication-bound</td><td>TP/PP/DP/CP, overlap, NCCL tuning</td><td>Ch10, Ch14</td></tr></tbody></table></div>
+<p>The table routes each bottleneck to the rest of the book.</p>
+<p>If the bottleneck is KV-cache bandwidth, Chapter 11 matters. If the bottleneck is FFN GEMM efficiency, Chapter 7 matters. If the bottleneck appears only at scale, Chapter 10 and Chapter 14 matter. If the bottleneck is hidden in production, Chapter 17 matters.</p>
+<blockquote><strong>Key Takeaway:</strong> A principal engineer maps model components to system resources. That mapping determines which optimization path is worth pursuing.</blockquote>
+<hr>
+<h2 id="214-how-to-explain-the-transformer-as-a-workload-in-a-principal-interview">2.14 How to Explain the Transformer as a Workload in a Principal Interview<a class="anchor" href="#214-how-to-explain-the-transformer-as-a-workload-in-a-principal-interview" aria-label="Link to this section">#</a></h2>
+<p>Do not describe the transformer only as “attention plus feed-forward layers.”</p>
+<p>That is correct but not principal-level.</p>
+<p>A strong answer sounds like this:</p>
+<blockquote>I do not treat the transformer as a black-box ML model. I decompose it into matrix multiplications, attention data movement, elementwise operations, normalization, and KV-cache state. In training and prefill, large GEMMs dominate and can become compute-bound. In decode, repeated weight and KV-cache reads push the workload toward memory bandwidth limits. Architecture choices like GQA, MLA, SwiGLU, and RoPE directly change memory footprint, FLOP distribution, and serving capacity.</blockquote>
+<h3 id="scenario-1-why-is-transformer-training-gpu-friendly">Scenario 1 — Why Is Transformer Training GPU-Friendly?<a class="anchor" href="#scenario-1-why-is-transformer-training-gpu-friendly" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<blockquote>Transformers use attention and GPUs are good at ML.</blockquote>
+<p>Better answer:</p>
+<blockquote>Transformer training contains many large matrix multiplications in QKV projections, output projection, and FFN layers. Those GEMMs expose massive parallelism and can use Tensor Cores efficiently. That is why transformers map well to GPUs during training and prefill.</blockquote>
+<h3 id="scenario-2-why-is-decode-different-from-prefill">Scenario 2 — Why Is Decode Different from Prefill?<a class="anchor" href="#scenario-2-why-is-decode-different-from-prefill" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<blockquote>Decode is slower because it generates one token at a time.</blockquote>
+<p>Better answer:</p>
+<blockquote>Decode is autoregressive. Each step processes one new token while reading model weights and prior K/V cache state. That reduces temporal parallelism and often shifts the bottleneck toward memory bandwidth, KV-cache layout, batching, and scheduler behavior.</blockquote>
+<h3 id="scenario-3-why-does-gqa-matter">Scenario 3 — Why Does GQA Matter?<a class="anchor" href="#scenario-3-why-does-gqa-matter" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<blockquote>GQA is a better attention variant.</blockquote>
+<p>Better answer:</p>
+<blockquote>GQA reduces the number of KV heads relative to query heads. Since KV-cache memory scales with KV heads, GQA can reduce serving memory and decode bandwidth pressure while preserving more modeling capacity than MQA.</blockquote>
+<h3 id="scenario-4-why-does-flashattention-help">Scenario 4 — Why Does FlashAttention Help?<a class="anchor" href="#scenario-4-why-does-flashattention-help" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<blockquote>FlashAttention is faster attention.</blockquote>
+<p>Better answer:</p>
+<blockquote>FlashAttention is IO-aware. It avoids materializing the full <code>S × S</code> attention matrix in HBM and computes attention in tiles using on-chip memory more efficiently. The performance win comes from reducing memory traffic, not changing the mathematical result.</blockquote>
+<h3 id="scenario-5-why-does-ffn-dominate-flops-but-decode-still-feels-memory-bound">Scenario 5 — Why Does FFN Dominate FLOPs but Decode Still Feels Memory-Bound?<a class="anchor" href="#scenario-5-why-does-ffn-dominate-flops-but-decode-still-feels-memory-bound" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<blockquote>FFN is bigger, so it should dominate everything.</blockquote>
+<p>Better answer:</p>
+<blockquote>FFN often dominates arithmetic FLOPs in dense transformer layers, but decode performance depends heavily on reading weights and KV-cache state for each generated token. FLOP dominance and latency dominance are not always the same.</blockquote>
+<hr>
+<h2 id="215-chapter-cheat-sheet">2.15 Chapter Cheat Sheet<a class="anchor" href="#215-chapter-cheat-sheet" aria-label="Link to this section">#</a></h2>
+<h3 id="core-formula">Core Formula<a class="anchor" href="#core-formula" aria-label="Link to this section">#</a></h3>
+<p class="confidence">[SHIPPED]</p>
+<pre class="code-block"><code>Attention(Q,K,V) = softmax(QKᵀ / sqrt(d_k)) V</code></pre>
+<h3 id="core-shapes">Core Shapes<a class="anchor" href="#core-shapes" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>X [B, S, H]
+Q [B, n_h, S, d_head]
+K [B, n_kv, S, d_head]
+V [B, n_kv, S, d_head]</code></pre>
+<h3 id="attention-scaling">Attention Scaling<a class="anchor" href="#attention-scaling" aria-label="Link to this section">#</a></h3>
+<p class="confidence">[ESTIMATED]</p>
+<pre class="code-block"><code>Prefill/training attention score shape ∝ [S, S]
+Sequence scaling ∝ O(S²)</code></pre>
+<h3 id="dense-transformer-flop-approximations">Dense Transformer FLOP Approximations<a class="anchor" href="#dense-transformer-flop-approximations" aria-label="Link to this section">#</a></h3>
+<p class="confidence">[ESTIMATED]</p>
+<pre class="code-block"><code>Inference FLOPs/token ≈ 2N
+Training FLOPs/token ≈ 6N</code></pre>
+<h3 id="kv-head-reduction">KV-Head Reduction<a class="anchor" href="#kv-head-reduction" aria-label="Link to this section">#</a></h3>
+<p class="confidence">[ESTIMATED]</p>
+<pre class="code-block"><code>KV reduction vs MHA ≈ n_h / n_kv</code></pre>
+<p>Example:</p>
+<pre class="code-block"><code>64 query heads / 8 KV heads = 8× KV-head reduction</code></pre>
+<h3 id="performance-map">Performance Map<a class="anchor" href="#performance-map" aria-label="Link to this section">#</a></h3>
+<div class="table-wrap"><table><thead><tr><th>If the bottleneck is...</th><th>Start with...</th></tr></thead><tbody><tr><td>GEMM throughput</td><td>Ch07 kernels, Ch09 compiler</td></tr><tr><td>Attention memory traffic</td><td>FlashAttention, Ch07</td></tr><tr><td>KV-cache memory</td><td>Ch11</td></tr><tr><td>Decode latency</td><td>Ch06 and Ch11</td></tr><tr><td>Distributed scaling</td><td>Ch10 and Ch14</td></tr><tr><td>Production regressions</td><td>Ch12 and Ch17</td></tr></tbody></table></div>
+<hr>
+<h2 id="216-key-takeaways">2.16 Key Takeaways<a class="anchor" href="#216-key-takeaways" aria-label="Link to this section">#</a></h2>
+<ol>
+<li>A transformer is a performance workload, not just a model architecture.</li>
+<li>The hidden-state tensor <code>[B,S,H]</code> is the starting point for shape reasoning.</li>
+<li>Q/K/V projections convert hidden states into attention heads.</li>
+<li>Scaled dot-product attention uses <code>softmax(QKᵀ / sqrt(d_k)) V</code>.</li>
+<li>Prefill and training attention scale quadratically with sequence length through the <code>S × S</code> attention structure.</li>
+<li>Decode behaves differently because it generates one token at a time and repeatedly reads KV-cache state.</li>
+<li>MHA, MQA, GQA, and MLA are infrastructure decisions because they change KV-cache memory and bandwidth pressure.</li>
+<li>RoPE is efficient positional encoding, but long context still increases attention and KV-cache pressure.</li>
+<li>RMSNorm and Pre-Norm are common choices in modern decoder-only LLMs, but implementation details matter.</li>
+<li>FFN/SwiGLU layers often dominate dense transformer FLOPs, but memory-bound operations can still dominate latency.</li>
+<li>FlashAttention helps by reducing HBM traffic and avoiding full attention-matrix materialization.</li>
+<li>Principal engineers map transformer components to system resources before choosing optimization strategies.</li>
+</ol>
+<hr>
+<h2 id="217-review-questions">2.17 Review Questions<a class="anchor" href="#217-review-questions" aria-label="Link to this section">#</a></h2>
+<h3 id="conceptual">Conceptual<a class="anchor" href="#conceptual" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>Why should a performance engineer treat the transformer as a workload specification?</li>
+<li>What does the tensor shape <code>[B,S,H]</code> represent?</li>
+<li>What are Q, K, and V?</li>
+<li>Why does scaled dot-product attention divide by <code>sqrt(d_k)</code>?</li>
+<li>Why does prefill attention scale as <code>O(S²)</code> with sequence length?</li>
+<li>Why is decode different from prefill?</li>
+<li>What is the difference between MHA, MQA, GQA, and MLA?</li>
+<li>Why does reducing KV heads reduce serving memory pressure?</li>
+<li>Why can FFN dominate FLOPs while decode remains memory-sensitive?</li>
+<li>Why is FlashAttention described as IO-aware?</li>
+</ol>
+<h3 id="calculation">Calculation<a class="anchor" href="#calculation" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>If <code>B=2</code>, <code>S=4096</code>, <code>H=8192</code>, what is the shape of <code>X</code>?</li>
+<li>If <code>n_h=64</code> and <code>d_head=128</code>, what is <code>n_h × d_head</code>?</li>
+<li>If <code>n_h=64</code> and <code>n_kv=8</code>, what is the KV-head reduction compared with MHA?</li>
+<li>If a dense model has <code>N=70B</code> non-embedding parameters, estimate inference FLOPs/token using <code>2N</code>.</li>
+<li>Using the same model, estimate training FLOPs/token using <code>6N</code>.</li>
+<li>If sequence length doubles, how does the size of the attention-score matrix change?</li>
+</ol>
+<h3 id="principal-level-interview-practice">Principal-Level Interview Practice<a class="anchor" href="#principal-level-interview-practice" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>Explain the transformer as a workload to a hiring manager in two minutes.</li>
+<li>A team says the transformer is slow. What are the first five questions you ask?</li>
+<li>A decode workload is memory-bound. Which transformer architecture choices could help?</li>
+<li>A training workload has high GEMM throughput but poor scaling. Where do you look next?</li>
+<li>How would you explain the performance impact of GQA to a systems team?</li>
+</ol>
+<hr>
+<h2 id="218-bridge-to-chapter-3a">2.18 Bridge to Chapter 3A<a class="anchor" href="#218-bridge-to-chapter-3a" aria-label="Link to this section">#</a></h2>
+<p>Chapter 2 decomposed the transformer into operations, shapes, FLOPs, memory traffic, and serving state.</p>
+<p>Chapter 3A moves one layer down.</p>
+<p>The next question is:</p>
+<blockquote>What does the GPU actually look like underneath these workloads, and why do SMs, Tensor Cores, HBM, NVLink, PCIe, and memory hierarchy determine which transformer operations run efficiently?</blockquote>
+<p>That is where model architecture becomes hardware architecture.</p>
+
+    <nav class="nav-row" aria-label="Previous and next chapter navigation">
+      <a href="ch01_performance_architecture_mindset.html">
+        <small>Previous Chapter</small>
+        <strong>Chapter 1 — Performance Architecture Mindset</strong>
+      </a>
+      <a href="../index.html">
+        <small>Back</small>
+        <strong>Book Homepage</strong>
+      </a>
+    </nav>
+  </main>
+</div>
+</body>
+</html>
