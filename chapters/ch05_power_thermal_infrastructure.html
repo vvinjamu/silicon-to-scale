@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 5 — Power, Thermal, and AI Data Center Infrastructure | Silicon to Scale</title>
+<meta name="description" content="Production web chapter on AI data center power, thermal infrastructure, rack power density, liquid cooling, PUE, performance per watt, thermal throttling, power caps, and power-aware scheduling.">
+<meta name="author" content="Venkat Vinjam">
+<meta property="og:title" content="Chapter 5 — Power, Thermal, and AI Data Center Infrastructure">
+<meta property="og:description" content="Learn why power delivery, thermal design, rack density, liquid cooling, PUE, and performance per watt are first-class AI infrastructure constraints.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c10;
+  --bg2: #0d1117;
+  --bg3: #161b22;
+  --bg4: #1c2128;
+  --border: #21262d;
+  --border2: #30363d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #6e7681;
+  --accent: #58a6ff;
+  --gold2: #f0c040;
+  --green: #3fb950;
+  --orange: #ff8b3d;
+  --purple: #bc8cff;
+  --teal: #39d0d8;
+  --red: #f85149;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.65;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(88,166,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(88,166,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(13,17,23,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 22px;
+}
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.brand a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.brand span {
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.topnav {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.topnav a {
+  color: var(--accent);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.topnav a:hover {
+  border-color: var(--accent);
+  background: rgba(88,166,255,0.08);
+}
+.layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 310px minmax(0, 960px);
+  gap: 36px;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 36px 24px 80px;
+}
+.sidebar {
+  position: sticky;
+  top: 76px;
+  align-self: start;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+}
+.sidebar h2 {
+  margin: 0 0 12px;
+  font-family: var(--mono);
+  color: var(--gold2);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+.sidebar a {
+  display: block;
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 13px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.35);
+}
+.sidebar a:hover { color: var(--accent); }
+.sidebar .toc-l3 {
+  padding-left: 14px;
+  font-size: 12px;
+  color: var(--text3);
+}
+.content {
+  background: rgba(13,17,23,0.72);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 38px 44px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+}
+.content h1 {
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -1.4px;
+  margin: 0 0 18px;
+}
+.content h2 {
+  margin-top: 46px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 25px;
+  letter-spacing: -0.5px;
+}
+.content h3 {
+  margin-top: 30px;
+  color: var(--accent);
+  font-size: 18px;
+}
+.content h4 {
+  margin-top: 24px;
+  color: var(--gold2);
+}
+.anchor {
+  margin-left: 8px;
+  color: var(--text3);
+  opacity: 0;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 0.8em;
+}
+h1:hover .anchor, h2:hover .anchor, h3:hover .anchor, h4:hover .anchor { opacity: 1; }
+p { color: var(--text); font-size: 16px; }
+blockquote {
+  margin: 24px 0;
+  padding: 18px 22px;
+  border-left: 4px solid var(--gold2);
+  background: rgba(212,160,23,0.08);
+  color: var(--text);
+  border-radius: 0 10px 10px 0;
+  font-size: 17px;
+}
+hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
+ul, ol { padding-left: 24px; }
+li { margin: 6px 0; }
+code {
+  font-family: var(--mono);
+  background: var(--bg4);
+  color: var(--gold2);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-size: 0.92em;
+}
+.code-block {
+  background: #05080c;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 18px 0;
+}
+.code-block code {
+  background: transparent;
+  border: 0;
+  color: #d8dee9;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.table-wrap {
+  overflow-x: auto;
+  margin: 22px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+  background: var(--bg3);
+}
+th {
+  background: var(--bg4);
+  color: var(--accent);
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+th, td {
+  padding: 11px 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+td { color: var(--text2); font-size: 14px; }
+tr:last-child td { border-bottom: 0; }
+.confidence-label {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+.label-shipped { color: var(--green); background: rgba(63,185,80,0.10); border-color: rgba(63,185,80,0.35); }
+.label-announced { color: var(--purple); background: rgba(188,140,255,0.10); border-color: rgba(188,140,255,0.35); }
+.label-derived { color: var(--teal); background: rgba(57,208,216,0.10); border-color: rgba(57,208,216,0.35); }
+.label-estimated { color: var(--gold2); background: rgba(240,192,64,0.10); border-color: rgba(240,192,64,0.35); }
+.label-representative { color: var(--accent); background: rgba(88,166,255,0.10); border-color: rgba(88,166,255,0.35); }
+.label-env { color: var(--orange); background: rgba(255,139,61,0.10); border-color: rgba(255,139,61,0.35); }
+.confidence-box {
+  border-left: 4px solid var(--green);
+  background: rgba(63,185,80,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.currency-note {
+  border-left: 4px solid var(--purple);
+  background: rgba(188,140,255,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.takeaway {
+  border-left: 4px solid var(--gold2);
+  background: rgba(212,160,23,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.figure-note { color: var(--text2); font-size: 14px; }
+.figure-placeholder {
+  margin: 28px 0;
+  background: linear-gradient(135deg, rgba(255,139,61,0.08), rgba(240,192,64,0.06));
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 20px;
+}
+.figure-kicker {
+  color: var(--gold2);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.figure-title { font-size: 20px; font-weight: 700; margin-bottom: 14px; }
+.figure-body {
+  display: grid;
+  grid-template-columns: 72px minmax(0,1fr);
+  gap: 16px;
+  align-items: center;
+  background: rgba(13,17,23,0.65);
+  border: 1px dashed var(--border2);
+  border-radius: 12px;
+  padding: 18px;
+}
+.figure-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: var(--orange);
+  border: 1px solid var(--orange);
+  font-size: 32px;
+  background: rgba(255,139,61,0.08);
+}
+.figure-path, .figure-status {
+  color: var(--text2);
+  margin: 6px 0;
+  font-size: 13px;
+}
+.figure-source {
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 12px;
+  text-decoration: none;
+}
+.figure-source:hover { text-decoration: underline; }
+.muted { color: var(--text3); }
+figcaption { color: var(--text2); font-size: 13px; margin-top: 12px; }
+.nav-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 44px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+.nav-row a {
+  flex: 1;
+  text-decoration: none;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--text);
+}
+.nav-row a:hover { border-color: var(--accent); }
+.nav-row small {
+  display: block;
+  color: var(--text3);
+  font-family: var(--mono);
+  margin-bottom: 4px;
+}
+.nav-row strong { color: var(--accent); }
+@media (max-width: 980px) {
+  .layout { grid-template-columns: 1fr; padding: 22px 16px 60px; }
+  .sidebar { position: static; max-height: none; }
+  .content { padding: 26px 20px; }
+  .topbar { align-items: flex-start; flex-direction: column; }
+}
+@media (max-width: 640px) {
+  .figure-body { grid-template-columns: 1fr; }
+  .nav-row { flex-direction: column; }
+  p { font-size: 15px; }
+}
+@media print {
+  body { background: #fff; color: #111; }
+  body::before, .topbar, .sidebar, .anchor { display: none !important; }
+  .layout { display: block; max-width: none; padding: 0; }
+  .content { box-shadow: none; border: 0; padding: 0; }
+  .content h1, .content h2, .content h3, .content h4, p, li, td, th, blockquote { color: #111 !important; }
+  .code-block, code, table, .figure-placeholder, .confidence-label { border-color: #999; }
+  .confidence-label { color: #111 !important; background: #eee !important; }
+  a { color: #111; text-decoration: none; }
+  .figure-placeholder, table, pre, blockquote { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <a href="../index.html">AI/ML Infrastructure from Silicon to Scale</a>
+    <span>Chapter 5 · Power, Thermal, and AI Data Center Infrastructure</span>
+  </div>
+  <nav class="topnav" aria-label="Top navigation">
+    <a href="../index.html">Home</a>
+    <a href="ch04_gpu_memory_hierarchy.html">Previous: Ch04</a>
+    <a href="../index.html">Next: Ch06 soon</a>
+    <a href="../pdfs/ch05_power_thermal_infrastructure.pdf">PDF</a>
+    <a href="../diagrams/diagram_08_observability_stack.html">Observability Diagram</a>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" aria-label="Chapter table of contents">
+    <h2>Chapter Contents</h2>
+    <a class="toc-l2" href="#chapter-overview">Chapter Overview</a>
+<a class="toc-l2" href="#50-power-in-one-page">5.0 Power in One Page</a>
+<a class="toc-l2" href="#51-product-level-power-guardrail">5.1 Product-Level Power Guardrail</a>
+<a class="toc-l2" href="#table-51-power-terminology-for-ai-infrastructure">Table 5.1 — Power Terminology for AI Infrastructure</a>
+<a class="toc-l2" href="#52-ai-data-center-power-delivery-chain">5.2 AI Data Center Power Delivery Chain</a>
+<a class="toc-l2" href="#figure-placeholder-fig-51">Figure Placeholder — Fig 5.1</a>
+<a class="toc-l2" href="#53-power-becomes-heat">5.3 Power Becomes Heat</a>
+<a class="toc-l2" href="#figure-placeholder-fig-52">Figure Placeholder — Fig 5.2</a>
+<a class="toc-l2" href="#54-validated-power-reference-values">5.4 Validated Power Reference Values</a>
+<a class="toc-l2" href="#table-52-accelerator-and-system-power-reference">Table 5.2 — Accelerator and System Power Reference</a>
+<a class="toc-l2" href="#55-rack-power-density">5.5 Rack Power Density</a>
+<a class="toc-l2" href="#figure-placeholder-fig-54">Figure Placeholder — Fig 5.4</a>
+<a class="toc-l2" href="#56-air-cooling-vs-liquid-cooling">5.6 Air Cooling vs Liquid Cooling</a>
+<a class="toc-l2" href="#figure-placeholder-fig-53">Figure Placeholder — Fig 5.3</a>
+<a class="toc-l2" href="#table-53-cooling-method-comparison-for-ai-infrastructure">Table 5.3 — Cooling Method Comparison for AI Infrastructure</a>
+<a class="toc-l2" href="#57-thermal-throttling-and-sustained-performance">5.7 Thermal Throttling and Sustained Performance</a>
+<a class="toc-l2" href="#figure-placeholder-fig-56">Figure Placeholder — Fig 5.6</a>
+<a class="toc-l2" href="#table-55-power-and-thermal-bottleneck-signals">Table 5.5 — Power and Thermal Bottleneck Signals</a>
+<a class="toc-l2" href="#58-power-cap-vs-performance-per-watt">5.8 Power Cap vs Performance per Watt</a>
+<a class="toc-l2" href="#figure-placeholder-fig-55">Figure Placeholder — Fig 5.5</a>
+<a class="toc-l2" href="#59-pue-and-efficiency-metrics">5.9 PUE and Efficiency Metrics</a>
+<a class="toc-l2" href="#table-54-pue-and-ai-efficiency-metrics">Table 5.4 — PUE and AI Efficiency Metrics</a>
+<a class="toc-l2" href="#510-power-and-cost-of-ai-infrastructure">5.10 Power and Cost of AI Infrastructure</a>
+<a class="toc-l2" href="#511-powerthermal-observability">5.11 Power/Thermal Observability</a>
+<a class="toc-l2" href="#figure-placeholder-fig-57">Figure Placeholder — Fig 5.7</a>
+<a class="toc-l2" href="#512-power-aware-scheduling">5.12 Power-Aware Scheduling</a>
+<a class="toc-l2" href="#figure-placeholder-fig-58">Figure Placeholder — Fig 5.8</a>
+<a class="toc-l2" href="#513-wrong-fix-vs-right-first-question">5.13 Wrong Fix vs Right First Question</a>
+<a class="toc-l2" href="#table-56-wrong-fix-vs-right-first-question-for-powerthermal-problems">Table 5.6 — Wrong Fix vs Right First Question for Power/Thermal Problems</a>
+<a class="toc-l2" href="#514-production-ai-infrastructure-readiness-checklist">5.14 Production AI Infrastructure Readiness Checklist</a>
+<a class="toc-l2" href="#table-57-production-ai-infrastructure-readiness-checklist">Table 5.7 — Production AI Infrastructure Readiness Checklist</a>
+<a class="toc-l2" href="#515-how-to-discuss-powerthermal-infrastructure-in-a-principal-interview">5.15 How to Discuss Power/Thermal Infrastructure in a Principal Interview</a>
+<a class="toc-l3" href="#scenario-1-why-can-throughput-drop-after-a-few-minutes">Scenario 1 — Why Can Throughput Drop After a Few Minutes?</a>
+<a class="toc-l3" href="#scenario-2-why-is-gb200-nvl72-a-facility-level-discussion">Scenario 2 — Why Is GB200 NVL72 a Facility-Level Discussion?</a>
+<a class="toc-l3" href="#scenario-3-why-is-dgx-b200-143-kw-not-a-per-gpu-number">Scenario 3 — Why Is DGX B200 14.3 kW Not a Per-GPU Number?</a>
+<a class="toc-l3" href="#scenario-4-why-might-power-capping-improve-efficiency">Scenario 4 — Why Might Power Capping Improve Efficiency?</a>
+<a class="toc-l3" href="#scenario-5-what-metrics-would-you-monitor">Scenario 5 — What Metrics Would You Monitor?</a>
+<a class="toc-l2" href="#516-chapter-cheat-sheet">5.16 Chapter Cheat Sheet</a>
+<a class="toc-l3" href="#power-boundary">Power Boundary</a>
+<a class="toc-l3" href="#validated-reference-values">Validated Reference Values</a>
+<a class="toc-l3" href="#pue">PUE</a>
+<a class="toc-l3" href="#performance-per-watt">Performance per Watt</a>
+<a class="toc-l3" href="#cooling">Cooling</a>
+<a class="toc-l3" href="#principal-rule">Principal Rule</a>
+<a class="toc-l2" href="#517-key-takeaways">5.17 Key Takeaways</a>
+<a class="toc-l2" href="#518-review-questions">5.18 Review Questions</a>
+<a class="toc-l3" href="#conceptual">Conceptual</a>
+<a class="toc-l3" href="#calculation">Calculation</a>
+<a class="toc-l3" href="#principal-level-interview-practice">Principal-Level Interview Practice</a>
+<a class="toc-l2" href="#519-bridge-to-chapter-6">5.19 Bridge to Chapter 6</a>
+  </aside>
+
+  <main class="content">
+    <h1 id="chapter-5-power-thermal-and-ai-data-center-infrastructure">Chapter 5 — Power, Thermal, and AI Data Center Infrastructure<a class="anchor" href="#chapter-5-power-thermal-and-ai-data-center-infrastructure" aria-label="Link to this section">#</a></h1>
+<blockquote>“A GPU does not run in a vacuum. It runs inside a power chain, a cooling system, a rack, a data center, and an operating model.”</blockquote>
+<hr>
+<h2 id="chapter-overview">Chapter Overview<a class="anchor" href="#chapter-overview" aria-label="Link to this section">#</a></h2>
+<p>Chapter 4 explained why memory capacity, memory bandwidth, and data movement often dominate AI performance.</p>
+<p>Chapter 5 moves one layer deeper into physical infrastructure.</p>
+<p>Modern AI systems are constrained not only by:</p>
+<pre class="code-block"><code>FLOPs
+HBM
+NVLink
+PCIe
+InfiniBand
+software kernels</code></pre>
+<p>but also by:</p>
+<pre class="code-block"><code>power delivery
+cooling capacity
+rack density
+thermal stability
+power capping
+voltage/frequency behavior
+facility efficiency
+observability
+reliability
+operational safety</code></pre>
+<p>This chapter answers:</p>
+<ul>
+<li>Why is power a performance constraint?</li>
+<li>Why does thermal design affect sustained throughput?</li>
+<li>What is the difference between GPU power, board power, system power, rack power, and facility power?</li>
+<li>Why do dense AI racks often require liquid cooling?</li>
+<li>What is PUE, and what does it not measure?</li>
+<li>How do power caps affect performance per watt?</li>
+<li>Why can thermal throttling look like a software performance problem?</li>
+<li>How should a principal engineer discuss power and thermal infrastructure?</li>
+</ul>
+<blockquote><strong>Current as of 2026 edition:</strong> Power, thermal, and rack-level values are product-specific and time-sensitive. Verify final procurement decisions against current vendor product pages, deployment guides, facility design constraints, and safety requirements.</blockquote>
+<hr>
+<h2 id="50-power-in-one-page">5.0 Power in One Page<a class="anchor" href="#50-power-in-one-page" aria-label="Link to this section">#</a></h2>
+<p>Power is not just a facilities topic.</p>
+<p>Power determines how much hardware can be installed, how hard it can run, how stable it remains, and how much it costs to operate.</p>
+<p>A simple model:</p>
+<pre class="code-block"><code>Power in → useful compute + losses → heat out</code></pre>
+<p>In a data center, nearly all IT electrical power eventually becomes heat that the facility must remove.</p>
+<p>Core truths:</p>
+<ol>
+<li>Every watt consumed by IT equipment becomes heat.</li>
+<li>Power delivery limits determine how much hardware can run.</li>
+<li>Cooling determines whether performance can be sustained.</li>
+<li>Thermal limits determine whether clocks stay high.</li>
+<li>PUE measures facility overhead, not model efficiency.</li>
+<li>Performance per watt must be measured for a specific workload.</li>
+<li>Rack-level power can become the limiting resource before GPU count does.</li>
+</ol>
+<blockquote><strong>Key Takeaway:</strong> Power and cooling are performance constraints, not side details.</blockquote>
+<hr>
+<h2 id="51-product-level-power-guardrail">5.1 Product-Level Power Guardrail<a class="anchor" href="#51-product-level-power-guardrail" aria-label="Link to this section">#</a></h2>
+<p>Before using any power number, ask:</p>
+<pre class="code-block"><code>What is the measurement boundary?</code></pre>
+<p>A 750 W accelerator, a 14.3 kW system, and a 120 kW rack are all valid numbers.</p>
+<p>They are not the same type of number.</p>
+<pre class="code-block"><code>GPU/device power != board/module power != system power != rack power != facility power</code></pre>
+<p>If you mix these boundaries, every comparison becomes misleading.</p>
+<hr>
+<h2 id="table-51-power-terminology-for-ai-infrastructure">Table 5.1 — Power Terminology for AI Infrastructure<a class="anchor" href="#table-51-power-terminology-for-ai-infrastructure" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Term</th><th>Boundary</th><th>Meaning</th><th>Common Mistake</th></tr></thead><tbody><tr><td>TDP</td><td>Device/design thermal boundary</td><td>Thermal design target, vendor-specific meaning</td><td>Treating it as exact runtime power</td></tr><tr><td>TBP</td><td>Board/module</td><td>Board-level power, often used by AMD</td><td>Treating it as full server power</td></tr><tr><td>GPU power</td><td>Accelerator</td><td>GPU/device power telemetry</td><td>Ignoring CPU, fans, NICs, PSUs</td></tr><tr><td>System power</td><td>Server/DGX/HGX node</td><td>Full server draw</td><td>Treating as per-GPU power</td></tr><tr><td>Rack power</td><td>Rack</td><td>Sum of systems, switches, power shelves, pumps/fans where applicable</td><td>Comparing to one server</td></tr><tr><td>Facility power</td><td>Data center</td><td>IT + cooling + power overhead</td><td>Confusing with IT load</td></tr><tr><td>PUE</td><td>Facility efficiency</td><td>Total facility energy / IT equipment energy</td><td>Treating it as model efficiency</td></tr></tbody></table></div>
+<p class="confidence-box"><span class="confidence-label label-representative">[REPRESENTATIVE]</span> TDP, TBP, GPU power, system power, rack power, and facility power describe different measurement boundaries. Do not compare them unless the boundary is normalized.</p>
+<blockquote><strong>Key Takeaway:</strong> Power numbers are meaningless without the measurement boundary.</blockquote>
+<hr>
+<h2 id="52-ai-data-center-power-delivery-chain">5.2 AI Data Center Power Delivery Chain<a class="anchor" href="#52-ai-data-center-power-delivery-chain" aria-label="Link to this section">#</a></h2>
+<p>A GPU cluster does not begin at the GPU.</p>
+<p>It begins at the power source.</p>
+<p>Power must flow through multiple layers before it reaches the accelerator:</p>
+<pre class="code-block"><code>Utility / generation
+  → transformer / substation
+  → switchgear
+  → UPS or backup path
+  → PDU / busway
+  → rack power shelf
+  → server PSU
+  → voltage regulators
+  → GPU / CPU / memory / NICs</code></pre>
+<p>Every layer must be designed for sustained load, redundancy, serviceability, fault isolation, and safety.</p>
+<hr>
+<h2 id="figure-placeholder-fig-51">Figure Placeholder — Fig 5.1<a class="anchor" href="#figure-placeholder-fig-51" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-51-ai-data-center-power-delivery-chain">
+  <div class="figure-kicker">Fig 5.1</div>
+  <div class="figure-title">AI Data Center Power Delivery Chain</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A left-to-right power path from utility/grid through switchgear, UPS/PDU, rack power, server PSUs, regulators, and accelerators.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch05_fig_5_1_power_delivery_chain.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+      <span class="figure-source muted">Source diagram pending</span>
+    </div>
+  </div>
+  <figcaption><strong>Fig 5.1 — AI Data Center Power Delivery Chain.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> A GPU cluster does not begin at the GPU. It begins at the power source. Every stage in the power chain must be designed for sustained load, redundancy, fault isolation, maintenance, and safety.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> If any link in the chain is undersized or unstable, the result may be throttling, node failures, breaker trips, job interruptions, or reduced cluster availability. AI infrastructure must be planned as an end-to-end power delivery system.</p>
+<blockquote><strong>Key Takeaway:</strong> A GPU is only as reliable as the power chain that feeds it.</blockquote>
+<hr>
+<h2 id="53-power-becomes-heat">5.3 Power Becomes Heat<a class="anchor" href="#53-power-becomes-heat" aria-label="Link to this section">#</a></h2>
+<p>In digital systems, almost all consumed electrical power eventually becomes heat.</p>
+<p>A rack drawing 100 kW is also creating roughly 100 kW of heat that must be removed continuously.</p>
+<p>That means power and thermal are the same problem viewed from two sides:</p>
+<pre class="code-block"><code>Electrical side:
+  Can we deliver the power safely and reliably?
+
+Thermal side:
+  Can we remove the heat continuously?
+
+Performance side:
+  Can the GPUs sustain clocks without throttling?
+
+Operations side:
+  Can we monitor, service, and recover the system?</code></pre>
+<hr>
+<h2 id="figure-placeholder-fig-52">Figure Placeholder — Fig 5.2<a class="anchor" href="#figure-placeholder-fig-52" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-52-gpu-power-to-heat-flow">
+  <div class="figure-kicker">Fig 5.2</div>
+  <div class="figure-title">GPU Power-to-Heat Flow</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A power-in/heat-out diagram showing that nearly all IT electrical power becomes heat that must be removed.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch05_fig_5_2_power_to_heat_flow.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+      <span class="figure-source muted">Source diagram pending</span>
+    </div>
+  </div>
+  <figcaption><strong>Fig 5.2 — GPU Power-to-Heat Flow.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> In a data center, power and thermal are two sides of the same problem. A rack drawing 100 kW is also creating roughly 100 kW of heat that must be removed continuously.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> This is why AI infrastructure design must consider both electrical capacity and heat rejection. A system can be electrically powered but still fail to sustain performance if cooling cannot keep device temperatures within operating limits.</p>
+<blockquote><strong>Key Takeaway:</strong> Every watt consumed by IT equipment becomes heat the facility must remove.</blockquote>
+<hr>
+<h2 id="54-validated-power-reference-values">5.4 Validated Power Reference Values<a class="anchor" href="#54-validated-power-reference-values" aria-label="Link to this section">#</a></h2>
+<p>Power values should be read with product level visible.</p>
+<p>Do not compare:</p>
+<pre class="code-block"><code>MI300X 750 W TBP</code></pre>
+<p>directly against:</p>
+<pre class="code-block"><code>DGX B200 14.3 kW system power</code></pre>
+<p>without normalizing the boundary.</p>
+<p>One is board/module level. The other is system level.</p>
+<p>Do not compare:</p>
+<pre class="code-block"><code>DGX B200 system power</code></pre>
+<p>directly against:</p>
+<pre class="code-block"><code>GB200 NVL72 rack power</code></pre>
+<p>without saying one is a server/system and the other is a rack-scale platform.</p>
+<hr>
+<h2 id="table-52-accelerator-and-system-power-reference">Table 5.2 — Accelerator and System Power Reference<a class="anchor" href="#table-52-accelerator-and-system-power-reference" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Product</th><th>Level</th><th>Power Claim</th><th>Confidence</th></tr></thead><tbody><tr><td>H100 SXM5</td><td>GPU/module</td><td>700 W class depending SKU/source</td><td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code> when official SKU is used</td></tr><tr><td>H200 SXM</td><td>GPU/module</td><td>700 W class depending SKU/source</td><td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code> when official SKU is used</td></tr><tr><td>MI300X</td><td>OAM accelerator</td><td>750 W peak TBP</td><td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code></td></tr><tr><td>DGX B200</td><td>System</td><td>~14.3 kW max system power</td><td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code></td></tr><tr><td>GB200 NVL72 / DGX GB200 rack</td><td>Rack-scale</td><td>~120 kW rack power consumption</td><td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code></td></tr><tr><td>Future Rubin / MI400 rack systems</td><td>Rack-scale roadmap</td><td>TBD / announced</td><td><code><span class="confidence-label label-announced">[ANNOUNCED]</span></code></td></tr></tbody></table></div>
+<p class="confidence-box"><span class="confidence-label label-shipped">[SHIPPED]</span> AMD Instinct MI300X lists 750 W peak TBP. This is an accelerator/module-level value, not a full server or rack power value.</p>
+<p class="confidence-box"><span class="confidence-label label-shipped">[SHIPPED]</span> NVIDIA DGX B200 lists approximately 14.3 kW maximum system power usage. This is a system-level value, not per-GPU power.</p>
+<p class="confidence-box"><span class="confidence-label label-shipped">[SHIPPED]</span> NVIDIA DGX GB200 rack-scale documentation lists approximately 120 kW rack power consumption for an NVL72 rack. This is a rack-level value and must not be compared directly to a single GPU or server.</p>
+<blockquote><strong>Key Takeaway:</strong> Compare power only after identifying whether the value is per GPU, per board, per system, or per rack.</blockquote>
+<hr>
+<h2 id="55-rack-power-density">5.5 Rack Power Density<a class="anchor" href="#55-rack-power-density" aria-label="Link to this section">#</a></h2>
+<p>Traditional enterprise racks were often planned around much lower power densities than today’s densest AI systems.</p>
+<p>AI infrastructure changes the problem.</p>
+<p>A rack can move from:</p>
+<pre class="code-block"><code>single-digit kW
+  → tens of kW
+  → 100 kW+ rack-scale AI systems</code></pre>
+<p class="confidence-box"><span class="confidence-label label-representative">[REPRESENTATIVE]</span> AI infrastructure has pushed rack power density from traditional enterprise ranges into tens of kilowatts and, for rack-scale AI systems such as GB200 NVL72-class racks, around 100 kW or more. Exact values are product- and facility-specific.</p>
+<p>This affects:</p>
+<ul>
+<li>electrical feed sizing,</li>
+<li>floor layout,</li>
+<li>airflow strategy,</li>
+<li>liquid cooling loops,</li>
+<li>service access,</li>
+<li>breaker and PDU design,</li>
+<li>redundancy,</li>
+<li>fire/safety procedures,</li>
+<li>and commissioning.</li>
+</ul>
+<hr>
+<h2 id="figure-placeholder-fig-54">Figure Placeholder — Fig 5.4<a class="anchor" href="#figure-placeholder-fig-54" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-54-rack-power-density-evolution">
+  <div class="figure-kicker">Fig 5.4</div>
+  <div class="figure-title">Rack Power Density Evolution</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A representative evolution from traditional racks to high-density AI racks and 100 kW-class rack-scale systems.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch05_fig_5_4_rack_power_density_evolution.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+      <span class="figure-source muted">Source diagram pending</span>
+    </div>
+  </div>
+  <figcaption><strong>Fig 5.4 — Rack Power Density Evolution.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> Traditional data center rack power budgets are not enough for the densest AI systems. Rack-scale GPU platforms require a different level of power delivery, cooling capacity, commissioning, and monitoring.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The figure should use representative ranges, not universal thresholds. It should visually show why 40–60 kW racks and 100 kW+ racks require different cooling and power planning than traditional enterprise racks.</p>
+<blockquote><strong>Key Takeaway:</strong> Rack density changes the data center design problem.</blockquote>
+<hr>
+<h2 id="56-air-cooling-vs-liquid-cooling">5.6 Air Cooling vs Liquid Cooling<a class="anchor" href="#56-air-cooling-vs-liquid-cooling" aria-label="Link to this section">#</a></h2>
+<p>Cooling is not a binary religion.</p>
+<p>It is an infrastructure design choice.</p>
+<p>Air cooling can work well for lower-density systems and mature service environments. But as rack density rises, airflow becomes harder to scale.</p>
+<p class="confidence-box"><span class="confidence-label label-representative">[REPRESENTATIVE]</span> As rack power density rises into tens or hundreds of kilowatts, direct liquid cooling or hybrid liquid/air cooling often becomes necessary. The exact threshold depends on rack design, facility airflow, coolant infrastructure, water strategy, and service model.</p>
+<p>Liquid cooling is not “free.” It adds:</p>
+<ul>
+<li>cold plates,</li>
+<li>manifolds,</li>
+<li>coolant distribution units,</li>
+<li>leak detection,</li>
+<li>pressure/flow monitoring,</li>
+<li>service procedures,</li>
+<li>facility water loops,</li>
+<li>and operational training.</li>
+</ul>
+<hr>
+<h2 id="figure-placeholder-fig-53">Figure Placeholder — Fig 5.3<a class="anchor" href="#figure-placeholder-fig-53" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-53-air-cooling-vs-direct-liquid-cooling">
+  <div class="figure-kicker">Fig 5.3</div>
+  <div class="figure-title">Air Cooling vs Direct Liquid Cooling</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A side-by-side view of airflow/heat-sink cooling versus cold plates, coolant loops, CDUs, and facility heat rejection.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch05_fig_5_3_air_vs_liquid_cooling.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+      <span class="figure-source muted">Source diagram pending</span>
+    </div>
+  </div>
+  <figcaption><strong>Fig 5.3 — Air Cooling vs Direct Liquid Cooling.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> As rack density rises, airflow alone becomes increasingly difficult. Direct liquid cooling moves heat more efficiently from high-power devices but adds plumbing, service, monitoring, and facility integration requirements.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The figure should show tradeoffs rather than declare one method universally superior. Air cooling can remain suitable for lower-density systems. Liquid cooling becomes increasingly important for dense AI racks and rack-scale systems.</p>
+<blockquote><strong>Key Takeaway:</strong> Cooling strategy follows rack density, service model, facility design, and reliability requirements.</blockquote>
+<hr>
+<h2 id="table-53-cooling-method-comparison-for-ai-infrastructure">Table 5.3 — Cooling Method Comparison for AI Infrastructure<a class="anchor" href="#table-53-cooling-method-comparison-for-ai-infrastructure" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Cooling Method</th><th>Best Fit</th><th>Strengths</th><th>Watchouts</th></tr></thead><tbody><tr><td>Air cooling</td><td>Lower/mid density racks</td><td>Simpler, mature, service-friendly</td><td>Airflow limits at high density</td></tr><tr><td>Rear-door heat exchanger</td><td>Transitional high-density racks</td><td>Can extend air-cooled facilities</td><td>Still facility-dependent</td></tr><tr><td>Direct-to-chip liquid</td><td>Dense GPU servers/racks</td><td>Efficient heat removal near devices</td><td>Plumbing, leak detection, service model</td></tr><tr><td>Immersion cooling</td><td>Specialized high-density environments</td><td>High thermal capacity</td><td>Ecosystem, maintenance, compatibility</td></tr><tr><td>Hybrid liquid/air</td><td>Most dense AI platforms</td><td>Handles device heat and residual air load</td><td>Requires integrated design</td></tr></tbody></table></div>
+<p class="confidence-box"><span class="confidence-label label-representative">[REPRESENTATIVE]</span> Direct-to-chip liquid cooling typically removes heat through cold plates, coolant loops, CDUs, and facility heat rejection systems, while air cooling may still remove residual heat from memory, networking, power supplies, and other components.</p>
+<blockquote><strong>Key Takeaway:</strong> Cooling is an infrastructure architecture decision, not an afterthought.</blockquote>
+<hr>
+<h2 id="57-thermal-throttling-and-sustained-performance">5.7 Thermal Throttling and Sustained Performance<a class="anchor" href="#57-thermal-throttling-and-sustained-performance" aria-label="Link to this section">#</a></h2>
+<p>Peak performance is not enough.</p>
+<p>Sustained performance matters.</p>
+<p>A GPU can start a job at high clocks and then slow down when thermal limits are reached.</p>
+<p class="confidence-box"><span class="confidence-label label-representative">[REPRESENTATIVE]</span> When device temperatures approach operating limits, GPUs may reduce clocks or power to protect the hardware, lowering sustained application throughput. Confirm with temperature, clock, power, and throttle-reason telemetry.</p>
+<p>Thermal throttling can appear as:</p>
+<ul>
+<li>lower tokens/sec,</li>
+<li>lower samples/sec,</li>
+<li>lower training step rate,</li>
+<li>increased latency,</li>
+<li>higher variance,</li>
+<li>or job instability.</li>
+</ul>
+<p>The workload may look like a software problem, but the root cause may be thermal headroom.</p>
+<hr>
+<h2 id="figure-placeholder-fig-56">Figure Placeholder — Fig 5.6<a class="anchor" href="#figure-placeholder-fig-56" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-56-thermal-throttling-feedback-loop">
+  <div class="figure-kicker">Fig 5.6</div>
+  <div class="figure-title">Thermal Throttling Feedback Loop</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A loop connecting workload intensity, power draw, heat, cooling capacity, device temperature, clocks, and throughput.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch05_fig_5_6_thermal_throttling_loop.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+      <span class="figure-source muted">Source diagram pending</span>
+    </div>
+  </div>
+  <figcaption><strong>Fig 5.6 — Thermal Throttling Feedback Loop.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> A GPU can start a job at high performance and then slow down as thermal limits are reached. Sustained performance is what matters for training jobs and production serving.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The loop connects workload intensity, power draw, heat, cooling capacity, device temperature, clock behavior, and throughput. Monitoring only average utilization can miss this feedback loop.</p>
+<blockquote><strong>Key Takeaway:</strong> Thermal throttling converts a cooling problem into an application-performance problem.</blockquote>
+<hr>
+<h2 id="table-55-power-and-thermal-bottleneck-signals">Table 5.5 — Power and Thermal Bottleneck Signals<a class="anchor" href="#table-55-power-and-thermal-bottleneck-signals" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Possible Cause</th><th>What to Check</th><th>Possible Fix</th></tr></thead><tbody><tr><td>Throughput drops after warm-up</td><td>Thermal throttling</td><td>GPU temp, clocks, throttle flags</td><td>Improve cooling, adjust power cap</td></tr><tr><td>Frequent node resets</td><td>Power instability</td><td>PSU logs, BMC, rack power events</td><td>Rebalance load, inspect power chain</td></tr><tr><td>High tokens/W variance</td><td>Scheduling or thermal variation</td><td>Power, temperature, batch mix</td><td>Power-aware scheduling</td></tr><tr><td>Lower-than-expected clocks</td><td>Power cap or thermals</td><td>Clock telemetry, power limit</td><td>Tune cap/cooling</td></tr><tr><td>Rack breaker trips</td><td>Rack budget exceeded</td><td>Rack PDU telemetry</td><td>Reduce density, phase balance</td></tr><tr><td>Fan/CDU alarms</td><td>Cooling issue</td><td>Fan speed, CDU flow/temp</td><td>Service cooling loop</td></tr></tbody></table></div>
+<p class="confidence-box"><span class="confidence-label label-representative">[REPRESENTATIVE]</span> Power and thermal instability can appear as application slowdowns, node resets, retries, job failures, or correlated hardware events. Confirm with GPU telemetry, BMC logs, PDU data, cooling-system metrics, and scheduler history.</p>
+<blockquote><strong>Key Takeaway:</strong> Power and thermal events are performance events.</blockquote>
+<hr>
+<h2 id="58-power-cap-vs-performance-per-watt">5.8 Power Cap vs Performance per Watt<a class="anchor" href="#58-power-cap-vs-performance-per-watt" aria-label="Link to this section">#</a></h2>
+<p>Maximum power is not always maximum efficiency.</p>
+<p>At high operating points, additional frequency often requires disproportionately more power.</p>
+<p class="confidence-box"><span class="confidence-label label-representative">[REPRESENTATIVE]</span> At high operating points, additional frequency often requires disproportionately more power, so maximum clock is not always the best performance-per-watt point.</p>
+<p>A power cap can sometimes:</p>
+<ul>
+<li>reduce energy cost,</li>
+<li>reduce thermal stress,</li>
+<li>improve reliability,</li>
+<li>reduce fan/pump overhead,</li>
+<li>improve cluster stability,</li>
+<li>and improve performance per watt.</li>
+</ul>
+<p>But it can also reduce throughput.</p>
+<p class="confidence-box"><span class="confidence-label label-representative">[REPRESENTATIVE]</span> Power caps can improve performance per watt when the workload is in a region where extra power produces diminishing throughput gains. The optimal cap is workload-, hardware-, cooling-, and SLA-specific.</p>
+<hr>
+<h2 id="figure-placeholder-fig-55">Figure Placeholder — Fig 5.5<a class="anchor" href="#figure-placeholder-fig-55" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-55-power-cap-vs-performance-curve">
+  <div class="figure-kicker">Fig 5.5</div>
+  <div class="figure-title">Power Cap vs Performance Curve</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A representative curve showing sublinear performance scaling with power and a possible performance-per-watt sweet spot.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch05_fig_5_5_power_cap_performance_curve.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+      <span class="figure-source muted">Source diagram pending</span>
+    </div>
+  </div>
+  <figcaption><strong>Fig 5.5 — Power Cap vs Performance Curve.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> Maximum power is not always maximum efficiency. GPUs often have voltage/frequency regions where additional watts produce diminishing performance gains.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> Power caps can improve fleet efficiency, reduce thermal stress, and increase reliability, but the optimal cap is workload-specific. Memory-bound workloads may lose little throughput under power caps, while compute-bound workloads may be more sensitive.</p>
+<blockquote><strong>Key Takeaway:</strong> The best operating point may be the best sustained performance per watt, not the highest possible clock.</blockquote>
+<hr>
+<h2 id="59-pue-and-efficiency-metrics">5.9 PUE and Efficiency Metrics<a class="anchor" href="#59-pue-and-efficiency-metrics" aria-label="Link to this section">#</a></h2>
+<p>PUE means Power Usage Effectiveness.</p>
+<p class="confidence-box"><span class="confidence-label label-shipped">[SHIPPED]</span> Power Usage Effectiveness, or PUE, is total facility energy divided by IT equipment energy. PUE measures facility overhead; it does not measure tokens per watt or model efficiency.</p>
+<p>Formula:</p>
+<pre class="code-block"><code>PUE = Total Facility Energy / IT Equipment Energy</code></pre>
+<p>A PUE of 1.2 means:</p>
+<pre class="code-block"><code>For every 1.0 unit of IT energy,
+the facility uses 0.2 additional units for cooling, power overhead, and other infrastructure.</code></pre>
+<p>But PUE does not tell you:</p>
+<ul>
+<li>tokens/sec/W,</li>
+<li>cost/token,</li>
+<li>GPU utilization,</li>
+<li>model quality,</li>
+<li>latency,</li>
+<li>or training throughput per watt.</li>
+</ul>
+<p>A data center can have good PUE and still run inefficient model serving. A model can have good tokens/W and still be deployed in a facility with poor overhead.</p>
+<hr>
+<h2 id="table-54-pue-and-ai-efficiency-metrics">Table 5.4 — PUE and AI Efficiency Metrics<a class="anchor" href="#table-54-pue-and-ai-efficiency-metrics" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Metric</th><th>Formula</th><th>Measures</th><th>Does Not Measure</th></tr></thead><tbody><tr><td>PUE</td><td>Total facility energy / IT equipment energy</td><td>Facility infrastructure efficiency</td><td>Model efficiency</td></tr><tr><td>IT power</td><td>Server/network/storage power</td><td>Compute load</td><td>Cooling overhead</td></tr><tr><td>Tokens/sec/W</td><td>Token throughput / power</td><td>Inference efficiency</td><td>Quality or latency alone</td></tr><tr><td>Samples/sec/W</td><td>Samples throughput / power</td><td>Training/inference efficiency</td><td>Job completion alone</td></tr><tr><td>TFLOPS/W</td><td>FLOPs / power</td><td>Math efficiency</td><td>Memory/communication efficiency</td></tr><tr><td>Cost/token</td><td>Cost / output token</td><td>Business efficiency</td><td>Hardware utilization alone</td></tr></tbody></table></div>
+<p class="confidence-box"><span class="confidence-label label-representative">[REPRESENTATIVE]</span> Performance per watt must be measured for a specific workload and metric: tokens/sec/W for inference, samples/sec/W for training/inference throughput, TFLOPS/W for math kernels, or jobs/day/MW for fleet planning.</p>
+<blockquote><strong>Key Takeaway:</strong> PUE is not tokens per watt. Facility efficiency and workload efficiency are different layers.</blockquote>
+<hr>
+<h2 id="510-power-and-cost-of-ai-infrastructure">5.10 Power and Cost of AI Infrastructure<a class="anchor" href="#510-power-and-cost-of-ai-infrastructure" aria-label="Link to this section">#</a></h2>
+<p>At scale, cost is not only the purchase price of GPUs.</p>
+<p>Cost includes:</p>
+<pre class="code-block"><code>GPU/server cost
+networking cost
+storage cost
+power cost
+cooling cost
+rack/floor space
+facility upgrades
+spares
+maintenance
+downtime
+staffing
+software operations</code></pre>
+<p class="confidence-box"><span class="confidence-label label-representative">[REPRESENTATIVE]</span> At scale, cost per token depends not only on GPU price but also on energy cost, cooling overhead, power availability, utilization, failure rate, operational staffing, and amortization model.</p>
+<p>Useful questions:</p>
+<ul>
+<li>What is the cost per generated token?</li>
+<li>What is the cost per training step?</li>
+<li>What is the cost per job completed?</li>
+<li>What is tokens/sec/W?</li>
+<li>What is jobs/day/MW?</li>
+<li>What is the reliability impact of running near thermal limits?</li>
+<li>What happens to throughput when power caps are applied?</li>
+</ul>
+<blockquote><strong>Key Takeaway:</strong> Power and cooling turn performance engineering into business economics.</blockquote>
+<hr>
+<h2 id="511-powerthermal-observability">5.11 Power/Thermal Observability<a class="anchor" href="#511-powerthermal-observability" aria-label="Link to this section">#</a></h2>
+<p>You cannot manage what you cannot observe.</p>
+<p>Power and thermal telemetry should be correlated across:</p>
+<ul>
+<li>GPU power,</li>
+<li>GPU temperature,</li>
+<li>memory temperature if available,</li>
+<li>clocks,</li>
+<li>throttle reasons,</li>
+<li>fan speed,</li>
+<li>pump/CDU status,</li>
+<li>PDU and rack power,</li>
+<li>inlet temperature,</li>
+<li>outlet temperature,</li>
+<li>BMC events,</li>
+<li>job throughput,</li>
+<li>latency,</li>
+<li>failures,</li>
+<li>retries,</li>
+<li>scheduler placement.</li>
+</ul>
+<hr>
+<h2 id="figure-placeholder-fig-57">Figure Placeholder — Fig 5.7<a class="anchor" href="#figure-placeholder-fig-57" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-57-powerthermal-observability-stack">
+  <div class="figure-kicker">Fig 5.7</div>
+  <div class="figure-title">Power/Thermal Observability Stack</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A monitoring stack connecting GPU telemetry, BMC, PDU, CDU/facility metrics, scheduler data, and application throughput.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch05_fig_5_7_power_thermal_observability_stack.svg</code></p>
+      <p class="figure-status">Adapt from existing observability stack</p>
+      <a class="figure-source" href="../diagrams/diagram_08_observability_stack.html">View source diagram</a>
+    </div>
+  </div>
+  <figcaption><strong>Fig 5.7 — Power/Thermal Observability Stack.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> Power and thermal events are not isolated facilities events. They affect application throughput, job completion time, failure rate, and cost.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The observability stack should collect metrics from GPUs, BMCs, PDUs, CDUs, facility systems, schedulers, and applications. Correlation is the key: power and thermal signals must be tied to throughput and reliability.</p>
+<blockquote><strong>Key Takeaway:</strong> You cannot optimize what you cannot observe across hardware, facility, and workload layers.</blockquote>
+<hr>
+<h2 id="512-power-aware-scheduling">5.12 Power-Aware Scheduling<a class="anchor" href="#512-power-aware-scheduling" aria-label="Link to this section">#</a></h2>
+<p>At small scale, scheduling can focus on:</p>
+<pre class="code-block"><code>How many GPUs are free?</code></pre>
+<p>At AI data center scale, that is not enough.</p>
+<p>A scheduler may need to consider:</p>
+<ul>
+<li>rack power budget,</li>
+<li>thermal headroom,</li>
+<li>cooling zone,</li>
+<li>workload power intensity,</li>
+<li>topology,</li>
+<li>failure history,</li>
+<li>current inlet temperature,</li>
+<li>power cap policy,</li>
+<li>and performance-per-watt target.</li>
+</ul>
+<p class="confidence-box"><span class="confidence-label label-representative">[REPRESENTATIVE]</span> At AI-cluster scale, scheduling can improve stability and efficiency by considering rack power budget, cooling headroom, workload intensity, and failure history, not only free GPU count.</p>
+<hr>
+<h2 id="figure-placeholder-fig-58">Figure Placeholder — Fig 5.8<a class="anchor" href="#figure-placeholder-fig-58" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-58-power-aware-scheduling-decision-flow">
+  <div class="figure-kicker">Fig 5.8</div>
+  <div class="figure-title">Power-Aware Scheduling Decision Flow</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A decision flow showing how rack power, cooling headroom, workload intensity, and efficiency goals affect placement.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch05_fig_5_8_power_aware_scheduling_flow.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+      <span class="figure-source muted">Source diagram pending</span>
+    </div>
+  </div>
+  <figcaption><strong>Fig 5.8 — Power-Aware Scheduling Decision Flow.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> At scale, power and thermal constraints become scheduling constraints. Not every job should be placed only by free GPU count.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> A power-aware scheduler can avoid placing too many high-power jobs in the same rack, can respect facility constraints, and can use power caps where performance loss is small but efficiency gain is high.</p>
+<blockquote><strong>Key Takeaway:</strong> In AI data centers, scheduling is also power and thermal management.</blockquote>
+<hr>
+<h2 id="513-wrong-fix-vs-right-first-question">5.13 Wrong Fix vs Right First Question<a class="anchor" href="#513-wrong-fix-vs-right-first-question" aria-label="Link to this section">#</a></h2>
+<p>Power and thermal issues are often misdiagnosed as software performance issues.</p>
+<p>A principal engineer avoids jumping to software fixes when the limiting resource may be power delivery or thermal headroom.</p>
+<hr>
+<h2 id="table-56-wrong-fix-vs-right-first-question-for-powerthermal-problems">Table 5.6 — Wrong Fix vs Right First Question for Power/Thermal Problems<a class="anchor" href="#table-56-wrong-fix-vs-right-first-question-for-powerthermal-problems" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Wrong Fix</th><th>Right First Question</th></tr></thead><tbody><tr><td>Throughput drops after minutes</td><td>Tune kernels</td><td>Are clocks dropping due to thermals?</td></tr><tr><td>Rack trips power</td><td>Replace GPUs</td><td>Is rack power budget exceeded?</td></tr><tr><td>Poor performance/W</td><td>Max out clocks</td><td>Are we past the efficient voltage/frequency region?</td></tr><tr><td>Random job failures</td><td>Retry jobs</td><td>Are failures correlated with power or thermal events?</td></tr><tr><td>Slow cluster during heat wave</td><td>Blame scheduler</td><td>Did cooling capacity or inlet temperature change?</td></tr><tr><td>Good benchmark, poor production</td><td>Tune model only</td><td>Is sustained power/cooling different from benchmark environment?</td></tr></tbody></table></div>
+<blockquote><strong>Key Takeaway:</strong> If performance changes over time under constant workload, check power and thermals.</blockquote>
+<hr>
+<h2 id="514-production-ai-infrastructure-readiness-checklist">5.14 Production AI Infrastructure Readiness Checklist<a class="anchor" href="#514-production-ai-infrastructure-readiness-checklist" aria-label="Link to this section">#</a></h2>
+<p>Dense AI systems require readiness across facilities, hardware, software, and operations.</p>
+<hr>
+<h2 id="table-57-production-ai-infrastructure-readiness-checklist">Table 5.7 — Production AI Infrastructure Readiness Checklist<a class="anchor" href="#table-57-production-ai-infrastructure-readiness-checklist" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Category</th><th>Questions</th></tr></thead><tbody><tr><td>Power</td><td>Is rack/system power budget validated under sustained workload?</td></tr><tr><td>Cooling</td><td>Is thermal capacity validated at peak and steady state?</td></tr><tr><td>Redundancy</td><td>What fails when one PSU, pump, fan, or CDU path fails?</td></tr><tr><td>Telemetry</td><td>Are GPU, PDU, BMC, CDU, and app metrics correlated?</td></tr><tr><td>Scheduling</td><td>Can the scheduler avoid rack-level power/thermal hotspots?</td></tr><tr><td>Reliability</td><td>Are thermal/power events linked to job failures?</td></tr><tr><td>Safety</td><td>Are liquid cooling and electrical procedures documented?</td></tr><tr><td>Cost</td><td>Are tokens/W, jobs/day/MW, and cost/token tracked?</td></tr></tbody></table></div>
+<p>The checklist helps principal engineers connect architecture decisions to deployment readiness.</p>
+<p>A powerful rack is not production-ready until it is:</p>
+<ul>
+<li>power-stable,</li>
+<li>thermally stable,</li>
+<li>observable,</li>
+<li>serviceable,</li>
+<li>resilient,</li>
+<li>and operationally safe.</li>
+</ul>
+<blockquote><strong>Key Takeaway:</strong> Production AI infrastructure is a system of systems.</blockquote>
+<hr>
+<h2 id="515-how-to-discuss-powerthermal-infrastructure-in-a-principal-interview">5.15 How to Discuss Power/Thermal Infrastructure in a Principal Interview<a class="anchor" href="#515-how-to-discuss-powerthermal-infrastructure-in-a-principal-interview" aria-label="Link to this section">#</a></h2>
+<p>A weak answer sounds like this:</p>
+<pre class="code-block"><code>We need enough power and cooling.</code></pre>
+<p>That is true, but too shallow.</p>
+<p>A principal-level answer sounds like this:</p>
+<blockquote>I treat power and thermal as performance constraints, not facilities details. I separate GPU, board, system, rack, and facility power, then check whether the power delivery and cooling design can sustain the workload. For AI clusters, I monitor power draw, temperatures, throttling, clocks, fan or CDU behavior, failures, and throughput per watt. I also evaluate power caps because maximum power is not always maximum useful throughput per watt.</blockquote>
+<h3 id="scenario-1-why-can-throughput-drop-after-a-few-minutes">Scenario 1 — Why Can Throughput Drop After a Few Minutes?<a class="anchor" href="#scenario-1-why-can-throughput-drop-after-a-few-minutes" aria-label="Link to this section">#</a></h3>
+<p>Answer:</p>
+<pre class="code-block"><code>If throughput drops after warm-up under a stable workload, I check thermal throttling, power caps, clocks, inlet temperature, cooling telemetry, and rack power events before assuming the model code changed.</code></pre>
+<h3 id="scenario-2-why-is-gb200-nvl72-a-facility-level-discussion">Scenario 2 — Why Is GB200 NVL72 a Facility-Level Discussion?<a class="anchor" href="#scenario-2-why-is-gb200-nvl72-a-facility-level-discussion" aria-label="Link to this section">#</a></h3>
+<p>Answer:</p>
+<pre class="code-block"><code>GB200 NVL72 is a rack-scale platform, not just a GPU. A rack-level power number around 120 kW affects facility power delivery, liquid cooling design, commissioning, redundancy, and operational safety. It must be planned at rack and data-center level.</code></pre>
+<h3 id="scenario-3-why-is-dgx-b200-143-kw-not-a-per-gpu-number">Scenario 3 — Why Is DGX B200 14.3 kW Not a Per-GPU Number?<a class="anchor" href="#scenario-3-why-is-dgx-b200-143-kw-not-a-per-gpu-number" aria-label="Link to this section">#</a></h3>
+<p>Answer:</p>
+<pre class="code-block"><code>DGX B200 is a system-level product. The 14.3 kW value includes the whole system power envelope, not just one GPU. I would not compare it directly to MI300X 750 W TBP without normalizing the boundary.</code></pre>
+<h3 id="scenario-4-why-might-power-capping-improve-efficiency">Scenario 4 — Why Might Power Capping Improve Efficiency?<a class="anchor" href="#scenario-4-why-might-power-capping-improve-efficiency" aria-label="Link to this section">#</a></h3>
+<p>Answer:</p>
+<pre class="code-block"><code>Performance often increases sublinearly with power near the high end of the voltage/frequency curve. A power cap can reduce energy and heat with limited throughput loss for some workloads, improving tokens/sec/W or jobs/day/MW. But the optimal cap must be measured per workload.</code></pre>
+<h3 id="scenario-5-what-metrics-would-you-monitor">Scenario 5 — What Metrics Would You Monitor?<a class="anchor" href="#scenario-5-what-metrics-would-you-monitor" aria-label="Link to this section">#</a></h3>
+<p>Answer:</p>
+<pre class="code-block"><code>I would monitor GPU power, clocks, temperatures, memory temperatures if available, throttle reasons, PDU/rack power, inlet/outlet temperature, CDU flow and alarms, BMC events, job failures, throughput, latency, and performance per watt.</code></pre>
+<hr>
+<h2 id="516-chapter-cheat-sheet">5.16 Chapter Cheat Sheet<a class="anchor" href="#516-chapter-cheat-sheet" aria-label="Link to this section">#</a></h2>
+<h3 id="power-boundary">Power Boundary<a class="anchor" href="#power-boundary" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>GPU/device power
+  != board/module power
+  != system power
+  != rack power
+  != facility power</code></pre>
+<h3 id="validated-reference-values">Validated Reference Values<a class="anchor" href="#validated-reference-values" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>[SHIPPED] MI300X: 750 W peak TBP
+[SHIPPED] DGX B200: ~14.3 kW max system power
+[SHIPPED] GB200 NVL72 / DGX GB200 rack: ~120 kW rack power</code></pre>
+<h3 id="pue">PUE<a class="anchor" href="#pue" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>PUE = Total Facility Energy / IT Equipment Energy</code></pre>
+<h3 id="performance-per-watt">Performance per Watt<a class="anchor" href="#performance-per-watt" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>tokens/sec/W
+samples/sec/W
+TFLOPS/W
+jobs/day/MW
+cost/token</code></pre>
+<h3 id="cooling">Cooling<a class="anchor" href="#cooling" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>Air cooling: simpler, mature, lower-density fit
+Liquid cooling: higher density support, more facility/service complexity
+Hybrid cooling: common for dense AI systems</code></pre>
+<h3 id="principal-rule">Principal Rule<a class="anchor" href="#principal-rule" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>If performance changes over time under constant workload, check thermals and power.</code></pre>
+<hr>
+<h2 id="517-key-takeaways">5.17 Key Takeaways<a class="anchor" href="#517-key-takeaways" aria-label="Link to this section">#</a></h2>
+<ol>
+<li>Power and thermal are performance constraints, not side details.</li>
+<li>Almost all consumed IT power becomes heat.</li>
+<li>Power numbers require measurement boundaries.</li>
+<li>GPU power, board power, system power, rack power, and facility power are different.</li>
+<li>MI300X 750 W TBP is an accelerator/module-level value.</li>
+<li>DGX B200 ~14.3 kW is a system-level value.</li>
+<li>GB200 NVL72 ~120 kW is a rack-level value.</li>
+<li>Rack density changes the data center design problem.</li>
+<li>Air cooling and liquid cooling are design choices driven by density, facility readiness, service model, and reliability.</li>
+<li>Thermal throttling turns a cooling problem into an application-performance problem.</li>
+<li>PUE measures facility overhead, not model efficiency.</li>
+<li>Tokens/sec/W and cost/token are workload-level efficiency metrics.</li>
+<li>Power caps can improve performance per watt when extra power gives diminishing throughput returns.</li>
+<li>Power-aware scheduling can improve stability and efficiency at cluster scale.</li>
+<li>Power and thermal telemetry must be correlated with application throughput and failures.</li>
+<li>A production AI rack is not ready until it is power-stable, thermally stable, observable, and serviceable.</li>
+</ol>
+<hr>
+<h2 id="518-review-questions">5.18 Review Questions<a class="anchor" href="#518-review-questions" aria-label="Link to this section">#</a></h2>
+<h3 id="conceptual">Conceptual<a class="anchor" href="#conceptual" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>Why are power and thermal performance constraints?</li>
+<li>Why does almost all IT power become heat?</li>
+<li>What is the difference between GPU power, board power, system power, and rack power?</li>
+<li>Why is MI300X 750 W TBP not comparable to DGX B200 14.3 kW system power?</li>
+<li>Why is GB200 NVL72 a rack-level infrastructure discussion?</li>
+<li>Why does high rack density often push infrastructure toward liquid cooling?</li>
+<li>Why is thermal throttling an application-performance problem?</li>
+<li>What does PUE measure?</li>
+<li>What does PUE not measure?</li>
+<li>Why can power capping improve performance per watt?</li>
+<li>Why should scheduling consider rack power and thermal headroom?</li>
+<li>Why should power/thermal telemetry be correlated with job metrics?</li>
+</ol>
+<h3 id="calculation">Calculation<a class="anchor" href="#calculation" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>Estimate accelerator-only power for eight MI300X accelerators at 750 W each.</li>
+<li>If a DGX B200 system is approximately 14.3 kW max power, what is the rough power for four such systems before facility overhead?</li>
+<li>If a rack consumes 120 kW and runs for one hour, how much energy is consumed at the rack level?</li>
+<li>If PUE is 1.2 and IT load is 1 MW, what is total facility power?</li>
+<li>If a power cap reduces power by 15% and throughput by 5%, what happens to performance per watt?</li>
+</ol>
+<h3 id="principal-level-interview-practice">Principal-Level Interview Practice<a class="anchor" href="#principal-level-interview-practice" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>Explain why power and thermal constraints matter for AI performance.</li>
+<li>Explain the product-level power guardrail.</li>
+<li>Explain the difference between MI300X TBP and DGX B200 system power.</li>
+<li>Explain why GB200 NVL72 requires rack-level planning.</li>
+<li>Explain air cooling vs liquid cooling tradeoffs.</li>
+<li>Explain how you would diagnose thermal throttling.</li>
+<li>Explain how power caps can improve efficiency.</li>
+<li>Explain why PUE is not enough to judge model-serving efficiency.</li>
+<li>Explain how you would design power/thermal observability for a GPU cluster.</li>
+<li>Explain how power-aware scheduling could improve reliability.</li>
+</ol>
+<hr>
+<h2 id="519-bridge-to-chapter-6">5.19 Bridge to Chapter 6<a class="anchor" href="#519-bridge-to-chapter-6" aria-label="Link to this section">#</a></h2>
+<p>Chapter 5 showed why AI infrastructure must sustain power, cooling, and reliability before theoretical performance becomes real performance.</p>
+<p>Chapter 6 moves from physical infrastructure back into workload execution:</p>
+<pre class="code-block"><code>How do training and inference pipelines stress the hardware differently?</code></pre>
+<p>The next chapter connects model execution phases, batching, scheduling, serving, and training loops to the silicon, memory, power, and network constraints introduced so far.</p>
+
+    <nav class="nav-row" aria-label="Previous and next chapter navigation">
+      <a href="ch04_gpu_memory_hierarchy.html">
+        <small>Previous Chapter</small>
+        <strong>Chapter 4 — GPU Memory Hierarchy and HBM</strong>
+      </a>
+      <a href="../index.html">
+        <small>Next</small>
+        <strong>Chapter 6 — Coming Soon</strong>
+      </a>
+    </nav>
+  </main>
+</div>
+</body>
+</html>
