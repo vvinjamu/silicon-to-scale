@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 3B — GPU Architecture Roadmap: NVIDIA and AMD Generations | Silicon to Scale</title>
+<meta name="description" content="Production web chapter on GPU architecture roadmaps: NVIDIA A100, H100, H200, B200, DGX B200, GB200, Rubin, AMD MI300X, MI325X, MI350, MI400, HBM evolution, NVLink, Infinity Fabric, and hardware selection.">
+<meta name="author" content="Venkat Vinjam">
+<meta property="og:title" content="Chapter 3B — GPU Architecture Roadmap: NVIDIA and AMD Generations">
+<meta property="og:description" content="Learn how to read GPU roadmaps safely: shipped vs announced, dense vs sparse TFLOPS, GPU vs system vs rack values, HBM evolution, and NVIDIA/AMD accelerator selection.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c10;
+  --bg2: #0d1117;
+  --bg3: #161b22;
+  --bg4: #1c2128;
+  --border: #21262d;
+  --border2: #30363d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #6e7681;
+  --accent: #58a6ff;
+  --gold: #d4a017;
+  --gold2: #f0c040;
+  --green: #3fb950;
+  --orange: #ff8b3d;
+  --purple: #bc8cff;
+  --red: #f85149;
+  --teal: #39d0d8;
+  --pink: #ff7bba;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.65;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(88,166,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(88,166,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(13,17,23,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 22px;
+}
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.brand a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.brand span {
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.topnav {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.topnav a {
+  color: var(--accent);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.topnav a:hover {
+  border-color: var(--accent);
+  background: rgba(88,166,255,0.08);
+}
+.layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 310px minmax(0, 960px);
+  gap: 36px;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 36px 24px 80px;
+}
+.sidebar {
+  position: sticky;
+  top: 76px;
+  align-self: start;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+}
+.sidebar h2 {
+  margin: 0 0 12px;
+  font-family: var(--mono);
+  color: var(--gold2);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+.sidebar a {
+  display: block;
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 13px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.35);
+}
+.sidebar a:hover {
+  color: var(--accent);
+}
+.sidebar .toc-l3 {
+  padding-left: 14px;
+  font-size: 12px;
+  color: var(--text3);
+}
+.content {
+  background: rgba(13,17,23,0.72);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 38px 44px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+}
+.content h1 {
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -1.4px;
+  margin: 0 0 18px;
+}
+.content h2 {
+  margin-top: 46px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 25px;
+  letter-spacing: -0.5px;
+}
+.content h3 {
+  margin-top: 30px;
+  color: var(--accent);
+  font-size: 18px;
+}
+.content h4 {
+  margin-top: 24px;
+  color: var(--gold2);
+}
+.anchor {
+  margin-left: 8px;
+  color: var(--text3);
+  opacity: 0;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 0.8em;
+}
+h1:hover .anchor, h2:hover .anchor, h3:hover .anchor, h4:hover .anchor {
+  opacity: 1;
+}
+p {
+  color: var(--text);
+  font-size: 16px;
+}
+blockquote {
+  margin: 24px 0;
+  padding: 18px 22px;
+  border-left: 4px solid var(--gold2);
+  background: rgba(212,160,23,0.08);
+  color: var(--text);
+  border-radius: 0 10px 10px 0;
+  font-size: 17px;
+}
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 28px 0;
+}
+ul, ol {
+  padding-left: 24px;
+}
+li {
+  margin: 6px 0;
+}
+code {
+  font-family: var(--mono);
+  background: var(--bg4);
+  color: var(--gold2);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-size: 0.92em;
+}
+.code-block {
+  background: #05080c;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 18px 0;
+}
+.code-block code {
+  background: transparent;
+  border: 0;
+  color: #d8dee9;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.table-wrap {
+  overflow-x: auto;
+  margin: 22px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+  background: var(--bg3);
+}
+th {
+  background: var(--bg4);
+  color: var(--accent);
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.2px;
+}
+th, td {
+  padding: 11px 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+td {
+  color: var(--text2);
+  font-size: 14px;
+}
+tr:last-child td {
+  border-bottom: 0;
+}
+.roadmap-label {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+.label-shipped { color: var(--green); background: rgba(63,185,80,0.10); border-color: rgba(63,185,80,0.35); }
+.label-announced { color: var(--purple); background: rgba(188,140,255,0.10); border-color: rgba(188,140,255,0.35); }
+.label-derived { color: var(--teal); background: rgba(57,208,216,0.10); border-color: rgba(57,208,216,0.35); }
+.label-estimated { color: var(--gold2); background: rgba(240,192,64,0.10); border-color: rgba(240,192,64,0.35); }
+.label-representative { color: var(--accent); background: rgba(88,166,255,0.10); border-color: rgba(88,166,255,0.35); }
+.label-env { color: var(--orange); background: rgba(255,139,61,0.10); border-color: rgba(255,139,61,0.35); }
+.confidence {
+  border-left: 4px solid var(--green);
+  background: rgba(63,185,80,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.currency-note {
+  border-left: 4px solid var(--purple);
+  background: rgba(188,140,255,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.takeaway {
+  border-left: 4px solid var(--gold2);
+  background: rgba(212,160,23,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.figure-note {
+  color: var(--text2);
+  font-size: 14px;
+}
+.figure-placeholder {
+  margin: 28px 0;
+  background: linear-gradient(135deg, rgba(88,166,255,0.08), rgba(188,140,255,0.06));
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 20px;
+}
+.figure-kicker {
+  color: var(--gold2);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.figure-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.figure-body {
+  display: grid;
+  grid-template-columns: 72px minmax(0,1fr);
+  gap: 16px;
+  align-items: center;
+  background: rgba(13,17,23,0.65);
+  border: 1px dashed var(--border2);
+  border-radius: 12px;
+  padding: 18px;
+}
+.figure-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: var(--purple);
+  border: 1px solid var(--purple);
+  font-size: 32px;
+  background: rgba(188,140,255,0.08);
+}
+.figure-path, .figure-status {
+  color: var(--text2);
+  margin: 6px 0;
+  font-size: 13px;
+}
+.figure-source {
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 12px;
+  text-decoration: none;
+}
+.figure-source:hover { text-decoration: underline; }
+.muted { color: var(--text3); }
+figcaption {
+  color: var(--text2);
+  font-size: 13px;
+  margin-top: 12px;
+}
+.nav-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 44px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+.nav-row a {
+  flex: 1;
+  text-decoration: none;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--text);
+}
+.nav-row a:hover { border-color: var(--accent); }
+.nav-row small {
+  display: block;
+  color: var(--text3);
+  font-family: var(--mono);
+  margin-bottom: 4px;
+}
+.nav-row strong { color: var(--accent); }
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 22px 16px 60px;
+  }
+  .sidebar {
+    position: static;
+    max-height: none;
+  }
+  .content {
+    padding: 26px 20px;
+  }
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (max-width: 640px) {
+  .figure-body {
+    grid-template-columns: 1fr;
+  }
+  .nav-row {
+    flex-direction: column;
+  }
+  p {
+    font-size: 15px;
+  }
+}
+@media print {
+  body {
+    background: #fff;
+    color: #111;
+  }
+  body::before, .topbar, .sidebar, .anchor {
+    display: none !important;
+  }
+  .layout {
+    display: block;
+    max-width: none;
+    padding: 0;
+  }
+  .content {
+    box-shadow: none;
+    border: 0;
+    padding: 0;
+  }
+  .content h1, .content h2, .content h3, .content h4, p, li, td, th, blockquote {
+    color: #111 !important;
+  }
+  .code-block, code, table, .figure-placeholder, .roadmap-label {
+    border-color: #999;
+  }
+  .roadmap-label {
+    color: #111 !important;
+    background: #eee !important;
+  }
+  a {
+    color: #111;
+    text-decoration: none;
+  }
+  h2 {
+    page-break-before: auto;
+  }
+  .figure-placeholder, table, pre, blockquote {
+    break-inside: avoid;
+  }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <a href="../index.html">AI/ML Infrastructure from Silicon to Scale</a>
+    <span>Chapter 3B · GPU Architecture Roadmap</span>
+  </div>
+  <nav class="topnav" aria-label="Top navigation">
+    <a href="../index.html">Home</a>
+    <a href="ch03a_gpu_architecture.html">Previous: Ch03A</a>
+    <a href="../index.html">Next: Ch04 soon</a>
+    <a href="../pdfs/ch03b_gpu_roadmap.pdf">PDF</a>
+    <a href="../diagrams/diagrams_batch2.html">Related Diagrams</a>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" aria-label="Chapter table of contents">
+    <h2>Chapter Contents</h2>
+    <a class="toc-l2" href="#chapter-overview">Chapter Overview</a>
+<a class="toc-l2" href="#3b0-roadmap-reading-rules">3B.0 Roadmap Reading Rules</a>
+<a class="toc-l2" href="#table-3b1-roadmap-confidence-labels">Table 3B.1 — Roadmap Confidence Labels</a>
+<a class="toc-l2" href="#3b1-the-four-lens-gpu-generation-evaluation-framework">3B.1 The Four-Lens GPU Generation Evaluation Framework</a>
+<a class="toc-l2" href="#figure-placeholder-fig-3b1">Figure Placeholder — Fig 3B.1</a>
+<a class="toc-l2" href="#3b2-lens-1-compute-density">3B.2 Lens 1 — Compute Density</a>
+<a class="toc-l2" href="#3b3-lens-2-memory-capacity-and-bandwidth">3B.3 Lens 2 — Memory Capacity and Bandwidth</a>
+<a class="toc-l2" href="#3b4-lens-3-interconnect-and-scale-up-domain">3B.4 Lens 3 — Interconnect and Scale-Up Domain</a>
+<a class="toc-l2" href="#3b5-lens-4-software-and-deployment-maturity">3B.5 Lens 4 — Software and Deployment Maturity</a>
+<a class="toc-l1" href="#3b6-nvidia-roadmap-ampere-hopper-blackwell-rubin">3B.6 NVIDIA Roadmap: Ampere → Hopper → Blackwell → Rubin</a>
+<a class="toc-l2" href="#figure-placeholder-fig-3b2">Figure Placeholder — Fig 3B.2</a>
+<a class="toc-l2" href="#3b7-nvidia-a100-ampere-baseline">3B.7 NVIDIA A100: Ampere Baseline</a>
+<a class="toc-l2" href="#3b8-nvidia-h100-hopper-becomes-the-llm-baseline">3B.8 NVIDIA H100: Hopper Becomes the LLM Baseline</a>
+<a class="toc-l3" href="#what-changed-with-h100">What Changed with H100?</a>
+<a class="toc-l2" href="#3b9-nvidia-h200-memory-refresh-with-large-inference-impact">3B.9 NVIDIA H200: Memory Refresh with Large Inference Impact</a>
+<a class="toc-l3" href="#h100-vs-h200-mental-model">H100 vs H200 Mental Model</a>
+<a class="toc-l2" href="#3b10-nvidia-blackwell-product-level-discipline-required">3B.10 NVIDIA Blackwell: Product-Level Discipline Required</a>
+<a class="toc-l2" href="#figure-placeholder-fig-3b7">Figure Placeholder — Fig 3B.7</a>
+<a class="toc-l2" href="#table-3b6-product-level-numbering-guardrail">Table 3B.6 — Product-Level Numbering Guardrail</a>
+<a class="toc-l2" href="#3b11-dgx-b200-gb200-superchip-and-gb200-nvl72">3B.11 DGX B200, GB200 Superchip, and GB200 NVL72</a>
+<a class="toc-l3" href="#blackwell-roadmap-lesson">Blackwell Roadmap Lesson</a>
+<a class="toc-l2" href="#3b12-rubin-vera-rubin">3B.12 Rubin / Vera Rubin</a>
+<a class="toc-l2" href="#table-3b2-nvidia-generation-comparison">Table 3B.2 — NVIDIA Generation Comparison</a>
+<a class="toc-l1" href="#3b13-amd-roadmap-cdna-3-cdna-3-cdna-4-mi400">3B.13 AMD Roadmap: CDNA 3 → CDNA 3+ → CDNA 4 → MI400</a>
+<a class="toc-l2" href="#figure-placeholder-fig-3b3">Figure Placeholder — Fig 3B.3</a>
+<a class="toc-l2" href="#3b14-amd-mi300x-large-hbm-cdna-3-accelerator">3B.14 AMD MI300X: Large-HBM CDNA 3 Accelerator</a>
+<a class="toc-l2" href="#figure-placeholder-fig-3b6">Figure Placeholder — Fig 3B.6</a>
+<a class="toc-l2" href="#3b15-amd-mi325x-memory-refresh">3B.15 AMD MI325X: Memory Refresh</a>
+<a class="toc-l2" href="#3b16-amd-mi350x-mi355x-cdna-4-and-larger-memory">3B.16 AMD MI350X / MI355X: CDNA 4 and Larger Memory</a>
+<a class="toc-l2" href="#3b17-amd-mi400-helios">3B.17 AMD MI400 / Helios</a>
+<a class="toc-l2" href="#table-3b3-amd-instinct-generation-comparison">Table 3B.3 — AMD Instinct Generation Comparison</a>
+<a class="toc-l1" href="#3b18-hbm-evolution-hbm2e-hbm3-hbm3e-hbm4">3B.18 HBM Evolution: HBM2e → HBM3 → HBM3e → HBM4</a>
+<a class="toc-l2" href="#figure-placeholder-fig-3b4">Figure Placeholder — Fig 3B.4</a>
+<a class="toc-l2" href="#table-3b4-memory-evolution-in-ai-accelerators">Table 3B.4 — Memory Evolution in AI Accelerators</a>
+<a class="toc-l1" href="#3b19-interconnect-evolution-nvlink-nvswitch-infinity-fabric">3B.19 Interconnect Evolution: NVLink, NVSwitch, Infinity Fabric</a>
+<a class="toc-l2" href="#figure-placeholder-fig-3b5">Figure Placeholder — Fig 3B.5</a>
+<a class="toc-l2" href="#table-3b5-interconnect-evolution-and-directionality-caution">Table 3B.5 — Interconnect Evolution and Directionality Caution</a>
+<a class="toc-l1" href="#3b20-nvidia-vs-amd-neutral-architecture-comparison">3B.20 NVIDIA vs AMD: Neutral Architecture Comparison</a>
+<a class="toc-l1" href="#3b21-hardware-selection-decision-tree">3B.21 Hardware Selection Decision Tree</a>
+<a class="toc-l2" href="#figure-placeholder-fig-3b8">Figure Placeholder — Fig 3B.8</a>
+<a class="toc-l2" href="#table-3b7-workload-to-hardware-selection-matrix">Table 3B.7 — Workload-to-Hardware Selection Matrix</a>
+<a class="toc-l2" href="#3b22-worked-example-70b-inference">3B.22 Worked Example: 70B Inference</a>
+<a class="toc-l2" href="#3b23-worked-example-training-cluster-selection">3B.23 Worked Example: Training Cluster Selection</a>
+<a class="toc-l2" href="#3b24-how-to-discuss-gpu-roadmaps-in-a-principal-interview">3B.24 How to Discuss GPU Roadmaps in a Principal Interview</a>
+<a class="toc-l3" href="#scenario-1-why-did-h100-matter">Scenario 1 — Why Did H100 Matter?</a>
+<a class="toc-l3" href="#scenario-2-why-did-h200-matter-if-compute-was-similar">Scenario 2 — Why Did H200 Matter If Compute Was Similar?</a>
+<a class="toc-l3" href="#scenario-3-why-is-blackwell-more-than-faster-h100">Scenario 3 — Why Is Blackwell More Than Faster H100?</a>
+<a class="toc-l3" href="#scenario-4-why-is-mi300x-important">Scenario 4 — Why Is MI300X Important?</a>
+<a class="toc-l3" href="#scenario-5-how-do-you-evaluate-rubin-or-mi400">Scenario 5 — How Do You Evaluate Rubin or MI400?</a>
+<a class="toc-l3" href="#scenario-6-what-is-the-biggest-roadmap-comparison-mistake">Scenario 6 — What Is the Biggest Roadmap Comparison Mistake?</a>
+<a class="toc-l2" href="#3b25-chapter-cheat-sheet">3B.25 Chapter Cheat Sheet</a>
+<a class="toc-l3" href="#roadmap-rule">Roadmap Rule</a>
+<a class="toc-l3" href="#four-lenses">Four Lenses</a>
+<a class="toc-l3" href="#dense-vs-sparse">Dense vs Sparse</a>
+<a class="toc-l3" href="#product-level">Product Level</a>
+<a class="toc-l3" href="#h100-reference">H100 Reference</a>
+<a class="toc-l3" href="#h200-reference">H200 Reference</a>
+<a class="toc-l3" href="#mi300x-reference">MI300X Reference</a>
+<a class="toc-l3" href="#blackwell-guardrail">Blackwell Guardrail</a>
+<a class="toc-l3" href="#future-roadmap-guardrail">Future Roadmap Guardrail</a>
+<a class="toc-l2" href="#3b26-key-takeaways">3B.26 Key Takeaways</a>
+<a class="toc-l2" href="#3b27-review-questions">3B.27 Review Questions</a>
+<a class="toc-l3" href="#conceptual">Conceptual</a>
+<a class="toc-l3" href="#calculation">Calculation</a>
+<a class="toc-l3" href="#principal-level-interview-practice">Principal-Level Interview Practice</a>
+<a class="toc-l2" href="#3b28-claims-requiring-annual-refresh">3B.28 Claims Requiring Annual Refresh</a>
+<a class="toc-l2" href="#table-3b8-roadmap-claims-requiring-annual-refresh">Table 3B.8 — Roadmap Claims Requiring Annual Refresh</a>
+<a class="toc-l2" href="#3b29-bridge-to-chapter-4">3B.29 Bridge to Chapter 4</a>
+  </aside>
+
+  <main class="content">
+    <h1 id="chapter-3b-gpu-architecture-roadmap-nvidia-and-amd-generations">Chapter 3B — GPU Architecture Roadmap: NVIDIA and AMD Generations<a class="anchor" href="#chapter-3b-gpu-architecture-roadmap-nvidia-and-amd-generations" aria-label="Link to this section">#</a></h1>
+<blockquote>“A roadmap is not a shopping list. It is a signal about which resource the industry expects to become the next bottleneck.”</blockquote>
+<hr>
+<h2 id="chapter-overview">Chapter Overview<a class="anchor" href="#chapter-overview" aria-label="Link to this section">#</a></h2>
+<p>Chapter 3A explained the GPU as a performance system:</p>
+<pre class="code-block"><code>SMs + warps + Tensor Cores + HBM + interconnect + software stack = accelerator behavior</code></pre>
+<p>Chapter 3B extends that mental model across generations.</p>
+<p>A performance architect should not evaluate GPU roadmaps by asking only:</p>
+<pre class="code-block"><code>Which GPU has the biggest TFLOPS number?</code></pre>
+<p>That is too shallow.</p>
+<p>A better question is:</p>
+<pre class="code-block"><code>Which resource changed, and does that resource limit my workload?</code></pre>
+<p>GPU generations evolve along several dimensions:</p>
+<ul>
+<li>Compute formats and peak throughput</li>
+<li>HBM capacity</li>
+<li>HBM bandwidth</li>
+<li>Scale-up interconnect</li>
+<li>Rack-scale system design</li>
+<li>Power and cooling</li>
+<li>Software maturity</li>
+<li>Compiler/kernel support</li>
+<li>Framework readiness</li>
+<li>Total cost of ownership</li>
+</ul>
+<p>This chapter teaches you how to read GPU roadmaps safely, using NVIDIA and AMD accelerator generations as the main examples.</p>
+<blockquote><strong>Current as of 2026 edition:</strong> Hardware roadmap details change quickly. Treat all roadmap and future-generation claims as time-sensitive. Always verify final procurement decisions against current vendor product pages, datasheets, software support matrices, benchmark disclosures, and cloud availability.</blockquote>
+<hr>
+<h2 id="3b0-roadmap-reading-rules">3B.0 Roadmap Reading Rules<a class="anchor" href="#3b0-roadmap-reading-rules" aria-label="Link to this section">#</a></h2>
+<p>Before comparing A100, H100, H200, B200, GB200, MI300X, MI325X, MI350X, Rubin, or MI400, use these rules.</p>
+<pre class="code-block"><code>Rule 1: Compare dense to dense and sparse to sparse.
+Rule 2: Compare GPU-level numbers to GPU-level numbers.
+Rule 3: Compare system-level numbers to system-level numbers.
+Rule 4: Compare rack-level numbers to rack-level numbers.
+Rule 5: Separate shipping specs from announced roadmap.
+Rule 6: Treat benchmark wins as workload-specific, not universal.
+Rule 7: Do not choose hardware from TFLOPS alone.</code></pre>
+<p>The biggest mistake in roadmap analysis is mixing units:</p>
+<pre class="code-block"><code>B200 GPU != DGX B200 system != GB200 Superchip != GB200 NVL72 rack</code></pre>
+<p>Another common mistake is mixing dense and sparse peak numbers:</p>
+<pre class="code-block"><code>H100 dense BF16 peak ≈ 989.4 TFLOPS
+H100 sparse BF16 peak ≈ 1,978.9 TFLOPS</code></pre>
+<p>If a dense workload is measured against sparse peak, model utilization appears artificially low.</p>
+<hr>
+<h2 id="table-3b1-roadmap-confidence-labels">Table 3B.1 — Roadmap Confidence Labels<a class="anchor" href="#table-3b1-roadmap-confidence-labels" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Label</th><th>Use in Ch03B</th><th>Example</th></tr></thead><tbody><tr><td><code><span class="roadmap-label label-shipped">[SHIPPED]</span></code></td><td>Vendor-published shipping product spec</td><td>H200 141 GB HBM3e, 4.8 TB/s</td></tr><tr><td><code><span class="roadmap-label label-announced">[ANNOUNCED]</span></code></td><td>Vendor-announced roadmap or future platform</td><td>Rubin or MI400 roadmap direction</td></tr><tr><td><code><span class="roadmap-label label-derived">[DERIVED FROM SHIPPED]</span></code></td><td>Calculation from official shipping spec</td><td>H100 dense BF16 derived from sparse peak</td></tr><tr><td><code><span class="roadmap-label label-estimated">[ESTIMATED]</span></code></td><td>Simplified engineering estimate</td><td>Memory needed for 70B BF16 weights</td></tr><tr><td><code><span class="roadmap-label label-representative">[REPRESENTATIVE]</span></code></td><td>Workload-dependent architecture guidance</td><td>H200 often helps memory-bound inference</td></tr><tr><td><code><span class="roadmap-label label-env">[ENV-SPECIFIC]</span></code></td><td>Benchmark or measured deployment behavior</td><td>MLPerf result, vendor benchmark, internal cluster throughput</td></tr></tbody></table></div>
+<p>Use this table as the contract for the chapter. A shipping GPU specification is not the same thing as a roadmap announcement, and a benchmark result is not the same thing as a production guarantee.</p>
+<blockquote><strong>Key Takeaway:</strong> Roadmap claims are not all equal. Before using a hardware number, identify whether it is shipped, announced, derived, estimated, representative, or environment-specific.</blockquote>
+<hr>
+<h2 id="3b1-the-four-lens-gpu-generation-evaluation-framework">3B.1 The Four-Lens GPU Generation Evaluation Framework<a class="anchor" href="#3b1-the-four-lens-gpu-generation-evaluation-framework" aria-label="Link to this section">#</a></h2>
+<p>A GPU generation matters only if the generation changes a resource that limits your workload.</p>
+<p>Use four lenses:</p>
+<ol>
+<li>Compute density</li>
+<li>Memory capacity and bandwidth</li>
+<li>Interconnect and scale-up domain</li>
+<li>Software and deployment maturity</li>
+</ol>
+<hr>
+<h2 id="figure-placeholder-fig-3b1">Figure Placeholder — Fig 3B.1<a class="anchor" href="#figure-placeholder-fig-3b1" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-3b1-four-lens-gpu-generation-evaluation-framework">
+  <div class="figure-kicker">Fig 3B.1</div>
+  <div class="figure-title">Four-Lens GPU Generation Evaluation Framework</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A roadmap evaluation framework covering compute density, memory architecture, interconnect domain, and software/deployment maturity.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch03b_fig_3b_1_four_lens_gpu_generation_framework.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+      <span class="figure-source muted">Source diagram pending</span>
+    </div>
+  </div>
+  <figcaption><strong>Fig 3B.1 — Four-Lens GPU Generation Evaluation Framework.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> GPU generations should not be evaluated by one headline number. A new generation may improve peak FLOPs, memory capacity, memory bandwidth, precision support, scale-up topology, or software-visible capability. The architect’s job is to identify which dimension actually changes the workload bottleneck.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The four-lens framework keeps roadmap discussion disciplined. H200 is mainly a memory-capacity and memory-bandwidth story. Blackwell is partly a precision and rack-scale interconnect story. MI300X is strongly a memory-capacity story. Future Rubin or MI400 claims should be treated as roadmap signals until product-level specifications are verified.</p>
+<blockquote><strong>Key Takeaway:</strong> A GPU generation matters only when its changed resource maps to your workload bottleneck.</blockquote>
+<hr>
+<h2 id="3b2-lens-1-compute-density">3B.2 Lens 1 — Compute Density<a class="anchor" href="#3b2-lens-1-compute-density" aria-label="Link to this section">#</a></h2>
+<p>Compute density asks:</p>
+<pre class="code-block"><code>How much math can this generation perform per GPU, per watt, per dollar, and per rack?</code></pre>
+<p>For AI workloads, compute density is shaped by:</p>
+<ul>
+<li>Tensor Core or matrix-engine generation</li>
+<li>Supported precision formats</li>
+<li>Dense vs sparse peak</li>
+<li>FP16, BF16, FP8, FP4, MXFP formats</li>
+<li>Real kernel availability</li>
+<li>Compiler/runtime support</li>
+<li>Sustained efficiency, not just peak numbers</li>
+</ul>
+<p>Do not compare:</p>
+<pre class="code-block"><code>H100 sparse BF16 peak</code></pre>
+<p>against:</p>
+<pre class="code-block"><code>MI300X dense BF16 peak</code></pre>
+<p>That is not a valid comparison.</p>
+<p>Compare dense-to-dense or sparse-to-sparse.</p>
+<hr>
+<h2 id="3b3-lens-2-memory-capacity-and-bandwidth">3B.3 Lens 2 — Memory Capacity and Bandwidth<a class="anchor" href="#3b3-lens-2-memory-capacity-and-bandwidth" aria-label="Link to this section">#</a></h2>
+<p>Memory capacity asks:</p>
+<pre class="code-block"><code>Does the model, KV cache, activations, and runtime overhead fit?</code></pre>
+<p>Memory bandwidth asks:</p>
+<pre class="code-block"><code>Can the workload stream weights, activations, and KV cache quickly enough?</code></pre>
+<p>For LLM inference, memory often decides system economics before peak compute does.</p>
+<p>A simplified 70B model memory estimate:</p>
+<p class="confidence"><span class="roadmap-label label-estimated">[ESTIMATED]</span></p>
+<pre class="code-block"><code>BF16 weights ≈ 70B × 2 bytes = 140 GB
+FP8 weights  ≈ 70B × 1 byte  = 70 GB
+INT4 weights ≈ 70B × 0.5 byte = 35 GB</code></pre>
+<p>This estimate excludes:</p>
+<ul>
+<li>KV cache</li>
+<li>Runtime buffers</li>
+<li>Activations</li>
+<li>Fragmentation</li>
+<li>Speculative decoding buffers</li>
+<li>Quantization metadata</li>
+<li>Framework overhead</li>
+</ul>
+<blockquote><strong>Key Takeaway:</strong> A GPU with enough compute but insufficient memory capacity can still be the wrong choice.</blockquote>
+<hr>
+<h2 id="3b4-lens-3-interconnect-and-scale-up-domain">3B.4 Lens 3 — Interconnect and Scale-Up Domain<a class="anchor" href="#3b4-lens-3-interconnect-and-scale-up-domain" aria-label="Link to this section">#</a></h2>
+<p>Interconnect asks:</p>
+<pre class="code-block"><code>How many accelerators can communicate efficiently as one local domain?</code></pre>
+<p>Important terms:</p>
+<ul>
+<li>PCIe</li>
+<li>NVLink</li>
+<li>NVSwitch</li>
+<li>Infinity Fabric</li>
+<li>InfiniBand</li>
+<li>Ethernet</li>
+<li>Rack-scale NVLink domains</li>
+<li>GPU-to-GPU bandwidth</li>
+<li>Line rate vs effective bandwidth</li>
+</ul>
+<p>The key question is not only “what is the bandwidth?” but:</p>
+<pre class="code-block"><code>What does that bandwidth connect?</code></pre>
+<p>A per-link number is not the same as a per-GPU aggregate number. A per-GPU number is not the same as a rack-level number. A network line rate is not the same as effective collective bandwidth.</p>
+<hr>
+<h2 id="3b5-lens-4-software-and-deployment-maturity">3B.5 Lens 4 — Software and Deployment Maturity<a class="anchor" href="#3b5-lens-4-software-and-deployment-maturity" aria-label="Link to this section">#</a></h2>
+<p>Software maturity asks:</p>
+<pre class="code-block"><code>Can production frameworks actually use the hardware paths?</code></pre>
+<p>This includes:</p>
+<ul>
+<li>CUDA / ROCm / XLA / vendor stack maturity</li>
+<li>PyTorch support</li>
+<li>Kernel libraries</li>
+<li>Compiler support</li>
+<li>Serving frameworks</li>
+<li>Distributed collectives</li>
+<li>Quantization support</li>
+<li>Debugging/profiling tools</li>
+<li>Driver stability</li>
+<li>Cloud availability</li>
+<li>Team expertise</li>
+</ul>
+<p class="confidence"><span class="roadmap-label label-representative">[REPRESENTATIVE]</span> The best accelerator on paper may not be the best accelerator for a team if the software path is immature for the workload.</p>
+<hr>
+<h1 id="3b6-nvidia-roadmap-ampere-hopper-blackwell-rubin">3B.6 NVIDIA Roadmap: Ampere → Hopper → Blackwell → Rubin<a class="anchor" href="#3b6-nvidia-roadmap-ampere-hopper-blackwell-rubin" aria-label="Link to this section">#</a></h1>
+<p>The NVIDIA roadmap should be read as a sequence of system changes.</p>
+<p>Ampere made A100 a major training platform. Hopper made FP8, HBM3, and Transformer Engine central to the LLM era. H200 expanded Hopper’s memory capacity and bandwidth. Blackwell pushes the system boundary toward newer low-precision formats and larger NVLink domains. Rubin / Vera Rubin should be treated as roadmap unless official product-level specifications are available.</p>
+<hr>
+<h2 id="figure-placeholder-fig-3b2">Figure Placeholder — Fig 3B.2<a class="anchor" href="#figure-placeholder-fig-3b2" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-3b2-nvidia-gpu-roadmap-timeline">
+  <div class="figure-kicker">Fig 3B.2</div>
+  <div class="figure-title">NVIDIA GPU Roadmap Timeline</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A timeline showing Ampere, Hopper, Blackwell, and Rubin as architecture and system-design signals.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch03b_fig_3b_2_nvidia_roadmap_timeline.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+      <span class="figure-source muted">Source diagram pending</span>
+    </div>
+  </div>
+  <figcaption><strong>Fig 3B.2 — NVIDIA GPU Roadmap Timeline.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> The NVIDIA roadmap is not simply “new GPU faster than old GPU.” Each generation changes a different part of the AI infrastructure stack. Ampere established A100 as a major training platform. Hopper made FP8 and HBM3 central to LLM infrastructure. H200 refreshed Hopper with larger and faster HBM. Blackwell shifts more emphasis toward rack-scale NVLink domains and newer precision formats. Rubin should be treated as roadmap until specific product specs are available.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The timeline helps the reader avoid comparing the wrong product level. H100 and H200 are GPU-level products. DGX B200 and GB200 NVL72 are system/rack-level products. Rubin is a future roadmap family unless official product-level specifications are available.</p>
+<blockquote><strong>Key Takeaway:</strong> Read NVIDIA generations by product level and confidence label: GPU, system, rack, or roadmap.</blockquote>
+<hr>
+<h2 id="3b7-nvidia-a100-ampere-baseline">3B.7 NVIDIA A100: Ampere Baseline<a class="anchor" href="#3b7-nvidia-a100-ampere-baseline" aria-label="Link to this section">#</a></h2>
+<p>A100 is still important because it is the baseline many engineers compare against.</p>
+<p class="confidence"><span class="roadmap-label label-shipped">[SHIPPED]</span> NVIDIA A100 80GB uses HBM2e memory. The 80GB PCIe SKU is commonly listed at 1,935 GB/s memory bandwidth, while the 80GB SXM SKU is listed at 2,039 GB/s.</p>
+<p class="confidence"><span class="roadmap-label label-shipped">[SHIPPED]</span> A100 80GB lists BF16 and FP16 Tensor Core peak performance around 312 TFLOPS dense and 624 TFLOPS with structured sparsity.</p>
+<p>Use A100 as a reference point for:</p>
+<ul>
+<li>Ampere-era training clusters</li>
+<li>BF16/FP16 dense vs sparse comparisons</li>
+<li>NVLink 3 class systems</li>
+<li>Migration to Hopper/H100</li>
+</ul>
+<p>A100 remains a useful baseline, but not because it is the newest. It is useful because many production clusters and benchmarks were built around it.</p>
+<hr>
+<h2 id="3b8-nvidia-h100-hopper-becomes-the-llm-baseline">3B.8 NVIDIA H100: Hopper Becomes the LLM Baseline<a class="anchor" href="#3b8-nvidia-h100-hopper-becomes-the-llm-baseline" aria-label="Link to this section">#</a></h2>
+<p>H100 became the defining accelerator of the early LLM infrastructure era.</p>
+<p>Important changes included:</p>
+<ul>
+<li>Hopper Tensor Cores</li>
+<li>Transformer Engine</li>
+<li>FP8 support</li>
+<li>HBM3</li>
+<li>NVLink 4</li>
+<li>Strong CUDA/software ecosystem support</li>
+<li>Broad hyperscale adoption</li>
+</ul>
+<p class="confidence"><span class="roadmap-label label-shipped">[SHIPPED]</span> H100 SXM5 80 GB provides 80 GB of HBM3 and 3.35 TB/s peak memory bandwidth.</p>
+<p class="confidence"><span class="roadmap-label label-derived">[DERIVED FROM SHIPPED]</span> H100 SXM5 dense/non-sparse BF16 Tensor Core peak is approximately 989.4 TFLOPS.</p>
+<p class="confidence"><span class="roadmap-label label-shipped">[SHIPPED]</span> The commonly listed approximately 1,978.9 TFLOPS BF16 value is the sparse Tensor Core peak and should not be used as the denominator for dense MFU.</p>
+<p class="confidence"><span class="roadmap-label label-shipped">[SHIPPED]</span> H100 SXM5 systems list up to 900 GB/s aggregate NVLink bandwidth per GPU using fourth-generation NVLink.</p>
+<h3 id="what-changed-with-h100">What Changed with H100?<a class="anchor" href="#what-changed-with-h100" aria-label="Link to this section">#</a></h3>
+<div class="table-wrap"><table><thead><tr><th>Dimension</th><th>H100 Roadmap Meaning</th></tr></thead><tbody><tr><td>Compute</td><td>Hopper Tensor Cores, FP8 Transformer Engine</td></tr><tr><td>Memory</td><td>80 GB HBM3, 3.35 TB/s</td></tr><tr><td>Interconnect</td><td>NVLink 4, high-bandwidth intra-node fabric</td></tr><tr><td>Software</td><td>CUDA ecosystem and framework support matured around LLM workloads</td></tr><tr><td>System impact</td><td>Became a common reference platform for training and inference</td></tr></tbody></table></div>
+<blockquote><strong>Key Takeaway:</strong> H100 mattered because compute, memory, interconnect, and software maturity aligned for transformer workloads.</blockquote>
+<hr>
+<h2 id="3b9-nvidia-h200-memory-refresh-with-large-inference-impact">3B.9 NVIDIA H200: Memory Refresh with Large Inference Impact<a class="anchor" href="#3b9-nvidia-h200-memory-refresh-with-large-inference-impact" aria-label="Link to this section">#</a></h2>
+<p>H200 is best understood as a Hopper-generation memory refresh.</p>
+<p class="confidence"><span class="roadmap-label label-shipped">[SHIPPED]</span> NVIDIA H200 provides 141 GB of HBM3e and 4.8 TB/s peak memory bandwidth.</p>
+<p class="confidence"><span class="roadmap-label label-representative">[REPRESENTATIVE]</span> H200 should be treated primarily as a Hopper-generation memory refresh: the major practical change versus H100 SXM5 is larger and faster HBM3e.</p>
+<p>This matters for:</p>
+<ul>
+<li>Larger models</li>
+<li>Larger KV cache</li>
+<li>Longer context</li>
+<li>Higher concurrency</li>
+<li>Memory-bound decode</li>
+<li>Reduced sharding pressure</li>
+</ul>
+<p>H200 is not important because it changes every part of the architecture. It is important because memory was a bottleneck.</p>
+<h3 id="h100-vs-h200-mental-model">H100 vs H200 Mental Model<a class="anchor" href="#h100-vs-h200-mental-model" aria-label="Link to this section">#</a></h3>
+<div class="table-wrap"><table><thead><tr><th>Question</th><th>H100</th><th>H200</th></tr></thead><tbody><tr><td>Generation</td><td>Hopper</td><td>Hopper-generation memory refresh</td></tr><tr><td>HBM capacity</td><td>80 GB</td><td>141 GB</td></tr><tr><td>HBM bandwidth</td><td>3.35 TB/s</td><td>4.8 TB/s</td></tr><tr><td>Main impact</td><td>LLM baseline</td><td>Better memory capacity and bandwidth for inference/HPC</td></tr><tr><td>Production lesson</td><td>Balanced Hopper platform</td><td>Memory can justify a refresh even without new architecture</td></tr></tbody></table></div>
+<blockquote><strong>Key Takeaway:</strong> A roadmap generation can matter because memory changed, even if the compute architecture is similar.</blockquote>
+<hr>
+<h2 id="3b10-nvidia-blackwell-product-level-discipline-required">3B.10 NVIDIA Blackwell: Product-Level Discipline Required<a class="anchor" href="#3b10-nvidia-blackwell-product-level-discipline-required" aria-label="Link to this section">#</a></h2>
+<p>Blackwell is where product-level confusion becomes dangerous.</p>
+<p>Do not say:</p>
+<pre class="code-block"><code>Blackwell has 1,440 GB memory.</code></pre>
+<p>That is a DGX B200 system-level number, not a single GPU number.</p>
+<p>Do not say:</p>
+<pre class="code-block"><code>GB200 NVL72 is a GPU.</code></pre>
+<p>It is a rack-scale platform.</p>
+<p>Use the product level every time:</p>
+<pre class="code-block"><code>B200 GPU
+DGX B200 system
+GB200 Superchip
+GB200 NVL72 rack-scale platform</code></pre>
+<hr>
+<h2 id="figure-placeholder-fig-3b7">Figure Placeholder — Fig 3B.7<a class="anchor" href="#figure-placeholder-fig-3b7" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-3b7-gpu-vs-system-vs-rack-product-level-guardrail">
+  <div class="figure-kicker">Fig 3B.7</div>
+  <div class="figure-title">GPU vs System vs Rack Product-Level Guardrail</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A product-level hierarchy that prevents mixing single-GPU, module, system, rack, and cluster numbers.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch03b_fig_3b_7_product_level_guardrail.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+      <span class="figure-source muted">Source diagram pending</span>
+    </div>
+  </div>
+  <figcaption><strong>Fig 3B.7 — GPU vs System vs Rack Product-Level Guardrail.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> Blackwell-era systems make product-level clarity mandatory. A B200 GPU, a DGX B200 system, a GB200 Superchip, and a GB200 NVL72 rack are not the same comparison unit.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> This figure should prevent one of the most common roadmap mistakes: comparing a rack-level HBM capacity or NVLink-domain number to a single-GPU number from a previous generation. Always declare whether a number is per GPU, per module, per node, per rack, or per cluster.</p>
+<blockquote><strong>Key Takeaway:</strong> Before comparing roadmap numbers, ask: “What is the unit — GPU, module, system, rack, or cluster?”</blockquote>
+<hr>
+<h2 id="table-3b6-product-level-numbering-guardrail">Table 3B.6 — Product-Level Numbering Guardrail<a class="anchor" href="#table-3b6-product-level-numbering-guardrail" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Level</th><th>Example</th><th>Valid Comparison</th><th>Common Mistake</th></tr></thead><tbody><tr><td>GPU</td><td>H100, H200, B200, MI300X</td><td>GPU-to-GPU specs</td><td>Comparing one GPU to a full rack</td></tr><tr><td>Module / Superchip</td><td>GB200 Superchip, accelerator module</td><td>Module-to-module</td><td>Treating module value as per-GPU</td></tr><tr><td>System / Node</td><td>DGX B200, HGX system, 8-GPU server</td><td>System-to-system</td><td>Comparing system total HBM to per-GPU HBM</td></tr><tr><td>Rack</td><td>GB200 NVL72, rack-scale platforms</td><td>Rack-to-rack</td><td>Comparing rack NVLink domain to node fabric</td></tr><tr><td>Cluster</td><td>Multi-rack training system</td><td>Cluster-to-cluster</td><td>Confusing network bisection with local fabric</td></tr></tbody></table></div>
+<blockquote><strong>Key Takeaway:</strong> Most roadmap comparison errors happen because the comparison unit changed without the reader noticing.</blockquote>
+<hr>
+<h2 id="3b11-dgx-b200-gb200-superchip-and-gb200-nvl72">3B.11 DGX B200, GB200 Superchip, and GB200 NVL72<a class="anchor" href="#3b11-dgx-b200-gb200-superchip-and-gb200-nvl72" aria-label="Link to this section">#</a></h2>
+<p class="confidence"><span class="roadmap-label label-shipped">[SHIPPED]</span> DGX B200 is a system-level product with 8 NVIDIA Blackwell GPUs, 1,440 GB total GPU memory, 64 TB/s total HBM3e bandwidth, and 14.4 TB/s aggregate NVLink bandwidth.</p>
+<p>These are system-level values.</p>
+<p>They should not be quoted as per-GPU values.</p>
+<p class="confidence"><span class="roadmap-label label-shipped">[SHIPPED]</span> The NVIDIA GB200 Superchip combines one Grace CPU and two Blackwell GPUs.</p>
+<p class="confidence"><span class="roadmap-label label-shipped">[SHIPPED]</span> In the GB200 context, NVIDIA describes fifth-generation NVLink as providing 1.8 TB/s GPU-to-GPU bandwidth.</p>
+<p class="confidence"><span class="roadmap-label label-shipped">[SHIPPED]</span> GB200 NVL72 is a rack-scale platform connecting 36 Grace CPUs and 72 Blackwell GPUs in a 72-GPU NVLink domain.</p>
+<p>GB200 NVL72 values are rack-level or platform-level values. They should not be directly compared against a single H100, H200, B200, or MI300X.</p>
+<h3 id="blackwell-roadmap-lesson">Blackwell Roadmap Lesson<a class="anchor" href="#blackwell-roadmap-lesson" aria-label="Link to this section">#</a></h3>
+<p>Blackwell is not only a GPU upgrade. It is a system-design boundary shift:</p>
+<pre class="code-block"><code>GPU-level thinking → system-level thinking → rack-scale thinking</code></pre>
+<blockquote><strong>Key Takeaway:</strong> Blackwell-era infrastructure makes “what product level are we discussing?” a first-class architecture question.</blockquote>
+<hr>
+<h2 id="3b12-rubin-vera-rubin">3B.12 Rubin / Vera Rubin<a class="anchor" href="#3b12-rubin-vera-rubin" aria-label="Link to this section">#</a></h2>
+<p class="confidence"><span class="roadmap-label label-announced">[ANNOUNCED]</span> Rubin / Vera Rubin should be treated as NVIDIA’s future roadmap direction beyond Blackwell.</p>
+<p>Use Rubin as a planning signal unless official product-level specifications and availability are verified for the edition date.</p>
+<p>Safe wording:</p>
+<pre class="code-block"><code>Rubin indicates NVIDIA’s future direction beyond Blackwell.</code></pre>
+<p>Unsafe wording:</p>
+<pre class="code-block"><code>Rubin has final production specs of X, Y, Z.</code></pre>
+<p>unless those values come from an official product-level source available at publication time.</p>
+<blockquote><strong>Key Takeaway:</strong> Future roadmap names are useful signals, not procurement-ready specifications.</blockquote>
+<hr>
+<h2 id="table-3b2-nvidia-generation-comparison">Table 3B.2 — NVIDIA Generation Comparison<a class="anchor" href="#table-3b2-nvidia-generation-comparison" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Generation / Product</th><th>Product Level</th><th>Main Change</th><th>Memory Story</th><th>Interconnect Story</th><th>Confidence</th></tr></thead><tbody><tr><td>A100</td><td>GPU</td><td>Ampere Tensor Core platform</td><td>80 GB HBM2e; PCIe and SXM bandwidth differ</td><td>NVLink 3 class systems</td><td><code><span class="roadmap-label label-shipped">[SHIPPED]</span></code></td></tr><tr><td>H100</td><td>GPU</td><td>Hopper, FP8 Transformer Engine, HBM3</td><td>80 GB HBM3, 3.35 TB/s for SXM5</td><td>NVLink 4, up to 900 GB/s aggregate per GPU</td><td><code><span class="roadmap-label label-shipped">[SHIPPED]</span></code></td></tr><tr><td>H200</td><td>GPU</td><td>Hopper-generation memory refresh</td><td>141 GB HBM3e, 4.8 TB/s</td><td>Hopper platform continuity</td><td><code><span class="roadmap-label label-shipped">[SHIPPED]</span></code></td></tr><tr><td>B200</td><td>GPU / module depending context</td><td>Blackwell compute and precision evolution</td><td>Product-specific HBM3e</td><td>NVLink 5 class systems</td><td><code><span class="roadmap-label label-shipped">[SHIPPED]</span></code> or <code><span class="roadmap-label label-announced">[ANNOUNCED]</span></code> depending source</td></tr><tr><td>DGX B200</td><td>System</td><td>8-GPU Blackwell system</td><td>1,440 GB total GPU memory, 64 TB/s total HBM3e bandwidth</td><td>14.4 TB/s aggregate NVLink bandwidth</td><td><code><span class="roadmap-label label-shipped">[SHIPPED]</span></code></td></tr><tr><td>GB200 Superchip</td><td>Module / superchip</td><td>Grace CPU + two Blackwell GPUs</td><td>Module-level values</td><td>Fifth-generation NVLink in GB200 context</td><td><code><span class="roadmap-label label-shipped">[SHIPPED]</span></code></td></tr><tr><td>GB200 NVL72</td><td>Rack-scale platform</td><td>72-GPU rack-scale NVLink domain</td><td>Rack-level HBM values</td><td>72-GPU NVLink domain</td><td><code><span class="roadmap-label label-shipped">[SHIPPED]</span></code></td></tr><tr><td>Rubin / Vera Rubin</td><td>Roadmap</td><td>Future generation beyond Blackwell</td><td>Roadmap-specific</td><td>Roadmap-specific</td><td><code><span class="roadmap-label label-announced">[ANNOUNCED]</span></code></td></tr></tbody></table></div>
+<p>This table is a roadmap reading tool. It shows that H200 should not be described as a completely new architecture in the same way Blackwell is. It also shows that GB200 NVL72 should not be compared directly to a single GPU number.</p>
+<blockquote><strong>Key Takeaway:</strong> Every NVIDIA roadmap number must answer: per GPU, per system, per rack, or roadmap?</blockquote>
+<hr>
+<h1 id="3b13-amd-roadmap-cdna-3-cdna-3-cdna-4-mi400">3B.13 AMD Roadmap: CDNA 3 → CDNA 3+ → CDNA 4 → MI400<a class="anchor" href="#3b13-amd-roadmap-cdna-3-cdna-3-cdna-4-mi400" aria-label="Link to this section">#</a></h1>
+<p>AMD’s roadmap tells a different story from NVIDIA’s roadmap.</p>
+<p>AMD’s accelerator strategy is strongly associated with:</p>
+<ul>
+<li>Large HBM capacity</li>
+<li>High HBM bandwidth</li>
+<li>Chiplet packaging</li>
+<li>CDNA architecture evolution</li>
+<li>ROCm/HIP software stack</li>
+<li>OAM-style accelerator platforms</li>
+<li>Future rack-scale system direction</li>
+</ul>
+<p>The point is not to declare AMD or NVIDIA the universal winner. The point is to evaluate each by workload fit.</p>
+<hr>
+<h2 id="figure-placeholder-fig-3b3">Figure Placeholder — Fig 3B.3<a class="anchor" href="#figure-placeholder-fig-3b3" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-3b3-amd-instinct-roadmap-timeline">
+  <div class="figure-kicker">Fig 3B.3</div>
+  <div class="figure-title">AMD Instinct Roadmap Timeline</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A timeline showing AMD CDNA 3, CDNA 3+ memory refresh, CDNA 4, and MI400/Helios roadmap direction.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch03b_fig_3b_3_amd_roadmap_timeline.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+      <span class="figure-source muted">Source diagram pending</span>
+    </div>
+  </div>
+  <figcaption><strong>Fig 3B.3 — AMD Instinct Roadmap Timeline.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> The AMD roadmap tells a different but important story. MI300X emphasized very large HBM capacity and bandwidth. MI325X extended the memory story. MI350/MI355 moved the platform toward CDNA 4, larger HBM3e capacity, higher bandwidth, and new low-precision formats. MI400 should be treated as roadmap unless final product specifications are available.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The timeline should show AMD’s memory-first relevance for LLM serving and long-context workloads. It should also avoid implying software maturity, benchmark parity, or deployment availability without evidence. The roadmap should be treated as a sequence of architectural signals, not a universal NVIDIA-vs-AMD conclusion.</p>
+<blockquote><strong>Key Takeaway:</strong> AMD roadmap evaluation should focus on memory fit, bandwidth, interconnect, precision support, ROCm/software readiness, and platform availability.</blockquote>
+<hr>
+<h2 id="3b14-amd-mi300x-large-hbm-cdna-3-accelerator">3B.14 AMD MI300X: Large-HBM CDNA 3 Accelerator<a class="anchor" href="#3b14-amd-mi300x-large-hbm-cdna-3-accelerator" aria-label="Link to this section">#</a></h2>
+<p class="confidence"><span class="roadmap-label label-shipped">[SHIPPED]</span> AMD Instinct MI300X provides 192 GB HBM3 and approximately 5.3 TB/s peak memory bandwidth.</p>
+<p class="confidence"><span class="roadmap-label label-shipped">[SHIPPED]</span> AMD lists peak dense BF16 at approximately 1,307.4 TFLOPS and sparse BF16 at approximately 2,614.9 TFLOPS.</p>
+<p class="confidence"><span class="roadmap-label label-representative">[REPRESENTATIVE]</span> MI300X’s large HBM footprint is especially relevant for memory-heavy inference and KV-cache-heavy workloads, provided the software stack fits the deployment.</p>
+<p>Do not say:</p>
+<pre class="code-block"><code>MI300X always wins 70B serving.</code></pre>
+<p>Safer:</p>
+<pre class="code-block"><code>MI300X’s 192 GB HBM can be attractive for memory-heavy 70B-class inference because it may reduce sharding pressure and leave more KV-cache headroom, but production results depend on model, precision, serving stack, kernels, batching, and software maturity.</code></pre>
+<hr>
+<h2 id="figure-placeholder-fig-3b6">Figure Placeholder — Fig 3B.6<a class="anchor" href="#figure-placeholder-fig-3b6" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-3b6-amd-mi300x-die-stack-chiplets-and-hbm">
+  <div class="figure-kicker">Fig 3B.6</div>
+  <div class="figure-title">AMD MI300X Die Stack: Chiplets and HBM</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A chiplet and HBM packaging view showing why MI300X matters for large-memory AI workloads.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/png_300dpi/ch03b_fig_3b_6_mi300x_die_stack.png</code></p>
+      <p class="figure-status">Existing diagram; print export needed</p>
+      <a class="figure-source" href="../diagrams/diagrams_batch2.html#d15">View source diagram</a>
+    </div>
+  </div>
+  <figcaption><strong>Fig 3B.6 — AMD MI300X Die Stack: Chiplets and HBM.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> MI300X is important not only because of its compute number, but because of its packaging and memory story. Large HBM capacity changes model-fit and KV-cache economics for LLM inference.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The die-stack figure should be used to explain why MI300X is often discussed in the context of large-memory serving. The architectural lesson is that memory capacity, bandwidth, packaging, and software support together determine production usefulness.</p>
+<blockquote><strong>Key Takeaway:</strong> MI300X is a roadmap milestone because it made large-HBM accelerator design central to AI infrastructure discussions.</blockquote>
+<hr>
+<h2 id="3b15-amd-mi325x-memory-refresh">3B.15 AMD MI325X: Memory Refresh<a class="anchor" href="#3b15-amd-mi325x-memory-refresh" aria-label="Link to this section">#</a></h2>
+<p>[SHIPPED/ANNOUNCED] AMD Instinct MI325X is a memory-focused refresh with 256 GB HBM3e and approximately 6 TB/s peak theoretical memory bandwidth.</p>
+<p>Use <code><span class="roadmap-label label-shipped">[SHIPPED]</span></code> only when referencing a final product page or datasheet. Use <code><span class="roadmap-label label-announced">[ANNOUNCED]</span></code> if the source language is forward-looking.</p>
+<p>Why MI325X matters:</p>
+<ul>
+<li>Larger HBM than MI300X</li>
+<li>Higher memory bandwidth</li>
+<li>Improved model-fit and KV-cache headroom</li>
+<li>Same general large-memory accelerator theme</li>
+</ul>
+<p class="confidence"><span class="roadmap-label label-representative">[REPRESENTATIVE]</span> MI325X is best understood as extending the MI300X memory story rather than replacing the need for workload validation.</p>
+<hr>
+<h2 id="3b16-amd-mi350x-mi355x-cdna-4-and-larger-memory">3B.16 AMD MI350X / MI355X: CDNA 4 and Larger Memory<a class="anchor" href="#3b16-amd-mi350x-mi355x-cdna-4-and-larger-memory" aria-label="Link to this section">#</a></h2>
+<p class="confidence"><span class="roadmap-label label-shipped">[SHIPPED]</span> AMD Instinct MI350 Series product materials list 288 GB HBM3e and 8 TB/s peak memory bandwidth, with CDNA 4 architecture and next-generation MXFP datatype support.</p>
+<p>Use product-specific wording for MI350X vs MI355X.</p>
+<p>The roadmap signal:</p>
+<ul>
+<li>Larger HBM capacity</li>
+<li>Higher HBM bandwidth</li>
+<li>CDNA 4 architecture</li>
+<li>MXFP4 / MXFP6 class low-precision support</li>
+<li>Continued focus on large-memory AI training and inference</li>
+</ul>
+<p class="confidence"><span class="roadmap-label label-representative">[REPRESENTATIVE]</span> MI350-class accelerators should be evaluated by memory capacity, memory bandwidth, low-precision kernel support, ROCm/framework maturity, platform availability, and workload fit.</p>
+<hr>
+<h2 id="3b17-amd-mi400-helios">3B.17 AMD MI400 / Helios<a class="anchor" href="#3b17-amd-mi400-helios" aria-label="Link to this section">#</a></h2>
+<p class="confidence"><span class="roadmap-label label-announced">[ANNOUNCED]</span> AMD Helios / MI400 should be discussed as a future rack-scale roadmap direction, not a shipping product specification, unless official product-level datasheets exist at publication time.</p>
+<p>Safe wording:</p>
+<pre class="code-block"><code>MI400 / Helios signals AMD’s direction toward future rack-scale AI infrastructure.</code></pre>
+<p>Unsafe wording:</p>
+<pre class="code-block"><code>MI400 has final spec X and should beat product Y.</code></pre>
+<p>unless final official product specifications and benchmark context exist.</p>
+<blockquote><strong>Key Takeaway:</strong> MI400 and Helios are planning signals until final product-level specifications and availability are verified.</blockquote>
+<hr>
+<h2 id="table-3b3-amd-instinct-generation-comparison">Table 3B.3 — AMD Instinct Generation Comparison<a class="anchor" href="#table-3b3-amd-instinct-generation-comparison" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Product</th><th>Generation / Family</th><th>Main Change</th><th>Memory Story</th><th>Compute / Precision Story</th><th>Confidence</th></tr></thead><tbody><tr><td>MI300X</td><td>CDNA 3</td><td>Large-HBM chiplet accelerator</td><td>192 GB HBM3, ≈5.3 TB/s</td><td>Dense BF16 ≈1,307.4 TFLOPS</td><td><code><span class="roadmap-label label-shipped">[SHIPPED]</span></code></td></tr><tr><td>MI325X</td><td>CDNA 3+ / refresh</td><td>Memory capacity/bandwidth refresh</td><td>256 GB HBM3e, ≈6 TB/s</td><td>Same general large-memory theme; verify exact compute values</td><td><code><span class="roadmap-label label-shipped">[SHIPPED]</span></code> or <code><span class="roadmap-label label-announced">[ANNOUNCED]</span></code> depending source</td></tr><tr><td>MI350X / MI355X</td><td>CDNA 4 / MI350 Series</td><td>Larger HBM and low-precision support</td><td>288 GB HBM3e, 8 TB/s class bandwidth</td><td>MXFP4/MXFP6 class support; SKU-specific</td><td><code><span class="roadmap-label label-shipped">[SHIPPED]</span></code> if official product page</td></tr><tr><td>MI400 / Helios</td><td>Roadmap / next generation</td><td>Future rack-scale/platform direction</td><td>TBD until official specs</td><td>TBD until official specs</td><td><code><span class="roadmap-label label-announced">[ANNOUNCED]</span></code></td></tr></tbody></table></div>
+<p>The table emphasizes AMD’s large-memory story without making universal performance claims. A memory-rich accelerator can be attractive for model-fit and KV-cache-heavy workloads, but production choice also depends on kernels, framework maturity, interconnect, support model, and operational risk.</p>
+<blockquote><strong>Key Takeaway:</strong> AMD’s roadmap should be evaluated through large HBM capacity, bandwidth, chiplet design, software maturity, and workload fit — not peak numbers alone.</blockquote>
+<hr>
+<h1 id="3b18-hbm-evolution-hbm2e-hbm3-hbm3e-hbm4">3B.18 HBM Evolution: HBM2e → HBM3 → HBM3e → HBM4<a class="anchor" href="#3b18-hbm-evolution-hbm2e-hbm3-hbm3e-hbm4" aria-label="Link to this section">#</a></h1>
+<p>The AI accelerator roadmap is also a memory roadmap.</p>
+<p>Many LLM workloads are constrained by:</p>
+<ul>
+<li>Weight memory</li>
+<li>KV-cache memory</li>
+<li>Activation memory</li>
+<li>Runtime buffers</li>
+<li>HBM bandwidth</li>
+<li>Memory fragmentation</li>
+<li>Context length</li>
+<li>Concurrency</li>
+</ul>
+<p>That is why HBM matters so much.</p>
+<hr>
+<h2 id="figure-placeholder-fig-3b4">Figure Placeholder — Fig 3B.4<a class="anchor" href="#figure-placeholder-fig-3b4" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-3b4-hbm-evolution-and-ai-accelerator-roadmaps">
+  <div class="figure-kicker">Fig 3B.4</div>
+  <div class="figure-title">HBM Evolution and AI Accelerator Roadmaps</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A roadmap visual showing how HBM2e, HBM3, HBM3e, and HBM4 affect model fit, KV cache, and memory bandwidth.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch03b_fig_3b_4_hbm_evolution.svg</code></p>
+      <p class="figure-status">Existing partial HBM visual; roadmap figure still needed</p>
+      <a class="figure-source" href="../diagrams/diagrams_batch2.html#d13">View source diagram</a>
+    </div>
+  </div>
+  <figcaption><strong>Fig 3B.4 — HBM Evolution and AI Accelerator Roadmaps.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> The AI accelerator roadmap is also a memory roadmap. Many LLM workloads are constrained not by peak compute, but by whether the model and KV cache fit in HBM and whether decode can stream data fast enough.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> HBM2e, HBM3, HBM3e, and HBM4 should be discussed as technology generations, while product-specific values must remain tied to a GPU or accelerator SKU. H100, H200, B200/GB200, MI300X, MI325X, and MI350 Series use memory differently at GPU, system, and rack levels.</p>
+<blockquote><strong>Key Takeaway:</strong> For LLM infrastructure, memory generation can matter as much as compute generation.</blockquote>
+<hr>
+<h2 id="table-3b4-memory-evolution-in-ai-accelerators">Table 3B.4 — Memory Evolution in AI Accelerators<a class="anchor" href="#table-3b4-memory-evolution-in-ai-accelerators" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Memory Generation</th><th>Used In / Associated With</th><th>What It Changes</th><th>Production Caution</th></tr></thead><tbody><tr><td>HBM2e</td><td>A100-era accelerators</td><td>Large memory bandwidth relative to prior GPU generations</td><td>Product values vary by SKU</td></tr><tr><td>HBM3</td><td>H100, MI300X class</td><td>Higher bandwidth and capacity for LLM training/inference</td><td>Compare product-specific values</td></tr><tr><td>HBM3e</td><td>H200, B200/GB200, MI325X/MI350 class</td><td>Larger capacity and higher bandwidth</td><td>Do not mix GPU, system, and rack totals</td></tr><tr><td>HBM4</td><td>Future roadmap</td><td>Expected future capacity/bandwidth direction</td><td>Use <code><span class="roadmap-label label-announced">[ANNOUNCED]</span></code> or <code><span class="roadmap-label label-estimated">[ESTIMATED]</span></code> unless final product specs exist</td></tr></tbody></table></div>
+<p class="confidence"><span class="roadmap-label label-representative">[REPRESENTATIVE]</span> AI accelerator roadmaps increasingly depend on HBM capacity and bandwidth. A100-era systems used HBM2e; H100/MI300X-class accelerators use HBM3; H200, B200/GB200, MI325X, and MI350-class products use HBM3e. HBM4 should be treated as roadmap/future until tied to official product specifications.</p>
+<blockquote><strong>Key Takeaway:</strong> HBM generation is a useful signal, but product-specific HBM capacity and bandwidth are what matter for architecture decisions.</blockquote>
+<hr>
+<h1 id="3b19-interconnect-evolution-nvlink-nvswitch-infinity-fabric">3B.19 Interconnect Evolution: NVLink, NVSwitch, Infinity Fabric<a class="anchor" href="#3b19-interconnect-evolution-nvlink-nvswitch-infinity-fabric" aria-label="Link to this section">#</a></h1>
+<p>Large AI systems are communication machines.</p>
+<p>Interconnect evolution is about expanding the efficient communication domain:</p>
+<pre class="code-block"><code>GPU → Node → Rack → Cluster</code></pre>
+<p class="confidence"><span class="roadmap-label label-representative">[REPRESENTATIVE]</span> Interconnect roadmaps are about expanding the efficient communication domain. NVLink/NVSwitch and AMD Infinity Fabric should be evaluated by scope: per link, per GPU, per node, per rack, aggregate, bidirectional, or effective application bandwidth.</p>
+<hr>
+<h2 id="figure-placeholder-fig-3b5">Figure Placeholder — Fig 3B.5<a class="anchor" href="#figure-placeholder-fig-3b5" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-3b5-scale-up-fabric-evolution-nvlink-nvswitch-and-infinity-fabric">
+  <div class="figure-kicker">Fig 3B.5</div>
+  <div class="figure-title">Scale-Up Fabric Evolution: NVLink, NVSwitch, and Infinity Fabric</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A visual comparing communication domains across GPU, node, rack, and cluster scale-up/scale-out fabrics.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch03b_fig_3b_5_interconnect_evolution.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+      <a class="figure-source" href="../diagrams/diagrams_batch2.html#d14">View source diagram</a>
+    </div>
+  </div>
+  <figcaption><strong>Fig 3B.5 — Scale-Up Fabric Evolution: NVLink, NVSwitch, and Infinity Fabric.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> Large AI systems are not just collections of fast GPUs. They are communication machines. As models grow, the boundary of high-bandwidth communication shifts from one GPU to one node and, increasingly, toward rack-scale domains.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> NVLink/NVSwitch and AMD Infinity Fabric should be discussed by scope and directionality. Is the number per link, per GPU, per system, per rack, per direction, bidirectional aggregate, or effective application bandwidth? Without that clarity, interconnect comparisons become misleading.</p>
+<blockquote><strong>Key Takeaway:</strong> Interconnect evolution is about expanding the efficient communication domain, not just increasing a bandwidth number.</blockquote>
+<hr>
+<h2 id="table-3b5-interconnect-evolution-and-directionality-caution">Table 3B.5 — Interconnect Evolution and Directionality Caution<a class="anchor" href="#table-3b5-interconnect-evolution-and-directionality-caution" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Fabric / Generation</th><th>Associated Products</th><th>Scope</th><th>What Changed</th><th>Directionality Caution</th></tr></thead><tbody><tr><td>NVLink 3</td><td>A100 systems</td><td>Intra-node GPU fabric</td><td>Ampere scale-up fabric</td><td>State per GPU/aggregate</td></tr><tr><td>NVLink 4</td><td>H100/H200 systems</td><td>Intra-node GPU fabric</td><td>Hopper scale-up bandwidth</td><td>H100 SXM often listed as 900 GB/s aggregate per GPU</td></tr><tr><td>NVLink 5</td><td>Blackwell systems</td><td>Node/rack-scale fabric depending platform</td><td>Higher bandwidth, larger NVLink domains</td><td>Product-specific</td></tr><tr><td>NVSwitch</td><td>DGX/HGX/NVL systems</td><td>Switched local/rack fabric</td><td>Many-GPU communication domain</td><td>System/rack specific</td></tr><tr><td>AMD Infinity Fabric</td><td>MI300/MI350 systems</td><td>Accelerator fabric / package/platform</td><td>GPU-to-GPU and package/platform communication</td><td>Product/platform specific</td></tr><tr><td>InfiniBand/Ethernet</td><td>Multi-node fabric</td><td>Cluster</td><td>Scale-out training/serving</td><td>Line rate ≠ effective NCCL bandwidth</td></tr></tbody></table></div>
+<p>The right comparison starts with scope. A tensor-parallel group cares about the local scale-up fabric. Data parallelism cares about scale-out bandwidth and collective efficiency. Expert parallelism may care about all-to-all patterns and topology.</p>
+<blockquote><strong>Key Takeaway:</strong> Interconnect numbers are meaningful only after you know the communication pattern and the scope of the bandwidth number.</blockquote>
+<hr>
+<h1 id="3b20-nvidia-vs-amd-neutral-architecture-comparison">3B.20 NVIDIA vs AMD: Neutral Architecture Comparison<a class="anchor" href="#3b20-nvidia-vs-amd-neutral-architecture-comparison" aria-label="Link to this section">#</a></h1>
+<p>Avoid vendor-ranking language.</p>
+<p>Do not write:</p>
+<pre class="code-block"><code>NVIDIA wins.
+AMD wins.</code></pre>
+<p>without a specific workload, software stack, metric, and measurement method.</p>
+<p>Better:</p>
+<pre class="code-block"><code>[REPRESENTATIVE] NVIDIA emphasizes vertically integrated GPU, networking, software, and rack-scale systems. AMD emphasizes high-memory accelerators, ROCm/HIP software momentum, chiplet packaging, and rack-scale roadmap systems. Both must be evaluated through workload fit and operational maturity.</code></pre>
+<p>A fair comparison includes:</p>
+<ul>
+<li>Model size</li>
+<li>Precision</li>
+<li>Sequence length</li>
+<li>Batch size</li>
+<li>Training vs inference</li>
+<li>Prefill vs decode</li>
+<li>Tensor parallelism</li>
+<li>KV cache</li>
+<li>Kernel stack</li>
+<li>Framework version</li>
+<li>Driver/runtime version</li>
+<li>Interconnect</li>
+<li>Power/cooling</li>
+<li>Cost</li>
+<li>Availability</li>
+<li>Team expertise</li>
+</ul>
+<p class="confidence"><span class="roadmap-label label-env">[ENV-SPECIFIC]</span> NVIDIA-vs-AMD performance comparisons are benchmark-specific. A valid comparison must state model, precision, sequence length, batch size, framework, kernel stack, compiler/runtime versions, topology, power settings, and metric.</p>
+<blockquote><strong>Key Takeaway:</strong> Architecture comparison is useful. Universal vendor ranking is not.</blockquote>
+<hr>
+<h1 id="3b21-hardware-selection-decision-tree">3B.21 Hardware Selection Decision Tree<a class="anchor" href="#3b21-hardware-selection-decision-tree" aria-label="Link to this section">#</a></h1>
+<p>The purpose of roadmap analysis is not to memorize product names. The purpose is to choose the right system for a workload.</p>
+<hr>
+<h2 id="figure-placeholder-fig-3b8">Figure Placeholder — Fig 3B.8<a class="anchor" href="#figure-placeholder-fig-3b8" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-3b8-hardware-selection-decision-tree">
+  <div class="figure-kicker">Fig 3B.8</div>
+  <div class="figure-title">Hardware Selection Decision Tree</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A workload-first decision tree for selecting hardware by memory, bandwidth, compute, interconnect, software maturity, power, and cost.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch03b_fig_3b_8_hardware_selection_decision_tree.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+      <span class="figure-source muted">Source diagram pending</span>
+    </div>
+  </div>
+  <figcaption><strong>Fig 3B.8 — Hardware Selection Decision Tree.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> The purpose of roadmap analysis is not to memorize product names. The purpose is to choose the right system for a workload. This decision tree turns roadmap knowledge into architecture judgment.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> A 70B inference service may prioritize HBM capacity and KV-cache headroom. A large training cluster may prioritize local and scale-out interconnect. A cost-sensitive deployment may prioritize software maturity, availability, and cost per token. Future platforms such as Rubin or MI400 should be treated as planning signals until production details are verified.</p>
+<blockquote><strong>Key Takeaway:</strong> Hardware selection starts with the workload bottleneck, not the newest product name.</blockquote>
+<hr>
+<h2 id="table-3b7-workload-to-hardware-selection-matrix">Table 3B.7 — Workload-to-Hardware Selection Matrix<a class="anchor" href="#table-3b7-workload-to-hardware-selection-matrix" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Workload Scenario</th><th>Most Important Hardware Attribute</th><th>Roadmap Implication</th></tr></thead><tbody><tr><td>70B inference with long context</td><td>HBM capacity, HBM bandwidth, KV-cache efficiency</td><td>H200, MI300X/MI325X/MI350-class memory-rich systems may be attractive</td></tr><tr><td>Multi-GPU tensor-parallel serving</td><td>Local scale-up fabric</td><td>NVLink/NVSwitch or equivalent high-bandwidth local fabric matters</td></tr><tr><td>Frontier training</td><td>Compute, HBM, scale-up + scale-out fabric, reliability</td><td>Hopper/Blackwell-class and rack-scale systems matter</td></tr><tr><td>Cost-sensitive inference</td><td>Software stack, availability, power, quantization support</td><td>Peak TFLOPS may matter less than cost per token</td></tr><tr><td>Long-context workloads</td><td>HBM capacity, bandwidth, attention kernels</td><td>HBM3e/HBM4 and FlashAttention-style kernels matter</td></tr><tr><td>MoE training/inference</td><td>All-to-all communication and routing balance</td><td>Interconnect and scheduler design matter</td></tr><tr><td>Enterprise deployment</td><td>Software maturity, support, observability</td><td>Ecosystem and operational maturity matter</td></tr></tbody></table></div>
+<p class="confidence"><span class="roadmap-label label-representative">[REPRESENTATIVE]</span> The table should be used as architecture guidance, not a benchmark claim. Real decisions still require profiling, cost modeling, framework testing, power/cooling analysis, and support review.</p>
+<blockquote><strong>Key Takeaway:</strong> The same hardware can be excellent for one workload and inefficient for another.</blockquote>
+<hr>
+<h2 id="3b22-worked-example-70b-inference">3B.22 Worked Example: 70B Inference<a class="anchor" href="#3b22-worked-example-70b-inference" aria-label="Link to this section">#</a></h2>
+<p class="confidence"><span class="roadmap-label label-estimated">[ESTIMATED]</span></p>
+<pre class="code-block"><code>70B BF16 weights ≈ 140 GB
+70B FP8 weights  ≈ 70 GB
+70B INT4 weights ≈ 35 GB</code></pre>
+<p>For 70B serving:</p>
+<ul>
+<li>H100 80 GB may fit FP8 weights but has limited KV-cache headroom.</li>
+<li>H200 141 GB gives more memory headroom.</li>
+<li>MI300X 192 GB gives even more memory capacity.</li>
+<li>MI325X and MI350-class accelerators continue the large-memory story.</li>
+<li>B200/GB200-class systems may add newer precision support and larger system/rack-scale fabrics.</li>
+</ul>
+<p>But none of this answers the full production question.</p>
+<p>You still need to evaluate:</p>
+<ul>
+<li>KV cache size</li>
+<li>Context length</li>
+<li>Concurrency</li>
+<li>Precision</li>
+<li>Quantization quality</li>
+<li>Prefill/decode mix</li>
+<li>Batching strategy</li>
+<li>Tensor parallelism</li>
+<li>Kernel availability</li>
+<li>Framework support</li>
+<li>Power and cost</li>
+</ul>
+<blockquote><strong>Key Takeaway:</strong> 70B inference is often a memory-capacity and KV-cache economics problem before it is a peak TFLOPS problem.</blockquote>
+<hr>
+<h2 id="3b23-worked-example-training-cluster-selection">3B.23 Worked Example: Training Cluster Selection<a class="anchor" href="#3b23-worked-example-training-cluster-selection" aria-label="Link to this section">#</a></h2>
+<p>A large training cluster cares about:</p>
+<ul>
+<li>Dense or low-precision Tensor Core throughput</li>
+<li>HBM capacity</li>
+<li>HBM bandwidth</li>
+<li>Activation memory</li>
+<li>Optimizer state memory</li>
+<li>NVLink/NVSwitch domain</li>
+<li>InfiniBand/Ethernet scale-out fabric</li>
+<li>NCCL/RCCL performance</li>
+<li>Failure recovery</li>
+<li>Checkpointing</li>
+<li>Power and cooling</li>
+<li>Software maturity</li>
+</ul>
+<p>A single GPU number is not enough.</p>
+<p class="confidence"><span class="roadmap-label label-representative">[REPRESENTATIVE]</span> Frontier training is a system-level problem: compute, memory, local fabric, scale-out network, storage, scheduler, observability, and reliability all matter.</p>
+<hr>
+<h2 id="3b24-how-to-discuss-gpu-roadmaps-in-a-principal-interview">3B.24 How to Discuss GPU Roadmaps in a Principal Interview<a class="anchor" href="#3b24-how-to-discuss-gpu-roadmaps-in-a-principal-interview" aria-label="Link to this section">#</a></h2>
+<p>Do not say:</p>
+<pre class="code-block"><code>Blackwell is faster, so it is better.</code></pre>
+<p>A stronger answer:</p>
+<blockquote>I do not evaluate accelerator roadmaps by peak TFLOPS alone. I look at four lenses: compute density, memory capacity and bandwidth, interconnect domain, and software maturity. H100 became the LLM baseline because Hopper Tensor Cores, HBM3, FP8, NVLink 4, and the CUDA ecosystem aligned. H200 was mainly a memory refresh that improved inference capacity. Blackwell moves the system boundary toward newer precision paths and rack-scale NVLink domains. AMD’s MI300X and MI350 line emphasize very large HBM capacity and bandwidth, which can be compelling for memory-bound inference and long-context workloads if the software stack fits. For future Rubin or MI400 claims, I separate vendor-announced roadmap from shipping specs.</blockquote>
+<h3 id="scenario-1-why-did-h100-matter">Scenario 1 — Why Did H100 Matter?<a class="anchor" href="#scenario-1-why-did-h100-matter" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<pre class="code-block"><code>H100 is faster than A100.</code></pre>
+<p>Better answer:</p>
+<pre class="code-block"><code>H100 mattered because Hopper combined Tensor Core improvements, FP8 Transformer Engine, HBM3, NVLink 4, and mature software support. It became a balanced platform for transformer training and inference.</code></pre>
+<h3 id="scenario-2-why-did-h200-matter-if-compute-was-similar">Scenario 2 — Why Did H200 Matter If Compute Was Similar?<a class="anchor" href="#scenario-2-why-did-h200-matter-if-compute-was-similar" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<pre class="code-block"><code>H200 has more memory.</code></pre>
+<p>Better answer:</p>
+<pre class="code-block"><code>H200 mattered because many LLM inference workloads are memory-capacity and memory-bandwidth constrained. Moving to 141 GB HBM3e and 4.8 TB/s improves model fit, KV-cache headroom, and memory-bound serving economics.</code></pre>
+<h3 id="scenario-3-why-is-blackwell-more-than-faster-h100">Scenario 3 — Why Is Blackwell More Than Faster H100?<a class="anchor" href="#scenario-3-why-is-blackwell-more-than-faster-h100" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<pre class="code-block"><code>Blackwell has more FLOPS.</code></pre>
+<p>Better answer:</p>
+<pre class="code-block"><code>Blackwell should be evaluated as a system-level transition: newer precision formats, higher memory bandwidth, NVLink 5, and rack-scale platforms such as GB200 NVL72. The major architectural story is not just per-GPU speed but the larger scale-up domain.</code></pre>
+<h3 id="scenario-4-why-is-mi300x-important">Scenario 4 — Why Is MI300X Important?<a class="anchor" href="#scenario-4-why-is-mi300x-important" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<pre class="code-block"><code>MI300X has 192 GB memory.</code></pre>
+<p>Better answer:</p>
+<pre class="code-block"><code>MI300X is important because 192 GB HBM3 changes model-fit and KV-cache economics for memory-heavy inference. It is especially relevant when memory capacity and bandwidth are the bottleneck, provided the ROCm/framework/kernel stack fits the workload.</code></pre>
+<h3 id="scenario-5-how-do-you-evaluate-rubin-or-mi400">Scenario 5 — How Do You Evaluate Rubin or MI400?<a class="anchor" href="#scenario-5-how-do-you-evaluate-rubin-or-mi400" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<pre class="code-block"><code>They will be much faster.</code></pre>
+<p>Better answer:</p>
+<pre class="code-block"><code>I treat Rubin and MI400 as roadmap signals unless final product specs exist. I separate announced roadmap direction from shipping product specifications, then watch which resource is changing: memory, precision, interconnect, rack-scale design, or software ecosystem.</code></pre>
+<h3 id="scenario-6-what-is-the-biggest-roadmap-comparison-mistake">Scenario 6 — What Is the Biggest Roadmap Comparison Mistake?<a class="anchor" href="#scenario-6-what-is-the-biggest-roadmap-comparison-mistake" aria-label="Link to this section">#</a></h3>
+<p>Answer:</p>
+<pre class="code-block"><code>Mixing product levels. A single GPU, an 8-GPU system, a superchip, and a 72-GPU rack are different comparison units. I always identify the unit before comparing memory, bandwidth, or performance.</code></pre>
+<hr>
+<h2 id="3b25-chapter-cheat-sheet">3B.25 Chapter Cheat Sheet<a class="anchor" href="#3b25-chapter-cheat-sheet" aria-label="Link to this section">#</a></h2>
+<h3 id="roadmap-rule">Roadmap Rule<a class="anchor" href="#roadmap-rule" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>A roadmap is a signal, not a guarantee.</code></pre>
+<h3 id="four-lenses">Four Lenses<a class="anchor" href="#four-lenses" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>1. Compute density
+2. Memory capacity and bandwidth
+3. Interconnect / scale-up domain
+4. Software and deployment maturity</code></pre>
+<h3 id="dense-vs-sparse">Dense vs Sparse<a class="anchor" href="#dense-vs-sparse" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>Compare dense to dense.
+Compare sparse to sparse.
+Do not mix them.</code></pre>
+<h3 id="product-level">Product Level<a class="anchor" href="#product-level" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>GPU != module != system != rack != cluster</code></pre>
+<h3 id="h100-reference">H100 Reference<a class="anchor" href="#h100-reference" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>[SHIPPED] H100 SXM5: 80 GB HBM3, 3.35 TB/s
+[DERIVED FROM SHIPPED] Dense BF16 ≈ 989.4 TFLOPS
+[SHIPPED] Sparse BF16 ≈ 1,978.9 TFLOPS</code></pre>
+<h3 id="h200-reference">H200 Reference<a class="anchor" href="#h200-reference" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>[SHIPPED] H200: 141 GB HBM3e, 4.8 TB/s
+[REPRESENTATIVE] Hopper-generation memory refresh</code></pre>
+<h3 id="mi300x-reference">MI300X Reference<a class="anchor" href="#mi300x-reference" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>[SHIPPED] MI300X: 192 GB HBM3, ≈5.3 TB/s
+[SHIPPED] Dense BF16 ≈1,307.4 TFLOPS</code></pre>
+<h3 id="blackwell-guardrail">Blackwell Guardrail<a class="anchor" href="#blackwell-guardrail" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>B200 GPU
+DGX B200 system
+GB200 Superchip
+GB200 NVL72 rack</code></pre>
+<h3 id="future-roadmap-guardrail">Future Roadmap Guardrail<a class="anchor" href="#future-roadmap-guardrail" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>Rubin and MI400 are [ANNOUNCED] unless final product specs exist.</code></pre>
+<hr>
+<h2 id="3b26-key-takeaways">3B.26 Key Takeaways<a class="anchor" href="#3b26-key-takeaways" aria-label="Link to this section">#</a></h2>
+<ol>
+<li>GPU roadmaps should be treated as architecture signals, not marketing claims.</li>
+<li>Always distinguish shipped product specs from announced roadmap claims.</li>
+<li>Always distinguish dense and sparse peak performance.</li>
+<li>Always identify the product level: GPU, module, system, rack, or cluster.</li>
+<li>A100 remains useful as an Ampere baseline.</li>
+<li>H100 became the LLM-era baseline because compute, memory, interconnect, and software maturity aligned.</li>
+<li>H200 matters primarily as a Hopper-generation memory refresh.</li>
+<li>Blackwell shifts roadmap discussion toward newer precision formats and larger scale-up domains.</li>
+<li>DGX B200 values are system-level values, not per-GPU values.</li>
+<li>GB200 NVL72 values are rack-scale values, not single-GPU values.</li>
+<li>Rubin / Vera Rubin should be treated as roadmap unless final product specs are verified.</li>
+<li>MI300X made large-HBM accelerator design central to AI infrastructure discussions.</li>
+<li>MI325X and MI350-class products continue the large-memory, high-bandwidth roadmap.</li>
+<li>MI400 / Helios should be treated as AMD roadmap direction until final product specs exist.</li>
+<li>HBM evolution is central to LLM inference and long-context serving.</li>
+<li>Interconnect evolution is about expanding the efficient communication domain.</li>
+<li>NVIDIA-vs-AMD comparisons must be workload-specific and evidence-based.</li>
+<li>Hardware selection starts with the workload bottleneck, not the newest product name.</li>
+</ol>
+<hr>
+<h2 id="3b27-review-questions">3B.27 Review Questions<a class="anchor" href="#3b27-review-questions" aria-label="Link to this section">#</a></h2>
+<h3 id="conceptual">Conceptual<a class="anchor" href="#conceptual" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>Why should GPU roadmaps be treated as architecture signals rather than marketing claims?</li>
+<li>What are the four lenses for evaluating a GPU generation?</li>
+<li>Why is H200 important even if it is not a fundamentally new architecture?</li>
+<li>Why is Blackwell more than a faster GPU?</li>
+<li>Why is MI300X important for memory-heavy inference?</li>
+<li>Why should Rubin and MI400 be labeled as roadmap unless final product specs exist?</li>
+<li>Why is HBM evolution central to LLM infrastructure?</li>
+<li>Why is interconnect scope as important as interconnect bandwidth?</li>
+<li>Why is software maturity part of hardware evaluation?</li>
+<li>Why is universal NVIDIA-vs-AMD ranking misleading?</li>
+</ol>
+<h3 id="calculation">Calculation<a class="anchor" href="#calculation" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>Estimate BF16 weight memory for a 70B model.</li>
+<li>Estimate FP8 weight memory for a 70B model.</li>
+<li>Estimate INT4 weight memory for a 70B model.</li>
+<li>If H100 sparse BF16 peak is approximately 1,978.9 TFLOPS, what is the approximate dense BF16 peak?</li>
+<li>If a system-level product lists 1,440 GB total GPU memory across 8 GPUs, what is the simple per-GPU average? What label should this calculation use?</li>
+<li>If a rack-level product has 72 GPUs, why should its values not be directly compared to one GPU?</li>
+</ol>
+<h3 id="principal-level-interview-practice">Principal-Level Interview Practice<a class="anchor" href="#principal-level-interview-practice" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>Explain the difference between GPU-level, system-level, and rack-level roadmap claims.</li>
+<li>Explain why dense vs sparse peak matters for MFU.</li>
+<li>Explain H100 vs H200 for LLM inference.</li>
+<li>Explain Blackwell as a system-level transition.</li>
+<li>Explain why GB200 NVL72 changes the scale-up domain.</li>
+<li>Explain MI300X’s relevance to 70B-class inference.</li>
+<li>Explain how you would evaluate MI350X vs B200 for a long-context workload.</li>
+<li>Explain how you would discuss Rubin or MI400 without overclaiming.</li>
+<li>Explain why benchmark comparisons must be environment-specific.</li>
+<li>Explain how you would select hardware for a new LLM serving platform.</li>
+</ol>
+<hr>
+<h2 id="3b28-claims-requiring-annual-refresh">3B.28 Claims Requiring Annual Refresh<a class="anchor" href="#3b28-claims-requiring-annual-refresh" aria-label="Link to this section">#</a></h2>
+<h2 id="table-3b8-roadmap-claims-requiring-annual-refresh">Table 3B.8 — Roadmap Claims Requiring Annual Refresh<a class="anchor" href="#table-3b8-roadmap-claims-requiring-annual-refresh" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Claim Category</th><th>Refresh Needed</th><th>Source Type</th></tr></thead><tbody><tr><td>B200 / GB200 product status</td><td>Per edition</td><td>NVIDIA official product pages</td></tr><tr><td>Rubin / Rubin Ultra roadmap</td><td>Per edition</td><td>NVIDIA roadmap / official announcements</td></tr><tr><td>MI325X / MI350 / MI355 availability</td><td>Per edition</td><td>AMD official product pages</td></tr><tr><td>MI400 / Helios roadmap</td><td>Per edition</td><td>AMD official roadmap announcements</td></tr><tr><td>HBM4 timing and product association</td><td>Per edition</td><td>JEDEC/vendor roadmap</td></tr><tr><td>NVLink / Infinity Fabric generation values</td><td>Per edition</td><td>Vendor product docs</td></tr><tr><td>MLPerf benchmark comparisons</td><td>Per release</td><td>MLPerf results database</td></tr><tr><td>Software stack maturity</td><td>Per release</td><td>CUDA/ROCm/framework docs</td></tr><tr><td>Pricing / availability / power</td><td>Per procurement cycle</td><td>Vendor quotes, cloud SKUs, TCO model</td></tr></tbody></table></div>
+<p>This table is a maintenance asset. It helps future editions stay accurate and prevents roadmap chapters from becoming stale.</p>
+<blockquote><strong>Key Takeaway:</strong> Roadmap content must be refreshed. The method is durable; the product details change.</blockquote>
+<hr>
+<h2 id="3b29-bridge-to-chapter-4">3B.29 Bridge to Chapter 4<a class="anchor" href="#3b29-bridge-to-chapter-4" aria-label="Link to this section">#</a></h2>
+<p>Chapter 3A taught the accelerator architecture fundamentals.</p>
+<p>Chapter 3B taught how accelerator generations evolve and how to interpret roadmap claims safely.</p>
+<p>Chapter 4 moves deeper into one resource that keeps appearing in every roadmap:</p>
+<pre class="code-block"><code>memory</code></pre>
+<p>The next question is:</p>
+<blockquote>Why do HBM capacity, HBM bandwidth, cache hierarchy, and data movement dominate so many AI performance problems?</blockquote>
+<p>That is the focus of Chapter 4.</p>
+
+    <nav class="nav-row" aria-label="Previous and next chapter navigation">
+      <a href="ch03a_gpu_architecture.html">
+        <small>Previous Chapter</small>
+        <strong>Chapter 3A — GPU and Accelerator Architecture</strong>
+      </a>
+      <a href="../index.html">
+        <small>Next</small>
+        <strong>Chapter 4 — Coming Soon</strong>
+      </a>
+    </nav>
+  </main>
+</div>
+</body>
+</html>
