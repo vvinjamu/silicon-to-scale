@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 4 — GPU Memory Hierarchy and HBM Deep Dive | Silicon to Scale</title>
+<meta name="description" content="Production web chapter on GPU memory hierarchy, HBM, memory-bound workloads, arithmetic intensity, ridge point, KV-cache memory, FlashAttention, and memory optimization for AI/ML infrastructure.">
+<meta name="author" content="Venkat Vinjam">
+<meta property="og:title" content="Chapter 4 — GPU Memory Hierarchy and HBM Deep Dive">
+<meta property="og:description" content="Learn why HBM capacity, memory bandwidth, KV cache, and data movement dominate AI/ML performance.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c10;
+  --bg2: #0d1117;
+  --bg3: #161b22;
+  --bg4: #1c2128;
+  --border: #21262d;
+  --border2: #30363d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #6e7681;
+  --accent: #58a6ff;
+  --gold2: #f0c040;
+  --green: #3fb950;
+  --orange: #ff8b3d;
+  --purple: #bc8cff;
+  --teal: #39d0d8;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.65;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(88,166,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(88,166,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(13,17,23,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 22px;
+}
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.brand a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.brand span {
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.topnav {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.topnav a {
+  color: var(--accent);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.topnav a:hover {
+  border-color: var(--accent);
+  background: rgba(88,166,255,0.08);
+}
+.layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 310px minmax(0, 960px);
+  gap: 36px;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 36px 24px 80px;
+}
+.sidebar {
+  position: sticky;
+  top: 76px;
+  align-self: start;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+}
+.sidebar h2 {
+  margin: 0 0 12px;
+  font-family: var(--mono);
+  color: var(--gold2);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+.sidebar a {
+  display: block;
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 13px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.35);
+}
+.sidebar a:hover { color: var(--accent); }
+.sidebar .toc-l3 {
+  padding-left: 14px;
+  font-size: 12px;
+  color: var(--text3);
+}
+.content {
+  background: rgba(13,17,23,0.72);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 38px 44px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+}
+.content h1 {
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -1.4px;
+  margin: 0 0 18px;
+}
+.content h2 {
+  margin-top: 46px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 25px;
+  letter-spacing: -0.5px;
+}
+.content h3 {
+  margin-top: 30px;
+  color: var(--accent);
+  font-size: 18px;
+}
+.content h4 {
+  margin-top: 24px;
+  color: var(--gold2);
+}
+.anchor {
+  margin-left: 8px;
+  color: var(--text3);
+  opacity: 0;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 0.8em;
+}
+h1:hover .anchor, h2:hover .anchor, h3:hover .anchor, h4:hover .anchor {
+  opacity: 1;
+}
+p { color: var(--text); font-size: 16px; }
+blockquote {
+  margin: 24px 0;
+  padding: 18px 22px;
+  border-left: 4px solid var(--gold2);
+  background: rgba(212,160,23,0.08);
+  color: var(--text);
+  border-radius: 0 10px 10px 0;
+  font-size: 17px;
+}
+hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
+ul, ol { padding-left: 24px; }
+li { margin: 6px 0; }
+code {
+  font-family: var(--mono);
+  background: var(--bg4);
+  color: var(--gold2);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-size: 0.92em;
+}
+.code-block {
+  background: #05080c;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 18px 0;
+}
+.code-block code {
+  background: transparent;
+  border: 0;
+  color: #d8dee9;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.table-wrap {
+  overflow-x: auto;
+  margin: 22px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+  background: var(--bg3);
+}
+th {
+  background: var(--bg4);
+  color: var(--accent);
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+th, td {
+  padding: 11px 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+td { color: var(--text2); font-size: 14px; }
+tr:last-child td { border-bottom: 0; }
+.confidence-label {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+.label-shipped { color: var(--green); background: rgba(63,185,80,0.10); border-color: rgba(63,185,80,0.35); }
+.label-announced { color: var(--purple); background: rgba(188,140,255,0.10); border-color: rgba(188,140,255,0.35); }
+.label-derived { color: var(--teal); background: rgba(57,208,216,0.10); border-color: rgba(57,208,216,0.35); }
+.label-estimated { color: var(--gold2); background: rgba(240,192,64,0.10); border-color: rgba(240,192,64,0.35); }
+.label-representative { color: var(--accent); background: rgba(88,166,255,0.10); border-color: rgba(88,166,255,0.35); }
+.label-env { color: var(--orange); background: rgba(255,139,61,0.10); border-color: rgba(255,139,61,0.35); }
+.confidence-box {
+  border-left: 4px solid var(--green);
+  background: rgba(63,185,80,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.takeaway {
+  border-left: 4px solid var(--gold2);
+  background: rgba(212,160,23,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.figure-note { color: var(--text2); font-size: 14px; }
+.figure-placeholder {
+  margin: 28px 0;
+  background: linear-gradient(135deg, rgba(88,166,255,0.08), rgba(57,208,216,0.06));
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 20px;
+}
+.figure-kicker {
+  color: var(--gold2);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.figure-title { font-size: 20px; font-weight: 700; margin-bottom: 14px; }
+.figure-body {
+  display: grid;
+  grid-template-columns: 72px minmax(0,1fr);
+  gap: 16px;
+  align-items: center;
+  background: rgba(13,17,23,0.65);
+  border: 1px dashed var(--border2);
+  border-radius: 12px;
+  padding: 18px;
+}
+.figure-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: var(--teal);
+  border: 1px solid var(--teal);
+  font-size: 32px;
+  background: rgba(57,208,216,0.08);
+}
+.figure-path, .figure-status {
+  color: var(--text2);
+  margin: 6px 0;
+  font-size: 13px;
+}
+.figure-source {
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 12px;
+  text-decoration: none;
+}
+.figure-source:hover { text-decoration: underline; }
+.muted { color: var(--text3); }
+figcaption { color: var(--text2); font-size: 13px; margin-top: 12px; }
+.nav-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 44px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+.nav-row a {
+  flex: 1;
+  text-decoration: none;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--text);
+}
+.nav-row a:hover { border-color: var(--accent); }
+.nav-row small {
+  display: block;
+  color: var(--text3);
+  font-family: var(--mono);
+  margin-bottom: 4px;
+}
+.nav-row strong { color: var(--accent); }
+@media (max-width: 980px) {
+  .layout { grid-template-columns: 1fr; padding: 22px 16px 60px; }
+  .sidebar { position: static; max-height: none; }
+  .content { padding: 26px 20px; }
+  .topbar { align-items: flex-start; flex-direction: column; }
+}
+@media (max-width: 640px) {
+  .figure-body { grid-template-columns: 1fr; }
+  .nav-row { flex-direction: column; }
+  p { font-size: 15px; }
+}
+@media print {
+  body { background: #fff; color: #111; }
+  body::before, .topbar, .sidebar, .anchor { display: none !important; }
+  .layout { display: block; max-width: none; padding: 0; }
+  .content { box-shadow: none; border: 0; padding: 0; }
+  .content h1, .content h2, .content h3, .content h4, p, li, td, th, blockquote { color: #111 !important; }
+  .code-block, code, table, .figure-placeholder, .confidence-label { border-color: #999; }
+  .confidence-label { color: #111 !important; background: #eee !important; }
+  a { color: #111; text-decoration: none; }
+  .figure-placeholder, table, pre, blockquote { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <a href="../index.html">AI/ML Infrastructure from Silicon to Scale</a>
+    <span>Chapter 4 · GPU Memory Hierarchy and HBM</span>
+  </div>
+  <nav class="topnav" aria-label="Top navigation">
+    <a href="../index.html">Home</a>
+    <a href="ch03b_gpu_roadmap.html">Previous: Ch03B</a>
+    <a href="../index.html">Next: Ch05 soon</a>
+    <a href="../pdfs/ch04_memory_hierarchy_hbm.pdf">PDF</a>
+    <a href="../diagrams/diagram_01_memory_hierarchy.html">Memory Diagram</a>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" aria-label="Chapter table of contents">
+    <h2>Chapter Contents</h2>
+    <a class="toc-l2" href="#chapter-overview">Chapter Overview</a>
+<a class="toc-l2" href="#40-memory-in-one-page">4.0 Memory in One Page</a>
+<a class="toc-l2" href="#41-gpu-memory-hierarchy">4.1 GPU Memory Hierarchy</a>
+<a class="toc-l2" href="#figure-placeholder-fig-41">Figure Placeholder — Fig 4.1</a>
+<a class="toc-l2" href="#table-41-gpu-memory-tier-summary">Table 4.1 — GPU Memory Tier Summary</a>
+<a class="toc-l2" href="#42-bandwidth-view-why-bytes-moved-dominate">4.2 Bandwidth View: Why Bytes Moved Dominate</a>
+<a class="toc-l2" href="#figure-placeholder-fig-42">Figure Placeholder — Fig 4.2</a>
+<a class="toc-l2" href="#43-hbm-more-than-vram">4.3 HBM: More Than “VRAM”</a>
+<a class="toc-l2" href="#figure-placeholder-fig-43">Figure Placeholder — Fig 4.3</a>
+<a class="toc-l2" href="#44-product-specific-hbm-reference-values">4.4 Product-Specific HBM Reference Values</a>
+<a class="toc-l2" href="#table-42-hbm-reference-values-by-accelerator">Table 4.2 — HBM Reference Values by Accelerator</a>
+<a class="toc-l2" href="#45-memory-bound-vs-compute-bound">4.5 Memory-Bound vs Compute-Bound</a>
+<a class="toc-l2" href="#figure-placeholder-fig-44">Figure Placeholder — Fig 4.4</a>
+<a class="toc-l2" href="#table-43-memory-bottleneck-diagnostic-signals">Table 4.3 — Memory Bottleneck Diagnostic Signals</a>
+<a class="toc-l2" href="#46-model-weight-memory-simple-mental-math">4.6 Model Weight Memory: Simple Mental Math</a>
+<a class="toc-l3" href="#practical-reading">Practical Reading</a>
+<a class="toc-l2" href="#47-kv-cache-memory">4.7 KV Cache Memory</a>
+<a class="toc-l2" href="#table-44-kv-cache-memory-formula-variables">Table 4.4 — KV Cache Memory Formula Variables</a>
+<a class="toc-l3" href="#why-gqa-and-mqa-matter">Why GQA and MQA Matter</a>
+<a class="toc-l2" href="#figure-placeholder-fig-45">Figure Placeholder — Fig 4.5</a>
+<a class="toc-l2" href="#48-prefill-vs-decode-memory-behavior">4.8 Prefill vs Decode Memory Behavior</a>
+<a class="toc-l3" href="#prefill">Prefill</a>
+<a class="toc-l3" href="#decode">Decode</a>
+<a class="toc-l2" href="#49-flashattention-as-a-memory-optimization">4.9 FlashAttention as a Memory Optimization</a>
+<a class="toc-l2" href="#figure-placeholder-fig-46">Figure Placeholder — Fig 4.6</a>
+<a class="toc-l2" href="#410-memory-optimization-techniques">4.10 Memory Optimization Techniques</a>
+<a class="toc-l2" href="#table-45-memory-optimization-techniques">Table 4.5 — Memory Optimization Techniques</a>
+<a class="toc-l2" href="#411-wrong-fix-vs-right-first-question">4.11 Wrong Fix vs Right First Question</a>
+<a class="toc-l2" href="#table-46-wrong-fix-vs-right-first-question-for-memory-problems">Table 4.6 — Wrong Fix vs Right First Question for Memory Problems</a>
+<a class="toc-l2" href="#412-memory-optimization-decision-tree">4.12 Memory Optimization Decision Tree</a>
+<a class="toc-l2" href="#figure-placeholder-fig-47">Figure Placeholder — Fig 4.7</a>
+<a class="toc-l2" href="#413-how-to-explain-gpu-memory-hierarchy-in-a-principal-interview">4.13 How to Explain GPU Memory Hierarchy in a Principal Interview</a>
+<a class="toc-l3" href="#scenario-1-why-can-a-gpu-with-more-tflops-be-slower">Scenario 1 — Why Can a GPU with More TFLOPS Be Slower?</a>
+<a class="toc-l3" href="#scenario-2-why-does-h200-matter-for-inference">Scenario 2 — Why Does H200 Matter for Inference?</a>
+<a class="toc-l3" href="#scenario-3-why-does-mi300x-matter">Scenario 3 — Why Does MI300X Matter?</a>
+<a class="toc-l3" href="#scenario-4-why-does-flashattention-help">Scenario 4 — Why Does FlashAttention Help?</a>
+<a class="toc-l3" href="#scenario-5-how-do-you-diagnose-a-memory-bottleneck">Scenario 5 — How Do You Diagnose a Memory Bottleneck?</a>
+<a class="toc-l2" href="#414-chapter-cheat-sheet">4.14 Chapter Cheat Sheet</a>
+<a class="toc-l3" href="#memory-hierarchy">Memory Hierarchy</a>
+<a class="toc-l3" href="#arithmetic-intensity">Arithmetic Intensity</a>
+<a class="toc-l3" href="#ridge-point">Ridge Point</a>
+<a class="toc-l3" href="#h100-dense-bf16-ridge-point">H100 Dense BF16 Ridge Point</a>
+<a class="toc-l3" href="#model-weight-memory">Model Weight Memory</a>
+<a class="toc-l3" href="#kv-cache">KV Cache</a>
+<a class="toc-l3" href="#memory-optimization-principle">Memory Optimization Principle</a>
+<a class="toc-l2" href="#415-key-takeaways">4.15 Key Takeaways</a>
+<a class="toc-l2" href="#416-review-questions">4.16 Review Questions</a>
+<a class="toc-l3" href="#conceptual">Conceptual</a>
+<a class="toc-l3" href="#calculation">Calculation</a>
+<a class="toc-l3" href="#principal-level-interview-practice">Principal-Level Interview Practice</a>
+<a class="toc-l2" href="#417-bridge-to-chapter-5">4.17 Bridge to Chapter 5</a>
+  </aside>
+
+  <main class="content">
+    <h1 id="chapter-4-gpu-memory-hierarchy-and-hbm-deep-dive">Chapter 4 — GPU Memory Hierarchy and HBM Deep Dive<a class="anchor" href="#chapter-4-gpu-memory-hierarchy-and-hbm-deep-dive" aria-label="Link to this section">#</a></h1>
+<blockquote>“In AI systems, performance is often decided less by how much math the accelerator can do, and more by how many bytes must move to make that math possible.”</blockquote>
+<hr>
+<h2 id="chapter-overview">Chapter Overview<a class="anchor" href="#chapter-overview" aria-label="Link to this section">#</a></h2>
+<p>Chapter 1 introduced the performance mindset and the Roofline model.</p>
+<p>Chapter 2 treated the transformer as a workload: GEMMs, attention, normalization, KV cache, and memory movement.</p>
+<p>Chapter 3A explained the GPU as a performance system: SMs, warps, Tensor Cores, HBM, and interconnect.</p>
+<p>Chapter 3B showed how accelerator generations evolve, especially through memory capacity, memory bandwidth, interconnect, and precision formats.</p>
+<p>Chapter 4 goes deeper into the resource that appears in almost every AI infrastructure bottleneck:</p>
+<pre class="code-block"><code>memory</code></pre>
+<p>This chapter answers:</p>
+<ul>
+<li>Why does HBM matter so much?</li>
+<li>Why can a workload be slow even when peak TFLOPS are enormous?</li>
+<li>Why is decode often memory-bandwidth-sensitive?</li>
+<li>Why does long-context serving become expensive?</li>
+<li>Why does FlashAttention improve performance?</li>
+<li>Why can H200 help inference even when it is not a brand-new architecture?</li>
+<li>Why does MI300X’s 192 GB HBM matter?</li>
+<li>How should a principal engineer diagnose and fix memory bottlenecks?</li>
+</ul>
+<p>By the end of this chapter, you should be able to:</p>
+<ul>
+<li>Explain GPU memory hierarchy clearly.</li>
+<li>Distinguish registers, shared memory/L1, L2, HBM, host memory, and network memory paths.</li>
+<li>Calculate simple model memory requirements.</li>
+<li>Calculate and explain KV-cache memory growth.</li>
+<li>Use arithmetic intensity and ridge point to identify memory-bound workloads.</li>
+<li>Explain why HBM capacity and HBM bandwidth matter for LLM inference.</li>
+<li>Explain FlashAttention as a memory-traffic optimization.</li>
+<li>Choose memory optimization techniques based on the limiting memory tier.</li>
+<li>Explain GPU memory hierarchy in a principal-level interview.</li>
+</ul>
+<hr>
+<h2 id="40-memory-in-one-page">4.0 Memory in One Page<a class="anchor" href="#40-memory-in-one-page" aria-label="Link to this section">#</a></h2>
+<p>A GPU has enormous compute capability, but compute is useful only when data arrives on time.</p>
+<p>The memory hierarchy is a distance map:</p>
+<pre class="code-block"><code>Registers       closest to compute, tiny, fastest
+Shared/L1       on-chip, per-SM, fast tile reuse
+L2              on-chip, shared across SMs
+HBM             high-bandwidth device memory, large but expensive to access
+Host memory     CPU-side memory, very large but much farther away
+Network memory  remote GPUs/nodes, dominated by fabric and scheduling</code></pre>
+<p>A simple mental model:</p>
+<pre class="code-block"><code>If the data is in registers, math can be fast.
+If the data is in shared memory/L1, tile reuse is possible.
+If the data is in L2, cross-SM reuse may help.
+If the data is in HBM, bandwidth and capacity dominate.
+If the data is in host memory, PCIe/NUMA latency can dominate.
+If the data is across the network, the parallelism strategy matters.</code></pre>
+<blockquote><strong>Key Takeaway:</strong> Memory optimization means keeping useful data closer to compute, moving fewer bytes, and increasing reuse before falling back to HBM, host memory, or the network.</blockquote>
+<hr>
+<h2 id="41-gpu-memory-hierarchy">4.1 GPU Memory Hierarchy<a class="anchor" href="#41-gpu-memory-hierarchy" aria-label="Link to this section">#</a></h2>
+<p>Every memory optimization starts with one question:</p>
+<pre class="code-block"><code>Where does the data live when the math needs it?</code></pre>
+<p>That answer determines whether the workload sees:</p>
+<ul>
+<li>fast on-chip reuse,</li>
+<li>HBM bandwidth pressure,</li>
+<li>host-device transfer overhead,</li>
+<li>or distributed communication latency.</li>
+</ul>
+<hr>
+<h2 id="figure-placeholder-fig-41">Figure Placeholder — Fig 4.1<a class="anchor" href="#figure-placeholder-fig-41" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-41-gpu-memory-hierarchy-pyramid">
+  <div class="figure-kicker">Fig 4.1</div>
+  <div class="figure-title">GPU Memory Hierarchy Pyramid</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A memory-tier pyramid showing registers, shared memory/L1, L2, HBM, host memory, and network memory paths.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/png_300dpi/ch04_fig_4_1_memory_hierarchy_pyramid.png</code></p>
+      <p class="figure-status">Existing diagram; print export needed</p>
+      <a class="figure-source" href="../diagrams/diagram_01_memory_hierarchy.html">View source diagram</a>
+    </div>
+  </div>
+  <figcaption><strong>Fig 4.1 — GPU Memory Hierarchy Pyramid.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> Every memory optimization starts with one question: where does the data live when the math needs it? The answer determines whether the workload sees fast on-chip reuse, HBM bandwidth pressure, PCIe latency, or network communication overhead.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The pyramid shows why locality matters. Data reused in registers or shared memory can feed compute efficiently. Data repeatedly fetched from HBM may become the bottleneck. Data that spills to host memory or crosses the network can dominate latency and destroy throughput.</p>
+<blockquote><strong>Key Takeaway:</strong> The farther data is from the compute units, the more carefully the workload must reuse, compress, tile, fuse, or schedule it.</blockquote>
+<hr>
+<h2 id="table-41-gpu-memory-tier-summary">Table 4.1 — GPU Memory Tier Summary<a class="anchor" href="#table-41-gpu-memory-tier-summary" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Tier</th><th>Scope</th><th>Capacity</th><th>What It Is Good For</th><th>Main Risk</th></tr></thead><tbody><tr><td>Registers</td><td>Per thread</td><td>Tiny</td><td>Fast operands and accumulator fragments</td><td>Spilling if register pressure is high</td></tr><tr><td>Shared memory / L1</td><td>Per SM</td><td>Small</td><td>Tiling and producer/consumer reuse</td><td>Bank conflicts, limited capacity</td></tr><tr><td>L2 cache</td><td>Whole GPU</td><td>Medium</td><td>Cross-SM reuse and reduced HBM traffic</td><td>Low-reuse workloads bypass benefits</td></tr><tr><td>HBM</td><td>Whole GPU</td><td>Large</td><td>Model weights, activations, KV cache</td><td>Bandwidth and capacity bottlenecks</td></tr><tr><td>Host memory</td><td>CPU side</td><td>Very large</td><td>Staging and offload</td><td>PCIe latency and bandwidth penalty</td></tr><tr><td>Network memory path</td><td>Remote GPUs/nodes</td><td>Remote</td><td>Distributed workloads</td><td>Fabric latency, congestion, collectives</td></tr></tbody></table></div>
+<p>A memory-bound workload is not simply “using memory.” It is using the wrong memory tier too often, with too little reuse, or with too many bytes per unit of useful math.</p>
+<blockquote><strong>Key Takeaway:</strong> The memory tier that supplies the critical path usually determines the optimization strategy.</blockquote>
+<hr>
+<h2 id="42-bandwidth-view-why-bytes-moved-dominate">4.2 Bandwidth View: Why Bytes Moved Dominate<a class="anchor" href="#42-bandwidth-view-why-bytes-moved-dominate" aria-label="Link to this section">#</a></h2>
+<p>The memory hierarchy is not only about capacity. It is also about bandwidth.</p>
+<p>A GPU can have massive Tensor Core throughput, but if the workload streams too many bytes from HBM per unit of math, the compute units wait.</p>
+<p>This is why two workloads can run very differently on the same GPU:</p>
+<pre class="code-block"><code>Large GEMM with high reuse:
+  Often compute-bound or Tensor-Core-bound.
+
+LayerNorm / RMSNorm:
+  Often HBM-bandwidth-sensitive because values are streamed with limited reuse.
+
+Decode with KV cache:
+  Often memory-bandwidth-sensitive because each token touches weights and prior KV state.
+
+Naive attention:
+  Can materialize large intermediate matrices and write/read too much HBM.
+
+FlashAttention:
+  Reduces HBM traffic using tiling and on-chip reuse.</code></pre>
+<hr>
+<h2 id="figure-placeholder-fig-42">Figure Placeholder — Fig 4.2<a class="anchor" href="#figure-placeholder-fig-42" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-42-gpu-memory-hierarchy-bandwidth-view">
+  <div class="figure-kicker">Fig 4.2</div>
+  <div class="figure-title">GPU Memory Hierarchy Bandwidth View</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A bandwidth-focused view showing why moving data farther from compute can dominate performance.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/png_300dpi/ch04_fig_4_2_gpu_memory_bandwidth_view.png</code></p>
+      <p class="figure-status">Existing diagram; print export needed</p>
+      <a class="figure-source" href="../diagrams/diagrams_batch1.html#d2">View source diagram</a>
+    </div>
+  </div>
+  <figcaption><strong>Fig 4.2 — GPU Memory Hierarchy Bandwidth View.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> The memory hierarchy is not only about capacity. It is also about bandwidth. A workload that repeatedly streams through HBM can become bandwidth-bound even on a GPU with enormous Tensor Core throughput.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> This bandwidth view connects directly to Roofline analysis. If an operation has low arithmetic intensity, it cannot reach the compute roof no matter how large the TFLOPS number is. Improving the workload often means increasing reuse or reducing bytes moved.</p>
+<blockquote><strong>Key Takeaway:</strong> Peak compute matters only if the memory hierarchy can feed it.</blockquote>
+<hr>
+<h2 id="43-hbm-more-than-vram">4.3 HBM: More Than “VRAM”<a class="anchor" href="#43-hbm-more-than-vram" aria-label="Link to this section">#</a></h2>
+<p>HBM stands for High Bandwidth Memory.</p>
+<p>It is not just “more GPU memory.” It is a packaging and bandwidth technology.</p>
+<p>HBM places stacks of DRAM close to the accelerator package and connects them through a very wide interface. That gives AI accelerators much higher memory bandwidth than conventional off-package memory approaches.</p>
+<p>HBM matters because modern AI workloads often need to stream or store:</p>
+<ul>
+<li>model weights,</li>
+<li>activations,</li>
+<li>gradients,</li>
+<li>optimizer state,</li>
+<li>KV cache,</li>
+<li>temporary buffers,</li>
+<li>communication buffers,</li>
+<li>quantization metadata,</li>
+<li>and runtime scheduler state.</li>
+</ul>
+<hr>
+<h2 id="figure-placeholder-fig-43">Figure Placeholder — Fig 4.3<a class="anchor" href="#figure-placeholder-fig-43" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-43-hbm3e-die-stacking-vs-gddr-style-memory">
+  <div class="figure-kicker">Fig 4.3</div>
+  <div class="figure-title">HBM3e Die Stacking vs GDDR-Style Memory</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A packaging-level visual explaining stacked HBM and why it provides high bandwidth near the accelerator.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/png_300dpi/ch04_fig_4_3_hbm3e_die_stacking.png</code></p>
+      <p class="figure-status">Existing diagram; print export needed</p>
+      <a class="figure-source" href="../diagrams/diagrams_batch2.html#d13">View source diagram</a>
+    </div>
+  </div>
+  <figcaption><strong>Fig 4.3 — HBM3e Die Stacking vs GDDR-Style Memory.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> HBM is not just “more VRAM.” It is a packaging and bandwidth technology. By stacking DRAM dies near the GPU and using a very wide interface, HBM delivers the bandwidth needed by modern AI accelerators.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> This physical structure explains why HBM capacity and bandwidth are expensive, power-sensitive, package-sensitive, and central to accelerator roadmap decisions. It also explains why HBM is one of the hardest resources to scale quickly.</p>
+<blockquote><strong>Key Takeaway:</strong> HBM is a packaging-level performance feature, not just a memory-size feature.</blockquote>
+<hr>
+<h2 id="44-product-specific-hbm-reference-values">4.4 Product-Specific HBM Reference Values<a class="anchor" href="#44-product-specific-hbm-reference-values" aria-label="Link to this section">#</a></h2>
+<p>Do not say:</p>
+<pre class="code-block"><code>HBM3e is 4.8 TB/s.</code></pre>
+<p>That is not precise enough.</p>
+<p>Say:</p>
+<pre class="code-block"><code>[SHIPPED] NVIDIA H200 provides 141 GB HBM3e and 4.8 TB/s peak memory bandwidth.</code></pre>
+<p>HBM values are product-specific. They depend on the accelerator, memory stack, package, interface width, clocking, SKU, and system level.</p>
+<hr>
+<h2 id="table-42-hbm-reference-values-by-accelerator">Table 4.2 — HBM Reference Values by Accelerator<a class="anchor" href="#table-42-hbm-reference-values-by-accelerator" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Accelerator / Product</th><th>Product Level</th><th>Memory</th><th>Peak Bandwidth</th><th>Confidence</th></tr></thead><tbody><tr><td>H100 SXM5</td><td>GPU</td><td>80 GB HBM3</td><td>3.35 TB/s</td><td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code></td></tr><tr><td>H200</td><td>GPU</td><td>141 GB HBM3e</td><td>4.8 TB/s</td><td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code></td></tr><tr><td>MI300X</td><td>GPU / OAM accelerator</td><td>192 GB HBM3</td><td>≈5.3 TB/s</td><td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code></td></tr><tr><td>MI325X</td><td>GPU / OAM accelerator</td><td>256 GB HBM3e</td><td>≈6 TB/s</td><td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code> or <code><span class="confidence-label label-announced">[ANNOUNCED]</span></code></td></tr><tr><td>MI350 Series</td><td>GPU / OAM accelerator</td><td>288 GB HBM3e</td><td>≈8 TB/s</td><td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code> if official product source</td></tr><tr><td>DGX B200</td><td>System</td><td>1,440 GB total GPU memory</td><td>64 TB/s total HBM3e</td><td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code> system-level</td></tr></tbody></table></div>
+<p class="confidence-box"><span class="confidence-label label-shipped">[SHIPPED]</span> H100 SXM5 80 GB provides 80 GB HBM3 with 3.35 TB/s peak memory bandwidth.</p>
+<p class="confidence-box"><span class="confidence-label label-shipped">[SHIPPED]</span> NVIDIA H200 provides 141 GB HBM3e with 4.8 TB/s peak memory bandwidth, making it especially relevant for memory-capacity and memory-bandwidth constrained workloads.</p>
+<p class="confidence-box"><span class="confidence-label label-shipped">[SHIPPED]</span> AMD Instinct MI300X provides 192 GB HBM3 with approximately 5.3 TB/s peak local memory bandwidth.</p>
+<p class="confidence-box"><span class="confidence-label label-shipped">[SHIPPED]</span> DGX B200 lists 1,440 GB total GPU memory and 64 TB/s total HBM3e bandwidth across the system. These are system-level values and must not be presented as per-GPU values.</p>
+<blockquote><strong>Key Takeaway:</strong> Always ask whether an HBM number is per GPU, per module, per system, or per rack.</blockquote>
+<hr>
+<h2 id="45-memory-bound-vs-compute-bound">4.5 Memory-Bound vs Compute-Bound<a class="anchor" href="#45-memory-bound-vs-compute-bound" aria-label="Link to this section">#</a></h2>
+<p>A workload is not memory-bound simply because memory is involved.</p>
+<p>A workload is memory-bound when the amount of useful math per byte moved is too low to reach the compute roof.</p>
+<p>The key quantity is arithmetic intensity:</p>
+<pre class="code-block"><code>Arithmetic intensity = FLOPs / bytes moved</code></pre>
+<p>The hardware ridge point is:</p>
+<pre class="code-block"><code>Ridge point = peak compute / memory bandwidth</code></pre>
+<p>For H100 SXM5 dense BF16:</p>
+<p class="confidence-box"><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></p>
+<pre class="code-block"><code>Dense BF16 peak ≈ 989.4 TFLOPS
+HBM bandwidth    ≈ 3.35 TB/s
+
+Ridge point ≈ 989.4 / 3.35
+            ≈ 295 FLOP/byte</code></pre>
+<p>This means that a workload needs roughly 295 FLOPs per byte moved from HBM to become compute-bound on this simplified dense BF16 Roofline view.</p>
+<p>If a workload has much lower arithmetic intensity, more Tensor Core peak will not solve the bottleneck.</p>
+<hr>
+<h2 id="figure-placeholder-fig-44">Figure Placeholder — Fig 4.4<a class="anchor" href="#figure-placeholder-fig-44" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-44-memory-bound-vs-compute-bound-decision-flow">
+  <div class="figure-kicker">Fig 4.4</div>
+  <div class="figure-title">Memory-Bound vs Compute-Bound Decision Flow</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A flowchart connecting arithmetic intensity, ridge point, and profiler symptoms to bottleneck classification.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch04_fig_4_4_memory_compute_bound_flow.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+      <span class="figure-source muted">Source diagram pending</span>
+    </div>
+  </div>
+  <figcaption><strong>Fig 4.4 — Memory-Bound vs Compute-Bound Decision Flow.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> A workload is not memory-bound because memory is involved. It is memory-bound when bytes moved per unit of math are too high for the hardware ridge point.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The decision flow should route the reader from symptoms to action. Low Tensor Core utilization may mean compute underuse, but it may also mean memory stalls. The key is to compare arithmetic intensity to the ridge point and then confirm with profiler metrics.</p>
+<blockquote><strong>Key Takeaway:</strong> Classify the bottleneck before optimizing. Memory-bound workloads need fewer bytes moved, not just more compute.</blockquote>
+<hr>
+<h2 id="table-43-memory-bottleneck-diagnostic-signals">Table 4.3 — Memory Bottleneck Diagnostic Signals<a class="anchor" href="#table-43-memory-bottleneck-diagnostic-signals" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Possible Cause</th><th>What to Check</th><th>Possible Fix</th></tr></thead><tbody><tr><td>Low compute utilization</td><td>Memory stalls</td><td>HBM bandwidth, cache hit rate, stall reasons</td><td>Fusion, tiling, quantization</td></tr><tr><td>High HBM bandwidth</td><td>Streaming low-reuse kernel</td><td>Bytes moved per token/layer</td><td>Fuse ops, reduce precision</td></tr><tr><td>OOM at long context</td><td>KV cache growth</td><td>KV bytes per token and concurrency</td><td>GQA/MQA, KV quantization, paging</td></tr><tr><td>High PCIe traffic</td><td>CPU/GPU fallback or offload</td><td>Host-device transfer counters</td><td>Keep hot path on GPU</td></tr><tr><td>Poor scaling</td><td>Remote memory/collectives</td><td>NCCL/RCCL traces</td><td>Topology-aware placement</td></tr><tr><td>Slow attention</td><td>Too much HBM traffic</td><td>Attention kernel memory reads/writes</td><td>FlashAttention-style tiling</td></tr></tbody></table></div>
+<p class="confidence-box"><span class="confidence-label label-env">[ENV-SPECIFIC]</span> High HBM bandwidth utilization with low arithmetic-unit utilization is a strong memory-bound signal, but confirm with arithmetic intensity, cache behavior, stall reasons, and profiler counters.</p>
+<blockquote><strong>Key Takeaway:</strong> Memory bottlenecks have signatures. Match the symptom to the memory tier before choosing the fix.</blockquote>
+<hr>
+<h2 id="46-model-weight-memory-simple-mental-math">4.6 Model Weight Memory: Simple Mental Math<a class="anchor" href="#46-model-weight-memory-simple-mental-math" aria-label="Link to this section">#</a></h2>
+<p>A dense model’s raw weight memory is approximately:</p>
+<pre class="code-block"><code>weight memory = parameter count × bytes per parameter</code></pre>
+<p>For a 70B model:</p>
+<p class="confidence-box"><span class="confidence-label label-estimated">[ESTIMATED]</span></p>
+<pre class="code-block"><code>BF16 weights ≈ 70B × 2 bytes = 140 GB
+FP8 weights  ≈ 70B × 1 byte  = 70 GB
+INT4 weights ≈ 70B × 0.5 byte = 35 GB</code></pre>
+<p>This excludes:</p>
+<ul>
+<li>KV cache,</li>
+<li>activations,</li>
+<li>temporary buffers,</li>
+<li>quantization metadata,</li>
+<li>runtime allocator fragmentation,</li>
+<li>communication buffers,</li>
+<li>speculative decoding buffers,</li>
+<li>serving scheduler overhead.</li>
+</ul>
+<p>That is why a model that “fits by weight math” may still fail in production.</p>
+<h3 id="practical-reading">Practical Reading<a class="anchor" href="#practical-reading" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>H100 80 GB may fit FP8 weights for a 70B model but has limited KV-cache headroom.</li>
+<li>H200 141 GB gives more memory headroom.</li>
+<li>MI300X 192 GB gives larger HBM capacity.</li>
+<li>MI325X and MI350-class accelerators extend the large-HBM trend.</li>
+<li>System-level products like DGX B200 must be interpreted by product level and parallelism strategy.</li>
+</ul>
+<blockquote><strong>Key Takeaway:</strong> Weight memory is only the first memory calculation. Serving memory also includes KV cache, runtime buffers, fragmentation, and concurrency.</blockquote>
+<hr>
+<h2 id="47-kv-cache-memory">4.7 KV Cache Memory<a class="anchor" href="#47-kv-cache-memory" aria-label="Link to this section">#</a></h2>
+<p>KV cache is one of the most important memory structures in LLM serving.</p>
+<p>During decode, each new token uses the prior context stored as keys and values. That means the KV cache grows with sequence length and concurrency.</p>
+<p>A useful estimate:</p>
+<p class="confidence-box"><span class="confidence-label label-estimated">[ESTIMATED]</span></p>
+<pre class="code-block"><code>KV cache bytes ≈ 2 × L × B × S × n_kv × d_head × bytes_per_element</code></pre>
+<hr>
+<h2 id="table-44-kv-cache-memory-formula-variables">Table 4.4 — KV Cache Memory Formula Variables<a class="anchor" href="#table-44-kv-cache-memory-formula-variables" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Symbol</th><th>Meaning</th><th>Notes</th></tr></thead><tbody><tr><td><code>2</code></td><td>Key and value tensors</td><td>One K and one V cache</td></tr><tr><td><code>L</code></td><td>Number of transformer layers</td><td>Model architecture dependent</td></tr><tr><td><code>B</code></td><td>Batch size / concurrent sequences</td><td>Serving concurrency</td></tr><tr><td><code>S</code></td><td>Sequence length</td><td>Grows with context</td></tr><tr><td><code>n_kv</code></td><td>Number of KV heads</td><td>Lower for GQA/MQA</td></tr><tr><td><code>d_head</code></td><td>Head dimension</td><td>Usually hidden size / attention heads</td></tr><tr><td><code>bytes_per_element</code></td><td>KV dtype size</td><td>BF16/FP16=2, FP8/INT8=1</td></tr></tbody></table></div>
+<p>The factor 2 accounts for key and value tensors.</p>
+<p>For GQA/MQA models, use the number of KV heads, not the number of query heads.</p>
+<h3 id="why-gqa-and-mqa-matter">Why GQA and MQA Matter<a class="anchor" href="#why-gqa-and-mqa-matter" aria-label="Link to this section">#</a></h3>
+<p>Multi-head attention, grouped-query attention, and multi-query attention can have very different KV-cache sizes.</p>
+<pre class="code-block"><code>MHA: many KV heads
+GQA: fewer KV heads than query heads
+MQA: one or very few KV heads</code></pre>
+<p>Reducing <code>n_kv</code> reduces KV-cache memory and bandwidth pressure.</p>
+<blockquote><strong>Key Takeaway:</strong> KV-cache growth is linear in layers, concurrency, sequence length, KV heads, head dimension, and bytes per element.</blockquote>
+<hr>
+<h2 id="figure-placeholder-fig-45">Figure Placeholder — Fig 4.5<a class="anchor" href="#figure-placeholder-fig-45" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-45-kv-cache-memory-growth-with-sequence-length-and-concurrency">
+  <div class="figure-kicker">Fig 4.5</div>
+  <div class="figure-title">KV Cache Memory Growth with Sequence Length and Concurrency</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A curve showing how KV-cache memory grows linearly with context length and concurrent sequences.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch04_fig_4_5_kv_cache_growth_curve.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+      <span class="figure-source muted">Source diagram pending</span>
+    </div>
+  </div>
+  <figcaption><strong>Fig 4.5 — KV Cache Memory Growth with Sequence Length and Concurrency.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> A model may fit in HBM at short context but fail at long context or high concurrency. KV cache is often the difference between a theoretical deployment and a production deployment.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The growth curve should show why batch size, sequence length, and KV precision interact. A serving system needs headroom for weights, KV cache, temporary buffers, fragmentation, and scheduler overhead.</p>
+<blockquote><strong>Key Takeaway:</strong> Long context is not free. It consumes HBM capacity and increases decode memory traffic.</blockquote>
+<hr>
+<h2 id="48-prefill-vs-decode-memory-behavior">4.8 Prefill vs Decode Memory Behavior<a class="anchor" href="#48-prefill-vs-decode-memory-behavior" aria-label="Link to this section">#</a></h2>
+<p>Prefill and decode stress memory differently.</p>
+<h3 id="prefill">Prefill<a class="anchor" href="#prefill" aria-label="Link to this section">#</a></h3>
+<p>Prefill processes the prompt.</p>
+<p>It usually exposes more parallel work because the model can process many prompt tokens together.</p>
+<p class="confidence-box"><span class="confidence-label label-representative">[REPRESENTATIVE]</span> Prefill usually exposes more parallel GEMM work and can achieve higher Tensor Core utilization than decode, depending on batch size, sequence length, and implementation.</p>
+<h3 id="decode">Decode<a class="anchor" href="#decode" aria-label="Link to this section">#</a></h3>
+<p>Decode generates one token at a time per sequence.</p>
+<p class="confidence-box"><span class="confidence-label label-representative">[REPRESENTATIVE]</span> LLM decode is often memory-bandwidth-sensitive because each generated token may require reading model weights and prior KV-cache state while exposing limited arithmetic intensity compared with large prefill GEMMs.</p>
+<p>This is why decode optimization often focuses on:</p>
+<ul>
+<li>batching strategy,</li>
+<li>KV-cache layout,</li>
+<li>KV-cache paging,</li>
+<li>KV-cache quantization,</li>
+<li>GQA/MQA,</li>
+<li>speculative decoding,</li>
+<li>memory bandwidth,</li>
+<li>and serving scheduler efficiency.</li>
+</ul>
+<blockquote><strong>Key Takeaway:</strong> Prefill and decode are not the same workload. Prefill often exposes more parallel compute; decode often stresses memory bandwidth and KV-cache behavior.</blockquote>
+<hr>
+<h2 id="49-flashattention-as-a-memory-optimization">4.9 FlashAttention as a Memory Optimization<a class="anchor" href="#49-flashattention-as-a-memory-optimization" aria-label="Link to this section">#</a></h2>
+<p>Attention is a perfect example of why memory hierarchy matters.</p>
+<p>A naive attention implementation can materialize large intermediate matrices:</p>
+<pre class="code-block"><code>QK^T
+softmax(QK^T)
+softmax(QK^T)V</code></pre>
+<p>If the intermediate attention matrix is written to HBM and read back, memory traffic becomes expensive.</p>
+<p>FlashAttention changes the memory schedule.</p>
+<p class="confidence-box"><span class="confidence-label label-representative">[REPRESENTATIVE]</span> FlashAttention improves attention performance by reducing HBM reads/writes through on-chip tiling and online softmax, avoiding materialization of the full attention matrix in HBM. Exact speedup is workload-, hardware-, and implementation-specific.</p>
+<hr>
+<h2 id="figure-placeholder-fig-46">Figure Placeholder — Fig 4.6<a class="anchor" href="#figure-placeholder-fig-46" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-46-flashattention-and-hbm-traffic-reduction">
+  <div class="figure-kicker">Fig 4.6</div>
+  <div class="figure-title">FlashAttention and HBM Traffic Reduction</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A memory-traffic visual showing how FlashAttention-style tiling avoids writing large intermediate attention matrices to HBM.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/png_300dpi/ch04_fig_4_6_flashattention_hbm_traffic.png</code></p>
+      <p class="figure-status">Existing/adapted diagram; print export needed</p>
+      <a class="figure-source" href="../diagrams/diagrams_batch1.html#d5">View source diagram</a>
+    </div>
+  </div>
+  <figcaption><strong>Fig 4.6 — FlashAttention and HBM Traffic Reduction.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> Attention is a perfect example of why memory hierarchy matters. A naive attention implementation can write and reread large intermediate matrices. FlashAttention changes the memory schedule.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> FlashAttention does not make attention free. It changes the bottleneck by reducing HBM traffic and increasing on-chip reuse. Exact speedups depend on sequence length, head dimension, dtype, GPU generation, and implementation.</p>
+<blockquote><strong>Key Takeaway:</strong> FlashAttention is a memory optimization: it wins by moving fewer bytes through HBM.</blockquote>
+<hr>
+<h2 id="410-memory-optimization-techniques">4.10 Memory Optimization Techniques<a class="anchor" href="#410-memory-optimization-techniques" aria-label="Link to this section">#</a></h2>
+<p>Once the memory tier and bottleneck are known, the optimization menu becomes clearer.</p>
+<p>Some techniques reduce bytes moved. Some improve on-chip reuse. Some trade compute for memory. Some reduce precision. Some change scheduling. Some add operational complexity.</p>
+<hr>
+<h2 id="table-45-memory-optimization-techniques">Table 4.5 — Memory Optimization Techniques<a class="anchor" href="#table-45-memory-optimization-techniques" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Technique</th><th>Reduces</th><th>Best For</th><th>Caveat</th></tr></thead><tbody><tr><td>Tiling</td><td>HBM traffic</td><td>GEMM, attention</td><td>Requires kernel support</td></tr><tr><td>Fusion</td><td>Intermediate reads/writes</td><td>Norm, activation, elementwise chains</td><td>May increase register pressure</td></tr><tr><td>Quantization</td><td>Weight/KV bytes</td><td>Inference</td><td>Quality and kernel support matter</td></tr><tr><td>KV quantization</td><td>KV-cache memory/bandwidth</td><td>Decode and long context</td><td>Accuracy and implementation matter</td></tr><tr><td>GQA/MQA</td><td>KV heads</td><td>LLM inference</td><td>Architecture-specific</td></tr><tr><td>Paging</td><td>Fragmentation/OOM</td><td>Serving systems</td><td>Scheduler overhead</td></tr><tr><td>Recomputation</td><td>Activation memory</td><td>Training</td><td>More compute</td></tr><tr><td>CPU offload</td><td>HBM capacity</td><td>Oversized models</td><td>PCIe latency/bandwidth penalty</td></tr><tr><td>Topology-aware placement</td><td>Remote memory/communication</td><td>Distributed workloads</td><td>Requires scheduler/fabric awareness</td></tr></tbody></table></div>
+<p class="confidence-box"><span class="confidence-label label-representative">[REPRESENTATIVE]</span> Operator fusion can reduce HBM traffic by avoiding intermediate tensor materialization, but it may increase register pressure, reduce occupancy, or require specialized kernels.</p>
+<p class="confidence-box"><span class="confidence-label label-estimated">[ESTIMATED]</span> Reducing precision from BF16 to FP8 roughly halves raw value storage, and INT4 roughly quarters it, before metadata and packing overhead.</p>
+<p class="confidence-box"><span class="confidence-label label-representative">[REPRESENTATIVE]</span> Production quantization must account for accuracy, kernel support, calibration, serving-stack compatibility, and observability.</p>
+<p class="confidence-box"><span class="confidence-label label-representative">[REPRESENTATIVE]</span> CPU offload can reduce HBM capacity pressure, but if it enters the critical path it can become limited by PCIe bandwidth, host-memory latency, NUMA placement, DMA behavior, and software scheduling.</p>
+<blockquote><strong>Key Takeaway:</strong> Memory optimization is tradeoff management, not a single trick.</blockquote>
+<hr>
+<h2 id="411-wrong-fix-vs-right-first-question">4.11 Wrong Fix vs Right First Question<a class="anchor" href="#411-wrong-fix-vs-right-first-question" aria-label="Link to this section">#</a></h2>
+<p>Memory problems often look like compute problems from far away.</p>
+<p>A senior engineer may jump to a fix.</p>
+<p>A principal engineer first names the limiting resource.</p>
+<hr>
+<h2 id="table-46-wrong-fix-vs-right-first-question-for-memory-problems">Table 4.6 — Wrong Fix vs Right First Question for Memory Problems<a class="anchor" href="#table-46-wrong-fix-vs-right-first-question-for-memory-problems" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Wrong Fix</th><th>Right First Question</th></tr></thead><tbody><tr><td>Low GPU utilization</td><td>Add more GPUs</td><td>Is the kernel memory-bound or launch/overhead-bound?</td></tr><tr><td>High decode latency</td><td>Use a bigger GPU for TFLOPS</td><td>Is KV-cache bandwidth the bottleneck?</td></tr><tr><td>OOM at long context</td><td>Reduce batch blindly</td><td>How many bytes does KV cache consume per request?</td></tr><tr><td>Slow attention</td><td>Tune only GEMM</td><td>Is attention materializing too much HBM traffic?</td></tr><tr><td>Slow norm/activation chain</td><td>Increase Tensor Core focus</td><td>Are elementwise ops streaming HBM repeatedly?</td></tr><tr><td>Poor multi-GPU scaling</td><td>Add faster GPUs</td><td>Is remote communication or topology the bottleneck?</td></tr></tbody></table></div>
+<blockquote><strong>Key Takeaway:</strong> The fastest way to waste optimization time is to fix the wrong bottleneck.</blockquote>
+<hr>
+<h2 id="412-memory-optimization-decision-tree">4.12 Memory Optimization Decision Tree<a class="anchor" href="#412-memory-optimization-decision-tree" aria-label="Link to this section">#</a></h2>
+<p>The chapter should end with a practical decision tool.</p>
+<p>Once the bottleneck is classified, the solution space becomes smaller and more rational:</p>
+<pre class="code-block"><code>Capacity problem?
+  Quantize, shard, page, offload, reduce context, reduce concurrency.
+
+Bandwidth problem?
+  Fuse, tile, quantize, improve layout, use better kernels, reduce KV traffic.
+
+On-chip reuse problem?
+  Use shared memory tiling, blocking, FlashAttention-style schedules.
+
+Host-memory problem?
+  Keep hot path on GPU, reduce transfers, prefetch, pin memory, fix NUMA placement.
+
+Distributed memory / communication problem?
+  Improve topology placement, overlap communication, adjust parallelism strategy.</code></pre>
+<hr>
+<h2 id="figure-placeholder-fig-47">Figure Placeholder — Fig 4.7<a class="anchor" href="#figure-placeholder-fig-47" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-47-memory-optimization-decision-tree">
+  <div class="figure-kicker">Fig 4.7</div>
+  <div class="figure-title">Memory Optimization Decision Tree</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A decision tree routing memory-capacity, bandwidth, on-chip reuse, host offload, and interconnect bottlenecks to appropriate fixes.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch04_fig_4_7_memory_optimization_decision_tree.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+      <span class="figure-source muted">Source diagram pending</span>
+    </div>
+  </div>
+  <figcaption><strong>Fig 4.7 — Memory Optimization Decision Tree.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> The chapter should end with a practical decision tool. Once the bottleneck is classified, the solution space becomes smaller and more rational.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The decision tree should route capacity problems toward quantization, sharding, paging, or offload; bandwidth problems toward fusion, tiling, KV quantization, and layout; and communication problems toward topology-aware placement and overlap.</p>
+<blockquote><strong>Key Takeaway:</strong> Memory optimization starts by naming the limiting memory tier.</blockquote>
+<hr>
+<h2 id="413-how-to-explain-gpu-memory-hierarchy-in-a-principal-interview">4.13 How to Explain GPU Memory Hierarchy in a Principal Interview<a class="anchor" href="#413-how-to-explain-gpu-memory-hierarchy-in-a-principal-interview" aria-label="Link to this section">#</a></h2>
+<p>A weak answer sounds like this:</p>
+<pre class="code-block"><code>GPU memory is fast, and HBM has high bandwidth.</code></pre>
+<p>That is true, but too shallow.</p>
+<p>A principal-level answer sounds like this:</p>
+<blockquote>I start with the memory movement path, not just peak TFLOPS. I ask where the data lives, how often it is reused, and whether arithmetic intensity is high enough to use the compute roof. For LLM inference, decode is often HBM- and KV-cache-bandwidth-sensitive. For attention, FlashAttention improves performance by reducing HBM traffic through on-chip tiling. For hardware selection, HBM capacity and bandwidth can dominate over peak TFLOPS.</blockquote>
+<h3 id="scenario-1-why-can-a-gpu-with-more-tflops-be-slower">Scenario 1 — Why Can a GPU with More TFLOPS Be Slower?<a class="anchor" href="#scenario-1-why-can-a-gpu-with-more-tflops-be-slower" aria-label="Link to this section">#</a></h3>
+<p>Answer:</p>
+<pre class="code-block"><code>If the workload is memory-bound, peak TFLOPS is not the limiting resource. A GPU with more compute but insufficient memory bandwidth, smaller HBM capacity, worse cache behavior, or a weaker software kernel path can underperform on memory-sensitive workloads.</code></pre>
+<h3 id="scenario-2-why-does-h200-matter-for-inference">Scenario 2 — Why Does H200 Matter for Inference?<a class="anchor" href="#scenario-2-why-does-h200-matter-for-inference" aria-label="Link to this section">#</a></h3>
+<p>Answer:</p>
+<pre class="code-block"><code>H200 matters because it increases HBM capacity and bandwidth. For memory-bound LLM inference and long-context serving, more HBM and more bandwidth can improve model fit, KV-cache headroom, and decode behavior even when the compute architecture is still Hopper-generation.</code></pre>
+<h3 id="scenario-3-why-does-mi300x-matter">Scenario 3 — Why Does MI300X Matter?<a class="anchor" href="#scenario-3-why-does-mi300x-matter" aria-label="Link to this section">#</a></h3>
+<p>Answer:</p>
+<pre class="code-block"><code>MI300X matters because 192 GB HBM3 changes model-fit and KV-cache economics. For memory-heavy serving, capacity can reduce sharding pressure. The final production decision still depends on ROCm/framework maturity, kernel availability, interconnect, power, and cost.</code></pre>
+<h3 id="scenario-4-why-does-flashattention-help">Scenario 4 — Why Does FlashAttention Help?<a class="anchor" href="#scenario-4-why-does-flashattention-help" aria-label="Link to this section">#</a></h3>
+<p>Answer:</p>
+<pre class="code-block"><code>FlashAttention helps because it changes the memory schedule. Instead of materializing the full attention matrix in HBM, it tiles the computation and uses on-chip memory with online softmax, reducing HBM reads and writes.</code></pre>
+<h3 id="scenario-5-how-do-you-diagnose-a-memory-bottleneck">Scenario 5 — How Do You Diagnose a Memory Bottleneck?<a class="anchor" href="#scenario-5-how-do-you-diagnose-a-memory-bottleneck" aria-label="Link to this section">#</a></h3>
+<p>Answer:</p>
+<pre class="code-block"><code>I compare arithmetic intensity to the ridge point, then confirm with profiler metrics: HBM bandwidth, cache behavior, stall reasons, Tensor Core utilization, memory transactions, and host-device transfers. I then choose a fix based on whether the bottleneck is HBM capacity, HBM bandwidth, on-chip reuse, PCIe/offload, or interconnect.</code></pre>
+<hr>
+<h2 id="414-chapter-cheat-sheet">4.14 Chapter Cheat Sheet<a class="anchor" href="#414-chapter-cheat-sheet" aria-label="Link to this section">#</a></h2>
+<h3 id="memory-hierarchy">Memory Hierarchy<a class="anchor" href="#memory-hierarchy" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>Registers → Shared/L1 → L2 → HBM → Host Memory → Network</code></pre>
+<h3 id="arithmetic-intensity">Arithmetic Intensity<a class="anchor" href="#arithmetic-intensity" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>Arithmetic intensity = FLOPs / bytes moved</code></pre>
+<h3 id="ridge-point">Ridge Point<a class="anchor" href="#ridge-point" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>Ridge point = peak compute / memory bandwidth</code></pre>
+<h3 id="h100-dense-bf16-ridge-point">H100 Dense BF16 Ridge Point<a class="anchor" href="#h100-dense-bf16-ridge-point" aria-label="Link to this section">#</a></h3>
+<p class="confidence-box"><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></p>
+<pre class="code-block"><code>H100 SXM5 dense BF16 peak ≈ 989.4 TFLOPS
+H100 SXM5 HBM bandwidth    ≈ 3.35 TB/s
+Ridge point                ≈ 295 FLOP/byte</code></pre>
+<h3 id="model-weight-memory">Model Weight Memory<a class="anchor" href="#model-weight-memory" aria-label="Link to this section">#</a></h3>
+<p class="confidence-box"><span class="confidence-label label-estimated">[ESTIMATED]</span></p>
+<pre class="code-block"><code>70B BF16 ≈ 140 GB
+70B FP8  ≈ 70 GB
+70B INT4 ≈ 35 GB</code></pre>
+<h3 id="kv-cache">KV Cache<a class="anchor" href="#kv-cache" aria-label="Link to this section">#</a></h3>
+<p class="confidence-box"><span class="confidence-label label-estimated">[ESTIMATED]</span></p>
+<pre class="code-block"><code>KV cache bytes ≈ 2 × L × B × S × n_kv × d_head × bytes_per_element</code></pre>
+<h3 id="memory-optimization-principle">Memory Optimization Principle<a class="anchor" href="#memory-optimization-principle" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>Move fewer bytes.
+Reuse data closer to compute.
+Use lower precision when quality allows.
+Avoid host/network movement in the critical path.</code></pre>
+<hr>
+<h2 id="415-key-takeaways">4.15 Key Takeaways<a class="anchor" href="#415-key-takeaways" aria-label="Link to this section">#</a></h2>
+<ol>
+<li>AI performance is often limited by bytes moved, not FLOPs available.</li>
+<li>GPU memory hierarchy is a distance map from registers to remote memory.</li>
+<li>Registers and shared memory are fast but tiny.</li>
+<li>HBM is large and high-bandwidth, but still expensive relative to on-chip reuse.</li>
+<li>Host memory and network memory paths are much slower and must be kept out of the critical path when possible.</li>
+<li>HBM capacity determines model-fit and KV-cache headroom.</li>
+<li>HBM bandwidth determines many memory-bound inference behaviors.</li>
+<li>H100 SXM5 has 80 GB HBM3 and 3.35 TB/s bandwidth.</li>
+<li>H200 provides 141 GB HBM3e and 4.8 TB/s bandwidth.</li>
+<li>MI300X provides 192 GB HBM3 and approximately 5.3 TB/s bandwidth.</li>
+<li>Ridge point connects compute peak and memory bandwidth.</li>
+<li>H100 dense BF16 ridge point is approximately 295 FLOP/byte.</li>
+<li>KV-cache memory grows with layers, concurrency, sequence length, KV heads, head dimension, and dtype size.</li>
+<li>Decode is often memory-bandwidth-sensitive.</li>
+<li>FlashAttention is fundamentally a memory-traffic optimization.</li>
+<li>The right fix depends on the limiting memory tier.</li>
+<li>Principal-level memory analysis starts with bottleneck classification, not a favorite optimization trick.</li>
+</ol>
+<hr>
+<h2 id="416-review-questions">4.16 Review Questions<a class="anchor" href="#416-review-questions" aria-label="Link to this section">#</a></h2>
+<h3 id="conceptual">Conceptual<a class="anchor" href="#conceptual" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>Why is HBM more than just “GPU memory”?</li>
+<li>What are the main tiers of GPU memory hierarchy?</li>
+<li>Why are registers and shared memory so important for performance?</li>
+<li>Why can a workload be memory-bound on a GPU with huge TFLOPS?</li>
+<li>What is arithmetic intensity?</li>
+<li>What is a hardware ridge point?</li>
+<li>Why should dense BF16 peak be used for dense BF16 ridge-point math?</li>
+<li>Why does HBM capacity matter for LLM inference?</li>
+<li>Why does HBM bandwidth matter for decode?</li>
+<li>Why does KV cache grow with sequence length?</li>
+<li>Why do GQA and MQA reduce KV-cache memory?</li>
+<li>Why does FlashAttention reduce HBM traffic?</li>
+<li>Why can CPU offload hurt latency?</li>
+<li>Why is product level important when comparing HBM values?</li>
+</ol>
+<h3 id="calculation">Calculation<a class="anchor" href="#calculation" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>Estimate BF16 weight memory for a 70B model.</li>
+<li>Estimate FP8 weight memory for a 70B model.</li>
+<li>Estimate INT4 weight memory for a 70B model.</li>
+<li>Calculate H100 SXM5 dense BF16 ridge point using 989.4 TFLOPS and 3.35 TB/s.</li>
+<li>Write the KV-cache memory formula and explain each variable.</li>
+<li>If sequence length doubles, what happens to KV-cache memory?</li>
+<li>If <code>n_kv</code> is reduced by 4× using GQA, what happens to KV-cache memory?</li>
+<li>If KV cache moves from BF16 to FP8, what happens to raw KV storage before metadata?</li>
+</ol>
+<h3 id="principal-level-interview-practice">Principal-Level Interview Practice<a class="anchor" href="#principal-level-interview-practice" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>Explain GPU memory hierarchy in two minutes.</li>
+<li>Explain how you would diagnose a memory-bound kernel.</li>
+<li>Explain why H200 can help inference even if compute is similar to H100.</li>
+<li>Explain why MI300X’s 192 GB HBM matters.</li>
+<li>Explain why FlashAttention is a memory optimization.</li>
+<li>Explain why decode is often memory-bandwidth-sensitive.</li>
+<li>Explain why long-context serving can become expensive.</li>
+<li>Explain how you would choose between H100, H200, and MI300X for a 70B serving workload.</li>
+<li>Explain the difference between HBM capacity and HBM bandwidth.</li>
+<li>Explain why adding more GPUs may not fix a memory bottleneck.</li>
+</ol>
+<hr>
+<h2 id="417-bridge-to-chapter-5">4.17 Bridge to Chapter 5<a class="anchor" href="#417-bridge-to-chapter-5" aria-label="Link to this section">#</a></h2>
+<p>Chapter 4 showed why memory capacity, bandwidth, and data movement often dominate AI performance.</p>
+<p>But memory is not the only physical constraint.</p>
+<p>As accelerators become denser, hotter, and more expensive to operate, power and cooling become architecture-level constraints.</p>
+<p>Chapter 5 moves from:</p>
+<pre class="code-block"><code>How do bytes move?</code></pre>
+<p>to:</p>
+<pre class="code-block"><code>How much power, cooling, and infrastructure are required to sustain the system?</code></pre>
+
+    <nav class="nav-row" aria-label="Previous and next chapter navigation">
+      <a href="ch03b_gpu_roadmap.html">
+        <small>Previous Chapter</small>
+        <strong>Chapter 3B — GPU Architecture Roadmap</strong>
+      </a>
+      <a href="../index.html">
+        <small>Next</small>
+        <strong>Chapter 5 — Coming Soon</strong>
+      </a>
+    </nav>
+  </main>
+</div>
+</body>
+</html>
