@@ -3,114 +3,596 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter 6 — Training and Inference Workloads: From Batch Training to Real-Time Serving | AI/ML Infrastructure from Silicon to Scale</title>
-<meta name="description" content="Chapter 6 explains training vs inference workloads, batch training, online inference, prefill/decode, TTFT, TPOT, percentile latency, continuous batching, scheduler behavior, activation memory, optimizer state, checkpointing, and distributed training communication.">
+<title>Chapter 6 — Training and Inference Workloads: From Batch Training to Real-Time Serving | Silicon to Scale</title>
+<meta name="description" content="Production web chapter on batch training, online inference, prefill/decode, TTFT, TPOT, continuous batching, model serving pipelines, and training bottlenecks.">
 <meta name="author" content="Venkat Vinjam">
+<meta property="og:title" content="Chapter 6 — Training and Inference Workloads: From Batch Training to Real-Time Serving">
+<meta property="og:description" content="Learn how batch training, online inference, prefill, decode, TTFT, TPOT, batching policy, KV cache pressure, and scheduler behavior shape AI workload performance.">
+<meta property="og:type" content="article">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:#080c10; --bg2:#0d1117; --bg3:#161b22; --bg4:#1c2128;
-  --border:#21262d; --border2:#30363d; --text:#e6edf3; --text2:#8b949e; --text3:#6e7681;
-  --accent:#58a6ff; --gold:#d4a017; --gold2:#f0c040; --green:#3fb950; --orange:#ff6b35;
-  --purple:#bc8cff; --red:#f85149; --yellow:#f7c948; --mono:'IBM Plex Mono', monospace; --sans:'IBM Plex Sans', sans-serif;
+  --bg: #080c10;
+  --bg2: #0d1117;
+  --bg3: #161b22;
+  --bg4: #1c2128;
+  --border: #21262d;
+  --border2: #30363d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #6e7681;
+  --accent: #58a6ff;
+  --gold2: #f0c040;
+  --green: #3fb950;
+  --orange: #ff8b3d;
+  --purple: #bc8cff;
+  --teal: #39d0d8;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
 }
-*{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.65}
-body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(88,166,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(88,166,255,.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
-a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
-.page{position:relative;z-index:1;display:grid;grid-template-columns:280px minmax(0,1fr);min-height:100vh}
-aside{position:sticky;top:0;height:100vh;overflow:auto;background:rgba(13,17,23,.96);border-right:1px solid var(--border);padding:24px 18px}
-.brand{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase;margin-bottom:8px}
-.book-title{font-weight:700;font-size:15px;line-height:1.25;margin-bottom:20px}
-.toc-title{font-family:var(--mono);font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin:20px 0 10px}
-.toc a{display:flex;gap:8px;align-items:flex-start;color:var(--text2);font-size:12px;padding:7px 8px;border-radius:6px;text-decoration:none}
-.toc a:hover{background:var(--bg3);color:var(--accent)} .toc a span{font-family:var(--mono);color:var(--text3);min-width:38px}
-main{max-width:1050px;padding:36px 42px 90px}
-.nav-top,.nav-bottom{display:flex;justify-content:space-between;gap:14px;margin:0 0 28px;flex-wrap:wrap}
-.nav-top a,.nav-bottom a{font-family:var(--mono);font-size:12px;border:1px solid var(--border2);border-radius:8px;padding:8px 12px;background:var(--bg3)}
-.chapter-kicker{font-family:var(--mono);font-size:12px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-top:10px}
-h1{font-size:clamp(32px,5vw,54px);line-height:1.05;letter-spacing:-1.4px;margin:14px 0 12px}
-.subtitle{color:var(--text2);font-size:18px;max-width:850px}
-.edition{display:inline-flex;margin:22px 0 18px;font-family:var(--mono);font-size:12px;color:var(--green);border:1px solid rgba(63,185,80,.35);background:rgba(63,185,80,.08);border-radius:999px;padding:6px 12px}
-h2{font-size:28px;margin:54px 0 16px;padding-bottom:12px;border-bottom:1px solid var(--border);letter-spacing:-.3px}
-h3{font-size:20px;margin:32px 0 10px;color:var(--gold2)} p{margin:12px 0;color:var(--text)}
-ul,ol{padding-left:22px;color:var(--text)} li{margin:6px 0}
-blockquote{margin:18px 0;padding:16px 18px;border-left:3px solid var(--accent);background:rgba(88,166,255,.06);border-radius:0 8px 8px 0;color:var(--text2)}
-.table-wrap{overflow-x:auto;margin:18px 0 30px;border:1px solid var(--border);border-radius:10px;background:var(--bg3)}
-table{width:100%;border-collapse:collapse;min-width:760px} th,td{padding:11px 13px;border-bottom:1px solid var(--border);vertical-align:top} th{font-family:var(--mono);font-size:11px;color:var(--accent);text-transform:uppercase;background:var(--bg4);letter-spacing:.6px} td{font-size:14px;color:var(--text2)} tr:last-child td{border-bottom:none}
-pre{background:#05080c;border:1px solid var(--border2);border-radius:10px;padding:16px;overflow:auto;color:#d8e6f3;font-family:var(--mono);font-size:13px;line-height:1.55} code{font-family:var(--mono);background:rgba(88,166,255,.08);padding:.1em .35em;border-radius:4px}
-.formula{background:linear-gradient(135deg,rgba(88,166,255,.08),rgba(188,140,255,.05));border:1px solid rgba(88,166,255,.28);border-radius:12px;padding:16px;margin:18px 0;font-family:var(--mono)}
-.conf{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.4px;border:1px solid var(--border2);border-radius:999px;padding:2px 7px;white-space:nowrap;color:var(--text2);background:var(--bg4)}
-.shipped{color:var(--green);border-color:rgba(63,185,80,.45);background:rgba(63,185,80,.08)} .announced{color:var(--purple);border-color:rgba(188,140,255,.45);background:rgba(188,140,255,.08)} .derived-from-shipped{color:var(--accent);border-color:rgba(88,166,255,.45);background:rgba(88,166,255,.08)} .estimated{color:var(--yellow);border-color:rgba(247,201,72,.45);background:rgba(247,201,72,.08)} .representative{color:var(--orange);border-color:rgba(255,107,53,.45);background:rgba(255,107,53,.08)} .env-specific{color:var(--red);border-color:rgba(248,81,73,.45);background:rgba(248,81,73,.08)}
-.callout{border:1px solid var(--border2);background:var(--bg3);border-radius:12px;padding:16px 18px;margin:20px 0} .callout strong{color:var(--gold2);font-size:14px;font-family:var(--mono)} .callout.warn{border-color:rgba(247,201,72,.45);background:rgba(247,201,72,.06)} .callout.interview{border-color:rgba(188,140,255,.45);background:rgba(188,140,255,.06)}
-.figure-card{background:var(--bg3);border:1px solid var(--border2);border-radius:14px;padding:18px;margin:28px 0;break-inside:avoid} .figure-kicker{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase} .figure-title{font-weight:700;font-size:18px;margin:4px 0 12px} .figure-placeholder{min-height:230px;border:1px dashed var(--border2);border-radius:10px;background:radial-gradient(ellipse at center,rgba(88,166,255,.07),rgba(88,166,255,.015));display:grid;place-items:center;text-align:center;color:var(--text3);font-family:var(--mono);padding:20px} figcaption{font-size:14px;color:var(--text2);margin-top:12px} .small{font-size:12px;color:var(--text3);font-family:var(--mono)}
-.production-notes{margin-top:60px;border:1px solid rgba(247,201,72,.35);background:rgba(247,201,72,.05);border-radius:14px;padding:18px}
-.footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--border);color:var(--text3);font-family:var(--mono);font-size:12px}
-@media (max-width: 980px){.page{grid-template-columns:1fr} aside{position:relative;height:auto;border-right:none;border-bottom:1px solid var(--border)} main{padding:26px 20px} .toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:4px} table{min-width:680px}}
-@media print{body{background:#fff;color:#000} body::before,aside,.nav-top,.nav-bottom,.production-notes{display:none!important} .page{display:block} main{max-width:none;padding:0} h1,h2,h3,p,li,td,th{color:#000} .figure-card,.table-wrap,pre,.formula,.callout{break-inside:avoid;border-color:#999;background:#fff} a{color:#000;text-decoration:none}}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.65;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(88,166,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(88,166,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(13,17,23,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 22px;
+}
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.brand a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.brand span {
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.topnav {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.topnav a {
+  color: var(--accent);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.topnav a:hover {
+  border-color: var(--accent);
+  background: rgba(88,166,255,0.08);
+}
+.layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 310px minmax(0, 960px);
+  gap: 36px;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 36px 24px 80px;
+}
+.sidebar {
+  position: sticky;
+  top: 76px;
+  align-self: start;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+}
+.sidebar h2 {
+  margin: 0 0 12px;
+  font-family: var(--mono);
+  color: var(--gold2);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+.sidebar a {
+  display: block;
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 13px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.35);
+}
+.sidebar a:hover { color: var(--accent); }
+.sidebar .toc-l3 {
+  padding-left: 14px;
+  font-size: 12px;
+  color: var(--text3);
+}
+.content {
+  background: rgba(13,17,23,0.72);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 38px 44px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+}
+.content h1 {
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -1.4px;
+  margin: 0 0 18px;
+}
+.content h2 {
+  margin-top: 46px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 25px;
+  letter-spacing: -0.5px;
+}
+.content h3 {
+  margin-top: 30px;
+  color: var(--accent);
+  font-size: 18px;
+}
+.content h4 {
+  margin-top: 24px;
+  color: var(--gold2);
+}
+.anchor {
+  margin-left: 8px;
+  color: var(--text3);
+  opacity: 0;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 0.8em;
+}
+h1:hover .anchor, h2:hover .anchor, h3:hover .anchor, h4:hover .anchor {
+  opacity: 1;
+}
+p { color: var(--text); font-size: 16px; }
+blockquote {
+  margin: 24px 0;
+  padding: 18px 22px;
+  border-left: 4px solid var(--gold2);
+  background: rgba(212,160,23,0.08);
+  color: var(--text);
+  border-radius: 0 10px 10px 0;
+  font-size: 17px;
+}
+hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
+ul, ol { padding-left: 24px; }
+li { margin: 6px 0; }
+code {
+  font-family: var(--mono);
+  background: var(--bg4);
+  color: var(--gold2);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-size: 0.92em;
+}
+.code-block {
+  background: #05080c;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 18px 0;
+}
+.code-block code {
+  background: transparent;
+  border: 0;
+  color: #d8dee9;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.table-wrap {
+  overflow-x: auto;
+  margin: 22px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+  background: var(--bg3);
+}
+th {
+  background: var(--bg4);
+  color: var(--accent);
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+th, td {
+  padding: 11px 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+td { color: var(--text2); font-size: 14px; }
+tr:last-child td { border-bottom: 0; }
+.confidence-label {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+.label-shipped { color: var(--green); background: rgba(63,185,80,0.10); border-color: rgba(63,185,80,0.35); }
+.label-announced { color: var(--purple); background: rgba(188,140,255,0.10); border-color: rgba(188,140,255,0.35); }
+.label-derived { color: var(--teal); background: rgba(57,208,216,0.10); border-color: rgba(57,208,216,0.35); }
+.label-estimated { color: var(--gold2); background: rgba(240,192,64,0.10); border-color: rgba(240,192,64,0.35); }
+.label-representative { color: var(--accent); background: rgba(88,166,255,0.10); border-color: rgba(88,166,255,0.35); }
+.label-env { color: var(--orange); background: rgba(255,139,61,0.10); border-color: rgba(255,139,61,0.35); }
+.confidence-box {
+  border-left: 4px solid var(--green);
+  background: rgba(63,185,80,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.takeaway {
+  border-left: 4px solid var(--gold2);
+  background: rgba(212,160,23,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.figure-note { color: var(--text2); font-size: 14px; }
+.figure-placeholder {
+  margin: 28px 0;
+  background: linear-gradient(135deg, rgba(88,166,255,0.08), rgba(57,208,216,0.06));
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 20px;
+}
+.figure-kicker {
+  color: var(--gold2);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.figure-title { font-size: 20px; font-weight: 700; margin-bottom: 14px; }
+.figure-body {
+  display: grid;
+  grid-template-columns: 72px minmax(0,1fr);
+  gap: 16px;
+  align-items: center;
+  background: rgba(13,17,23,0.65);
+  border: 1px dashed var(--border2);
+  border-radius: 12px;
+  padding: 18px;
+}
+.figure-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: var(--teal);
+  border: 1px solid var(--teal);
+  font-size: 32px;
+  background: rgba(57,208,216,0.08);
+}
+.figure-path, .figure-status {
+  color: var(--text2);
+  margin: 6px 0;
+  font-size: 13px;
+}
+.figure-source {
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 12px;
+  text-decoration: none;
+}
+.figure-source:hover { text-decoration: underline; }
+.muted { color: var(--text3); }
+figcaption { color: var(--text2); font-size: 13px; margin-top: 12px; }
+.nav-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 44px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+.nav-row a {
+  flex: 1;
+  text-decoration: none;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--text);
+}
+.nav-row a:hover { border-color: var(--accent); }
+.nav-row small {
+  display: block;
+  color: var(--text3);
+  font-family: var(--mono);
+  margin-bottom: 4px;
+}
+.nav-row strong { color: var(--accent); }
+@media (max-width: 980px) {
+  .layout { grid-template-columns: 1fr; padding: 22px 16px 60px; }
+  .sidebar { position: static; max-height: none; }
+  .content { padding: 26px 20px; }
+  .topbar { align-items: flex-start; flex-direction: column; }
+}
+@media (max-width: 640px) {
+  .figure-body { grid-template-columns: 1fr; }
+  .nav-row { flex-direction: column; }
+  p { font-size: 15px; }
+}
+@media print {
+  body { background: #fff; color: #111; }
+  body::before, .topbar, .sidebar, .anchor { display: none !important; }
+  .layout { display: block; max-width: none; padding: 0; }
+  .content { box-shadow: none; border: 0; padding: 0; }
+  .content h1, .content h2, .content h3, .content h4, p, li, td, th, blockquote { color: #111 !important; }
+  .code-block, code, table, .figure-placeholder, .confidence-label { border-color: #999; }
+  .confidence-label { color: #111 !important; background: #eee !important; }
+  a { color: #111; text-decoration: none; }
+  .figure-placeholder, table, pre, blockquote { break-inside: avoid; }
+}
 </style>
 </head>
 <body>
-<div class="page">
-<aside>
-  <div class="brand">Silicon to Scale</div>
-  <div class="book-title">AI/ML Infrastructure<br>from Silicon to Scale</div>
-  <div class="toc-title">Chapter 6</div>
-  <nav class="toc"><a href="#6-0"><span>6.0</span>Manifesto</a>
-<a href="#6-1"><span>6.1</span>Workload Taxonomy</a>
-<a href="#6-2"><span>6.2</span>Batch Training Pipeline</a>
-<a href="#6-3"><span>6.3</span>Training Metrics</a>
-<a href="#6-4"><span>6.4</span>Training Memory</a>
-<a href="#6-5"><span>6.5</span>Distributed Training Communication</a>
-<a href="#6-6"><span>6.6</span>Data Loading and Checkpointing</a>
-<a href="#6-7"><span>6.7</span>Prefill and Decode</a>
-<a href="#6-8"><span>6.8</span>Serving Metrics</a>
-<a href="#6-9"><span>6.9</span>Batching Policies</a>
-<a href="#6-10"><span>6.10</span>Chunked Prefill</a>
-<a href="#6-11"><span>6.11</span>Disaggregated Serving</a>
-<a href="#6-12"><span>6.12</span>KV Cache Bridge</a>
-<a href="#6-13"><span>6.13</span>Runtime Serving Stack</a>
-<a href="#6-14"><span>6.14</span>Throughput-Latency Knee</a>
-<a href="#6-15"><span>6.15</span>Diagnostic Matrix</a>
-<a href="#6-16"><span>6.16</span>Principal Discussion</a>
-<a href="#6-17"><span>6.17</span>Anti-Patterns</a>
-<a href="#6-18"><span>6.18</span>Key Takeaways</a>
-<a href="#review"><span>review</span>Review Questions</a></nav>
-</aside>
-<main>
-  <nav class="nav-top"><a href="ch05_power_thermal_infrastructure.html">← Previous: Ch05</a><a href="../index.html">Home</a><a href="ch07_gpu_kernels_cuda_optimization.html">Next: Ch07 →</a></nav>
-  <div class="chapter-kicker">Part III · Optimization Techniques</div>
-  <h1>Training and Inference Workloads</h1>
-  <p class="subtitle">From batch training to real-time serving: how workload shape determines bottlenecks, metrics, scheduler behavior, and principal-level system design tradeoffs.</p>
-  <div class="edition">Current as of 2026 edition</div>
+<header class="topbar">
+  <div class="brand">
+    <a href="../index.html">AI/ML Infrastructure from Silicon to Scale</a>
+    <span>Chapter 6 · Training and Inference Workloads</span>
+  </div>
+  <nav class="topnav" aria-label="Top navigation">
+    <a href="../index.html">Home</a>
+    <a href="ch05_power_thermal_infrastructure.html">Previous: Ch05</a>
+    <a href="ch07_gpu_kernels_cuda_optimization.html">Next: Ch07</a>
+    <a href="../pdfs/ch06_training_inference_workloads.pdf">PDF</a>
+    <a href="../diagrams/diagrams_batch1.html#d7">Prefill/Decode Diagram</a>
+    <a href="../diagrams/diagrams_batch1.html#d9">Batching Diagram</a>
+  </nav>
+</header>
 
-  <section id="6-0"><h2>6.0 Chapter Manifesto — Why This Chapter Exists</h2>
-  <p>The first five chapters built the foundation: roofline thinking, transformer arithmetic, GPU architecture, HBM behavior, and the power and thermal limits of AI infrastructure. Chapter 6 changes the unit of analysis from <strong>hardware</strong> to <strong>workload</strong>.</p>
-  <p>A GPU cluster does not run “AI” in the abstract. It runs a workload mode: a multi-day training job, an offline inference batch, a batch API service, or an interactive streaming service. The same model and the same GPU can behave completely differently in each mode.</p>
-  <div class="callout interview"><strong>Principal question</strong><p>Given a workload, what is the dominant objective, bottleneck, memory pressure, communication pattern, scheduler behavior, and metric that determines whether the system is healthy?</p></div>
-  </section>
+<div class="layout">
+  <aside class="sidebar" aria-label="Chapter table of contents">
+    <h2>Chapter Contents</h2>
+    <a class="toc-l2" href="#chapter-overview">Chapter Overview</a>
+<a class="toc-l2" href="#60-workloads-in-one-page">6.0 Workloads in One Page</a>
+<a class="toc-l2" href="#61-workload-taxonomy-four-modes-four-objective-functions">6.1 Workload Taxonomy: Four Modes, Four Objective Functions</a>
+<a class="toc-l2" href="#figure-placeholder-fig-61">Figure Placeholder — Fig 6.1</a>
+<a class="toc-l2" href="#table-61-training-vs-inference-workload-comparison">Table 6.1 — Training vs Inference Workload Comparison</a>
+<a class="toc-l2" href="#62-batch-training-pipeline-the-anatomy-of-a-step">6.2 Batch Training Pipeline: The Anatomy of a Step</a>
+<a class="toc-l2" href="#figure-placeholder-fig-62">Figure Placeholder — Fig 6.2</a>
+<a class="toc-l2" href="#table-62-training-step-breakdown">Table 6.2 — Training Step Breakdown</a>
+<a class="toc-l3" href="#training-flop-rule-of-thumb">Training FLOP Rule of Thumb</a>
+<a class="toc-l2" href="#63-training-metrics-step-time-tokenssecgpu-mfu-and-stall-time">6.3 Training Metrics: Step Time, Tokens/sec/GPU, MFU, and Stall Time</a>
+<a class="toc-l3" href="#useful-tokens-matter">Useful tokens matter</a>
+<a class="toc-l3" href="#mfu-vs-gpu-utilization">MFU vs GPU utilization</a>
+<a class="toc-l2" href="#64-training-memory-weights-gradients-activations-optimizer-state">6.4 Training Memory: Weights, Gradients, Activations, Optimizer State</a>
+<a class="toc-l3" href="#training-memory-categories">Training memory categories</a>
+<a class="toc-l3" href="#adamw-state-rule-of-thumb">AdamW state rule of thumb</a>
+<a class="toc-l3" href="#activation-memory-is-not-optional">Activation memory is not optional</a>
+<a class="toc-l2" href="#65-distributed-training-communication-why-scaling-is-not-free">6.5 Distributed Training Communication: Why Scaling Is Not Free</a>
+<a class="toc-l3" href="#the-principal-level-mental-model">The principal-level mental model</a>
+<a class="toc-l2" href="#66-data-loading-and-checkpointing-the-non-gpu-bottlenecks">6.6 Data Loading and Checkpointing: The Non-GPU Bottlenecks</a>
+<a class="toc-l3" href="#data-loading-bottlenecks">Data loading bottlenecks</a>
+<a class="toc-l3" href="#checkpointing-bottlenecks">Checkpointing bottlenecks</a>
+<a class="toc-l2" href="#67-inference-anatomy-prefill-and-decode">6.7 Inference Anatomy: Prefill and Decode</a>
+<a class="toc-l2" href="#figure-placeholder-fig-63">Figure Placeholder — Fig 6.3</a>
+<a class="toc-l2" href="#table-63-prefill-vs-decode-regime-comparison">Table 6.3 — Prefill vs Decode Regime Comparison</a>
+<a class="toc-l3" href="#ttft-decomposition">TTFT decomposition</a>
+<a class="toc-l3" href="#tpot-lower-bound-model">TPOT lower-bound model</a>
+<a class="toc-l2" href="#68-serving-metrics-ttft-tpot-p50p95p99-throughput-and-cost">6.8 Serving Metrics: TTFT, TPOT, P50/P95/P99, Throughput, and Cost</a>
+<a class="toc-l2" href="#table-64-serving-metrics-and-root-causes">Table 6.4 — Serving Metrics and Root Causes</a>
+<a class="toc-l3" href="#representative-slo-example">Representative SLO example</a>
+<a class="toc-l3" href="#percentiles-beat-averages">Percentiles beat averages</a>
+<a class="toc-l2" href="#69-static-batching-dynamic-batching-and-continuous-batching">6.9 Static Batching, Dynamic Batching, and Continuous Batching</a>
+<a class="toc-l3" href="#static-batching">Static batching</a>
+<a class="toc-l3" href="#dynamic-batching">Dynamic batching</a>
+<a class="toc-l3" href="#continuous-batching">Continuous batching</a>
+<a class="toc-l2" href="#figure-placeholder-fig-64">Figure Placeholder — Fig 6.4</a>
+<a class="toc-l2" href="#table-65-scheduling-and-runtime-levers">Table 6.5 — Scheduling and Runtime Levers</a>
+<a class="toc-l2" href="#610-chunked-prefill-protecting-decode-from-long-prompts">6.10 Chunked Prefill: Protecting Decode from Long Prompts</a>
+<a class="toc-l2" href="#figure-placeholder-fig-65">Figure Placeholder — Fig 6.5</a>
+<a class="toc-l2" href="#611-disaggregated-prefilldecode-serving">6.11 Disaggregated Prefill/Decode Serving</a>
+<a class="toc-l2" href="#figure-placeholder-fig-68">Figure Placeholder — Fig 6.8</a>
+<a class="toc-l2" href="#612-kv-cache-as-the-serving-resource-bridge">6.12 KV Cache as the Serving Resource Bridge</a>
+<a class="toc-l2" href="#613-runtime-serving-stack-and-framework-choices">6.13 Runtime Serving Stack and Framework Choices</a>
+<a class="toc-l2" href="#figure-placeholder-fig-67">Figure Placeholder — Fig 6.7</a>
+<a class="toc-l2" href="#table-66-runtime-framework-comparison">Table 6.6 — Runtime Framework Comparison</a>
+<a class="toc-l2" href="#614-throughput-latency-knee-and-multi-tenant-serving">6.14 Throughput-Latency Knee and Multi-Tenant Serving</a>
+<a class="toc-l2" href="#figure-placeholder-fig-66">Figure Placeholder — Fig 6.6</a>
+<a class="toc-l3" href="#multi-tenant-risks">Multi-tenant risks</a>
+<a class="toc-l2" href="#615-symptom-to-bottleneck-diagnostic-matrix">6.15 Symptom-to-Bottleneck Diagnostic Matrix</a>
+<a class="toc-l2" href="#table-67-symptom-to-bottleneck-diagnostic-matrix">Table 6.7 — Symptom-to-Bottleneck Diagnostic Matrix</a>
+<a class="toc-l2" href="#616-principal-level-workload-discussion">6.16 Principal-Level Workload Discussion</a>
+<a class="toc-l3" href="#prompt-a-design-a-training-system-for-a-70b-model">Prompt A: “Design a training system for a 70B model.”</a>
+<a class="toc-l3" href="#prompt-b-design-an-llm-serving-system-for-real-time-chat">Prompt B: “Design an LLM serving system for real-time chat.”</a>
+<a class="toc-l2" href="#617-anti-patterns">6.17 Anti-Patterns</a>
+<a class="toc-l2" href="#618-key-takeaways">6.18 Key Takeaways</a>
+<a class="toc-l2" href="#619-review-questions">6.19 Review Questions</a>
+<a class="toc-l2" href="#621-bridge-to-chapter-7">6.21 Bridge to Chapter 7</a>
+  </aside>
 
-  <section id="6-1"><h2>6.1 Workload Taxonomy: Four Modes, Four Objective Functions</h2>
-  <p>The most useful first classification is not model type. It is how much the system can control the batch and how much the user cares about latency.</p>
-  <figure id="fig-6-1" class="figure-card">
-      <div class="figure-kicker">FIG 6.1</div>
-      <div class="figure-title">Training vs Inference Workload Map</div>
-      <div class="figure-placeholder"><div>Four-mode map: batch training · offline inference · batch API serving · interactive serving</div></div>
-      <figcaption><strong>Training vs Inference Workload Map.</strong> Use a quadrant chart to show that “AI workload” is not one performance problem. Training is stable and throughput-oriented; interactive serving is dynamic and tail-latency-oriented. <em>Key takeaway:</em> Do not optimize all workload modes for the same metric. <br><span class="small">Production asset: fig_06_01_workload_map.html — must be created</span></figcaption>
-    </figure>
-  <h3>Table 6.1 — Training vs Inference Workload Comparison</h3>
-  <div class="table-wrap"><table><thead><tr><th>Workload mode</th><th>Primary objective</th><th>Batch shape</th><th>Dominant resources</th><th>Main failure mode</th><th>First metric</th><th>Label</th></tr></thead><tbody>
-  <tr><td>Batch training</td><td>Maximize useful tokens/sec/GPU and MFU</td><td>Static or planned microbatches</td><td>Compute, activation memory, optimizer state, communication, data pipeline</td><td>Low MFU, stragglers, checkpoint loss, data stalls</td><td>Step time breakdown + MFU</td><td><span class="conf shipped">[SHIPPED]</span></td></tr>
-  <tr><td>Offline inference</td><td>Maximize tokens/sec or samples/sec</td><td>Large static/dynamic batches</td><td>Compute and HBM</td><td>Poor batching, low utilization, high cost/token</td><td>Tokens/sec/GPU</td><td><span class="conf shipped">[SHIPPED]</span></td></tr>
-  <tr><td>Batch API serving</td><td>Balance throughput and bounded latency</td><td>Dynamic, queueing allowed</td><td>Scheduler, queue depth, runtime batching, HBM, KV cache</td><td>P95/P99 drift under load</td><td>Throughput under SLA</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  <tr><td>Interactive streaming</td><td>Minimize TTFT/TPOT tail latency at acceptable cost</td><td>Highly dynamic</td><td>KV cache, HBM bandwidth, scheduler fairness</td><td>P99 TTFT/TPOT cliff, OOM, preemption</td><td>P99 TTFT, P99 TPOT, KV utilization</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  </tbody></table></div>
-  <p>A principal engineer does not begin with a tool. They begin with the objective function.</p>
-  </section>
+  <main class="content">
+    <h1 id="chapter-6-training-and-inference-workloads-from-batch-training-to-real-time-serving">Chapter 6 — Training and Inference Workloads: From Batch Training to Real-Time Serving<a aria-label="Link to this section" class="anchor" href="#chapter-6-training-and-inference-workloads-from-batch-training-to-real-time-serving">#</a></h1>
+<blockquote>
+<p>“A GPU cluster does not run AI in the abstract. It runs workload modes, each with its own bottleneck, metric, and operating point.”</p>
+</blockquote>
+<hr/>
+<h2 id="chapter-overview">Chapter Overview<a aria-label="Link to this section" class="anchor" href="#chapter-overview">#</a></h2>
+<p>Chapter 5 explained why power, thermal design, and physical infrastructure determine whether AI hardware can sustain performance.</p>
+<p>Chapter 6 moves from physical infrastructure into workload execution.</p>
+<p>The first five chapters built the foundation: roofline thinking, transformer arithmetic, GPU architecture, HBM behavior, and the power and thermal limits of AI infrastructure. Chapter 6 changes the unit of analysis from <strong>hardware</strong> to <strong>workload</strong>.</p>
+<p>This shift matters because a GPU cluster does not run “AI” in the abstract. It runs specific workload modes:</p>
+<ul>
+<li>A training job that consumes a fixed dataset for days or weeks.</li>
+<li>An offline inference job that scores a large batch with loose latency constraints.</li>
+<li>A batch API service that accepts user traffic but can tolerate bounded queueing.</li>
+<li>An interactive streaming service where first-token and per-token latency determine user experience.</li>
+</ul>
+<p>All four may use the same model architecture and the same GPU type, but they stress the system differently. Training stresses compute, activation memory, optimizer state, data pipeline throughput, checkpointing, and collective communication. Inference stresses request scheduling, KV cache, prefill/decode phase balance, HBM bandwidth, percentile latency, and cost per token.</p>
+<p>A principal performance architect should be able to look at a workload and immediately ask:</p>
+<ol>
+<li>What is the primary objective: throughput, latency, cost, quality, or recovery time?</li>
+<li>What is the dominant resource: compute, HBM, network, storage, scheduler, or queueing headroom?</li>
+<li>What metric proves the system is healthy?</li>
+<li>What metric proves it is failing?</li>
+<li>Which optimization moves the bottleneck rather than merely moving a number?</li>
+</ol>
+<p>This chapter gives that operating model.</p>
+<blockquote>
+<p><strong>Current as of 2026 edition:</strong> Hardware, framework features, serving engines, and runtime APIs change quickly. Quantitative claims in this chapter use confidence labels so the reader can distinguish shipped behavior, first-principles estimates, representative examples, and environment-specific production outcomes.</p>
+</blockquote>
+<hr/>
+<h2 id="60-workloads-in-one-page">6.0 Workloads in One Page<a aria-label="Link to this section" class="anchor" href="#60-workloads-in-one-page">#</a></h2>
+<p>Training and inference are not two versions of the same performance problem.</p>
+<p>They optimize different objectives:</p>
+<pre class="code-block"><code class="language-text">Training:
+  maximize useful tokens/sec/GPU, MFU, stability, and recoverability
 
-  <section id="6-2"><h2>6.2 Batch Training Pipeline: The Anatomy of a Step</h2>
-  <p>A training job turns data into updated model weights. One step appears simple in Python, but at scale it becomes a pipeline of CPU work, GPU kernels, memory allocation, network collectives, and storage writes.</p>
-  <pre><code># Representative PyTorch-style training step [REPRESENTATIVE]
+Offline inference:
+  maximize batch throughput and cost efficiency
+
+Batch API serving:
+  maximize throughput under bounded latency
+
+Interactive serving:
+  minimize TTFT and TPOT tail latency at acceptable cost/token
+</code></pre>
+<p>The fastest way to reason about any workload is to name four things:</p>
+<ol>
+<li>The objective function.</li>
+<li>The dominant resource.</li>
+<li>The health metric.</li>
+<li>The failure metric.</li>
+</ol>
+<blockquote>
+<p><strong>Key Takeaway:</strong> Workload classification comes before optimization. A training bottleneck, an offline inference bottleneck, and an interactive serving bottleneck require different evidence and different fixes.</p>
+</blockquote>
+<hr/>
+<h2 id="61-workload-taxonomy-four-modes-four-objective-functions">6.1 Workload Taxonomy: Four Modes, Four Objective Functions<a aria-label="Link to this section" class="anchor" href="#61-workload-taxonomy-four-modes-four-objective-functions">#</a></h2>
+<p>“Training vs inference” is the common split, but production systems need a finer taxonomy. The most useful first classification is not model type. It is <strong>how much the system can control the batch</strong> and <strong>how much the user cares about latency</strong>.</p>
+<h2 id="figure-placeholder-fig-61">Figure Placeholder — Fig 6.1<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-61">#</a></h2>
+<figure class="figure-placeholder" id="fig-6-1-training-vs-inference-workload-map">
+<div class="figure-kicker">Fig 6.1</div>
+<div class="figure-title">Training vs Inference Workload Map</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A four-mode workload classification map showing batch training, offline inference, batch API serving, and interactive serving.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch06_fig_6_1_training_inference_workload_map.svg</code></p>
+<p class="figure-status">Figure to be created</p>
+<span class="figure-source muted">Source diagram pending</span>
+</div>
+</div>
+<figcaption><strong>Fig 6.1 — Training vs Inference Workload Map.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong><br/>
+Start this chapter by showing that “AI workload” is not one performance problem. Place batch training, offline inference, batch API serving, and interactive serving on a two-axis workload map.</p>
+<p class="figure-note"><strong>Figure explanation:</strong><br/>
+The X-axis should represent latency sensitivity. The Y-axis should represent batch dynamism. Training is stable and throughput-oriented; interactive serving is dynamic and tail-latency-oriented.</p>
+<blockquote>
+<p><strong>Key Takeaway:</strong> The first production mistake is treating all workload modes as if they should maximize the same metric.</p>
+</blockquote>
+<h2 id="table-61-training-vs-inference-workload-comparison">Table 6.1 — Training vs Inference Workload Comparison<a aria-label="Link to this section" class="anchor" href="#table-61-training-vs-inference-workload-comparison">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Workload mode</th>
+<th>Primary objective</th>
+<th>Batch shape</th>
+<th>Dominant resources</th>
+<th>Main failure mode</th>
+<th>First metric to inspect</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Batch training</td>
+<td>Maximize useful tokens/sec/GPU and MFU over long runs</td>
+<td>Static or planned microbatches</td>
+<td>Compute, activation memory, optimizer state, network collectives, data pipeline</td>
+<td>Low MFU, stragglers, checkpoint loss, data stalls</td>
+<td>Step time breakdown + MFU</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>Offline inference</td>
+<td>Maximize tokens/sec or samples/sec under loose latency</td>
+<td>Large static/dynamic batches</td>
+<td>Compute and HBM, depending on model and batch</td>
+<td>Poor batching, low utilization, high cost per token</td>
+<td>Tokens/sec/GPU</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>Batch API serving</td>
+<td>Balance throughput and bounded latency</td>
+<td>Dynamic, but queueing allowed</td>
+<td>Scheduler, queue depth, runtime batching, HBM, KV cache</td>
+<td>P95/P99 drift under load</td>
+<td>Throughput under SLA</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>Interactive streaming serving</td>
+<td>Minimize TTFT and TPOT tail latency at acceptable cost</td>
+<td>Highly dynamic</td>
+<td>KV cache, HBM bandwidth, scheduler fairness, queueing headroom</td>
+<td>P99 TTFT/TPOT cliff, OOM, preemption, user-visible stalls</td>
+<td>P99 TTFT, P99 TPOT, KV utilization</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+</tbody>
+</table></div>
+<p>The table is intentionally metric-first. A principal engineer does not begin with a tool. They begin with the objective function.</p>
+<p><strong>Training objective:</strong> keep the expensive training fleet doing useful work for as much of the wall-clock time as possible, while preserving numerical stability and recoverability.</p>
+<p><strong>Serving objective:</strong> deliver tokens to users inside a latency SLO at the lowest cost per token, while handling bursty demand, heterogeneous prompts, and multi-tenant fairness.</p>
+<p>The distinction is simple, but it drives almost every architectural decision in the rest of the book.</p>
+<hr/>
+<h2 id="62-batch-training-pipeline-the-anatomy-of-a-step">6.2 Batch Training Pipeline: The Anatomy of a Step<a aria-label="Link to this section" class="anchor" href="#62-batch-training-pipeline-the-anatomy-of-a-step">#</a></h2>
+<p>A training job turns data into updated model weights. One step appears simple in Python, but at scale it becomes a pipeline of CPU work, GPU kernels, memory allocation, network collectives, and storage writes.</p>
+<pre class="code-block"><code class="language-python"># Representative PyTorch-style training step <span class="confidence-label label-representative">[REPRESENTATIVE]</span>
 for batch in dataloader:
     batch = move_to_gpu(batch)
     optimizer.zero_grad(set_to_none=True)
@@ -120,234 +602,968 @@ for batch in dataloader:
     optimizer.step()
 
     if step % checkpoint_interval == 0:
-        save_checkpoint(model, optimizer, step)</code></pre>
-  <figure id="fig-6-2" class="figure-card">
-      <div class="figure-kicker">FIG 6.2</div>
-      <div class="figure-title">Training Step Waterfall</div>
-      <div class="figure-placeholder"><div>Data load → H2D transfer → forward → backward → gradient sync → optimizer → checkpoint</div></div>
-      <figcaption><strong>Training Step Waterfall.</strong> Show a horizontal waterfall of a training step. Color forward/backward as compute-heavy, optimizer as memory-heavy, gradient sync as communication-heavy, checkpoint as I/O-heavy. <em>Key takeaway:</em> A training step is not just matrix math. <br><span class="small">Production asset: Existing source: diagrams_batch3.html#d29</span></figcaption>
-    </figure>
-  <h3>Table 6.2 — Training Step Breakdown</h3>
-  <div class="table-wrap"><table><thead><tr><th>Stage</th><th>What happens</th><th>Common bottleneck</th><th>Measure first</th><th>Mitigation</th><th>Label</th></tr></thead><tbody>
-  <tr><td>Data read</td><td>Read samples</td><td>Storage or metadata latency</td><td>Data-loader wait, throughput</td><td>Sharding, caching, prefetch</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  <tr><td>Tokenize / augment</td><td>CPU preprocessing</td><td>CPU/Python overhead</td><td>CPU utilization, queue depth</td><td>Pre-tokenize, increase workers</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  <tr><td>Forward</td><td>Compute activations</td><td>Tensor core efficiency, HBM traffic</td><td>Kernel timeline, achieved TFLOPS</td><td>Fusion, compiled graphs, better shapes</td><td><span class="conf derived-from-shipped">[DERIVED FROM SHIPPED]</span></td></tr>
-  <tr><td>Backward</td><td>Compute gradients</td><td>Compute + activation reads</td><td>Backward time, activation memory</td><td>Checkpointing, fusion, mixed precision</td><td><span class="conf derived-from-shipped">[DERIVED FROM SHIPPED]</span></td></tr>
-  <tr><td>Gradient sync</td><td>AllReduce / reduce-scatter</td><td>Network/topology/overlap</td><td>Collective time, busbw</td><td>Bucket tuning, topology placement</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  <tr><td>Optimizer</td><td>Update weights and states</td><td>Memory bandwidth/state size</td><td>Optimizer time, HBM bytes</td><td>Fused optimizer, ZeRO/FSDP</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  <tr><td>Checkpoint</td><td>Persist state</td><td>Filesystem/object-store throughput</td><td>Checkpoint duration, GB/s</td><td>Async/sharded checkpoint</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  </tbody></table></div>
-  <div class="formula">training_FLOPs ≈ 6 × N_parameters × N_training_tokens <br><span class="conf estimated">[ESTIMATED]</span></div>
-  <p>This dense Transformer training estimate is a sizing model, not an exact accounting of attention overhead, padding, MoE sparsity, recomputation, or communication.</p>
-  </section>
+        save_checkpoint(model, optimizer, step)
+</code></pre>
+<p>This loop hides the real performance story. The wall-clock step is not only forward and backward compute.</p>
+<h2 id="figure-placeholder-fig-62">Figure Placeholder — Fig 6.2<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-62">#</a></h2>
+<figure class="figure-placeholder" id="fig-6-2-training-step-waterfall">
+<div class="figure-kicker">Fig 6.2</div>
+<div class="figure-title">Training Step Waterfall</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A timeline from data loading through checkpointing, showing compute, communication, memory, and I/O regions.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch06_fig_6_2_training_step_waterfall.svg</code></p>
+<p class="figure-status">Adapt from existing training streams diagram</p>
+<a class="figure-source" href="../diagrams/diagrams_batch3.html#d29">View source diagram</a>
+</div>
+</div>
+<figcaption><strong>Fig 6.2 — Training Step Waterfall.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong><br/>
+Show a horizontal training-step waterfall: data load, host-to-device transfer, forward pass, loss, backward pass, gradient synchronization, optimizer step, and checkpoint.</p>
+<p class="figure-note"><strong>Figure explanation:</strong><br/>
+Color forward/backward as compute-heavy, optimizer update as memory-heavy, gradient synchronization as communication-heavy, and checkpoint as I/O-heavy. Leave room for future measured examples.</p>
+<blockquote>
+<p><strong>Key Takeaway:</strong> A training step is a pipeline; the slowest stage, not the Python loop, determines throughput.</p>
+</blockquote>
+<h2 id="table-62-training-step-breakdown">Table 6.2 — Training Step Breakdown<a aria-label="Link to this section" class="anchor" href="#table-62-training-step-breakdown">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>What happens</th>
+<th>Common bottleneck</th>
+<th>What to measure first</th>
+<th>Typical mitigation</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Data read</td>
+<td>Read samples from storage/object store/local cache</td>
+<td>Storage or metadata latency</td>
+<td>Data-loader wait time, disk/object-store throughput</td>
+<td>Sharding, caching, prefetching, larger read blocks</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>Tokenize / decode / augment</td>
+<td>CPU-side preprocessing</td>
+<td>CPU saturation or Python overhead</td>
+<td>CPU utilization, dataloader queue depth</td>
+<td>Pre-tokenize, increase workers, vectorize preprocessing</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>Batch pack</td>
+<td>Create fixed-length or packed sequences</td>
+<td>Padding waste, CPU overhead</td>
+<td>Useful tokens / padded tokens</td>
+<td>Sequence packing, bucketing, dynamic shapes</td>
+<td><span class="confidence-label label-representative">[REPRESENTATIVE]</span></td>
+</tr>
+<tr>
+<td>H2D transfer</td>
+<td>Move batch to GPU</td>
+<td>PCIe/NVLink host path, pageable memory</td>
+<td>Copy time, overlap with compute</td>
+<td>Pinned memory, non-blocking copy, prefetch</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>Forward pass</td>
+<td>Compute activations and logits</td>
+<td>Tensor core efficiency, HBM traffic</td>
+<td>Kernel timeline, achieved TFLOPS</td>
+<td>Fusion, compiled graphs, FlashAttention, better shapes</td>
+<td><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></td>
+</tr>
+<tr>
+<td>Backward pass</td>
+<td>Compute gradients</td>
+<td>Compute + activation reads</td>
+<td>Backward time, activation memory</td>
+<td>Gradient checkpointing, fusion, mixed precision</td>
+<td><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></td>
+</tr>
+<tr>
+<td>Gradient sync</td>
+<td>AllReduce or reduce-scatter gradients</td>
+<td>Network / topology / overlap</td>
+<td>Collective time, bus bandwidth, bucket timing</td>
+<td>Bucket tuning, topology-aware placement, overlap</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>Optimizer step</td>
+<td>Update weights and optimizer states</td>
+<td>Memory bandwidth and optimizer state size</td>
+<td>Optimizer time, HBM bytes</td>
+<td>Fused optimizer, ZeRO/FSDP, lower precision states</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>Checkpoint</td>
+<td>Persist model/optimizer/RNG state</td>
+<td>Filesystem/object-store throughput</td>
+<td>Checkpoint duration, GB/s, pause time</td>
+<td>Async checkpoint, sharded checkpoint, lower frequency</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="training-flop-rule-of-thumb">Training FLOP Rule of Thumb<a aria-label="Link to this section" class="anchor" href="#training-flop-rule-of-thumb">#</a></h3>
+<p>For dense Transformer training, a common first-order estimate is:</p>
+<pre class="code-block"><code class="language-text">training_FLOPs ≈ 6 × N_parameters × N_training_tokens
+</code></pre>
+<p class="confidence-box">Confidence label: <strong><span class="confidence-label label-estimated">[ESTIMATED]</span></strong></p>
+<p>The intuition is that dense forward inference costs roughly <code>2 × parameters</code> FLOPs per token, while training includes forward, backward through activations, and gradient computation. The approximation is useful for first-order sizing, but it does not exactly account for attention overhead, embeddings, padding, activation recomputation, MoE sparsity, communication, or implementation details.</p>
+<p>A principal-level answer should say:</p>
+<blockquote>
+<p>“I would start with the 6N dense training estimate for a first sizing pass, then correct it using measured step time and MFU from the actual stack.”</p>
+</blockquote>
+<hr/>
+<h2 id="63-training-metrics-step-time-tokenssecgpu-mfu-and-stall-time">6.3 Training Metrics: Step Time, Tokens/sec/GPU, MFU, and Stall Time<a aria-label="Link to this section" class="anchor" href="#63-training-metrics-step-time-tokenssecgpu-mfu-and-stall-time">#</a></h2>
+<p>Training health is not a single number. A job can report high aggregate throughput while wasting GPUs on padding, data stalls, or synchronization imbalance. The core training metrics are:</p>
+<pre class="code-block"><code class="language-text">step_time = data_time + forward_time + backward_time + communication_time + optimizer_time + checkpoint_overhead
+</code></pre>
+<pre class="code-block"><code class="language-text">tokens_per_second_per_GPU = useful_training_tokens / (step_time_seconds × GPU_count)
+</code></pre>
+<pre class="code-block"><code class="language-text">MFU = achieved_model_FLOPs_per_second / theoretical_peak_FLOPs_per_second
+</code></pre>
+<p class="confidence-box">Confidence labels: <strong><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></strong> for the formulas, <strong><span class="confidence-label label-env">[ENV-SPECIFIC]</span></strong> for measured values.</p>
+<h3 id="useful-tokens-matter">Useful tokens matter<a aria-label="Link to this section" class="anchor" href="#useful-tokens-matter">#</a></h3>
+<p>For language model training, the numerator should be <strong>useful non-padding tokens</strong>, not merely allocated token positions. If a batch contains 40% padding, then reporting padded tokens/sec makes the system look healthier than it is.</p>
+<h3 id="mfu-vs-gpu-utilization">MFU vs GPU utilization<a aria-label="Link to this section" class="anchor" href="#mfu-vs-gpu-utilization">#</a></h3>
+<p>GPU utilization tells you whether the GPU is busy. MFU tells you whether the busy time is doing useful model math. A GPU can be “utilized” while running inefficient kernels, waiting on memory, or spinning through padding-heavy sequences.</p>
+<p>A practical hierarchy:</p>
+<ol>
+<li><strong>Step time</strong> tells you whether the job is progressing.</li>
+<li><strong>Tokens/sec/GPU</strong> tells you throughput normalized by GPU count.</li>
+<li><strong>MFU</strong> tells you how close useful model math is to hardware potential.</li>
+<li><strong>Stall breakdown</strong> tells you where to optimize.</li>
+</ol>
+<p>For production training, the most useful dashboard is not a single utilization chart. It is a stacked step-time view with data, compute, communication, optimizer, and checkpoint components.</p>
+<hr/>
+<h2 id="64-training-memory-weights-gradients-activations-optimizer-state">6.4 Training Memory: Weights, Gradients, Activations, Optimizer State<a aria-label="Link to this section" class="anchor" href="#64-training-memory-weights-gradients-activations-optimizer-state">#</a></h2>
+<p>Training requires more memory than inference because the system must retain or reconstruct information needed for backpropagation.</p>
+<h3 id="training-memory-categories">Training memory categories<a aria-label="Link to this section" class="anchor" href="#training-memory-categories">#</a></h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Memory category</th>
+<th>Why it exists</th>
+<th>Scales with</th>
+<th>Typical pressure</th>
+<th>Common mitigation</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Weights</td>
+<td>Model parameters</td>
+<td>Parameter count × precision</td>
+<td>Always resident or sharded</td>
+<td>Tensor parallelism, FSDP/ZeRO, quantized loading for inference only</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>Gradients</td>
+<td>Parameter gradients</td>
+<td>Parameter count × precision</td>
+<td>During backward and optimizer step</td>
+<td>Gradient sharding, reduce-scatter, accumulation strategy</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>Optimizer state</td>
+<td>Adam moments, master weights, metadata</td>
+<td>Often multiple copies per parameter</td>
+<td>Large memory multiplier</td>
+<td>ZeRO/FSDP, optimizer sharding, lower precision optimizer</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>Activations</td>
+<td>Intermediate tensors for backward</td>
+<td>Batch × sequence × hidden × layers</td>
+<td>Often the training memory limiter</td>
+<td>Activation checkpointing/recomputation, sequence parallelism</td>
+<td><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></td>
+</tr>
+<tr>
+<td>Temporary buffers</td>
+<td>Workspace, communication buckets, fused-kernel scratch</td>
+<td>Runtime and operator dependent</td>
+<td>Fragmentation / OOM</td>
+<td>Preallocation, graph capture, bucket tuning</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="adamw-state-rule-of-thumb">AdamW state rule of thumb<a aria-label="Link to this section" class="anchor" href="#adamw-state-rule-of-thumb">#</a></h3>
+<p>A common mixed-precision Adam-style training budget is roughly <strong>many bytes per parameter</strong> once weights, gradients, master weights, and optimizer states are included. The exact value depends on precision choices and sharding strategy.</p>
+<p>Use safe wording:</p>
+<blockquote>
+<p class="confidence-box">“Adam-style training commonly requires multiple state tensors in addition to the model weights. Without sharding, optimizer state can dominate memory. The exact bytes per parameter depend on precision, framework, and optimizer implementation.” <strong><span class="confidence-label label-env">[ENV-SPECIFIC]</span></strong></p>
+</blockquote>
+<p>Do not present a single universal value unless the precision convention is stated.</p>
+<h3 id="activation-memory-is-not-optional">Activation memory is not optional<a aria-label="Link to this section" class="anchor" href="#activation-memory-is-not-optional">#</a></h3>
+<p>In inference, intermediate activations can be freed once the forward pass finishes. In training, backward needs them. If memory is insufficient, the system can recompute activations during backward. This trades extra compute for lower memory.</p>
+<pre class="code-block"><code class="language-text">activation_checkpointing_tradeoff:
+    lower_activation_memory
+    higher_recompute_FLOPs
+    longer_step_time
+</code></pre>
+<p class="confidence-box">Confidence label: <strong><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></strong></p>
+<p>A principal-level discussion should not say only, “Use checkpointing.” It should say:</p>
+<blockquote>
+<p>“Checkpointing is a memory-for-compute trade. I would enable it only after estimating whether activation memory is the limiting factor and measuring the recompute cost against the gain in batch size or model size.”</p>
+</blockquote>
+<hr/>
+<h2 id="65-distributed-training-communication-why-scaling-is-not-free">6.5 Distributed Training Communication: Why Scaling Is Not Free<a aria-label="Link to this section" class="anchor" href="#65-distributed-training-communication-why-scaling-is-not-free">#</a></h2>
+<p>When a model trains across multiple GPUs, the GPUs must exchange information. In data parallel training, each replica computes gradients for a different microbatch, then synchronizes gradients so all replicas apply the same update.</p>
+<p>The basic pattern is:</p>
+<pre class="code-block"><code class="language-text">local forward/backward → gradients → AllReduce or reduce-scatter → optimizer update
+</code></pre>
+<p class="confidence-box">Confidence label: <strong><span class="confidence-label label-shipped">[SHIPPED]</span></strong></p>
+<p>Communication time becomes visible when:</p>
+<ul>
+<li>Gradients are large.</li>
+<li>Compute per byte is low.</li>
+<li>Network bandwidth is limited.</li>
+<li>Buckets are not overlapped with backward compute.</li>
+<li>One rank is slower and creates a straggler.</li>
+<li>Topology placement crosses a slow boundary.</li>
+</ul>
+<h3 id="the-principal-level-mental-model">The principal-level mental model<a aria-label="Link to this section" class="anchor" href="#the-principal-level-mental-model">#</a></h3>
+<p>Distributed training scaling efficiency is controlled by the ratio:</p>
+<pre class="code-block"><code class="language-text">communication_time / useful_compute_time
+</code></pre>
+<p>If communication time is small and well overlapped, scaling is efficient. If communication time grows with GPU count and becomes exposed on the critical path, adding GPUs can reduce time-to-train less than expected.</p>
+<p>This chapter introduces the communication problem. Chapter 10 covers 4D parallelism and ZeRO/FSDP in detail. Chapter 14 covers NCCL, InfiniBand, RDMA, AllReduce algorithms, and network topology.</p>
+<hr/>
+<h2 id="66-data-loading-and-checkpointing-the-non-gpu-bottlenecks">6.6 Data Loading and Checkpointing: The Non-GPU Bottlenecks<a aria-label="Link to this section" class="anchor" href="#66-data-loading-and-checkpointing-the-non-gpu-bottlenecks">#</a></h2>
+<p>Training clusters are often purchased as if GPUs are the only bottleneck. Production traces usually teach a harder lesson: the job is only as fast as the slowest pipeline stage.</p>
+<h3 id="data-loading-bottlenecks">Data loading bottlenecks<a aria-label="Link to this section" class="anchor" href="#data-loading-bottlenecks">#</a></h3>
+<p>A GPU can starve when data arrives late. Causes include:</p>
+<ul>
+<li>Small random reads from object storage.</li>
+<li>Too few dataloader workers.</li>
+<li>CPU tokenization or image decode overhead.</li>
+<li>Compression/decompression bottlenecks.</li>
+<li>Inefficient shuffling across remote storage.</li>
+<li>Padding waste from poor sequence packing.</li>
+</ul>
+<p>The direct symptom is a gap before forward kernels start. The dashboard symptom is low MFU even though the model code is correct.</p>
+<h3 id="checkpointing-bottlenecks">Checkpointing bottlenecks<a aria-label="Link to this section" class="anchor" href="#checkpointing-bottlenecks">#</a></h3>
+<p>Checkpointing protects long training jobs from failure, but it writes large state: model weights, optimizer state, scheduler state, RNG state, dataloader position, and sometimes activation/offload metadata.</p>
+<p>A safe checkpoint objective is:</p>
+<pre class="code-block"><code class="language-text">checkpoint_overhead_fraction = checkpoint_pause_time / checkpoint_interval_wall_time
+</code></pre>
+<p class="confidence-box">Confidence label: <strong><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></strong></p>
+<p>If checkpointing pauses a large job too often, the cluster loses expensive GPU-hours. If checkpointing happens too rarely, failures lose too much work. This is a reliability-throughput tradeoff, not a pure storage decision.</p>
+<hr/>
+<h2 id="67-inference-anatomy-prefill-and-decode">6.7 Inference Anatomy: Prefill and Decode<a aria-label="Link to this section" class="anchor" href="#67-inference-anatomy-prefill-and-decode">#</a></h2>
+<p>Autoregressive LLM inference has two phases:</p>
+<ol>
+<li><strong>Prefill:</strong> process the input prompt and populate the KV cache.</li>
+<li><strong>Decode:</strong> generate output tokens one at a time, reusing the KV cache.</li>
+</ol>
+<h2 id="figure-placeholder-fig-63">Figure Placeholder — Fig 6.3<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-63">#</a></h2>
+<figure class="figure-placeholder" id="fig-6-3-prefill-vs-decode-regime-split">
+<div class="figure-kicker">Fig 6.3</div>
+<div class="figure-title">Prefill vs Decode Regime Split</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A two-panel diagram contrasting compute-heavy prefill with memory/KV-cache-sensitive decode.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch06_fig_6_3_prefill_decode_regime_split.svg</code></p>
+<p class="figure-status">Adapt from existing prefill/decode diagram</p>
+<a class="figure-source" href="../diagrams/diagrams_batch1.html#d7">View source diagram</a>
+</div>
+</div>
+<figcaption><strong>Fig 6.3 — Prefill vs Decode Regime Split.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong><br/>
+Show a two-panel diagram: prefill processes many prompt tokens in parallel; decode emits one new token at a time.</p>
+<p class="figure-note"><strong>Figure explanation:</strong><br/>
+Prefill uses large batched GEMMs and is often compute-heavy for long prompts. Decode repeatedly reads weights and KV state and is often memory-bandwidth-sensitive at small batch.</p>
+<blockquote>
+<p><strong>Key Takeaway:</strong> LLM serving is not one forward pass; it is a phase-split workload with different bottlenecks per phase.</p>
+</blockquote>
+<h2 id="table-63-prefill-vs-decode-regime-comparison">Table 6.3 — Prefill vs Decode Regime Comparison<a aria-label="Link to this section" class="anchor" href="#table-63-prefill-vs-decode-regime-comparison">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Prefill</th>
+<th>Decode</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Work performed</td>
+<td>Process all prompt tokens</td>
+<td>Generate one token per active sequence per iteration</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>Parallelism</td>
+<td>High across sequence length and batch</td>
+<td>Limited by one-step autoregressive dependency</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>Common bottleneck</td>
+<td>Tensor core compute for long prompts; attention for long context</td>
+<td>HBM bandwidth, KV cache reads, scheduler overhead, sampling</td>
+<td><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></td>
+</tr>
+<tr>
+<td>User-visible metric</td>
+<td>TTFT</td>
+<td>TPOT / inter-token latency</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>Memory pressure</td>
+<td>KV cache allocation begins</td>
+<td>KV cache grows with output length</td>
+<td><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></td>
+</tr>
+<tr>
+<td>Scheduler issue</td>
+<td>Long prompts can monopolize runtime</td>
+<td>Short iterations require careful batching</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>Optimization examples</td>
+<td>Chunked prefill, prefix caching, disaggregated prefill</td>
+<td>Continuous batching, KV cache efficiency, quantization, fair scheduling</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="ttft-decomposition">TTFT decomposition<a aria-label="Link to this section" class="anchor" href="#ttft-decomposition">#</a></h3>
+<p>A practical serving measurement boundary is:</p>
+<pre class="code-block"><code class="language-text">TTFT ≈ queue_time + tokenization_time + prefill_time + first_decode_time + response_overhead
+</code></pre>
+<p class="confidence-box">Confidence label: <strong><span class="confidence-label label-estimated">[ESTIMATED]</span></strong> for the decomposition, <strong><span class="confidence-label label-env">[ENV-SPECIFIC]</span></strong> for measured values.</p>
+<p>If the runtime measures only inside the engine, simplify to:</p>
+<pre class="code-block"><code class="language-text">engine_TTFT ≈ scheduler_wait + prefill_time + first_decode_time
+</code></pre>
+<h3 id="tpot-lower-bound-model">TPOT lower-bound model<a aria-label="Link to this section" class="anchor" href="#tpot-lower-bound-model">#</a></h3>
+<p>For small-batch decode, a useful lower-bound model is:</p>
+<pre class="code-block"><code class="language-text">TPOT_lower_bound ≈ bytes_touched_per_decode_step / effective_HBM_bandwidth
+</code></pre>
+<p class="confidence-box">Confidence label: <strong><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></strong></p>
+<p>This is not a prediction of actual latency. Real TPOT is higher because kernels do not achieve ideal bandwidth, attention reads KV state, sampling and scheduler overhead exist, and multi-GPU communication may be present. The value of the formula is that it tells you why adding peak TFLOPS may not improve small-batch decode.</p>
+<hr/>
+<h2 id="68-serving-metrics-ttft-tpot-p50p95p99-throughput-and-cost">6.8 Serving Metrics: TTFT, TPOT, P50/P95/P99, Throughput, and Cost<a aria-label="Link to this section" class="anchor" href="#68-serving-metrics-ttft-tpot-p50p95p99-throughput-and-cost">#</a></h2>
+<p>Training usually optimizes long-window throughput. Serving must optimize the user-visible latency distribution.</p>
+<h2 id="table-64-serving-metrics-and-root-causes">Table 6.4 — Serving Metrics and Root Causes<a aria-label="Link to this section" class="anchor" href="#table-64-serving-metrics-and-root-causes">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Meaning</th>
+<th>Why it matters</th>
+<th>Common root causes when bad</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TTFT</td>
+<td>Time to first token</td>
+<td>User perception of responsiveness</td>
+<td>Queueing, long prefill, cold cache, router delay</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>TPOT / TBT</td>
+<td>Time per output token / time between tokens</td>
+<td>Streaming smoothness</td>
+<td>Decode HBM pressure, KV cache traffic, scheduler interference</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>E2E latency</td>
+<td>Total request duration</td>
+<td>Full user wait time</td>
+<td>Long output, slow decode, queueing</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>P50</td>
+<td>Median request behavior</td>
+<td>Typical user experience</td>
+<td>Useful but can hide failures</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>P95</td>
+<td>High percentile tail</td>
+<td>Early production pain indicator</td>
+<td>Bursts, long prompts, overload, preemption</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>P99</td>
+<td>Extreme tail</td>
+<td>SLO / incident indicator</td>
+<td>Queueing cliff, OOM, retries, noisy neighbors</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>Tokens/sec/GPU</td>
+<td>Throughput normalized by GPU count</td>
+<td>Efficiency and capacity planning</td>
+<td>Poor batching, low batch occupancy, inefficient kernels</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>Cost/token</td>
+<td>Economic efficiency</td>
+<td>Product viability at scale</td>
+<td>Low utilization, expensive hardware, overprovisioning</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>KV utilization</td>
+<td>Fraction of KV memory budget in use</td>
+<td>Admission and OOM risk</td>
+<td>Long context, high concurrency, fragmentation</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="representative-slo-example">Representative SLO example<a aria-label="Link to this section" class="anchor" href="#representative-slo-example">#</a></h3>
+<p>A chatbot might target values such as:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Metric</th>
+<th style="text-align:right">Representative target</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TTFT P50</td>
+<td style="text-align:right">&lt; 300 ms</td>
+<td><span class="confidence-label label-representative">[REPRESENTATIVE]</span></td>
+</tr>
+<tr>
+<td>TTFT P99</td>
+<td style="text-align:right">&lt; 800 ms</td>
+<td><span class="confidence-label label-representative">[REPRESENTATIVE]</span></td>
+</tr>
+<tr>
+<td>TPOT P50</td>
+<td style="text-align:right">&lt; 40 ms/token</td>
+<td><span class="confidence-label label-representative">[REPRESENTATIVE]</span></td>
+</tr>
+<tr>
+<td>TPOT P99</td>
+<td style="text-align:right">&lt; 80 ms/token</td>
+<td><span class="confidence-label label-representative">[REPRESENTATIVE]</span></td>
+</tr>
+</tbody>
+</table></div>
+<p>These are teaching examples, not universal targets. A coding assistant, voice agent, batch summarization job, and enterprise RAG service will have different acceptable values.</p>
+<h3 id="percentiles-beat-averages">Percentiles beat averages<a aria-label="Link to this section" class="anchor" href="#percentiles-beat-averages">#</a></h3>
+<p>Averages hide user pain. If 99 users receive tokens quickly and one user waits five seconds, the average may look fine while the product feels broken. A principal-level serving dashboard must track <strong>P50, P95, and P99</strong> separately and must correlate tail latency with queue depth, prompt length, output length, runtime batch size, and KV utilization.</p>
+<hr/>
+<h2 id="69-static-batching-dynamic-batching-and-continuous-batching">6.9 Static Batching, Dynamic Batching, and Continuous Batching<a aria-label="Link to this section" class="anchor" href="#69-static-batching-dynamic-batching-and-continuous-batching">#</a></h2>
+<p>Batching is the core throughput lever for inference. But unlike training, serving batches are not known in advance. Requests arrive at different times, prompts have different lengths, and outputs terminate at different steps.</p>
+<h3 id="static-batching">Static batching<a aria-label="Link to this section" class="anchor" href="#static-batching">#</a></h3>
+<p>Static batching waits for a batch, runs all requests together, and does not admit new work until the batch completes.</p>
+<p>Problem: output lengths vary. If one request generates 200 tokens and another generates 20 tokens, the short request’s slot becomes idle while the long request continues.</p>
+<h3 id="dynamic-batching">Dynamic batching<a aria-label="Link to this section" class="anchor" href="#dynamic-batching">#</a></h3>
+<p>Dynamic batching forms a batch from requests that arrive within a small time window. It improves throughput but still often treats a batch as a unit.</p>
+<h3 id="continuous-batching">Continuous batching<a aria-label="Link to this section" class="anchor" href="#continuous-batching">#</a></h3>
+<p>Continuous batching admits and removes requests at decode iteration boundaries. When a sequence finishes, a new sequence can enter the next iteration.</p>
+<h2 id="figure-placeholder-fig-64">Figure Placeholder — Fig 6.4<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-64">#</a></h2>
+<figure class="figure-placeholder" id="fig-6-4-static-vs-continuous-batching-timeline">
+<div class="figure-kicker">Fig 6.4</div>
+<div class="figure-title">Static vs Continuous Batching Timeline</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A request timeline showing slot waste under static batching and iteration-level refill under continuous batching.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch06_fig_6_4_static_vs_continuous_batching_timeline.svg</code></p>
+<p class="figure-status">Adapt from existing continuous batching diagram</p>
+<a class="figure-source" href="../diagrams/diagrams_batch1.html#d9">View source diagram</a>
+</div>
+</div>
+<figcaption><strong>Fig 6.4 — Static vs Continuous Batching Timeline.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong><br/>
+Make continuous batching intuitive with a timeline of requests that finish at different decode lengths.</p>
+<p class="figure-note"><strong>Figure explanation:</strong><br/>
+The static-batching panel should show idle slots waiting for the longest request. The continuous-batching panel should show new requests entering as soon as a slot becomes free at an iteration boundary.</p>
+<blockquote>
+<p><strong>Key Takeaway:</strong> Continuous batching improves utilization by keeping decode slots full without waiting for a whole batch to finish.</p>
+</blockquote>
+<p class="confidence-box">Confidence label: <strong><span class="confidence-label label-shipped">[SHIPPED]</span></strong> for continuous batching as a modern serving-engine feature; <strong><span class="confidence-label label-env">[ENV-SPECIFIC]</span></strong> for the throughput improvement in a specific deployment.</p>
+<h2 id="table-65-scheduling-and-runtime-levers">Table 6.5 — Scheduling and Runtime Levers<a aria-label="Link to this section" class="anchor" href="#table-65-scheduling-and-runtime-levers">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Lever</th>
+<th>Helps most when</th>
+<th>Main benefit</th>
+<th>Main risk</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Larger batch</td>
+<td>Throughput-limited offline or batch API workload</td>
+<td>Higher arithmetic intensity and GPU utilization</td>
+<td>Higher queueing latency</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>Continuous batching</td>
+<td>Output lengths are heterogeneous</td>
+<td>Reduces slot waste</td>
+<td>More complex scheduler and fairness policy</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>Chunked prefill</td>
+<td>Long prompts interfere with active decode</td>
+<td>Reduces decode latency spikes</td>
+<td>Chunk size must be tuned</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>Prefix caching</td>
+<td>Many requests share system prompt/RAG context</td>
+<td>Reduces prefill compute and TTFT</td>
+<td>Requires cache hit tracking and routing awareness</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>KV quantization</td>
+<td>KV memory limits concurrency</td>
+<td>More active sequences per GPU</td>
+<td>Accuracy must be validated</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>Admission control</td>
+<td>Load approaches memory or latency cliff</td>
+<td>Protects P99 and avoids OOM</td>
+<td>Rejections or queueing must be product-managed</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>Disaggregated P/D</td>
+<td>Prefill and decode resource needs diverge</td>
+<td>Better fleet specialization</td>
+<td>KV transfer latency and reliability complexity</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+</tbody>
+</table></div>
+<hr/>
+<h2 id="610-chunked-prefill-protecting-decode-from-long-prompts">6.10 Chunked Prefill: Protecting Decode from Long Prompts<a aria-label="Link to this section" class="anchor" href="#610-chunked-prefill-protecting-decode-from-long-prompts">#</a></h2>
+<p>A long prompt can be a latency hazard. Without chunking, a 32K-token prefill can monopolize compute and delay active decode requests. Users already receiving streamed output may see a TPOT spike.</p>
+<p>Chunked prefill breaks a long prefill into smaller chunks and interleaves decode iterations between chunks.</p>
+<h2 id="figure-placeholder-fig-65">Figure Placeholder — Fig 6.5<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-65">#</a></h2>
+<figure class="figure-placeholder" id="fig-6-5-chunked-prefill-scheduler">
+<div class="figure-kicker">Fig 6.5</div>
+<div class="figure-title">Chunked Prefill Scheduler</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A scheduler timeline interleaving long-prefill chunks with active decode iterations.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch06_fig_6_5_chunked_prefill_scheduler.svg</code></p>
+<p class="figure-status">Figure to be created</p>
+<span class="figure-source muted">Source diagram pending</span>
+</div>
+</div>
+<figcaption><strong>Fig 6.5 — Chunked Prefill Scheduler.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong><br/>
+Long prompts can monopolize the runtime and delay active decode traffic. The figure should show how chunked prefill creates scheduling points.</p>
+<p class="figure-note"><strong>Figure explanation:</strong><br/>
+The bad case shows a long prompt blocking decode. The chunked case alternates prefill chunks with decode iterations so active users continue receiving tokens.</p>
+<blockquote>
+<p><strong>Key Takeaway:</strong> Chunked prefill trades some prefill scheduling complexity for better decode fairness and tail latency.</p>
+</blockquote>
+<p>A safe production statement is:</p>
+<blockquote>
+<p class="confidence-box">“Chunked prefill can reduce long-prompt interference with decode latency, but the best chunk size and policy depend on model, hardware, runtime, traffic mix, and SLO.” <strong><span class="confidence-label label-env">[ENV-SPECIFIC]</span></strong></p>
+</blockquote>
+<p>Do not claim a universal improvement multiplier.</p>
+<hr/>
+<h2 id="611-disaggregated-prefilldecode-serving">6.11 Disaggregated Prefill/Decode Serving<a aria-label="Link to this section" class="anchor" href="#611-disaggregated-prefilldecode-serving">#</a></h2>
+<p>At small scale, one engine may handle both prefill and decode on the same GPU. At larger scale, prefill and decode can have sufficiently different resource profiles that separating them becomes attractive.</p>
+<ul>
+<li><strong>Prefill pool:</strong> optimized for prompt processing and compute-heavy bursts.</li>
+<li><strong>Decode pool:</strong> optimized for streaming decode, KV residency, and stable TPOT.</li>
+<li><strong>KV transfer path:</strong> moves KV state from prefill workers to decode workers.</li>
+<li><strong>Router/admission controller:</strong> decides which path a request takes.</li>
+</ul>
+<h2 id="figure-placeholder-fig-68">Figure Placeholder — Fig 6.8<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-68">#</a></h2>
+<figure class="figure-placeholder" id="fig-6-8-disaggregated-prefilldecode-architecture">
+<div class="figure-kicker">Fig 6.8</div>
+<div class="figure-title">Disaggregated Prefill/Decode Architecture</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A flow architecture with request router, prefill pool, KV transfer path, decode pool, admission control, and observability.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch06_fig_6_8_disaggregated_prefill_decode_architecture.svg</code></p>
+<p class="figure-status">Adapt from existing disaggregated prefill diagram</p>
+<a class="figure-source" href="../diagrams/diagrams_batch2.html#d20">View source diagram</a>
+</div>
+</div>
+<figcaption><strong>Fig 6.8 — Disaggregated Prefill/Decode Architecture.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong><br/>
+Show why larger fleets may separate prefill from decode when the two phases stress different resources.</p>
+<p class="figure-note"><strong>Figure explanation:</strong><br/>
+The figure should show a router deciding between local and disaggregated paths, a compute-oriented prefill pool, a KV transfer path, a decode pool, and observability around TTFT, TPOT, and KV-transfer latency.</p>
+<blockquote>
+<p><strong>Key Takeaway:</strong> Disaggregation is a fleet-level optimization, not a free speedup; it exchanges utilization gains for transfer and routing complexity.</p>
+</blockquote>
+<p class="confidence-box">Confidence labels: <strong><span class="confidence-label label-shipped">[SHIPPED]</span></strong> where a framework documents the feature; <strong><span class="confidence-label label-env">[ENV-SPECIFIC]</span></strong> for any throughput, latency, or cost gain.</p>
+<p>A principal-level design discussion should include the failure cases:</p>
+<ul>
+<li>What if KV transfer fails?</li>
+<li>What if prefill queue is empty but decode pool is saturated?</li>
+<li>What if decode pool has KV memory but not enough compute headroom?</li>
+<li>What if a long prompt should be chunked instead of disaggregated?</li>
+<li>What if routing breaks prefix-cache locality?</li>
+</ul>
+<hr/>
+<h2 id="612-kv-cache-as-the-serving-resource-bridge">6.12 KV Cache as the Serving Resource Bridge<a aria-label="Link to this section" class="anchor" href="#612-kv-cache-as-the-serving-resource-bridge">#</a></h2>
+<p>The full KV cache chapter is Chapter 11. Chapter 6 only needs the serving-level intuition:</p>
+<pre class="code-block"><code class="language-text">KV_cache_bytes ∝ active_sequences × sequence_length × layers × KV_heads × head_dim × bytes_per_element
+</code></pre>
+<p class="confidence-box">Confidence label: <strong><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></strong></p>
+<p>The important operational facts are:</p>
+<ol>
+<li>KV cache grows with active concurrency.</li>
+<li>KV cache grows with context length.</li>
+<li>Long-context users consume disproportionate serving capacity.</li>
+<li>KV pressure can force preemption, eviction, offload, or rejection.</li>
+<li>A runtime can have available compute but insufficient KV memory for new requests.</li>
+</ol>
+<p>A representative guardrail is:</p>
+<blockquote>
+<p class="confidence-box">“A KV-utilization alert threshold around 80–85% can be useful, but it must be tuned to the model, runtime, page size, preemption behavior, traffic distribution, and SLO.” <strong><span class="confidence-label label-env">[ENV-SPECIFIC]</span></strong></p>
+</blockquote>
+<p>Avoid saying “82% is always the threshold.” In this book, treat it as a production heuristic to be validated.</p>
+<hr/>
+<h2 id="613-runtime-serving-stack-and-framework-choices">6.13 Runtime Serving Stack and Framework Choices<a aria-label="Link to this section" class="anchor" href="#613-runtime-serving-stack-and-framework-choices">#</a></h2>
+<p>A serving request touches more layers than the model runtime alone.</p>
+<h2 id="figure-placeholder-fig-67">Figure Placeholder — Fig 6.7<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-67">#</a></h2>
+<figure class="figure-placeholder" id="fig-6-7-runtime-serving-stack">
+<div class="figure-kicker">Fig 6.7</div>
+<div class="figure-title">Runtime Serving Stack</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A layered serving stack from client/API gateway through routing, scheduling, runtime, kernels, HBM weights, and KV cache.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch06_fig_6_7_runtime_serving_stack.svg</code></p>
+<p class="figure-status">Adapt from existing vLLM lifecycle/observability concepts</p>
+<a class="figure-source" href="../diagrams/diagrams_batch2.html#d19">View source diagram</a>
+</div>
+</div>
+<figcaption><strong>Fig 6.7 — Runtime Serving Stack.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong><br/>
+Connect product request flow to runtime and GPU execution. The serving system is more than a model.forward call.</p>
+<p class="figure-note"><strong>Figure explanation:</strong><br/>
+Show client, gateway, router, scheduler, runtime, kernels, GPU, HBM weights, KV cache, and streaming tokens. Side metrics should include TTFT, TPOT, KV utilization, and prefix-cache hit rate.</p>
+<blockquote>
+<p><strong>Key Takeaway:</strong> Serving latency is created across the stack; profiler evidence must be correlated with request-level metrics.</p>
+</blockquote>
+<h2 id="table-66-runtime-framework-comparison">Table 6.6 — Runtime Framework Comparison<a aria-label="Link to this section" class="anchor" href="#table-66-runtime-framework-comparison">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Runtime / stack</th>
+<th>Strong fit</th>
+<th>Key features to validate before production</th>
+<th>Main caution</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>vLLM</td>
+<td>General high-throughput LLM serving, OpenAI-compatible APIs, research-to-production iteration</td>
+<td>PagedAttention, continuous batching, chunked prefill, prefix caching, speculative decoding, disaggregated prefill support</td>
+<td>Feature maturity and backend behavior vary by version and hardware</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>TensorRT-LLM / Triton backend</td>
+<td>NVIDIA production inference, optimized engines, deployment with Triton</td>
+<td>In-flight batching, paged KV cache, chunked context/prefill, scheduler behavior, tensor/pipeline parallel support</td>
+<td>Engine build complexity and hardware/vendor specificity</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>SGLang</td>
+<td>Agentic workloads, prefix-heavy workloads, structured outputs, high-performance serving</td>
+<td>RadixAttention, continuous batching, chunked prefill, prefill-decode disaggregation, speculative decoding, parallelism modes</td>
+<td>Fast-moving project; validate release behavior</td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
+</tr>
+<tr>
+<td>Custom runtime</td>
+<td>Highly specialized fleet or product constraints</td>
+<td>Tailored scheduler, custom cache policy, deep telemetry integration</td>
+<td>High engineering and maintenance burden</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+</tbody>
+</table></div>
+<p>A safe framework statement is:</p>
+<blockquote>
+<p class="confidence-box">“Modern LLM serving engines such as vLLM, TensorRT-LLM, and SGLang provide runtime features for batching, KV-cache management, and scheduling. The exact feature set and maturity must be validated against the specific release and hardware backend.” <strong><span class="confidence-label label-shipped">[SHIPPED]</span></strong> / <strong><span class="confidence-label label-env">[ENV-SPECIFIC]</span></strong></p>
+</blockquote>
+<hr/>
+<h2 id="614-throughput-latency-knee-and-multi-tenant-serving">6.14 Throughput-Latency Knee and Multi-Tenant Serving<a aria-label="Link to this section" class="anchor" href="#614-throughput-latency-knee-and-multi-tenant-serving">#</a></h2>
+<p>Interactive serving should not blindly maximize average GPU utilization. Queueing systems have a knee: as request rate approaches service capacity, latency increases nonlinearly. P50 may remain acceptable while P99 becomes unacceptable.</p>
+<h2 id="figure-placeholder-fig-66">Figure Placeholder — Fig 6.6<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-66">#</a></h2>
+<figure class="figure-placeholder" id="fig-6-6-throughput-latency-knee-curve">
+<div class="figure-kicker">Fig 6.6</div>
+<div class="figure-title">Throughput-Latency Knee Curve</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A P99 latency curve versus utilization or request rate, showing efficient range, knee, and SLA cliff.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch06_fig_6_6_throughput_latency_knee_curve.svg</code></p>
+<p class="figure-status">Figure to be created</p>
+<span class="figure-source muted">Source diagram pending</span>
+</div>
+</div>
+<figcaption><strong>Fig 6.6 — Throughput-Latency Knee Curve.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong><br/>
+Serving systems often look healthy until they approach a utilization knee, where queueing delay grows faster than throughput.</p>
+<p class="figure-note"><strong>Figure explanation:</strong><br/>
+The curve should label underutilized, efficient operating range, knee, and SLA breach regions. Values are representative and environment-specific.</p>
+<blockquote>
+<p><strong>Key Takeaway:</strong> Maximizing utilization can violate P99 latency; production serving needs headroom.</p>
+</blockquote>
+<p>Representative operating targets such as 65–75% utilization for interactive serving are teaching examples only. The real target must be derived from trace replay and load testing.</p>
+<h3 id="multi-tenant-risks">Multi-tenant risks<a aria-label="Link to this section" class="anchor" href="#multi-tenant-risks">#</a></h3>
+<p>Multi-tenant serving adds additional pressure:</p>
+<ul>
+<li>One tenant’s long prompts can hurt another tenant’s decode latency.</li>
+<li>One tenant’s high output length can occupy decode slots for too long.</li>
+<li>Prefix cache locality can conflict with load balancing.</li>
+<li>Priority traffic needs reserved capacity or preemption policy.</li>
+<li>KV memory must be isolated or fairly shared.</li>
+</ul>
+<p>A principal design should explicitly define fairness and isolation, not just throughput.</p>
+<hr/>
+<h2 id="615-symptom-to-bottleneck-diagnostic-matrix">6.15 Symptom-to-Bottleneck Diagnostic Matrix<a aria-label="Link to this section" class="anchor" href="#615-symptom-to-bottleneck-diagnostic-matrix">#</a></h2>
+<h2 id="table-67-symptom-to-bottleneck-diagnostic-matrix">Table 6.7 — Symptom-to-Bottleneck Diagnostic Matrix<a aria-label="Link to this section" class="anchor" href="#table-67-symptom-to-bottleneck-diagnostic-matrix">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely bottleneck</th>
+<th>First evidence to collect</th>
+<th>First safe experiment</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Training MFU is low, GPU gaps before forward</td>
+<td>Data loading or H2D stalls</td>
+<td>Nsight Systems timeline, dataloader wait, CPU utilization</td>
+<td>Increase workers, pin memory, prefetch, cache data</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>Training scales poorly beyond one node</td>
+<td>Communication exposed</td>
+<td>AllReduce time, bus bandwidth, per-rank step time</td>
+<td>Bucket tuning, topology-aware placement, overlap analysis</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>Training OOM with modest batch</td>
+<td>Activation or optimizer state memory</td>
+<td>Memory snapshot, activation size estimate, optimizer state size</td>
+<td>Enable checkpointing or sharding; reduce sequence/batch</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>Checkpoint pauses dominate</td>
+<td>Storage throughput or serialization</td>
+<td>Checkpoint duration and GB/s</td>
+<td>Sharded or async checkpoint; adjust interval</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>TTFT P99 spikes</td>
+<td>Queueing or long prefill</td>
+<td>Prompt length histogram, prefill time, queue depth</td>
+<td>Chunked prefill, prefix caching, admission policy</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>TPOT P99 spikes during traffic bursts</td>
+<td>Decode scheduler or HBM/KV pressure</td>
+<td>Decode batch size, KV utilization, per-token timeline</td>
+<td>Reserve headroom, continuous batching tuning, KV policy</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>High GPU utilization but poor user latency</td>
+<td>Queueing cliff</td>
+<td>P50/P95/P99 vs request rate</td>
+<td>Lower admission rate, separate tiers, autoscale</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>OOM or preemptions under long context</td>
+<td>KV cache exhaustion</td>
+<td>KV utilization, active sequence lengths</td>
+<td>Route long-context tier, KV quantization, admission limit</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+<tr>
+<td>Cost/token too high</td>
+<td>Low utilization or overprovisioning</td>
+<td>Tokens/sec/GPU, idle time, batch occupancy</td>
+<td>Tune batching, consolidate tenants, offline tier</td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
+</tr>
+</tbody>
+</table></div>
+<p>Diagnostic discipline matters. Do not tune before you know which resource is on the critical path.</p>
+<hr/>
+<h2 id="616-principal-level-workload-discussion">6.16 Principal-Level Workload Discussion<a aria-label="Link to this section" class="anchor" href="#616-principal-level-workload-discussion">#</a></h2>
+<p>In interviews and architecture reviews, the strongest answer is not a list of technologies. It is a structured workload diagnosis.</p>
+<h3 id="prompt-a-design-a-training-system-for-a-70b-model">Prompt A: “Design a training system for a 70B model.”<a aria-label="Link to this section" class="anchor" href="#prompt-a-design-a-training-system-for-a-70b-model">#</a></h3>
+<p>A principal-level answer should cover:</p>
+<ol>
+<li><strong>Objective:</strong> minimize time-to-train at acceptable cost and reliability risk.</li>
+<li><strong>Workload shape:</strong> tokens, sequence length, global batch, precision, target MFU.</li>
+<li><strong>Memory budget:</strong> weights, gradients, optimizer state, activations, temporary buffers.</li>
+<li><strong>Parallelism need:</strong> data, tensor, pipeline, sequence/context, ZeRO/FSDP.</li>
+<li><strong>Communication:</strong> gradient sync, topology, overlap, straggler detection.</li>
+<li><strong>Data pipeline:</strong> storage, tokenization, packing, shuffle, cache.</li>
+<li><strong>Checkpoint/recovery:</strong> interval, write bandwidth, restart time, lost-work budget.</li>
+<li><strong>Measurement:</strong> step breakdown, MFU, tokens/sec/GPU, per-rank variance.</li>
+</ol>
+<p>A weak answer says: “Use distributed training and NCCL.”</p>
+<p>A strong answer says:</p>
+<blockquote>
+<p>“I would first size memory and compute from parameters, sequence length, and global batch. Then I would choose the minimum parallelism needed to fit memory and the topology that keeps communication inside the fastest fabric. I would validate with step-time decomposition and MFU before optimizing kernels.”</p>
+</blockquote>
+<h3 id="prompt-b-design-an-llm-serving-system-for-real-time-chat">Prompt B: “Design an LLM serving system for real-time chat.”<a aria-label="Link to this section" class="anchor" href="#prompt-b-design-an-llm-serving-system-for-real-time-chat">#</a></h3>
+<p>A principal-level answer should cover:</p>
+<ol>
+<li><strong>Objective:</strong> TTFT/TPOT P99 under SLO at target QPS and cost/token.</li>
+<li><strong>Traffic shape:</strong> prompt length, output length, arrival bursts, tenant mix.</li>
+<li><strong>Phase split:</strong> prefill vs decode, chunked prefill, prefix caching.</li>
+<li><strong>Memory:</strong> weights, KV cache, context length, admission thresholds.</li>
+<li><strong>Scheduler:</strong> continuous batching, fairness, priority, preemption.</li>
+<li><strong>Runtime:</strong> vLLM/TensorRT-LLM/SGLang/custom tradeoffs.</li>
+<li><strong>Scale-out:</strong> routing, sticky sessions, autoscaling, optional P/D disaggregation.</li>
+<li><strong>Measurement:</strong> TTFT, TPOT, P50/P95/P99, queue depth, KV utilization, tokens/sec/GPU.</li>
+</ol>
+<p>A weak answer says: “Use vLLM because it is fast.”</p>
+<p>A strong answer says:</p>
+<blockquote>
+<p>“I would choose the runtime based on traffic shape, prefix reuse, hardware target, and tail-latency SLO. I would tune scheduler policy with trace replay, not just synthetic throughput, because average tokens/sec can improve while P99 TTFT fails.”</p>
+</blockquote>
+<hr/>
+<h2 id="617-anti-patterns">6.17 Anti-Patterns<a aria-label="Link to this section" class="anchor" href="#617-anti-patterns">#</a></h2>
+<p>Avoid these production mistakes:</p>
+<ol>
+<li><strong>Treating training and serving as the same workload.</strong> Training optimizes long-window throughput; serving optimizes latency distribution under dynamic arrivals.</li>
+<li><strong>Reporting average latency only.</strong> P99 is where production pain lives.</li>
+<li><strong>Maximizing utilization without SLO headroom.</strong> High utilization can create a queueing cliff.</li>
+<li><strong>Ignoring useful tokens.</strong> Padded tokens can inflate training throughput metrics.</li>
+<li><strong>Blaming kernels before checking data stalls.</strong> Empty GPU gaps often come from the input pipeline.</li>
+<li><strong>Using fixed batch intuition for serving.</strong> Interactive serving requires iteration-level scheduling.</li>
+<li><strong>Forgetting optimizer state.</strong> Training memory is much larger than inference memory.</li>
+<li><strong>Underestimating checkpoint cost.</strong> Reliability has a throughput price.</li>
+<li><strong>Universalizing framework benchmark claims.</strong> Runtime performance depends on model, hardware, traffic distribution, and configuration.</li>
+<li><strong>Forgetting economics.</strong> A serving system that is fast but too expensive per token may still fail.</li>
+</ol>
+<hr/>
+<h2 id="618-key-takeaways">6.18 Key Takeaways<a aria-label="Link to this section" class="anchor" href="#618-key-takeaways">#</a></h2>
+<ol>
+<li>Training, offline inference, batch API serving, and interactive serving have different objective functions.</li>
+<li>Training bottlenecks include compute, activation memory, optimizer state, data loading, communication, and checkpoint I/O.</li>
+<li>Dense Transformer training FLOPs are often estimated as <code>6 × parameters × training tokens</code>, but this is an approximation.</li>
+<li>LLM inference has two distinct phases: prefill and decode.</li>
+<li>TTFT is primarily shaped by queueing and prefill; TPOT is shaped by decode efficiency, scheduler policy, HBM/KV pressure, and batch behavior.</li>
+<li>Percentile latency matters more than average latency for interactive serving.</li>
+<li>Continuous batching improves decode slot utilization by admitting work at iteration boundaries.</li>
+<li>Chunked prefill protects active decode requests from long-prompt interference.</li>
+<li>KV cache is a first-class serving resource because it scales with active sequences and context length.</li>
+<li>Principal-level workload analysis begins with objective, bottleneck, metric, and validation experiment — not with a tool name.</li>
+</ol>
+<hr/>
+<h2 id="619-review-questions">6.19 Review Questions<a aria-label="Link to this section" class="anchor" href="#619-review-questions">#</a></h2>
+<ol>
+<li>Explain the difference between batch training, offline inference, batch API serving, and interactive serving.</li>
+<li>Why is useful tokens/sec/GPU better than padded tokens/sec/GPU for training?</li>
+<li>Derive the dense training FLOP approximation <code>6 × parameters × tokens</code>. What does it omit?</li>
+<li>What memory categories make training more memory-intensive than inference?</li>
+<li>Why can activation checkpointing reduce memory but increase step time?</li>
+<li>What evidence would show that a training job is data-loader-bound?</li>
+<li>What evidence would show that distributed training is communication-bound?</li>
+<li>Define TTFT and TPOT. Which serving phase dominates each?</li>
+<li>Why is decode often memory-bandwidth-sensitive at small batch?</li>
+<li>Explain static batching, dynamic batching, and continuous batching.</li>
+<li>Why can a long prefill harm active decode traffic?</li>
+<li>What problem does chunked prefill solve?</li>
+<li>What new complexity does disaggregated prefill/decode introduce?</li>
+<li>Why is P99 latency more important than average latency for interactive serving?</li>
+<li>What is the relationship between KV cache, context length, and serving concurrency?</li>
+<li>How would you design an experiment to choose a safe KV admission threshold?</li>
+<li>Why might maximizing GPU utilization hurt user experience?</li>
+<li>Compare vLLM, TensorRT-LLM, and SGLang at a high level. What would you validate before choosing one?</li>
+<li>In an interview, how would you explain the difference between a training bottleneck and a serving bottleneck?</li>
+<li>Build a diagnostic plan for this symptom: TTFT P99 doubled after enabling long-context requests.</li>
+</ol>
+<hr/>
+<hr/>
+<h2 id="621-bridge-to-chapter-7">6.21 Bridge to Chapter 7<a aria-label="Link to this section" class="anchor" href="#621-bridge-to-chapter-7">#</a></h2>
+<p>Chapter 6 showed why training and serving workloads stress AI infrastructure differently.</p>
+<p>Chapter 7 moves one level lower into the execution unit behind many of those workload behaviors:</p>
+<pre class="code-block"><code class="language-text">What actually happens inside a GPU kernel, and how do memory access, occupancy, Tensor Cores, fusion, and profiling determine performance?
+</code></pre>
+<p>The next chapter connects workload symptoms to kernel-level causes and teaches how to decide when kernel work is the right optimization move.</p>
 
-  <section id="6-3"><h2>6.3 Training Metrics: Step Time, Tokens/sec/GPU, MFU, and Stall Time</h2>
-  <div class="formula">step_time = data_time + forward_time + backward_time + communication_time + optimizer_time + checkpoint_overhead</div>
-  <div class="formula">tokens_per_second_per_GPU = useful_training_tokens / (step_time_seconds × GPU_count)</div>
-  <div class="formula">MFU = achieved_model_FLOPs_per_second / theoretical_peak_FLOPs_per_second</div>
-  <p>For language model training, use useful non-padding tokens. Padding-heavy workloads can make a system look healthier than it is. GPU utilization tells you whether the GPU is busy; MFU tells you whether the busy time is doing useful model math.</p>
-  </section>
 
-  <section id="6-4"><h2>6.4 Training Memory: Weights, Gradients, Activations, Optimizer State</h2>
-  <p>Training requires more memory than inference because backward propagation needs gradients, optimizer state, and either stored or recomputed activations.</p>
-  <div class="table-wrap"><table><thead><tr><th>Category</th><th>Why it exists</th><th>Scales with</th><th>Pressure</th><th>Mitigation</th><th>Label</th></tr></thead><tbody>
-  <tr><td>Weights</td><td>Model parameters</td><td>Parameter count × precision</td><td>Resident or sharded</td><td>TP, FSDP/ZeRO</td><td><span class="conf shipped">[SHIPPED]</span></td></tr>
-  <tr><td>Gradients</td><td>Parameter gradients</td><td>Parameter count × precision</td><td>Backward/update</td><td>Sharding, reduce-scatter</td><td><span class="conf shipped">[SHIPPED]</span></td></tr>
-  <tr><td>Optimizer state</td><td>Adam moments/master weights</td><td>Multiple tensors per parameter</td><td>Large memory multiplier</td><td>ZeRO/FSDP, lower precision</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  <tr><td>Activations</td><td>Intermediate tensors for backward</td><td>Batch × sequence × hidden × layers</td><td>Often memory limiter</td><td>Activation checkpointing</td><td><span class="conf derived-from-shipped">[DERIVED FROM SHIPPED]</span></td></tr>
-  <tr><td>Temporary buffers</td><td>Workspace and communication buckets</td><td>Runtime/operator dependent</td><td>Fragmentation/OOM</td><td>Preallocation, graph capture</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  </tbody></table></div>
-  <div class="callout warn"><strong>Checkpointing is a tradeoff</strong><p>Activation checkpointing lowers activation memory by recomputing selected activations during backward. It can enable a larger batch or model, but increases step time.</p></div>
-  </section>
-
-  <section id="6-5"><h2>6.5 Distributed Training Communication: Why Scaling Is Not Free</h2>
-  <p>In data parallel training, each replica computes gradients for a different microbatch, then synchronizes gradients so all replicas apply the same update.</p>
-  <div class="formula">local forward/backward → gradients → AllReduce or reduce-scatter → optimizer update</div>
-  <p>Scaling efficiency is controlled by the ratio of communication time to useful compute time. If communication time is hidden behind backward compute, scaling is efficient. If exposed on the critical path, adding GPUs gives diminishing returns.</p>
-  </section>
-
-  <section id="6-6"><h2>6.6 Data Loading and Checkpointing: The Non-GPU Bottlenecks</h2>
-  <p>Production training traces often show that the job is only as fast as the slowest pipeline stage. A GPU can starve because data arrives late or checkpointing pauses too often.</p>
-  <div class="formula">checkpoint_overhead_fraction = checkpoint_pause_time / checkpoint_interval_wall_time</div>
-  <p>If checkpointing happens too often, the cluster loses expensive GPU-hours. If it happens too rarely, failures lose too much work. This is a reliability-throughput tradeoff.</p>
-  </section>
-
-  <section id="6-7"><h2>6.7 Inference Anatomy: Prefill and Decode</h2>
-  <p>Autoregressive LLM inference has two phases: prefill processes the input prompt and populates the KV cache; decode generates output tokens one at a time.</p>
-  <figure id="fig-6-3" class="figure-card">
-      <div class="figure-kicker">FIG 6.3</div>
-      <div class="figure-title">Prefill vs Decode Regime Split</div>
-      <div class="figure-placeholder"><div>Prefill: many prompt tokens → large GEMMs → KV cache. Decode: one new token → read weights/KV → emit token.</div></div>
-      <figcaption><strong>Prefill vs Decode Regime Split.</strong> Use a two-panel diagram to explain inference phase split. Prefill is usually compute-heavy for long prompts; decode is often memory-bandwidth-sensitive at small batch. <em>Key takeaway:</em> LLM serving is not one forward pass; each phase has different bottlenecks. <br><span class="small">Production asset: Existing source: diagrams_batch1.html#d7</span></figcaption>
-    </figure>
-  <h3>Table 6.3 — Prefill vs Decode Regime Comparison</h3>
-  <div class="table-wrap"><table><thead><tr><th>Dimension</th><th>Prefill</th><th>Decode</th><th>Label</th></tr></thead><tbody>
-  <tr><td>Work</td><td>Process all prompt tokens</td><td>Generate one token per active sequence</td><td><span class="conf shipped">[SHIPPED]</span></td></tr>
-  <tr><td>Parallelism</td><td>High across sequence and batch</td><td>Limited by autoregressive dependency</td><td><span class="conf shipped">[SHIPPED]</span></td></tr>
-  <tr><td>Common bottleneck</td><td>Compute for long prompts; attention for long context</td><td>HBM bandwidth, KV cache reads, scheduler overhead</td><td><span class="conf derived-from-shipped">[DERIVED FROM SHIPPED]</span></td></tr>
-  <tr><td>User metric</td><td>TTFT</td><td>TPOT / inter-token latency</td><td><span class="conf shipped">[SHIPPED]</span></td></tr>
-  <tr><td>Scheduler issue</td><td>Long prompts can monopolize runtime</td><td>Short iterations require careful batching</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  </tbody></table></div>
-  <div class="formula">TTFT ≈ queue_time + tokenization_time + prefill_time + first_decode_time + response_overhead</div>
-  <div class="formula">TPOT_lower_bound ≈ bytes_touched_per_decode_step / effective_HBM_bandwidth</div>
-  </section>
-
-  <section id="6-8"><h2>6.8 Serving Metrics: TTFT, TPOT, P50/P95/P99, Throughput, and Cost</h2>
-  <p>Training usually optimizes long-window throughput. Serving must optimize the user-visible latency distribution.</p>
-  <h3>Table 6.4 — Serving Metrics and Root Causes</h3>
-  <div class="table-wrap"><table><thead><tr><th>Metric</th><th>Meaning</th><th>Why it matters</th><th>Common root causes when bad</th><th>Label</th></tr></thead><tbody>
-  <tr><td>TTFT</td><td>Time to first token</td><td>Responsiveness</td><td>Queueing, long prefill, cold cache</td><td><span class="conf shipped">[SHIPPED]</span></td></tr>
-  <tr><td>TPOT / TBT</td><td>Time per output token</td><td>Streaming smoothness</td><td>Decode HBM pressure, KV traffic, scheduler interference</td><td><span class="conf shipped">[SHIPPED]</span></td></tr>
-  <tr><td>P50/P95/P99</td><td>Latency percentiles</td><td>Typical and tail experience</td><td>Bursts, overload, noisy neighbors</td><td><span class="conf shipped">[SHIPPED]</span></td></tr>
-  <tr><td>Tokens/sec/GPU</td><td>Throughput normalized by GPU count</td><td>Capacity planning</td><td>Poor batching, inefficient kernels</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  <tr><td>Cost/token</td><td>Economic efficiency</td><td>Product viability</td><td>Low utilization, overprovisioning</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  <tr><td>KV utilization</td><td>KV memory budget in use</td><td>Admission and OOM risk</td><td>Long context, high concurrency, fragmentation</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  </tbody></table></div>
-  <p>Averages hide user pain. P99 latency is where production incidents usually appear first.</p>
-  </section>
-
-  <section id="6-9"><h2>6.9 Static Batching, Dynamic Batching, and Continuous Batching</h2>
-  <p>Batching is the core throughput lever for inference, but serving batches are not known in advance. Requests arrive at different times, prompts have different lengths, and outputs terminate at different steps.</p>
-  <figure id="fig-6-4" class="figure-card">
-      <div class="figure-kicker">FIG 6.4</div>
-      <div class="figure-title">Static vs Continuous Batching Timeline</div>
-      <div class="figure-placeholder"><div>Static batching leaves slots idle. Continuous batching refills slots at decode iteration boundaries.</div></div>
-      <figcaption><strong>Static vs Continuous Batching Timeline.</strong> Use two timelines: static batching with idle slots and continuous batching with refill. Static batching wastes decode capacity when shorter outputs finish early; continuous batching keeps more slots occupied. <em>Key takeaway:</em> Continuous batching schedules at the token-iteration level rather than the whole-request level. <br><span class="small">Production asset: Existing source: diagrams_batch1.html#d9</span></figcaption>
-    </figure>
-  <h3>Table 6.5 — Scheduling and Runtime Levers</h3>
-  <div class="table-wrap"><table><thead><tr><th>Lever</th><th>Helps when</th><th>Benefit</th><th>Risk</th><th>Label</th></tr></thead><tbody>
-  <tr><td>Larger batch</td><td>Throughput-limited workload</td><td>Higher arithmetic intensity/utilization</td><td>Higher queueing latency</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  <tr><td>Continuous batching</td><td>Output lengths vary</td><td>Reduces slot waste</td><td>Complex fairness policy</td><td><span class="conf shipped">[SHIPPED]</span></td></tr>
-  <tr><td>Chunked prefill</td><td>Long prompts interfere with decode</td><td>Reduces TPOT spikes</td><td>Chunk size tuning</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  <tr><td>Prefix caching</td><td>Shared prompts/RAG contexts</td><td>Reduces prefill compute and TTFT</td><td>Routing/cache locality</td><td><span class="conf shipped">[SHIPPED]</span></td></tr>
-  <tr><td>KV quantization</td><td>KV memory limits concurrency</td><td>More active sequences</td><td>Accuracy validation</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  <tr><td>Disaggregated P/D</td><td>Prefill/decode needs diverge</td><td>Fleet specialization</td><td>KV transfer complexity</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  </tbody></table></div>
-  </section>
-
-  <section id="6-10"><h2>6.10 Chunked Prefill: Protecting Decode from Long Prompts</h2>
-  <p>A long prompt can monopolize compute and delay active decode requests. Chunked prefill breaks a long prefill into smaller chunks and interleaves decode iterations between chunks.</p>
-  <figure id="fig-6-5" class="figure-card">
-      <div class="figure-kicker">FIG 6.5</div>
-      <div class="figure-title">Chunked Prefill Scheduler</div>
-      <div class="figure-placeholder"><div>Long prefill chunk → decode step → prefill chunk → decode step</div></div>
-      <figcaption><strong>Chunked Prefill Scheduler.</strong> Show the bad case first, where a long prefill blocks decode. Then show chunked prefill. Chunking reduces head-of-line blocking and gives the scheduler chances to protect active decode traffic. <em>Key takeaway:</em> Chunked prefill is a scheduler fairness technique as much as a performance optimization. <br><span class="small">Production asset: fig_06_05_chunked_prefill_scheduler.html — must be created</span></figcaption>
-    </figure>
-  </section>
-
-  <section id="6-11"><h2>6.11 Disaggregated Prefill/Decode Serving</h2>
-  <p>At large scale, prefill and decode can have sufficiently different resource profiles that separating them becomes attractive.</p>
-  <figure id="fig-6-8" class="figure-card">
-      <div class="figure-kicker">FIG 6.8</div>
-      <div class="figure-title">Disaggregated Prefill/Decode Architecture</div>
-      <div class="figure-placeholder"><div>Router → prefill pool → KV transfer → decode pool → streaming tokens</div></div>
-      <figcaption><strong>Disaggregated Prefill/Decode Architecture.</strong> Show request routing into prefill and decode pools, with KV transfer between them. Disaggregation can improve fleet specialization, but introduces KV-transfer latency, routing complexity, and failure handling. <em>Key takeaway:</em> Use disaggregation only when phase-specialization benefits exceed KV transfer and orchestration costs. <br><span class="small">Production asset: Existing source: diagrams_batch2.html#d20</span></figcaption>
-    </figure>
-  </section>
-
-  <section id="6-12"><h2>6.12 KV Cache as the Serving Resource Bridge</h2>
-  <div class="formula">KV_cache_bytes ∝ active_sequences × sequence_length × layers × KV_heads × head_dim × bytes_per_element</div>
-  <p>KV cache grows with active concurrency and context length. A runtime can have available compute but insufficient KV memory for new requests.</p>
-  <div class="callout warn"><strong>KV guardrail wording</strong><p>A KV-utilization alert threshold around 80–85% can be useful, but it must be tuned to the model, runtime, page size, preemption behavior, traffic distribution, and SLO. Do not treat 82% as universal.</p></div>
-  </section>
-
-  <section id="6-13"><h2>6.13 Runtime Serving Stack and Framework Choices</h2>
-  <figure id="fig-6-7" class="figure-card">
-      <div class="figure-kicker">FIG 6.7</div>
-      <div class="figure-title">Runtime Serving Stack</div>
-      <div class="figure-placeholder"><div>Client → gateway → tokenizer/router → scheduler → runtime → kernels → GPU HBM/KV → streaming response</div></div>
-      <figcaption><strong>Runtime Serving Stack.</strong> Show the full serving path from product entry point to GPU execution. User-visible latency is shaped by every layer, not only GPU kernels. <em>Key takeaway:</em> Serving performance is a stack problem. <br><span class="small">Production asset: fig_06_07_runtime_serving_stack.html — should be created</span></figcaption>
-    </figure>
-  <h3>Table 6.6 — Runtime Framework Comparison</h3>
-  <div class="table-wrap"><table><thead><tr><th>Runtime</th><th>Strong fit</th><th>Features to validate</th><th>Caution</th><th>Label</th></tr></thead><tbody>
-  <tr><td>vLLM</td><td>General high-throughput LLM serving</td><td>PagedAttention, continuous batching, chunked prefill, prefix caching, speculative decoding, disaggregated prefill</td><td>Version/backend maturity varies</td><td><span class="conf shipped">[SHIPPED]</span></td></tr>
-  <tr><td>TensorRT-LLM / Triton</td><td>NVIDIA production inference</td><td>In-flight batching, paged KV cache, chunked context, scheduler, parallelism</td><td>Engine build complexity and vendor specificity</td><td><span class="conf shipped">[SHIPPED]</span></td></tr>
-  <tr><td>SGLang</td><td>Agentic and prefix-heavy workloads</td><td>RadixAttention, continuous batching, chunked prefill, P/D disaggregation, speculative decoding</td><td>Fast-moving release behavior</td><td><span class="conf shipped">[SHIPPED]</span></td></tr>
-  <tr><td>Custom runtime</td><td>Specialized fleet constraints</td><td>Custom scheduler/cache/telemetry</td><td>High maintenance burden</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  </tbody></table></div>
-  </section>
-
-  <section id="6-14"><h2>6.14 Throughput-Latency Knee and Multi-Tenant Serving</h2>
-  <p>Interactive serving should not blindly maximize average GPU utilization. Queueing systems have a knee: as request rate approaches service capacity, latency increases nonlinearly.</p>
-  <figure id="fig-6-6" class="figure-card">
-      <div class="figure-kicker">FIG 6.6</div>
-      <div class="figure-title">Throughput-Latency Knee Curve</div>
-      <div class="figure-placeholder"><div>X-axis: utilization/request rate. Y-axis: P99 TTFT/TPOT. Mark efficient region, knee, SLA cliff.</div></div>
-      <figcaption><strong>Throughput-Latency Knee Curve.</strong> Plot request rate or utilization against P99 latency. P99 climbs sharply when queues build, KV memory tightens, and scheduler choices narrow. <em>Key takeaway:</em> Strict P99 SLOs require headroom; average utilization is not enough. <br><span class="small">Production asset: fig_06_06_latency_knee_curve.html — must be created</span></figcaption>
-    </figure>
-  </section>
-
-  <section id="6-15"><h2>6.15 Symptom-to-Bottleneck Diagnostic Matrix</h2>
-  <h3>Table 6.7 — Symptom-to-Bottleneck Diagnostic Matrix</h3>
-  <div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Likely bottleneck</th><th>First evidence</th><th>First safe experiment</th><th>Label</th></tr></thead><tbody>
-  <tr><td>Training MFU low, GPU gaps</td><td>Data loading or H2D stalls</td><td>Nsight timeline, dataloader wait</td><td>Increase workers, pin memory, prefetch</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  <tr><td>Training scales poorly</td><td>Communication exposed</td><td>AllReduce time, per-rank variance</td><td>Bucket tuning, topology placement</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  <tr><td>Training OOM</td><td>Activations or optimizer state</td><td>Memory snapshot and state estimate</td><td>Checkpointing or sharding</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  <tr><td>TTFT P99 spikes</td><td>Queueing or long prefill</td><td>Prompt histogram, queue depth</td><td>Chunked prefill, prefix caching</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  <tr><td>TPOT P99 spikes</td><td>Decode scheduler or KV/HBM pressure</td><td>Decode batch, KV utilization</td><td>Reserve headroom, tune batching</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  <tr><td>OOM/preemptions under long context</td><td>KV cache exhaustion</td><td>KV utilization, context lengths</td><td>Long-context tier, KV quantization, admission limit</td><td><span class="conf env-specific">[ENV-SPECIFIC]</span></td></tr>
-  </tbody></table></div>
-  </section>
-
-  <section id="6-16"><h2>6.16 Principal-Level Workload Discussion</h2>
-  <div class="callout interview"><strong>Training design answer</strong><p>Start with objective, tokens, sequence length, global batch, memory budget, parallelism, communication, data pipeline, checkpoint/recovery, and measurement. Do not jump straight to NCCL or a framework name.</p></div>
-  <div class="callout interview"><strong>Serving design answer</strong><p>Start with TTFT/TPOT P99 SLO, traffic shape, prefill/decode split, KV budget, scheduler behavior, runtime choice, routing, autoscaling, and measurement. Do not say only “use vLLM because it is fast.”</p></div>
-  </section>
-
-  <section id="6-17"><h2>6.17 Anti-Patterns</h2>
-  <ol>
-    <li>Treating training and serving as the same workload.</li>
-    <li>Reporting average latency only.</li>
-    <li>Maximizing utilization without SLO headroom.</li>
-    <li>Ignoring useful tokens and padding waste.</li>
-    <li>Blaming kernels before checking input pipeline stalls.</li>
-    <li>Using fixed-batch intuition for interactive serving.</li>
-    <li>Forgetting optimizer state and checkpoint cost.</li>
-    <li>Universalizing framework benchmark claims without trace replay.</li>
-  </ol>
-  </section>
-
-  <section id="6-18"><h2>6.18 Key Takeaways</h2>
-  <ol>
-    <li>Training, offline inference, batch API serving, and interactive serving have different objective functions.</li>
-    <li>Training bottlenecks include compute, activation memory, optimizer state, data loading, communication, and checkpoint I/O.</li>
-    <li>LLM inference has two phases: prefill and decode.</li>
-    <li>TTFT is shaped by queueing and prefill; TPOT is shaped by decode efficiency, scheduler policy, HBM/KV pressure, and batch behavior.</li>
-    <li>Percentile latency matters more than average latency for interactive serving.</li>
-    <li>Continuous batching schedules at token-iteration boundaries.</li>
-    <li>KV cache is a first-class serving resource.</li>
-    <li>Principal-level workload analysis begins with objective, bottleneck, metric, and validation experiment.</li>
-  </ol>
-  </section>
-
-  <section id="review"><h2>Review Questions</h2>
-  <ol>
-    <li>Explain the difference between batch training, offline inference, batch API serving, and interactive serving.</li>
-    <li>Why is useful tokens/sec/GPU better than padded tokens/sec/GPU for training?</li>
-    <li>Derive the dense training FLOP approximation <code>6 × parameters × tokens</code>. What does it omit?</li>
-    <li>What memory categories make training more memory-intensive than inference?</li>
-    <li>Why can activation checkpointing reduce memory but increase step time?</li>
-    <li>What evidence would show that a training job is data-loader-bound?</li>
-    <li>Define TTFT and TPOT. Which serving phase dominates each?</li>
-    <li>Explain static batching, dynamic batching, and continuous batching.</li>
-    <li>What new complexity does disaggregated prefill/decode introduce?</li>
-    <li>Build a diagnostic plan for this symptom: TTFT P99 doubled after enabling long-context requests.</li>
-  </ol>
-  </section>
-
-  <section class="production-notes"><h2>Production Notes</h2>
-  <p>These notes are visually separated from reader-facing chapter text and hidden in print.</p>
-  <ul>
-    <li>Replace all figure placeholders with final SVG/HTML assets before the print pass.</li>
-    <li>Validate final framework claims against the exact 2026 release versions used for publication.</li>
-    <li>Keep exact benchmark values marked <span class="conf representative">[REPRESENTATIVE]</span> or <span class="conf env-specific">[ENV-SPECIFIC]</span> unless measured or cited.</li>
-    <li>Do not over-expand this chapter into Ch10 distributed training or Ch11 KV cache; keep those deep dives separate.</li>
-  </ul>
-  </section>
-
-  <nav class="nav-bottom"><a href="ch05_power_thermal_infrastructure.html">← Previous: Ch05</a><a href="../index.html">Home</a><a href="ch07_gpu_kernels_cuda_optimization.html">Next: Ch07 →</a></nav>
-  <div class="footer">AI/ML Infrastructure from Silicon to Scale — Chapter 6 · Venkat Vinjam · Production v1.0</div>
-</main>
+    <nav class="nav-row" aria-label="Previous and next chapter navigation">
+      <a href="ch05_power_thermal_infrastructure.html">
+        <small>Previous Chapter</small>
+        <strong>Ch05</strong>
+      </a>
+      <a href="ch07_gpu_kernels_cuda_optimization.html">
+        <small>Next</small>
+        <strong>Ch07</strong>
+      </a>
+    </nav>
+  </main>
 </div>
 </body>
 </html>

@@ -3,97 +3,480 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter 7 — GPU Kernels and CUDA Optimization | AI/ML Infrastructure from Silicon to Scale</title>
-<meta name="description" content="Chapter 7 explains GPU kernel execution, warps, blocks, SM scheduling, occupancy, memory coalescing, shared memory, Tensor Cores, FlashAttention, fused kernels, Triton, Nsight Compute, and principal-level kernel optimization prioritization.">
+<title>Chapter 7 — GPU Kernels and CUDA Optimization | Silicon to Scale</title>
+<meta name="description" content="Production web chapter on GPU kernel execution, CUDA hierarchy, memory coalescing, shared memory, occupancy, Tensor Cores, FlashAttention, Triton, and Nsight Compute profiling.">
 <meta name="author" content="Venkat Vinjam">
+<meta property="og:title" content="Chapter 7 — GPU Kernels and CUDA Optimization">
+<meta property="og:description" content="Learn the principal-level mental model for GPU kernels, CUDA execution hierarchy, Tensor Cores, FlashAttention, Triton, memory traffic, occupancy, and profiling workflow.">
+<meta property="og:type" content="article">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#080c10;--bg2:#0d1117;--bg3:#161b22;--bg4:#1c2128;--border:#21262d;--border2:#30363d;--text:#e6edf3;--text2:#8b949e;--text3:#6e7681;--accent:#58a6ff;--gold:#d4a017;--gold2:#f0c040;--green:#3fb950;--orange:#ff6b35;--purple:#bc8cff;--red:#f85149;--yellow:#f7c948;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.65}body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(88,166,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(88,166,255,.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}.page{position:relative;z-index:1;display:grid;grid-template-columns:280px minmax(0,1fr);min-height:100vh}aside{position:sticky;top:0;height:100vh;overflow:auto;background:rgba(13,17,23,.96);border-right:1px solid var(--border);padding:24px 18px}.brand{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase;margin-bottom:8px}.book-title{font-weight:700;font-size:15px;line-height:1.25;margin-bottom:20px}.toc-title{font-family:var(--mono);font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin:20px 0 10px}.toc a{display:flex;gap:8px;align-items:flex-start;color:var(--text2);font-size:12px;padding:7px 8px;border-radius:6px;text-decoration:none}.toc a:hover{background:var(--bg3);color:var(--accent)}.toc a span{font-family:var(--mono);color:var(--text3);min-width:42px}main{max-width:1050px;padding:36px 42px 90px}.nav-top,.nav-bottom{display:flex;justify-content:space-between;gap:14px;margin:0 0 28px;flex-wrap:wrap}.nav-top a,.nav-bottom a{font-family:var(--mono);font-size:12px;border:1px solid var(--border2);border-radius:8px;padding:8px 12px;background:var(--bg3)}.chapter-kicker{font-family:var(--mono);font-size:12px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-top:10px}h1{font-size:clamp(32px,5vw,54px);line-height:1.05;letter-spacing:-1.4px;margin:14px 0 12px}.subtitle{color:var(--text2);font-size:18px;max-width:850px}.edition{display:inline-flex;margin:22px 0 18px;font-family:var(--mono);font-size:12px;color:var(--green);border:1px solid rgba(63,185,80,.35);background:rgba(63,185,80,.08);border-radius:999px;padding:6px 12px}h2{font-size:28px;margin:54px 0 16px;padding-bottom:12px;border-bottom:1px solid var(--border);letter-spacing:-.3px}h3{font-size:20px;margin:32px 0 10px;color:var(--gold2)}p{margin:12px 0;color:var(--text)}ul,ol{padding-left:22px;color:var(--text)}li{margin:6px 0}blockquote{margin:22px 0;padding:16px 18px;border-left:3px solid var(--accent);background:rgba(88,166,255,.06);border-radius:0 10px 10px 0;color:var(--text2)}blockquote strong:first-child{font-family:var(--mono);color:var(--accent);font-size:13px}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto;margin:18px 0 30px;border:1px solid var(--border);border-radius:10px;background:var(--bg3)}thead,tbody,tr{width:100%}th,td{padding:11px 13px;border-bottom:1px solid var(--border);vertical-align:top;min-width:120px}th{font-family:var(--mono);font-size:11px;color:var(--accent);text-transform:uppercase;background:var(--bg4);letter-spacing:.6px}td{font-size:14px;color:var(--text2)}tr:last-child td{border-bottom:none}pre{background:#05080c;border:1px solid var(--border2);border-radius:10px;padding:16px;overflow:auto;color:#d8e6f3;font-family:var(--mono);font-size:13px;line-height:1.55}code{font-family:var(--mono);background:rgba(88,166,255,.08);padding:.1em .35em;border-radius:4px}.conf{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.4px;border:1px solid var(--border2);border-radius:999px;padding:2px 7px;white-space:nowrap;color:var(--text2);background:var(--bg4)}.shipped{color:var(--green);border-color:rgba(63,185,80,.45);background:rgba(63,185,80,.08)}.announced{color:var(--purple);border-color:rgba(188,140,255,.45);background:rgba(188,140,255,.08)}.derived-from-shipped{color:var(--accent);border-color:rgba(88,166,255,.45);background:rgba(88,166,255,.08)}.estimated{color:var(--yellow);border-color:rgba(247,201,72,.45);background:rgba(247,201,72,.08)}.representative{color:var(--orange);border-color:rgba(255,107,53,.45);background:rgba(255,107,53,.08)}.env-specific{color:var(--red);border-color:rgba(248,81,73,.45);background:rgba(248,81,73,.08)}.callout{border:1px solid var(--border2);background:var(--bg3);border-radius:12px;padding:16px 18px;margin:20px 0}.callout strong{color:var(--gold2);font-size:14px;font-family:var(--mono)}.footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--border);color:var(--text3);font-family:var(--mono);font-size:12px}@media(max-width:980px){.page{grid-template-columns:1fr}aside{position:relative;height:auto;border-right:none;border-bottom:1px solid var(--border)}main{padding:26px 20px}.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:4px}table{min-width:680px}}@media print{body{background:#fff;color:#000}body::before,aside,.nav-top,.nav-bottom{display:none!important}.page{display:block}main{max-width:none;padding:0}h1,h2,h3,p,li,td,th{color:#000}blockquote,table,pre,.callout{break-inside:avoid;border-color:#999;background:#fff}a{color:#000;text-decoration:none}.conf{border-color:#777;color:#000;background:#fff}}
+:root {
+  --bg: #080c10;
+  --bg2: #0d1117;
+  --bg3: #161b22;
+  --bg4: #1c2128;
+  --border: #21262d;
+  --border2: #30363d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #6e7681;
+  --accent: #58a6ff;
+  --gold2: #f0c040;
+  --green: #3fb950;
+  --orange: #ff8b3d;
+  --purple: #bc8cff;
+  --teal: #39d0d8;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.65;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(88,166,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(88,166,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(13,17,23,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 22px;
+}
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.brand a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.brand span {
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.topnav {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.topnav a {
+  color: var(--accent);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.topnav a:hover {
+  border-color: var(--accent);
+  background: rgba(88,166,255,0.08);
+}
+.layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 310px minmax(0, 960px);
+  gap: 36px;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 36px 24px 80px;
+}
+.sidebar {
+  position: sticky;
+  top: 76px;
+  align-self: start;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+}
+.sidebar h2 {
+  margin: 0 0 12px;
+  font-family: var(--mono);
+  color: var(--gold2);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+.sidebar a {
+  display: block;
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 13px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.35);
+}
+.sidebar a:hover { color: var(--accent); }
+.sidebar .toc-l3 {
+  padding-left: 14px;
+  font-size: 12px;
+  color: var(--text3);
+}
+.content {
+  background: rgba(13,17,23,0.72);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 38px 44px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+}
+.content h1 {
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -1.4px;
+  margin: 0 0 18px;
+}
+.content h2 {
+  margin-top: 46px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 25px;
+  letter-spacing: -0.5px;
+}
+.content h3 {
+  margin-top: 30px;
+  color: var(--accent);
+  font-size: 18px;
+}
+.content h4 {
+  margin-top: 24px;
+  color: var(--gold2);
+}
+.anchor {
+  margin-left: 8px;
+  color: var(--text3);
+  opacity: 0;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 0.8em;
+}
+h1:hover .anchor, h2:hover .anchor, h3:hover .anchor, h4:hover .anchor {
+  opacity: 1;
+}
+p { color: var(--text); font-size: 16px; }
+blockquote {
+  margin: 24px 0;
+  padding: 18px 22px;
+  border-left: 4px solid var(--gold2);
+  background: rgba(212,160,23,0.08);
+  color: var(--text);
+  border-radius: 0 10px 10px 0;
+  font-size: 17px;
+}
+hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
+ul, ol { padding-left: 24px; }
+li { margin: 6px 0; }
+code {
+  font-family: var(--mono);
+  background: var(--bg4);
+  color: var(--gold2);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-size: 0.92em;
+}
+.code-block {
+  background: #05080c;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 18px 0;
+}
+.code-block code {
+  background: transparent;
+  border: 0;
+  color: #d8dee9;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.table-wrap {
+  overflow-x: auto;
+  margin: 22px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+  background: var(--bg3);
+}
+th {
+  background: var(--bg4);
+  color: var(--accent);
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+th, td {
+  padding: 11px 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+td { color: var(--text2); font-size: 14px; }
+tr:last-child td { border-bottom: 0; }
+.confidence-label {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+.label-shipped { color: var(--green); background: rgba(63,185,80,0.10); border-color: rgba(63,185,80,0.35); }
+.label-announced { color: var(--purple); background: rgba(188,140,255,0.10); border-color: rgba(188,140,255,0.35); }
+.label-derived { color: var(--teal); background: rgba(57,208,216,0.10); border-color: rgba(57,208,216,0.35); }
+.label-estimated { color: var(--gold2); background: rgba(240,192,64,0.10); border-color: rgba(240,192,64,0.35); }
+.label-representative { color: var(--accent); background: rgba(88,166,255,0.10); border-color: rgba(88,166,255,0.35); }
+.label-env { color: var(--orange); background: rgba(255,139,61,0.10); border-color: rgba(255,139,61,0.35); }
+.confidence-box {
+  border-left: 4px solid var(--green);
+  background: rgba(63,185,80,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.takeaway {
+  border-left: 4px solid var(--gold2);
+  background: rgba(212,160,23,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.figure-note { color: var(--text2); font-size: 14px; }
+.figure-placeholder {
+  margin: 28px 0;
+  background: linear-gradient(135deg, rgba(88,166,255,0.08), rgba(57,208,216,0.06));
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 20px;
+}
+.figure-kicker {
+  color: var(--gold2);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.figure-title { font-size: 20px; font-weight: 700; margin-bottom: 14px; }
+.figure-body {
+  display: grid;
+  grid-template-columns: 72px minmax(0,1fr);
+  gap: 16px;
+  align-items: center;
+  background: rgba(13,17,23,0.65);
+  border: 1px dashed var(--border2);
+  border-radius: 12px;
+  padding: 18px;
+}
+.figure-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: var(--teal);
+  border: 1px solid var(--teal);
+  font-size: 32px;
+  background: rgba(57,208,216,0.08);
+}
+.figure-path, .figure-status {
+  color: var(--text2);
+  margin: 6px 0;
+  font-size: 13px;
+}
+.figure-source {
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 12px;
+  text-decoration: none;
+}
+.figure-source:hover { text-decoration: underline; }
+.muted { color: var(--text3); }
+figcaption { color: var(--text2); font-size: 13px; margin-top: 12px; }
+.nav-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 44px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+.nav-row a {
+  flex: 1;
+  text-decoration: none;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--text);
+}
+.nav-row a:hover { border-color: var(--accent); }
+.nav-row small {
+  display: block;
+  color: var(--text3);
+  font-family: var(--mono);
+  margin-bottom: 4px;
+}
+.nav-row strong { color: var(--accent); }
+@media (max-width: 980px) {
+  .layout { grid-template-columns: 1fr; padding: 22px 16px 60px; }
+  .sidebar { position: static; max-height: none; }
+  .content { padding: 26px 20px; }
+  .topbar { align-items: flex-start; flex-direction: column; }
+}
+@media (max-width: 640px) {
+  .figure-body { grid-template-columns: 1fr; }
+  .nav-row { flex-direction: column; }
+  p { font-size: 15px; }
+}
+@media print {
+  body { background: #fff; color: #111; }
+  body::before, .topbar, .sidebar, .anchor { display: none !important; }
+  .layout { display: block; max-width: none; padding: 0; }
+  .content { box-shadow: none; border: 0; padding: 0; }
+  .content h1, .content h2, .content h3, .content h4, p, li, td, th, blockquote { color: #111 !important; }
+  .code-block, code, table, .figure-placeholder, .confidence-label { border-color: #999; }
+  .confidence-label { color: #111 !important; background: #eee !important; }
+  a { color: #111; text-decoration: none; }
+  .figure-placeholder, table, pre, blockquote { break-inside: avoid; }
+}
 </style>
 </head>
 <body>
-<div class="page">
-<aside>
-  <div class="brand">Silicon to Scale</div>
-  <div class="book-title">AI/ML Infrastructure<br>from Silicon to Scale</div>
-  <div class="toc-title">Chapter 7</div>
-  <nav class="toc">
-    <a href="#chapter-overview"><span>7.0</span>Overview</a>
-    <a href="#70-chapter-manifesto--kernel-optimization-is-a-systems-decision"><span>7.0</span>Manifesto</a>
-    <a href="#71-the-gpu-kernel-execution-model"><span>7.1</span>Execution Model</a>
-    <a href="#72-memory-coalescing--the-first-rule-of-gpu-performance"><span>7.2</span>Coalescing</a>
-    <a href="#73-shared-memory-registers-and-bank-conflicts"><span>7.3</span>Memory Spaces</a>
-    <a href="#74-warp-divergence-occupancy-and-latency-hiding"><span>7.4</span>Occupancy</a>
-    <a href="#75-tensor-cores-gemm-and-library-first-optimization"><span>7.5</span>Tensor Cores</a>
-    <a href="#76-flashattention--io-aware-kernel-design"><span>7.6</span>FlashAttention</a>
-    <a href="#77-flashattention-2-flashattention-3-and-hardware-specific-kernels"><span>7.7</span>FA-2 / FA-3</a>
-    <a href="#78-fused-kernels-and-memory-traffic-reduction"><span>7.8</span>Fusion</a>
-    <a href="#79-triton-as-a-productivity-layer-for-custom-kernels"><span>7.9</span>Triton</a>
-    <a href="#710-kernel-profiling-workflow-nsys--ncu--fix--verify"><span>7.10</span>Profiling</a>
-    <a href="#711-should-you-write-a-custom-kernel"><span>7.11</span>Custom Kernel?</a>
-    <a href="#712-common-kernel-optimization-anti-patterns"><span>7.12</span>Anti-Patterns</a>
-    <a href="#713-principal-level-interview-section"><span>7.13</span>Interview</a>
-    <a href="#714-key-takeaways"><span>7.14</span>Takeaways</a>
-    <a href="#review-questions"><span>review</span>Questions</a>
+<header class="topbar">
+  <div class="brand">
+    <a href="../index.html">AI/ML Infrastructure from Silicon to Scale</a>
+    <span>Chapter 7 · GPU Kernels and CUDA Optimization</span>
+  </div>
+  <nav class="topnav" aria-label="Top navigation">
+    <a href="../index.html">Home</a>
+    <a href="ch06_training_inference_workloads.html">Previous: Ch06</a>
+    <a href="ch08_quantization.html">Next: Ch08</a>
+    <a href="../pdfs/ch07_gpu_kernels_cuda_optimization.pdf">PDF</a>
+    <a href="../diagrams/diagrams_batch3.html#d27">CUDA Hierarchy</a>
+    <a href="../diagrams/diagrams_batch1.html#d5">FlashAttention Diagram</a>
   </nav>
-</aside>
-<main>
-  <nav class="nav-top"><a href="ch06_training_inference_workloads.html">← Previous: Ch06</a><a href="../index.html">Home</a><a href="ch08_quantization.html">Next: Ch08 →</a></nav>
-  <div class="chapter-kicker">Part III · Optimization Techniques</div>
-  <h1>GPU Kernels and CUDA Optimization</h1>
-  <p class="subtitle">A principal-level guide to kernel execution, memory movement, Tensor Cores, FlashAttention, fusion, Triton, Nsight Compute, and deciding when low-level optimization is worth it.</p>
-  <div class="edition">Current as of 2026 edition</div>
-<h2 id="confidence-label-key">Confidence Label Key</h2>
-<table>
-<thead>
-<tr class="header">
-<th>Label</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><span class="conf shipped">[SHIPPED]</span></td>
-<td>Verified behavior from shipping hardware/software or official documentation.</td>
-</tr>
-<tr class="even">
-<td><span class="conf announced">[ANNOUNCED]</span></td>
-<td>Vendor-announced or published but not yet broadly production-proven.</td>
-</tr>
-<tr class="odd">
-<td><span class="conf derived-from-shipped">[DERIVED FROM SHIPPED]</span></td>
-<td>Formula or conclusion derived from shipped specs or stable performance models.</td>
-</tr>
-<tr class="even">
-<td><span class="conf estimated">[ESTIMATED]</span></td>
-<td>Engineering estimate; methodology should be shown.</td>
-</tr>
-<tr class="odd">
-<td><span class="conf representative">[REPRESENTATIVE]</span></td>
-<td>Illustrative example, not a universal benchmark result.</td>
-</tr>
-<tr class="even">
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
-<td>Depends strongly on model, shape, framework, kernel version, runtime configuration, or cluster environment.</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="chapter-overview">Chapter Overview</h2>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" aria-label="Chapter table of contents">
+    <h2>Chapter Contents</h2>
+    <a class="toc-l2" href="#chapter-overview">Chapter Overview</a>
+<a class="toc-l2" href="#70-kernel-optimization-in-one-page">7.0 Kernel Optimization in One Page</a>
+<a class="toc-l2" href="#table-71-kernel-bottleneck-taxonomy">Table 7.1 — Kernel Bottleneck Taxonomy</a>
+<a class="toc-l2" href="#71-the-gpu-kernel-execution-model">7.1 The GPU Kernel Execution Model</a>
+<a class="toc-l2" href="#figure-placeholder-fig-71">Figure Placeholder — Fig 7.1</a>
+<a class="toc-l3" href="#blocks-warps-and-sm-residency">Blocks, warps, and SM residency</a>
+<a class="toc-l3" href="#cuda-vs-portable-mental-model">CUDA vs portable mental model</a>
+<a class="toc-l2" href="#72-memory-coalescing-the-first-rule-of-gpu-performance">7.2 Memory Coalescing — The First Rule of GPU Performance</a>
+<a class="toc-l2" href="#figure-placeholder-fig-72">Figure Placeholder — Fig 7.2</a>
+<a class="toc-l3" href="#whiteboard-rule">Whiteboard rule</a>
+<a class="toc-l3" href="#coalescing-in-transformer-workloads">Coalescing in transformer workloads</a>
+<a class="toc-l2" href="#73-shared-memory-registers-and-bank-conflicts">7.3 Shared Memory, Registers, and Bank Conflicts</a>
+<a class="toc-l2" href="#table-72-cuda-memory-spaces-and-what-they-are-good-for">Table 7.2 — CUDA Memory Spaces and What They Are Good For</a>
+<a class="toc-l3" href="#registers">Registers</a>
+<a class="toc-l3" href="#shared-memory">Shared memory</a>
+<a class="toc-l2" href="#figure-placeholder-fig-75">Figure Placeholder — Fig 7.5</a>
+<a class="toc-l3" href="#bank-conflicts">Bank conflicts</a>
+<a class="toc-l2" href="#74-warp-divergence-occupancy-and-latency-hiding">7.4 Warp Divergence, Occupancy, and Latency Hiding</a>
+<a class="toc-l3" href="#occupancy-is-not-utilization">Occupancy is not utilization</a>
+<a class="toc-l2" href="#figure-placeholder-fig-76">Figure Placeholder — Fig 7.6</a>
+<a class="toc-l2" href="#table-76-occupancy-limiters-and-mitigation-options">Table 7.6 — Occupancy Limiters and Mitigation Options</a>
+<a class="toc-l3" href="#interview-safe-wording">Interview-safe wording</a>
+<a class="toc-l2" href="#75-tensor-cores-gemm-and-library-first-optimization">7.5 Tensor Cores, GEMM, and Library-First Optimization</a>
+<a class="toc-l3" href="#tensor-cores-conceptually">Tensor Cores conceptually</a>
+<a class="toc-l2" href="#figure-placeholder-fig-73">Figure Placeholder — Fig 7.3</a>
+<a class="toc-l2" href="#table-75-gemm-tuning-levers-and-when-they-matter">Table 7.5 — GEMM Tuning Levers and When They Matter</a>
+<a class="toc-l3" href="#library-first-rule">Library-first rule</a>
+<a class="toc-l2" href="#76-flashattention-io-aware-kernel-design">7.6 FlashAttention — IO-Aware Kernel Design</a>
+<a class="toc-l2" href="#figure-placeholder-fig-74">Figure Placeholder — Fig 7.4</a>
+<a class="toc-l3" href="#the-memory-traffic-argument">The memory-traffic argument</a>
+<a class="toc-l3" href="#why-this-belongs-in-a-kernel-chapter">Why this belongs in a kernel chapter</a>
+<a class="toc-l2" href="#77-flashattention-2-flashattention-3-and-hardware-specific-kernels">7.7 FlashAttention-2, FlashAttention-3, and Hardware-Specific Kernels</a>
+<a class="toc-l2" href="#table-74-flashattention-version-comparison">Table 7.4 — FlashAttention Version Comparison</a>
+<a class="toc-l2" href="#78-fused-kernels-and-memory-traffic-reduction">7.8 Fused Kernels and Memory-Traffic Reduction</a>
+<a class="toc-l3" href="#common-fused-patterns-in-ai-workloads">Common fused patterns in AI workloads</a>
+<a class="toc-l2" href="#79-triton-as-a-productivity-layer-for-custom-kernels">7.9 Triton as a Productivity Layer for Custom Kernels</a>
+<a class="toc-l3" href="#when-triton-is-a-good-first-custom-kernel-move">When Triton is a good first custom-kernel move</a>
+<a class="toc-l2" href="#710-kernel-profiling-workflow-nsys-ncu-fix-verify">7.10 Kernel Profiling Workflow: nsys → ncu → Fix → Verify</a>
+<a class="toc-l2" href="#figure-placeholder-fig-77">Figure Placeholder — Fig 7.7</a>
+<a class="toc-l2" href="#table-73-nsight-compute-metrics-what-to-look-at-first">Table 7.3 — Nsight Compute Metrics: What to Look At First</a>
+<a class="toc-l3" href="#profiling-checklist">Profiling checklist</a>
+<a class="toc-l2" href="#711-should-you-write-a-custom-kernel">7.11 Should You Write a Custom Kernel?</a>
+<a class="toc-l2" href="#figure-placeholder-fig-78">Figure Placeholder — Fig 7.8</a>
+<a class="toc-l2" href="#table-77-should-this-kernel-be-optimized">Table 7.7 — Should This Kernel Be Optimized?</a>
+<a class="toc-l3" href="#amdahl-framing">Amdahl framing</a>
+<a class="toc-l2" href="#712-common-kernel-optimization-anti-patterns">7.12 Common Kernel Optimization Anti-Patterns</a>
+<a class="toc-l3" href="#anti-pattern-1-starting-with-nsight-compute">Anti-pattern 1 — Starting with Nsight Compute</a>
+<a class="toc-l3" href="#anti-pattern-2-maximizing-occupancy-blindly">Anti-pattern 2 — Maximizing occupancy blindly</a>
+<a class="toc-l3" href="#anti-pattern-3-writing-custom-gemm-too-early">Anti-pattern 3 — Writing custom GEMM too early</a>
+<a class="toc-l3" href="#anti-pattern-4-treating-microbenchmark-gains-as-production-wins">Anti-pattern 4 — Treating microbenchmark gains as production wins</a>
+<a class="toc-l3" href="#anti-pattern-5-ignoring-numerical-and-maintenance-risk">Anti-pattern 5 — Ignoring numerical and maintenance risk</a>
+<a class="toc-l2" href="#713-principal-level-interview-section">7.13 Principal-Level Interview Section</a>
+<a class="toc-l3" href="#interview-prompt-1-slow-inference-endpoint">Interview prompt 1 — Slow inference endpoint</a>
+<a class="toc-l3" href="#interview-prompt-2-slow-training-step">Interview prompt 2 — Slow training step</a>
+<a class="toc-l3" href="#interview-prompt-3-should-we-write-a-custom-kernel">Interview prompt 3 — Should we write a custom kernel?</a>
+<a class="toc-l3" href="#principal-rubric">Principal rubric</a>
+<a class="toc-l2" href="#714-key-takeaways">7.14 Key Takeaways</a>
+<a class="toc-l2" href="#715-review-questions">7.15 Review Questions</a>
+<a class="toc-l2" href="#717-bridge-to-chapter-8">7.17 Bridge to Chapter 8</a>
+  </aside>
+
+  <main class="content">
+    <h1 id="chapter-7-gpu-kernels-and-cuda-optimization">Chapter 7 — GPU Kernels and CUDA Optimization<a aria-label="Link to this section" class="anchor" href="#chapter-7-gpu-kernels-and-cuda-optimization">#</a></h1>
+<blockquote>
+<p>“A kernel is where model math becomes memory transactions, warp scheduling, Tensor Core issue, and measured throughput.”</p>
+</blockquote>
+<hr/>
+<h2 id="chapter-overview">Chapter Overview<a aria-label="Link to this section" class="anchor" href="#chapter-overview">#</a></h2>
 <p>Chapter 7 moves from workload-level reasoning into the smallest unit of GPU execution that a performance engineer can directly reason about: the <strong>kernel</strong>. A model layer, PyTorch operation, or inference runtime step eventually becomes one or more GPU kernels. Those kernels consume registers, shared memory, cache bandwidth, HBM bandwidth, scheduler slots, Tensor Core issue bandwidth, and launch overhead.</p>
 <p>This chapter is not a full CUDA programming textbook. Its goal is to build the principal-level mental model required to answer these questions:</p>
-<ol type="1">
+<ol>
 <li>Is this kernel worth optimizing?</li>
 <li>Is the bottleneck memory movement, math throughput, launch overhead, dependency stalls, occupancy, or communication overlap?</li>
 <li>Should the fix be a library call, layout change, fused kernel, compiler path, Triton prototype, CUDA kernel, or no action?</li>
 <li>How do you prove the optimization improved the <strong>end-to-end workload</strong>, not only a microbenchmark?</li>
 </ol>
 <p>A principal AI/ML performance architect does not optimize kernels because kernels are interesting. They optimize kernels only when the kernel is on the critical path of a meaningful metric: training step time, tokens/sec/GPU, TTFT, TPOT, P95/P99 latency, cost per token, or fleet utilization.</p>
-<hr />
-<h2 id="70-chapter-manifesto--kernel-optimization-is-a-systems-decision">7.0 Chapter Manifesto — Kernel Optimization Is a Systems Decision</h2>
-<p>GPU kernel optimization sits at a dangerous point in the stack. It is technically deep enough to attract engineering attention, but local enough to mislead teams into optimizing the wrong thing. A 2× speedup to a kernel that consumes 1% of wall time improves total runtime by at most about 0.5%. That is not a strategy; it is a distraction. <span class="conf derived-from-shipped">[DERIVED FROM SHIPPED]</span></p>
+<blockquote>
+<p><strong>Current as of 2026 edition:</strong> CUDA, ROCm, Triton, PyTorch compiler paths, profiler metrics, and GPU microarchitectures evolve quickly. Use confidence labels and verify exact behavior against the final hardware, driver, framework, and model shape used in production.</p>
+</blockquote>
+<hr/>
+<h2 id="70-kernel-optimization-in-one-page">7.0 Kernel Optimization in One Page<a aria-label="Link to this section" class="anchor" href="#70-kernel-optimization-in-one-page">#</a></h2>
+<p class="confidence-box">GPU kernel optimization sits at a dangerous point in the stack. It is technically deep enough to attract engineering attention, but local enough to mislead teams into optimizing the wrong thing. A 2× speedup to a kernel that consumes 1% of wall time improves total runtime by at most about 0.5%. That is not a strategy; it is a distraction. <span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></p>
 <p>The right kernel question is not:</p>
 <blockquote>
 <p>“Can I make this kernel faster?”</p>
@@ -103,16 +486,16 @@
 <p>“Will improving this kernel move the workload-level bottleneck enough to justify the engineering cost and maintenance risk?”</p>
 </blockquote>
 <p>That question requires three layers of evidence:</p>
-<ol type="1">
+<ol>
 <li><strong>Timeline evidence:</strong> The kernel is on the critical path, not hidden behind another bottleneck.</li>
 <li><strong>Counter evidence:</strong> The kernel has a specific bottleneck classification.</li>
 <li><strong>System evidence:</strong> Fixing it improves an end-to-end workload metric under realistic conditions.</li>
 </ol>
 <p>This chapter teaches that evidence chain.</p>
-<h3 id="table-71--kernel-bottleneck-taxonomy">Table 7.1 — Kernel Bottleneck Taxonomy</h3>
-<table>
+<h2 id="table-71-kernel-bottleneck-taxonomy">Table 7.1 — Kernel Bottleneck Taxonomy<a aria-label="Link to this section" class="anchor" href="#table-71-kernel-bottleneck-taxonomy">#</a></h2>
+<div class="table-wrap"><table>
 <thead>
-<tr class="header">
+<tr>
 <th>Bottleneck</th>
 <th>Typical symptom</th>
 <th>Profiler signal</th>
@@ -122,60 +505,60 @@
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Memory bandwidth</td>
 <td>High bytes moved, low math utilization</td>
 <td>High HBM traffic relative to useful FLOPs</td>
 <td>Poor reuse, unfused ops, strided loads</td>
 <td>Coalesce, fuse, tile, reduce bytes</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Compute / Tensor Core</td>
 <td>Math pipes are busy but wall time is still large</td>
 <td>High Tensor Core or FP pipe utilization</td>
 <td>True math-heavy GEMM/attention work</td>
 <td>Use vendor libraries, verify precision/layout/alignment</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Launch overhead</td>
 <td>Many small kernels separated by host/runtime gaps</td>
 <td>Nsight Systems shows CPU-side gaps</td>
 <td>Many tiny ops, Python/runtime dispatch</td>
 <td>Fuse, compiler capture, CUDA Graphs where applicable</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Latency / dependency</td>
 <td>Low bandwidth and low compute despite stalls</td>
 <td>Warp stall metrics dominate</td>
 <td>Dependent loads, insufficient independent work</td>
 <td>Improve tiling, prefetch, increase independent work</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Occupancy-limited</td>
 <td>Too few resident warps or blocks</td>
 <td>Occupancy constrained by registers or shared memory</td>
 <td>Register pressure, large shared-memory allocation</td>
 <td>Tune block size, reduce register pressure, change tile shape</td>
-<td><span class="conf shipped">[SHIPPED]</span></td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Communication overlap</td>
 <td>GPU compute finishes, then collectives run serially</td>
 <td>Timeline shows NCCL/RCCL after compute</td>
 <td>Poor stream scheduling or bucket timing</td>
 <td>Overlap communication, tune buckets, adjust topology placement</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p><strong>Key idea:</strong> classify before changing code. Random tuning creates fragile wins; bottleneck-driven tuning creates reproducible wins.</p>
-<hr />
-<h2 id="71-the-gpu-kernel-execution-model">7.1 The GPU Kernel Execution Model</h2>
-<p>A GPU kernel is a program launched across many parallel threads. In CUDA terminology, a kernel launch creates a <strong>grid</strong>. The grid contains <strong>thread blocks</strong>, also called CTAs. Each block contains threads. Threads are scheduled in groups called <strong>warps</strong> on NVIDIA GPUs, with 32 threads per warp. <span class="conf shipped">[SHIPPED]</span></p>
+<hr/>
+<h2 id="71-the-gpu-kernel-execution-model">7.1 The GPU Kernel Execution Model<a aria-label="Link to this section" class="anchor" href="#71-the-gpu-kernel-execution-model">#</a></h2>
+<p class="confidence-box">A GPU kernel is a program launched across many parallel threads. In CUDA terminology, a kernel launch creates a <strong>grid</strong>. The grid contains <strong>thread blocks</strong>, also called CTAs. Each block contains threads. Threads are scheduled in groups called <strong>warps</strong> on NVIDIA GPUs, with 32 threads per warp. <span class="confidence-label label-shipped">[SHIPPED]</span></p>
 <p>The hierarchy matters because different levels have different synchronization and memory rules:</p>
 <ul>
 <li>A <strong>thread</strong> owns its registers.</li>
@@ -184,42 +567,71 @@
 <li>A <strong>grid</strong> spans the full kernel launch but does not provide cheap global synchronization inside a normal kernel.</li>
 <li>An <strong>SM</strong> schedules resident blocks and warps subject to resource limits.</li>
 </ul>
+<h2 id="figure-placeholder-fig-71">Figure Placeholder — Fig 7.1<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-71">#</a></h2>
+<figure class="figure-placeholder" id="fig-7-1-gpu-kernel-execution-hierarchy">
+<div class="figure-kicker">Fig 7.1</div>
+<div class="figure-title">GPU Kernel Execution Hierarchy</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A CUDA hierarchy diagram showing kernel launch, grid, blocks/CTAs, SMs, warps, and threads.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch07_fig_7_1_gpu_kernel_execution_hierarchy.svg</code></p>
+<p class="figure-status">Adapt from existing CUDA hierarchy diagram</p>
+<a class="figure-source" href="../diagrams/diagrams_batch3.html#d27">View source diagram</a>
+</div>
+</div>
+<figcaption><strong>Fig 7.1 — GPU Kernel Execution Hierarchy.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong><br/>
+Before optimizing a GPU kernel, identify what the hardware is actually scheduling: grid, block, warp, and thread work mapped onto SMs.</p>
+<p class="figure-note"><strong>Figure explanation:</strong><br/>
+The figure should show a kernel launch feeding a grid of blocks, blocks assigned to SMs, each block decomposed into warps, and each warp containing 32 CUDA threads. Include a note that warp size is NVIDIA CUDA-specific.</p>
 <blockquote>
-<p><strong>Figure 7.1 — GPU Kernel Execution Hierarchy</strong><br />
-<em>Placeholder: Grid → CTA/block → warp → thread hierarchy, with blocks assigned to SMs and warps shown as 32-thread scheduling groups.</em><br />
-<strong>Caption:</strong> A CUDA kernel launches a grid of blocks. Each block runs on an SM as one or more warps. The hierarchy determines scheduling, memory access, synchronization, and occupancy.<br />
-<strong>Placement:</strong> §7.1 The GPU Kernel Execution Model.<br />
-<strong>Key takeaway:</strong> Kernel performance starts with execution mapping: enough independent work must exist to fill SMs and hide latency.<br />
-<strong>Production note:</strong> Create or adapt from <code>diagrams_batch3.html#d27</code>; keep NVIDIA-specific warp wording separate from AMD wavefront terminology.</p>
+<p><strong>Key Takeaway:</strong> Kernel optimization starts with the execution hierarchy, not with a random counter.</p>
 </blockquote>
-<h3 id="blocks-warps-and-sm-residency">Blocks, warps, and SM residency</h3>
-<p>When a kernel launches, blocks are distributed to SMs. An SM can host multiple resident blocks if it has enough registers, shared memory, scheduler resources, and block slots. The GPU then schedules warps from those resident blocks. If one warp stalls on memory, another warp can issue work. This is the central latency-hiding model of GPU execution. <span class="conf shipped">[SHIPPED]</span></p>
+<h3 id="blocks-warps-and-sm-residency">Blocks, warps, and SM residency<a aria-label="Link to this section" class="anchor" href="#blocks-warps-and-sm-residency">#</a></h3>
+<p class="confidence-box">When a kernel launches, blocks are distributed to SMs. An SM can host multiple resident blocks if it has enough registers, shared memory, scheduler resources, and block slots. The GPU then schedules warps from those resident blocks. If one warp stalls on memory, another warp can issue work. This is the central latency-hiding model of GPU execution. <span class="confidence-label label-shipped">[SHIPPED]</span></p>
 <p>The performance implication is important: GPUs tolerate long memory latency not by making each thread fast, but by running enough independent warps that useful work is available while other warps wait.</p>
-<h3 id="cuda-vs-portable-mental-model">CUDA vs portable mental model</h3>
+<h3 id="cuda-vs-portable-mental-model">CUDA vs portable mental model<a aria-label="Link to this section" class="anchor" href="#cuda-vs-portable-mental-model">#</a></h3>
 <p>This chapter uses CUDA terms because most public documentation, profiling tools, and interview questions use CUDA vocabulary. The mental model transfers to other accelerators, but exact details differ:</p>
 <ul>
-<li>NVIDIA uses warps of 32 threads. <span class="conf shipped">[SHIPPED]</span></li>
-<li>AMD uses wavefront terminology; wave size and compiler/runtime behavior may differ by architecture and mode. <span class="conf env-specific">[ENV-SPECIFIC]</span></li>
-<li>Vendor profilers use different metric names and counter availability. <span class="conf env-specific">[ENV-SPECIFIC]</span></li>
+<li>NVIDIA uses warps of 32 threads. <span class="confidence-label label-shipped">[SHIPPED]</span></li>
+<li>AMD uses wavefront terminology; wave size and compiler/runtime behavior may differ by architecture and mode. <span class="confidence-label label-env">[ENV-SPECIFIC]</span></li>
+<li>Vendor profilers use different metric names and counter availability. <span class="confidence-label label-env">[ENV-SPECIFIC]</span></li>
 </ul>
 <p>The portable idea is not “warp size equals 32 everywhere.” The portable idea is: <strong>hardware schedules groups of lanes, and your memory/control-flow pattern determines whether those lanes do useful work together.</strong></p>
-<hr />
-<h2 id="72-memory-coalescing--the-first-rule-of-gpu-performance">7.2 Memory Coalescing — The First Rule of GPU Performance</h2>
+<hr/>
+<h2 id="72-memory-coalescing-the-first-rule-of-gpu-performance">7.2 Memory Coalescing — The First Rule of GPU Performance<a aria-label="Link to this section" class="anchor" href="#72-memory-coalescing-the-first-rule-of-gpu-performance">#</a></h2>
 <p>Many slow kernels do not perform too many FLOPs. They move data in a pattern that prevents the memory system from serving it efficiently.</p>
-<p>A coalesced global-memory access occurs when neighboring lanes in a warp access neighboring addresses. This allows the memory system to serve the warp with fewer, wider memory transactions. A scattered or strided pattern can require more transactions for the same useful data, wasting bandwidth. <span class="conf shipped">[SHIPPED]</span></p>
+<p class="confidence-box">A coalesced global-memory access occurs when neighboring lanes in a warp access neighboring addresses. This allows the memory system to serve the warp with fewer, wider memory transactions. A scattered or strided pattern can require more transactions for the same useful data, wasting bandwidth. <span class="confidence-label label-shipped">[SHIPPED]</span></p>
+<h2 id="figure-placeholder-fig-72">Figure Placeholder — Fig 7.2<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-72">#</a></h2>
+<figure class="figure-placeholder" id="fig-7-2-memory-coalescing-consecutive-threads-consecutive-addresses">
+<div class="figure-kicker">Fig 7.2</div>
+<div class="figure-title">Memory Coalescing: Consecutive Threads, Consecutive Addresses</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A side-by-side comparison of coalesced, strided, and scattered memory access patterns.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch07_fig_7_2_memory_coalescing.svg</code></p>
+<p class="figure-status">Figure to be created</p>
+<span class="figure-source muted">Source diagram pending</span>
+</div>
+</div>
+<figcaption><strong>Fig 7.2 — Memory Coalescing: Consecutive Threads, Consecutive Addresses.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong><br/>
+Memory coalescing is the first global-memory rule because most AI kernels move large tensors through HBM.</p>
+<p class="figure-note"><strong>Figure explanation:</strong><br/>
+Show a good pattern where lanes 0–31 access contiguous elements and a bad pattern where lanes access separated or scattered addresses, requiring more memory transactions.</p>
 <blockquote>
-<p><strong>Figure 7.2 — Memory Coalescing: Consecutive Threads, Consecutive Addresses</strong><br />
-<em>Placeholder: Good case shows lanes 0–31 reading contiguous addresses. Bad case shows lanes reading strided/scattered addresses across cache lines.</em><br />
-<strong>Caption:</strong> Coalesced memory access lets neighboring threads in a warp load neighboring addresses, minimizing wasted memory transactions. Strided or scattered access wastes bandwidth even when arithmetic work is unchanged.<br />
-<strong>Placement:</strong> §7.2 Memory Coalescing.<br />
-<strong>Key takeaway:</strong> Memory bandwidth is not just a spec-sheet number; access pattern determines how much bandwidth a kernel can actually use.<br />
-<strong>Production note:</strong> Use architecture-agnostic transaction wording; avoid claiming one fixed transaction size for all GPUs.</p>
+<p><strong>Key Takeaway:</strong> The GPU wants predictable, contiguous memory access whenever possible.</p>
 </blockquote>
-<h3 id="whiteboard-rule">Whiteboard rule</h3>
+<h3 id="whiteboard-rule">Whiteboard rule<a aria-label="Link to this section" class="anchor" href="#whiteboard-rule">#</a></h3>
 <p>For the first pass, ask:</p>
-<pre class="text"><code>lane i should usually access address base + i</code></pre>
-<p>That rule is not universal, but it catches many performance bugs. If lane 0 reads element 0, lane 1 reads element 1024, lane 2 reads element 2048, and so on, the memory system sees scattered demand. If each lane reads a nearby element, the memory system can combine work more efficiently. <span class="conf shipped">[SHIPPED]</span></p>
-<h3 id="coalescing-in-transformer-workloads">Coalescing in transformer workloads</h3>
+<pre class="code-block"><code class="language-text">lane i should usually access address base + i
+</code></pre>
+<p class="confidence-box">That rule is not universal, but it catches many performance bugs. If lane 0 reads element 0, lane 1 reads element 1024, lane 2 reads element 2048, and so on, the memory system sees scattered demand. If each lane reads a nearby element, the memory system can combine work more efficiently. <span class="confidence-label label-shipped">[SHIPPED]</span></p>
+<h3 id="coalescing-in-transformer-workloads">Coalescing in transformer workloads<a aria-label="Link to this section" class="anchor" href="#coalescing-in-transformer-workloads">#</a></h3>
 <p>Coalescing shows up in transformer systems in several ways:</p>
 <ul>
 <li>Tensor layouts that force transposed or strided reads before GEMM.</li>
@@ -228,13 +640,13 @@
 <li>Custom kernels that treat logical layout as if it were physical layout.</li>
 </ul>
 <p>The principal lesson is simple: before inventing a new algorithm, verify that the existing kernel reads and writes memory in a pattern the hardware can serve efficiently.</p>
-<hr />
-<h2 id="73-shared-memory-registers-and-bank-conflicts">7.3 Shared Memory, Registers, and Bank Conflicts</h2>
+<hr/>
+<h2 id="73-shared-memory-registers-and-bank-conflicts">7.3 Shared Memory, Registers, and Bank Conflicts<a aria-label="Link to this section" class="anchor" href="#73-shared-memory-registers-and-bank-conflicts">#</a></h2>
 <p>The GPU memory hierarchy was introduced earlier in the book. Chapter 7 focuses on what that hierarchy means for kernel implementation.</p>
-<h3 id="table-72--cuda-memory-spaces-and-what-they-are-good-for">Table 7.2 — CUDA Memory Spaces and What They Are Good For</h3>
-<table>
+<h2 id="table-72-cuda-memory-spaces-and-what-they-are-good-for">Table 7.2 — CUDA Memory Spaces and What They Are Good For<a aria-label="Link to this section" class="anchor" href="#table-72-cuda-memory-spaces-and-what-they-are-good-for">#</a></h2>
+<div class="table-wrap"><table>
 <thead>
-<tr class="header">
+<tr>
 <th>Memory space</th>
 <th>Scope</th>
 <th>Typical use</th>
@@ -243,65 +655,79 @@
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Registers</td>
 <td>Per thread</td>
 <td>Fragments, accumulators, loop variables</td>
 <td>Register pressure can reduce occupancy</td>
-<td><span class="conf shipped">[SHIPPED]</span></td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Shared memory</td>
 <td>Per block/CTA</td>
 <td>Reused tiles, staging, reductions</td>
 <td>Bank conflicts, synchronization overhead, limited capacity</td>
-<td><span class="conf shipped">[SHIPPED]</span></td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>L1 / texture cache</td>
 <td>Per SM behavior, architecture-dependent</td>
 <td>Cached global/local accesses</td>
 <td>Hit rate depends on access pattern</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td>L2 cache</td>
 <td>GPU-wide cache</td>
 <td>Cross-SM reuse, global-memory locality</td>
 <td>Capacity pressure and eviction</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>HBM / global memory</td>
 <td>GPU-wide device memory</td>
 <td>Tensors, model weights, activations, KV cache</td>
 <td>Bandwidth and capacity bottleneck</td>
-<td><span class="conf shipped">[SHIPPED]</span></td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Host memory</td>
 <td>CPU/system memory</td>
 <td>Data staging, offload, input pipeline</td>
 <td>Transfer latency and bandwidth limit</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>The hierarchy follows a tradeoff: faster memory is smaller and more explicit; larger memory is slower and easier to overuse.</p>
-<h3 id="registers">Registers</h3>
-<p>Registers are the fastest storage visible to a thread. Accumulators in GEMM fragments, loop variables, and temporary values live here. But registers are not free. If each thread uses too many registers, fewer warps can be resident on the SM, reducing latency hiding. <span class="conf shipped">[SHIPPED]</span></p>
-<h3 id="shared-memory">Shared memory</h3>
-<p>Shared memory is explicitly managed scratchpad memory shared by threads in a block. It is useful when data is reused by multiple threads, as in tiled GEMM, reductions, scans, and staging patterns. It is not automatically faster in every situation because staging has overhead: loads, stores, synchronization, bank layout constraints, and occupancy pressure. <span class="conf env-specific">[ENV-SPECIFIC]</span></p>
+<h3 id="registers">Registers<a aria-label="Link to this section" class="anchor" href="#registers">#</a></h3>
+<p class="confidence-box">Registers are the fastest storage visible to a thread. Accumulators in GEMM fragments, loop variables, and temporary values live here. But registers are not free. If each thread uses too many registers, fewer warps can be resident on the SM, reducing latency hiding. <span class="confidence-label label-shipped">[SHIPPED]</span></p>
+<h3 id="shared-memory">Shared memory<a aria-label="Link to this section" class="anchor" href="#shared-memory">#</a></h3>
+<p class="confidence-box">Shared memory is explicitly managed scratchpad memory shared by threads in a block. It is useful when data is reused by multiple threads, as in tiled GEMM, reductions, scans, and staging patterns. It is not automatically faster in every situation because staging has overhead: loads, stores, synchronization, bank layout constraints, and occupancy pressure. <span class="confidence-label label-env">[ENV-SPECIFIC]</span></p>
+<h2 id="figure-placeholder-fig-75">Figure Placeholder — Fig 7.5<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-75">#</a></h2>
+<figure class="figure-placeholder" id="fig-7-5-shared-memory-bank-conflicts">
+<div class="figure-kicker">Fig 7.5</div>
+<div class="figure-title">Shared Memory Bank Conflicts</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A conceptual shared-memory bank diagram showing parallel bank access versus serialized bank conflicts.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch07_fig_7_5_shared_memory_bank_conflicts.svg</code></p>
+<p class="figure-status">Figure to be created</p>
+<span class="figure-source muted">Source diagram pending</span>
+</div>
+</div>
+<figcaption><strong>Fig 7.5 — Shared Memory Bank Conflicts.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong><br/>
+Shared memory is not automatically fast. It is fast only when the access pattern cooperates with the bank organization.</p>
+<p class="figure-note"><strong>Figure explanation:</strong><br/>
+Show conceptual banks. In the good case, lanes map to different banks. In the bad case, multiple lanes contend for the same bank, causing serialization. Exact behavior varies by architecture.</p>
 <blockquote>
-<p><strong>Figure 7.5 — Shared Memory Bank Conflicts: When Fast Memory Serializes</strong><br />
-<em>Placeholder: 32 conceptual shared-memory banks. Good path maps lanes to distinct banks. Bad path maps many lanes to the same bank, causing serialization.</em><br />
-<strong>Caption:</strong> Shared memory is fast when a warp accesses distinct banks or broadcast-friendly addresses. Conflicting bank access patterns can serialize requests and reduce effective bandwidth.<br />
-<strong>Placement:</strong> §7.3 Shared Memory, Registers, and Bank Conflicts.<br />
-<strong>Key takeaway:</strong> Shared memory is a tool for data reuse, but bad access patterns can turn it into a bottleneck.<br />
-<strong>Production note:</strong> Label conflict behavior as architecture-dependent and cite CUDA documentation in the final bibliography/source notes.</p>
+<p><strong>Key Takeaway:</strong> Shared memory is a tool for reuse, but bad access patterns can turn it into a bottleneck.</p>
 </blockquote>
-<h3 id="bank-conflicts">Bank conflicts</h3>
-<p>Shared memory is divided into banks. When multiple lanes in a warp access different addresses that map to the same bank, requests may serialize, reducing effective bandwidth. Broadcast-style cases and exact bank behavior vary by architecture, so use this as a design model rather than a fixed latency formula. <span class="conf shipped">[SHIPPED]</span></p>
+<h3 id="bank-conflicts">Bank conflicts<a aria-label="Link to this section" class="anchor" href="#bank-conflicts">#</a></h3>
+<p class="confidence-box">Shared memory is divided into banks. When multiple lanes in a warp access different addresses that map to the same bank, requests may serialize, reducing effective bandwidth. Broadcast-style cases and exact bank behavior vary by architecture, so use this as a design model rather than a fixed latency formula. <span class="confidence-label label-shipped">[SHIPPED]</span></p>
 <p>Common mitigations include:</p>
 <ul>
 <li>Padding shared-memory arrays.</li>
@@ -310,31 +736,45 @@
 <li>Using library kernels that already solve the layout problem.</li>
 </ul>
 <p>The last bullet matters. If cuBLAS, cuDNN, CUTLASS, or a framework kernel already implements the pattern well, the best optimization may be to route work into that path instead of writing a fragile custom kernel.</p>
-<hr />
-<h2 id="74-warp-divergence-occupancy-and-latency-hiding">7.4 Warp Divergence, Occupancy, and Latency Hiding</h2>
-<p>A warp is efficient when lanes execute the same instruction path on useful data. If lanes take different branches, execution can serialize across paths. This is warp divergence. <span class="conf shipped">[SHIPPED]</span></p>
+<hr/>
+<h2 id="74-warp-divergence-occupancy-and-latency-hiding">7.4 Warp Divergence, Occupancy, and Latency Hiding<a aria-label="Link to this section" class="anchor" href="#74-warp-divergence-occupancy-and-latency-hiding">#</a></h2>
+<p class="confidence-box">A warp is efficient when lanes execute the same instruction path on useful data. If lanes take different branches, execution can serialize across paths. This is warp divergence. <span class="confidence-label label-shipped">[SHIPPED]</span></p>
 <p>Warp divergence matters most when:</p>
 <ul>
 <li>Branches are data-dependent and vary across lanes.</li>
 <li>The divergent region does substantial work.</li>
 <li>The kernel is already latency-sensitive or underutilized.</li>
 </ul>
-<p>It matters less when the branch is uniform across the warp, the divergent region is tiny, or the kernel is dominated by a different bottleneck. <span class="conf env-specific">[ENV-SPECIFIC]</span></p>
-<h3 id="occupancy-is-not-utilization">Occupancy is not utilization</h3>
-<p>Occupancy is the ratio of active warps resident on an SM to the maximum possible resident warps. It is a measure of scheduling capacity, not proof that useful work is happening. <span class="conf shipped">[SHIPPED]</span></p>
-<p>High occupancy can help hide latency. But maximum occupancy is not always optimal. Some high-performance kernels intentionally use more registers or shared memory per block to increase data reuse, even if occupancy drops. <span class="conf env-specific">[ENV-SPECIFIC]</span></p>
+<p class="confidence-box">It matters less when the branch is uniform across the warp, the divergent region is tiny, or the kernel is dominated by a different bottleneck. <span class="confidence-label label-env">[ENV-SPECIFIC]</span></p>
+<h3 id="occupancy-is-not-utilization">Occupancy is not utilization<a aria-label="Link to this section" class="anchor" href="#occupancy-is-not-utilization">#</a></h3>
+<p class="confidence-box">Occupancy is the ratio of active warps resident on an SM to the maximum possible resident warps. It is a measure of scheduling capacity, not proof that useful work is happening. <span class="confidence-label label-shipped">[SHIPPED]</span></p>
+<p class="confidence-box">High occupancy can help hide latency. But maximum occupancy is not always optimal. Some high-performance kernels intentionally use more registers or shared memory per block to increase data reuse, even if occupancy drops. <span class="confidence-label label-env">[ENV-SPECIFIC]</span></p>
+<h2 id="figure-placeholder-fig-76">Figure Placeholder — Fig 7.6<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-76">#</a></h2>
+<figure class="figure-placeholder" id="fig-7-6-occupancy-limiters">
+<div class="figure-kicker">Fig 7.6</div>
+<div class="figure-title">Occupancy Limiters</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>An SM resource-budget diagram showing occupancy limited by threads, registers, shared memory, and resident block constraints.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch07_fig_7_6_occupancy_limiters.svg</code></p>
+<p class="figure-status">Figure to be created</p>
+<span class="figure-source muted">Source diagram pending</span>
+</div>
+</div>
+<figcaption><strong>Fig 7.6 — Occupancy Limiters.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong><br/>
+Occupancy is useful only when interpreted with its limiting factor.</p>
+<p class="figure-note"><strong>Figure explanation:</strong><br/>
+Show an SM resource budget divided into register file, shared memory, maximum resident blocks, and maximum resident warps. Demonstrate one kernel limited by registers and another limited by shared memory.</p>
 <blockquote>
-<p><strong>Figure 7.6 — Occupancy Is Limited by Threads, Registers, Shared Memory, and Blocks</strong><br />
-<em>Placeholder: SM resource budget showing register file, shared memory, resident block slots, resident warp slots, and two example kernels: register-limited and shared-memory-limited.</em><br />
-<strong>Caption:</strong> Occupancy is constrained by multiple per-SM resources. More occupancy is useful only until enough independent work exists to hide latency.<br />
-<strong>Placement:</strong> §7.4 Warp Divergence, Occupancy, and Latency Hiding.<br />
-<strong>Key takeaway:</strong> Treat occupancy as a diagnostic clue, not a performance objective by itself.<br />
-<strong>Production note:</strong> Exact limits vary by architecture and compilation choices.</p>
+<p><strong>Key Takeaway:</strong> Treat occupancy as a diagnostic clue, not a performance objective by itself.</p>
 </blockquote>
-<h3 id="table-76--occupancy-limiters-and-mitigation-options">Table 7.6 — Occupancy Limiters and Mitigation Options</h3>
-<table>
+<h2 id="table-76-occupancy-limiters-and-mitigation-options">Table 7.6 — Occupancy Limiters and Mitigation Options<a aria-label="Link to this section" class="anchor" href="#table-76-occupancy-limiters-and-mitigation-options">#</a></h2>
+<div class="table-wrap"><table>
 <thead>
-<tr class="header">
+<tr>
 <th>Limiter</th>
 <th>Symptom</th>
 <th>Mitigation</th>
@@ -342,39 +782,39 @@
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Registers per thread</td>
 <td>Low resident warps due to register pressure</td>
 <td>Reduce unrolling, split kernel, tune tile size</td>
-<td><span class="conf shipped">[SHIPPED]</span></td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Shared memory per block</td>
 <td>Few blocks resident per SM</td>
 <td>Smaller tiles, double buffering only when beneficial</td>
-<td><span class="conf shipped">[SHIPPED]</span></td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Threads per block</td>
 <td>Too few or too many active warps</td>
 <td>Tune block shape and work per thread</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Blocks per SM</td>
 <td>Resident CTA limit reached</td>
 <td>Adjust block granularity</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Long dependency chains</td>
 <td>Warps resident but stalled</td>
 <td>Increase independent work, prefetch, restructure computation</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
 </tbody>
-</table>
-<h3 id="interview-safe-wording">Interview-safe wording</h3>
+</table></div>
+<h3 id="interview-safe-wording">Interview-safe wording<a aria-label="Link to this section" class="anchor" href="#interview-safe-wording">#</a></h3>
 <p>Do not say:</p>
 <blockquote>
 <p>“I would maximize occupancy.”</p>
@@ -384,28 +824,43 @@
 <p>“I would check whether occupancy is the limiting factor. If low occupancy is caused by register or shared-memory pressure and the kernel is latency-bound, I would tune tile shape or resource use. If lower occupancy buys much better reuse, I may keep it.”</p>
 </blockquote>
 <p>That answer separates senior-level metric awareness from principal-level tradeoff judgment.</p>
-<hr />
-<h2 id="75-tensor-cores-gemm-and-library-first-optimization">7.5 Tensor Cores, GEMM, and Library-First Optimization</h2>
+<hr/>
+<h2 id="75-tensor-cores-gemm-and-library-first-optimization">7.5 Tensor Cores, GEMM, and Library-First Optimization<a aria-label="Link to this section" class="anchor" href="#75-tensor-cores-gemm-and-library-first-optimization">#</a></h2>
 <p>Transformer models are GEMM-heavy. Linear projections, MLP layers, QKV projection, output projection, and many batched operations reduce to matrix multiply patterns. For matrix multiplication:</p>
-<pre class="text"><code>C[M, N] = A[M, K] × B[K, N]
-FLOPs_GEMM ≈ 2 × M × N × K</code></pre>
-<p>Confidence label: <span class="conf derived-from-shipped">[DERIVED FROM SHIPPED]</span></p>
+<pre class="code-block"><code class="language-text">C[M, N] = A[M, K] × B[K, N]
+FLOPs_GEMM ≈ 2 × M × N × K
+</code></pre>
+<p class="confidence-box">Confidence label: <span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></p>
 <p>The factor of 2 comes from multiply-add counting. This is a convention; be explicit in interviews.</p>
-<h3 id="tensor-cores-conceptually">Tensor Cores conceptually</h3>
-<p>Tensor Cores accelerate matrix multiply-accumulate operations for supported precision and layout combinations. At the kernel level, the code does not perform one scalar multiply at a time. It loads matrix fragments, performs matrix multiply-accumulate instructions, and accumulates output fragments. <span class="conf shipped">[SHIPPED]</span></p>
+<h3 id="tensor-cores-conceptually">Tensor Cores conceptually<a aria-label="Link to this section" class="anchor" href="#tensor-cores-conceptually">#</a></h3>
+<p class="confidence-box">Tensor Cores accelerate matrix multiply-accumulate operations for supported precision and layout combinations. At the kernel level, the code does not perform one scalar multiply at a time. It loads matrix fragments, performs matrix multiply-accumulate instructions, and accumulates output fragments. <span class="confidence-label label-shipped">[SHIPPED]</span></p>
 <p>This is why GEMM optimization is primarily a data-reuse problem. The kernel wants to move tiles from HBM to on-chip storage, reuse those tiles many times, and keep Tensor Cores fed.</p>
+<h2 id="figure-placeholder-fig-73">Figure Placeholder — Fig 7.3<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-73">#</a></h2>
+<figure class="figure-placeholder" id="fig-7-3-gemm-tiling-hbm-shared-memory-registers-tensor-cores">
+<div class="figure-kicker">Fig 7.3</div>
+<div class="figure-title">GEMM Tiling: HBM → Shared Memory → Registers → Tensor Cores</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A GEMM tile dataflow showing HBM loads into shared memory, register fragments, Tensor Core MMA, and output stores.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch07_fig_7_3_gemm_tiling_pipeline.svg</code></p>
+<p class="figure-status">Figure to be created</p>
+<span class="figure-source muted">Source diagram pending</span>
+</div>
+</div>
+<figcaption><strong>Fig 7.3 — GEMM Tiling: HBM → Shared Memory → Registers → Tensor Cores.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong><br/>
+GEMM is the dominant math operation in transformer workloads, but good GEMM performance is mostly a data-movement and tiling problem.</p>
+<p class="figure-note"><strong>Figure explanation:</strong><br/>
+Show A and B tiles moving from HBM to shared memory, then to register fragments, then into Tensor Core MMA operations, with accumulators written back to HBM.</p>
 <blockquote>
-<p><strong>Figure 7.3 — GEMM Tiling: HBM → Shared Memory → Registers → Tensor Cores</strong><br />
-<em>Placeholder: Matrices A and B loaded as tiles from HBM into shared memory, fragments moved into registers, Tensor Cores perform MMA, output tile accumulated into C.</em><br />
-<strong>Caption:</strong> High-performance GEMM is a data-reuse problem. Tiles are loaded from HBM into shared memory, fragments are staged into registers, Tensor Cores perform matrix multiply-accumulate, and output tiles are written back.<br />
-<strong>Placement:</strong> §7.5 Tensor Cores, GEMM, and Library-First Optimization.<br />
-<strong>Key takeaway:</strong> GEMM is fast because it turns memory traffic into repeated compute through tiling and reuse.<br />
-<strong>Production note:</strong> Label this as conceptual; real kernels vary by architecture, library, precision, and shape.</p>
+<p><strong>Key Takeaway:</strong> Tensor Core peak is reachable only when the memory schedule feeds the math pipeline.</p>
 </blockquote>
-<h3 id="table-75--gemm-tuning-levers-and-when-they-matter">Table 7.5 — GEMM Tuning Levers and When They Matter</h3>
-<table>
+<h2 id="table-75-gemm-tuning-levers-and-when-they-matter">Table 7.5 — GEMM Tuning Levers and When They Matter<a aria-label="Link to this section" class="anchor" href="#table-75-gemm-tuning-levers-and-when-they-matter">#</a></h2>
+<div class="table-wrap"><table>
 <thead>
-<tr class="header">
+<tr>
 <th>Lever</th>
 <th>Why it matters</th>
 <th>First check</th>
@@ -413,47 +868,47 @@ FLOPs_GEMM ≈ 2 × M × N × K</code></pre>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Matrix dimensions</td>
 <td>Tensor Core kernels prefer hardware-friendly tile shapes</td>
 <td>Are dimensions aligned for the intended library path?</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Precision</td>
 <td>BF16, FP16, TF32, FP8, INT8 map to different hardware/library paths</td>
 <td>Is the intended precision actually active?</td>
-<td><span class="conf shipped">[SHIPPED]</span></td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Layout</td>
 <td>Strides/transposes affect memory coalescing and library selection</td>
 <td>Are tensors contiguous or in the expected layout?</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Batch size</td>
 <td>Small batches may underutilize compute</td>
 <td>Can batching increase arithmetic intensity?</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Library path</td>
 <td>Vendor kernels are heavily optimized</td>
 <td>Is cuBLAS/cuBLASLt/CUTLASS or framework equivalent being used?</td>
-<td><span class="conf shipped">[SHIPPED]</span></td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Fusion</td>
 <td>Epilogues can create extra memory traffic</td>
 <td>Can bias, activation, residual, or normalization be fused?</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
 </tbody>
-</table>
-<h3 id="library-first-rule">Library-first rule</h3>
+</table></div>
+<h3 id="library-first-rule">Library-first rule<a aria-label="Link to this section" class="anchor" href="#library-first-rule">#</a></h3>
 <p>For GEMM, custom kernel work is rarely the first move. The usual order is:</p>
-<ol type="1">
+<ol>
 <li>Verify the workload is actually GEMM-bound.</li>
 <li>Verify dimensions, layout, and precision route into the intended Tensor Core path.</li>
 <li>Try vendor libraries and framework-supported fused epilogues.</li>
@@ -461,24 +916,38 @@ FLOPs_GEMM ≈ 2 × M × N × K</code></pre>
 <li>Write custom CUDA only when the shape, fusion, or scheduling requirement justifies it.</li>
 </ol>
 <p>A principal engineer earns trust by avoiding expensive custom work until simpler high-leverage options are exhausted.</p>
-<hr />
-<h2 id="76-flashattention--io-aware-kernel-design">7.6 FlashAttention — IO-Aware Kernel Design</h2>
-<p>Naive attention can materialize an <code>S × S</code> score matrix in HBM. For long sequences, that intermediate becomes extremely expensive. FlashAttention changes the memory schedule: it tiles Q, K, and V; keeps intermediate state on-chip; uses an online softmax formulation; and writes the final output without storing the full attention-score matrix in HBM. The mathematical attention result is exact for the supported formulation; the memory traffic is reduced. <span class="conf shipped">[SHIPPED]</span></p>
+<hr/>
+<h2 id="76-flashattention-io-aware-kernel-design">7.6 FlashAttention — IO-Aware Kernel Design<a aria-label="Link to this section" class="anchor" href="#76-flashattention-io-aware-kernel-design">#</a></h2>
+<p class="confidence-box">Naive attention can materialize an <code>S × S</code> score matrix in HBM. For long sequences, that intermediate becomes extremely expensive. FlashAttention changes the memory schedule: it tiles Q, K, and V; keeps intermediate state on-chip; uses an online softmax formulation; and writes the final output without storing the full attention-score matrix in HBM. The mathematical attention result is exact for the supported formulation; the memory traffic is reduced. <span class="confidence-label label-shipped">[SHIPPED]</span></p>
 <p>Do not describe FlashAttention as simply “changing attention from O(S²) to O(S).” That statement is misleading. The compute still has attention-dependent terms. The safer statement is:</p>
 <blockquote>
-<p>FlashAttention reduces HBM IO by avoiding materialization of the full <code>S × S</code> score matrix while preserving exact attention semantics for supported attention patterns. <span class="conf shipped">[SHIPPED]</span></p>
+<p class="confidence-box">FlashAttention reduces HBM IO by avoiding materialization of the full <code>S × S</code> score matrix while preserving exact attention semantics for supported attention patterns. <span class="confidence-label label-shipped">[SHIPPED]</span></p>
 </blockquote>
+<h2 id="figure-placeholder-fig-74">Figure Placeholder — Fig 7.4<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-74">#</a></h2>
+<figure class="figure-placeholder" id="fig-7-4-flashattention-io-aware-attention-kernel">
+<div class="figure-kicker">Fig 7.4</div>
+<div class="figure-title">FlashAttention: IO-Aware Attention Kernel</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A memory-traffic diagram showing tiled attention without materializing the full sequence-by-sequence attention matrix in HBM.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch07_fig_7_4_flashattention_io_aware_kernel.svg</code></p>
+<p class="figure-status">Adapt from existing FlashAttention diagram</p>
+<a class="figure-source" href="../diagrams/diagrams_batch1.html#d5">View source diagram</a>
+</div>
+</div>
+<figcaption><strong>Fig 7.4 — FlashAttention: IO-Aware Attention Kernel.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong><br/>
+FlashAttention is the canonical example of a kernel that wins by changing the memory schedule while preserving exact attention semantics.</p>
+<p class="figure-note"><strong>Figure explanation:</strong><br/>
+Contrast naive attention that writes the S×S score matrix to HBM with tiled online-softmax attention that keeps partial results on chip.</p>
 <blockquote>
-<p><strong>Figure 7.4 — FlashAttention: Compute Attention Without Materializing the S×S Score Matrix in HBM</strong><br />
-<em>Placeholder: Left side naive attention path writes QKᵀ scores to HBM. Right side FlashAttention path streams Q tiles over K/V tiles, performs online softmax, and writes final output only.</em><br />
-<strong>Caption:</strong> FlashAttention tiles Q, K, and V so attention can be computed through on-chip memory without writing the full <code>S × S</code> attention matrix to HBM.<br />
-<strong>Placement:</strong> §7.6 FlashAttention — IO-Aware Kernel Design.<br />
-<strong>Key takeaway:</strong> FlashAttention is the canonical example of IO-aware algorithm design: same mathematical output, less HBM traffic.<br />
-<strong>Production note:</strong> Existing <code>diagrams_batch1.html#d5</code> can be adapted for Ch07.</p>
+<p><strong>Key Takeaway:</strong> FlashAttention is an IO-aware kernel: the primary win is fewer bytes moved through HBM.</p>
 </blockquote>
-<h3 id="the-memory-traffic-argument">The memory-traffic argument</h3>
+<h3 id="the-memory-traffic-argument">The memory-traffic argument<a aria-label="Link to this section" class="anchor" href="#the-memory-traffic-argument">#</a></h3>
 <p>The simple model is:</p>
-<pre class="text"><code>Naive attention path:
+<pre class="code-block"><code class="language-text">Naive attention path:
 Q, K, V read from HBM
 S×S attention scores written to HBM
 S×S scores read back for softmax / value weighting
@@ -487,10 +956,11 @@ Output written to HBM
 FlashAttention-style path:
 Q/K/V tiles streamed through on-chip memory
 Online softmax state maintained per tile
-Final output written to HBM</code></pre>
-<p>Confidence label: <span class="conf representative">[REPRESENTATIVE]</span></p>
-<p>Actual implementation details depend on architecture, sequence length, precision, mask type, head dimension, batch shape, and framework integration. <span class="conf env-specific">[ENV-SPECIFIC]</span></p>
-<h3 id="why-this-belongs-in-a-kernel-chapter">Why this belongs in a kernel chapter</h3>
+Final output written to HBM
+</code></pre>
+<p class="confidence-box">Confidence label: <span class="confidence-label label-representative">[REPRESENTATIVE]</span></p>
+<p class="confidence-box">Actual implementation details depend on architecture, sequence length, precision, mask type, head dimension, batch shape, and framework integration. <span class="confidence-label label-env">[ENV-SPECIFIC]</span></p>
+<h3 id="why-this-belongs-in-a-kernel-chapter">Why this belongs in a kernel chapter<a aria-label="Link to this section" class="anchor" href="#why-this-belongs-in-a-kernel-chapter">#</a></h3>
 <p>FlashAttention is not just an attention algorithm. It is the best teaching example of how kernel design changes system behavior. It shows that a kernel can produce the same mathematical answer while changing:</p>
 <ul>
 <li>HBM traffic.</li>
@@ -501,13 +971,13 @@ Final output written to HBM</code></pre>
 <li>Whether attention becomes the bottleneck.</li>
 </ul>
 <p>That is why FlashAttention appears here, and KV-cache serving appears later in Chapter 11.</p>
-<hr />
-<h2 id="77-flashattention-2-flashattention-3-and-hardware-specific-kernels">7.7 FlashAttention-2, FlashAttention-3, and Hardware-Specific Kernels</h2>
+<hr/>
+<h2 id="77-flashattention-2-flashattention-3-and-hardware-specific-kernels">7.7 FlashAttention-2, FlashAttention-3, and Hardware-Specific Kernels<a aria-label="Link to this section" class="anchor" href="#77-flashattention-2-flashattention-3-and-hardware-specific-kernels">#</a></h2>
 <p>FlashAttention evolved because GPUs evolved. New GPU generations expose new scheduling, memory movement, and matrix-instruction capabilities. A production chapter should not promise universal speedups; it should teach the reader to ask whether their stack, precision, sequence length, and GPU generation use the intended path.</p>
-<h3 id="table-74--flashattention-version-comparison">Table 7.4 — FlashAttention Version Comparison</h3>
-<table>
+<h2 id="table-74-flashattention-version-comparison">Table 7.4 — FlashAttention Version Comparison<a aria-label="Link to this section" class="anchor" href="#table-74-flashattention-version-comparison">#</a></h2>
+<div class="table-wrap"><table>
 <thead>
-<tr class="header">
+<tr>
 <th>Version</th>
 <th>Main idea</th>
 <th>Best suited for</th>
@@ -516,39 +986,39 @@ Final output written to HBM</code></pre>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>FlashAttention</td>
 <td>IO-aware exact attention, tiled to reduce HBM traffic</td>
 <td>Long sequence attention</td>
 <td>Reduces memory traffic versus naive attention implementations that materialize full score matrices</td>
-<td><span class="conf shipped">[SHIPPED]</span></td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td>FlashAttention-2</td>
 <td>Better parallelism and work partitioning</td>
 <td>A100/H100-class deployments and many training/inference stacks</td>
 <td>Often faster than v1; exact gain varies by shape and implementation</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>FlashAttention-3</td>
 <td>Hopper-specific asynchrony, WGMMA/TMA usage, and FP8 path</td>
 <td>H100/Hopper-class GPUs</td>
 <td>Paper and release materials report 1.5–2.0× FP16 speedups versus FlashAttention-2, up to about 740 TFLOP/s FP16, and close to 1.2 PFLOP/s FP8 on H100; treat as reported benchmark results</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>The principal-level framing is:</p>
 <blockquote>
 <p>“I would first verify which attention kernel is active for my sequence length, head dimension, precision, mask, and GPU. Then I would compare it under the workload’s real prefill/decode or training-step mix.”</p>
 </blockquote>
 <p>This avoids the common mistake of quoting a kernel benchmark as if it directly predicts service-level latency or training MFU.</p>
-<hr />
-<h2 id="78-fused-kernels-and-memory-traffic-reduction">7.8 Fused Kernels and Memory-Traffic Reduction</h2>
-<p>Fusion combines multiple operations into one kernel so intermediate tensors do not need to be written to and read from HBM. This is especially valuable for memory-bandwidth-sensitive operations such as normalization, activation, bias add, residual add, dropout, and simple elementwise chains. <span class="conf env-specific">[ENV-SPECIFIC]</span></p>
+<hr/>
+<h2 id="78-fused-kernels-and-memory-traffic-reduction">7.8 Fused Kernels and Memory-Traffic Reduction<a aria-label="Link to this section" class="anchor" href="#78-fused-kernels-and-memory-traffic-reduction">#</a></h2>
+<p class="confidence-box">Fusion combines multiple operations into one kernel so intermediate tensors do not need to be written to and read from HBM. This is especially valuable for memory-bandwidth-sensitive operations such as normalization, activation, bias add, residual add, dropout, and simple elementwise chains. <span class="confidence-label label-env">[ENV-SPECIFIC]</span></p>
 <p>A simple traffic model:</p>
-<pre class="text"><code>Unfused two-op chain:
+<pre class="code-block"><code class="language-text">Unfused two-op chain:
 read input
 write intermediate
 read intermediate
@@ -556,10 +1026,11 @@ write output
 
 Fused chain:
 read input
-write output</code></pre>
-<p>Confidence label: <span class="conf representative">[REPRESENTATIVE]</span></p>
+write output
+</code></pre>
+<p class="confidence-box">Confidence label: <span class="confidence-label label-representative">[REPRESENTATIVE]</span></p>
 <p>This model is not a benchmark promise. Cache behavior, compiler fusion, tensor layout, operation shape, and launch overhead all matter. But it explains why fusion is often powerful: it removes memory round trips and reduces launch count.</p>
-<h3 id="common-fused-patterns-in-ai-workloads">Common fused patterns in AI workloads</h3>
+<h3 id="common-fused-patterns-in-ai-workloads">Common fused patterns in AI workloads<a aria-label="Link to this section" class="anchor" href="#common-fused-patterns-in-ai-workloads">#</a></h3>
 <ul>
 <li>Bias + activation.</li>
 <li>Residual add + normalization.</li>
@@ -568,10 +1039,10 @@ write output</code></pre>
 <li>Optimizer update fusion.</li>
 <li>Attention kernels that fuse score computation, softmax, and value weighting.</li>
 </ul>
-<p>Fusion can improve performance, but it can also reduce flexibility. A fused kernel may be harder to debug, harder to support across shapes, and harder to maintain across hardware generations. <span class="conf env-specific">[ENV-SPECIFIC]</span></p>
-<hr />
-<h2 id="79-triton-as-a-productivity-layer-for-custom-kernels">7.9 Triton as a Productivity Layer for Custom Kernels</h2>
-<p>Triton is a language and compiler for writing GPU kernels with a Python-like programming model. It is especially useful for custom or fused tensor programs where standard framework operations or vendor libraries do not already provide the right optimized path. <span class="conf shipped">[SHIPPED]</span></p>
+<p class="confidence-box">Fusion can improve performance, but it can also reduce flexibility. A fused kernel may be harder to debug, harder to support across shapes, and harder to maintain across hardware generations. <span class="confidence-label label-env">[ENV-SPECIFIC]</span></p>
+<hr/>
+<h2 id="79-triton-as-a-productivity-layer-for-custom-kernels">7.9 Triton as a Productivity Layer for Custom Kernels<a aria-label="Link to this section" class="anchor" href="#79-triton-as-a-productivity-layer-for-custom-kernels">#</a></h2>
+<p class="confidence-box">Triton is a language and compiler for writing GPU kernels with a Python-like programming model. It is especially useful for custom or fused tensor programs where standard framework operations or vendor libraries do not already provide the right optimized path. <span class="confidence-label label-shipped">[SHIPPED]</span></p>
 <p>Triton does not remove the need to understand GPU performance. It changes the productivity curve:</p>
 <ul>
 <li>You still reason about blocks/programs, memory loads/stores, masks, tiling, and vectorized operations.</li>
@@ -579,36 +1050,50 @@ write output</code></pre>
 <li>You still compare against library baselines.</li>
 <li>You may get to a high-quality prototype faster than hand-written CUDA.</li>
 </ul>
-<h3 id="when-triton-is-a-good-first-custom-kernel-move">When Triton is a good first custom-kernel move</h3>
+<h3 id="when-triton-is-a-good-first-custom-kernel-move">When Triton is a good first custom-kernel move<a aria-label="Link to this section" class="anchor" href="#when-triton-is-a-good-first-custom-kernel-move">#</a></h3>
 <p>Triton is a strong candidate when:</p>
 <ul>
 <li>The operation is a fused elementwise/reduction pattern not covered by existing libraries.</li>
 <li>The shape is stable enough to tune.</li>
 <li>The kernel is on the critical path.</li>
 <li>The team needs iteration speed.</li>
-<li>Portability across CUDA and ROCm-style backends matters, with validation. <span class="conf env-specific">[ENV-SPECIFIC]</span></li>
+<li>Portability across CUDA and ROCm-style backends matters, with validation. <span class="confidence-label label-env">[ENV-SPECIFIC]</span></li>
 </ul>
 <p>Triton is usually not the first move for mainstream GEMM, convolution, or already-optimized attention paths. For those, vendor libraries and framework kernels should be the baseline.</p>
-<hr />
-<h2 id="710-kernel-profiling-workflow-nsys--ncu--fix--verify">7.10 Kernel Profiling Workflow: nsys → ncu → Fix → Verify</h2>
+<hr/>
+<h2 id="710-kernel-profiling-workflow-nsys-ncu-fix-verify">7.10 Kernel Profiling Workflow: nsys → ncu → Fix → Verify<a aria-label="Link to this section" class="anchor" href="#710-kernel-profiling-workflow-nsys-ncu-fix-verify">#</a></h2>
 <p>Nsight Systems and Nsight Compute answer different questions.</p>
 <ul>
 <li><strong>Nsight Systems</strong> answers: Where did time go across the application timeline?</li>
 <li><strong>Nsight Compute / ncu</strong> answers: Why did this selected CUDA kernel behave this way?</li>
 </ul>
 <p>The most common mistake is starting with <code>ncu</code> before proving the kernel matters.</p>
+<h2 id="figure-placeholder-fig-77">Figure Placeholder — Fig 7.7<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-77">#</a></h2>
+<figure class="figure-placeholder" id="fig-7-7-the-kernel-profiling-workflow">
+<div class="figure-kicker">Fig 7.7</div>
+<div class="figure-title">The Kernel Profiling Workflow</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A profiling loop: system symptom → Nsight Systems → critical kernel/gap → Nsight Compute → fix → verify end-to-end.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch07_fig_7_7_kernel_profiling_workflow.svg</code></p>
+<p class="figure-status">Adapt from existing profiling tree diagram</p>
+<a class="figure-source" href="../diagrams/diagrams_batch3.html#d30">View source diagram</a>
+</div>
+</div>
+<figcaption><strong>Fig 7.7 — The Kernel Profiling Workflow.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong><br/>
+The most common profiling mistake is opening a kernel profiler before proving that the kernel is on the critical path.</p>
+<p class="figure-note"><strong>Figure explanation:</strong><br/>
+Show the loop from system symptom to Nsight Systems timeline, critical kernel identification, Nsight Compute counters, bottleneck classification, one fix, and system-level verification.</p>
 <blockquote>
-<p><strong>Figure 7.7 — The Kernel Profiling Workflow</strong><br />
-<em>Placeholder: System symptom → Nsight Systems timeline → identify critical kernel/gap → Nsight Compute counters → classify bottleneck → apply fix → re-run workload benchmark. Include stop branch for “kernel not on critical path.”</em><br />
-<strong>Caption:</strong> Start with Nsight Systems to find where time goes. Use Nsight Compute only after a specific kernel is proven important. Then fix one hypothesis and verify end-to-end impact.<br />
-<strong>Placement:</strong> §7.10 Kernel Profiling Workflow.<br />
-<strong>Key takeaway:</strong> Nsight Systems answers “where did time go?” Nsight Compute answers “why was this kernel slow?”<br />
-<strong>Production note:</strong> Add a reproducibility note because profiler settings can perturb performance.</p>
+<p><strong>Key Takeaway:</strong> Nsight Systems answers where time went; Nsight Compute answers why a selected kernel was slow.</p>
 </blockquote>
-<h3 id="table-73--nsight-compute-metrics-what-to-look-at-first">Table 7.3 — Nsight Compute Metrics: What to Look At First</h3>
-<table>
+<h2 id="table-73-nsight-compute-metrics-what-to-look-at-first">Table 7.3 — Nsight Compute Metrics: What to Look At First<a aria-label="Link to this section" class="anchor" href="#table-73-nsight-compute-metrics-what-to-look-at-first">#</a></h2>
+<div class="table-wrap"><table>
 <thead>
-<tr class="header">
+<tr>
 <th>Metric family</th>
 <th>What it indicates</th>
 <th>When to care</th>
@@ -617,53 +1102,53 @@ write output</code></pre>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Tensor/FP pipe utilization</td>
 <td>Whether compute units are busy</td>
 <td>GEMM and attention kernels</td>
 <td>Check precision, layout, Tensor Core path, library selection</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td>DRAM/HBM throughput</td>
 <td>Whether memory bandwidth is limiting</td>
 <td>Elementwise, normalization, attention, copy-heavy kernels</td>
 <td>Coalesce, fuse, tile, reduce bytes</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>L2 hit rate / cache throughput</td>
 <td>Reuse across accesses</td>
 <td>Reused weights, activations, KV blocks</td>
 <td>Improve locality or layout</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Warp stall reasons</td>
 <td>Why warps cannot issue</td>
 <td>Any slow selected kernel</td>
 <td>Map dominant stall to a specific hypothesis</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Occupancy / launch statistics</td>
 <td>Active warps and resource limits</td>
 <td>Suspected latency-hiding problem</td>
 <td>Tune registers, shared memory, or block size</td>
-<td><span class="conf shipped">[SHIPPED]</span></td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Memory workload analysis</td>
 <td>Load/store pattern quality</td>
 <td>Suspected bad coalescing</td>
 <td>Reorder layout or access pattern</td>
-<td><span class="conf shipped">[SHIPPED]</span></td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
 </tr>
 </tbody>
-</table>
-<p>Exact metric names change across Nsight Compute versions and GPU architectures. Treat the table as a starting map, not a literal metric-name contract. <span class="conf env-specific">[ENV-SPECIFIC]</span></p>
-<h3 id="profiling-checklist">Profiling checklist</h3>
-<ol type="1">
+</table></div>
+<p class="confidence-box">Exact metric names change across Nsight Compute versions and GPU architectures. Treat the table as a starting map, not a literal metric-name contract. <span class="confidence-label label-env">[ENV-SPECIFIC]</span></p>
+<h3 id="profiling-checklist">Profiling checklist<a aria-label="Link to this section" class="anchor" href="#profiling-checklist">#</a></h3>
+<ol>
 <li>Reproduce the workload with fixed input shapes, seed, batch size, precision, and runtime configuration.</li>
 <li>Capture a system timeline.</li>
 <li>Identify the top wall-time regions and idle gaps.</li>
@@ -673,21 +1158,35 @@ write output</code></pre>
 <li>Re-measure both microbenchmark and end-to-end workload.</li>
 <li>Report the metric that matters: step time, tokens/sec/GPU, TTFT, TPOT, P95/P99, or cost per token.</li>
 </ol>
-<hr />
-<h2 id="711-should-you-write-a-custom-kernel">7.11 Should You Write a Custom Kernel?</h2>
+<hr/>
+<h2 id="711-should-you-write-a-custom-kernel">7.11 Should You Write a Custom Kernel?<a aria-label="Link to this section" class="anchor" href="#711-should-you-write-a-custom-kernel">#</a></h2>
 <p>Custom kernels are powerful, but expensive. They create maintenance burden, portability risk, testing load, shape coverage issues, numerical risk, and future hardware risk. A principal engineer protects the team from custom work unless the leverage is clear.</p>
+<h2 id="figure-placeholder-fig-78">Figure Placeholder — Fig 7.8<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-78">#</a></h2>
+<figure class="figure-placeholder" id="fig-7-8-should-you-write-a-custom-kernel">
+<div class="figure-kicker">Fig 7.8</div>
+<div class="figure-title">Should You Write a Custom Kernel?</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A decision tree for deciding whether to use libraries, compiler/fusion, Triton, or custom CUDA work.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch07_fig_7_8_custom_kernel_decision_tree.svg</code></p>
+<p class="figure-status">Figure to be created</p>
+<span class="figure-source muted">Source diagram pending</span>
+</div>
+</div>
+<figcaption><strong>Fig 7.8 — Should You Write a Custom Kernel?.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong><br/>
+Principal engineers protect teams from expensive low-leverage optimization projects. The decision tree makes that judgment explicit.</p>
+<p class="figure-note"><strong>Figure explanation:</strong><br/>
+Decision nodes should include end-to-end share, library availability, data-movement bottleneck, fusion opportunity, shape stability, numerical risk, and maintenance cost.</p>
 <blockquote>
-<p><strong>Figure 7.8 — Should You Write a Custom Kernel?</strong><br />
-<em>Placeholder: Decision tree: Is operation &gt;10% of end-to-end time? Is a library path available? Is layout/precision correct? Can fusion/compiler/CUDA Graphs solve it? Is shape stable? Then consider Triton/CUDA custom work.</em><br />
-<strong>Caption:</strong> A custom kernel is justified only after library, layout, batching, fusion, compiler, and configuration options are ruled out or shown insufficient.<br />
-<strong>Placement:</strong> §7.11 Principal-Level Optimization Prioritization.<br />
-<strong>Key takeaway:</strong> The highest-leverage kernel optimization is often to avoid writing a kernel.<br />
-<strong>Production note:</strong> Keep compiler details shallow here; Chapter 9 covers compiler internals.</p>
+<p><strong>Key Takeaway:</strong> Custom kernels are powerful, but the highest-leverage optimization is often avoiding one.</p>
 </blockquote>
-<h3 id="table-77--should-this-kernel-be-optimized">Table 7.7 — Should This Kernel Be Optimized?</h3>
-<table>
+<h2 id="table-77-should-this-kernel-be-optimized">Table 7.7 — Should This Kernel Be Optimized?<a aria-label="Link to this section" class="anchor" href="#table-77-should-this-kernel-be-optimized">#</a></h2>
+<div class="table-wrap"><table>
 <thead>
-<tr class="header">
+<tr>
 <th>Situation</th>
 <th>Optimize kernel now?</th>
 <th>Better first move</th>
@@ -696,76 +1195,78 @@ write output</code></pre>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Kernel is less than 1% of wall time</td>
 <td>Usually no</td>
 <td>Ignore or batch with nearby work</td>
 <td>P2</td>
-<td><span class="conf derived-from-shipped">[DERIVED FROM SHIPPED]</span></td>
+<td><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Kernel is 10–30% and memory-bound</td>
 <td>Maybe</td>
 <td>Check fusion, coalescing, layout, library path</td>
 <td>P1/P0</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>GEMM underperforms</td>
 <td>Usually not custom first</td>
 <td>Verify cuBLAS/cuBLASLt precision/layout/alignment</td>
 <td>P0</td>
-<td><span class="conf shipped">[SHIPPED]</span></td>
+<td><span class="confidence-label label-shipped">[SHIPPED]</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Many small kernels with CPU gaps</td>
 <td>Do not tune each kernel separately</td>
 <td>CUDA Graphs, compiler capture, fusion</td>
 <td>P0</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>FlashAttention disabled or unsupported path active</td>
 <td>No custom attention yet</td>
 <td>Enable supported attention backend first</td>
 <td>P0</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Unique op unsupported by libraries and on critical path</td>
 <td>Yes, possibly</td>
 <td>Triton prototype, then CUDA/CUTLASS if justified</td>
 <td>P1</td>
-<td><span class="conf env-specific">[ENV-SPECIFIC]</span></td>
+<td><span class="confidence-label label-env">[ENV-SPECIFIC]</span></td>
 </tr>
 </tbody>
-</table>
-<h3 id="amdahl-framing">Amdahl framing</h3>
+</table></div>
+<h3 id="amdahl-framing">Amdahl framing<a aria-label="Link to this section" class="anchor" href="#amdahl-framing">#</a></h3>
 <p>If a kernel consumes fraction <code>p</code> of total wall time and you speed it up by factor <code>s</code>, total speedup is:</p>
-<pre class="text"><code>Speedup_total = 1 / ((1 - p) + p / s)</code></pre>
-<p>Confidence label: <span class="conf derived-from-shipped">[DERIVED FROM SHIPPED]</span></p>
+<pre class="code-block"><code class="language-text">Speedup_total = 1 / ((1 - p) + p / s)
+</code></pre>
+<p class="confidence-box">Confidence label: <span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></p>
 <p>Example: if <code>p = 0.01</code> and <code>s = 2</code>, then:</p>
-<pre class="text"><code>Speedup_total = 1 / (0.99 + 0.01 / 2) ≈ 1.005</code></pre>
+<pre class="code-block"><code class="language-text">Speedup_total = 1 / (0.99 + 0.01 / 2) ≈ 1.005
+</code></pre>
 <p>That is about 0.5% improvement. This is why the first optimization skill is not CUDA. It is prioritization.</p>
-<hr />
-<h2 id="712-common-kernel-optimization-anti-patterns">7.12 Common Kernel Optimization Anti-Patterns</h2>
-<h3 id="anti-pattern-1--starting-with-nsight-compute">Anti-pattern 1 — Starting with Nsight Compute</h3>
+<hr/>
+<h2 id="712-common-kernel-optimization-anti-patterns">7.12 Common Kernel Optimization Anti-Patterns<a aria-label="Link to this section" class="anchor" href="#712-common-kernel-optimization-anti-patterns">#</a></h2>
+<h3 id="anti-pattern-1-starting-with-nsight-compute">Anti-pattern 1 — Starting with Nsight Compute<a aria-label="Link to this section" class="anchor" href="#anti-pattern-1-starting-with-nsight-compute">#</a></h3>
 <p>If you do not know whether the kernel is on the critical path, detailed counters can waste time. Start with timeline-level evidence.</p>
-<h3 id="anti-pattern-2--maximizing-occupancy-blindly">Anti-pattern 2 — Maximizing occupancy blindly</h3>
+<h3 id="anti-pattern-2-maximizing-occupancy-blindly">Anti-pattern 2 — Maximizing occupancy blindly<a aria-label="Link to this section" class="anchor" href="#anti-pattern-2-maximizing-occupancy-blindly">#</a></h3>
 <p>Maximum occupancy can reduce performance if it forces smaller tiles, less reuse, or worse memory behavior. Occupancy is a means to hide latency, not an objective by itself.</p>
-<h3 id="anti-pattern-3--writing-custom-gemm-too-early">Anti-pattern 3 — Writing custom GEMM too early</h3>
+<h3 id="anti-pattern-3-writing-custom-gemm-too-early">Anti-pattern 3 — Writing custom GEMM too early<a aria-label="Link to this section" class="anchor" href="#anti-pattern-3-writing-custom-gemm-too-early">#</a></h3>
 <p>Mainstream GEMM paths are heavily optimized. If a GEMM is slow, first check shape, layout, precision, batching, and library path.</p>
-<h3 id="anti-pattern-4--treating-microbenchmark-gains-as-production-wins">Anti-pattern 4 — Treating microbenchmark gains as production wins</h3>
+<h3 id="anti-pattern-4-treating-microbenchmark-gains-as-production-wins">Anti-pattern 4 — Treating microbenchmark gains as production wins<a aria-label="Link to this section" class="anchor" href="#anti-pattern-4-treating-microbenchmark-gains-as-production-wins">#</a></h3>
 <p>A kernel benchmark can improve while the service-level metric stays flat because the bottleneck moved to launch overhead, queueing, communication, or memory allocation.</p>
-<h3 id="anti-pattern-5--ignoring-numerical-and-maintenance-risk">Anti-pattern 5 — Ignoring numerical and maintenance risk</h3>
+<h3 id="anti-pattern-5-ignoring-numerical-and-maintenance-risk">Anti-pattern 5 — Ignoring numerical and maintenance risk<a aria-label="Link to this section" class="anchor" href="#anti-pattern-5-ignoring-numerical-and-maintenance-risk">#</a></h3>
 <p>Kernel changes can introduce precision differences, shape-specific bugs, portability issues, and hidden performance cliffs. Production optimization requires validation, not just speed.</p>
-<hr />
-<h2 id="713-principal-level-interview-section">7.13 Principal-Level Interview Section</h2>
+<hr/>
+<h2 id="713-principal-level-interview-section">7.13 Principal-Level Interview Section<a aria-label="Link to this section" class="anchor" href="#713-principal-level-interview-section">#</a></h2>
 <p>Chapter 7 is a common interview differentiator because it tests whether the candidate can bridge low-level performance and system-level impact.</p>
-<h3 id="interview-prompt-1--slow-inference-endpoint">Interview prompt 1 — Slow inference endpoint</h3>
+<h3 id="interview-prompt-1-slow-inference-endpoint">Interview prompt 1 — Slow inference endpoint<a aria-label="Link to this section" class="anchor" href="#interview-prompt-1-slow-inference-endpoint">#</a></h3>
 <p><strong>Prompt:</strong> “A production LLM endpoint has poor P99 TPOT. The GPU utilization dashboard looks moderate, but latency is high. How do you investigate?”</p>
 <p>Strong answer:</p>
-<ol type="1">
+<ol>
 <li>Separate TTFT and TPOT to identify prefill vs decode pressure.</li>
 <li>Use Nsight Systems or service tracing to locate timeline gaps, kernel regions, CPU dispatch, and scheduling delays.</li>
 <li>Check whether decode is memory-bandwidth-bound, launch-overhead-bound, or scheduler/KV-cache-bound.</li>
@@ -773,10 +1274,10 @@ write output</code></pre>
 <li>Prioritize runtime batching, KV layout, attention backend, CUDA Graphs/compiler capture, and fusion before custom CUDA.</li>
 <li>Verify with P50/P95/P99 TPOT under production-like concurrency.</li>
 </ol>
-<h3 id="interview-prompt-2--slow-training-step">Interview prompt 2 — Slow training step</h3>
+<h3 id="interview-prompt-2-slow-training-step">Interview prompt 2 — Slow training step<a aria-label="Link to this section" class="anchor" href="#interview-prompt-2-slow-training-step">#</a></h3>
 <p><strong>Prompt:</strong> “Training step time regressed by 12% after a model change. How do you debug?”</p>
 <p>Strong answer:</p>
-<ol type="1">
+<ol>
 <li>Compare step breakdown: data, forward, backward, communication, optimizer, checkpoint.</li>
 <li>Use timeline to see whether the regression is compute, collective, launch, or data pipeline related.</li>
 <li>Check shape changes, sequence length, padding, attention kernel path, precision, and activation memory behavior.</li>
@@ -784,37 +1285,37 @@ write output</code></pre>
 <li>Validate whether MFU changed and whether communication overlap broke.</li>
 <li>Fix one hypothesis, then re-run the full training step benchmark.</li>
 </ol>
-<h3 id="interview-prompt-3--should-we-write-a-custom-kernel">Interview prompt 3 — Should we write a custom kernel?</h3>
+<h3 id="interview-prompt-3-should-we-write-a-custom-kernel">Interview prompt 3 — Should we write a custom kernel?<a aria-label="Link to this section" class="anchor" href="#interview-prompt-3-should-we-write-a-custom-kernel">#</a></h3>
 <p>Strong principal answer:</p>
 <blockquote>
 <p>“Only if the operation is on the end-to-end critical path, existing library/compiler/fusion options are insufficient, the shape is stable enough, numerical behavior can be validated, and the maintenance cost is justified by workload-level gain. I would prototype in Triton if appropriate, compare against vendor/library baselines, and only move to lower-level CUDA if the prototype proves the opportunity.”</p>
 </blockquote>
-<h3 id="principal-rubric">Principal rubric</h3>
-<table>
+<h3 id="principal-rubric">Principal rubric<a aria-label="Link to this section" class="anchor" href="#principal-rubric">#</a></h3>
+<div class="table-wrap"><table>
 <thead>
-<tr class="header">
+<tr>
 <th>Level</th>
 <th>What the answer sounds like</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Senior engineer</td>
 <td>“I can profile the kernel and tune memory/occupancy.”</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Staff engineer</td>
 <td>“I can classify the bottleneck and choose the right optimization technique.”</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Principal engineer</td>
 <td>“I can decide whether the kernel should be optimized at all, connect the fix to product/SLO/cost impact, and prevent local optimization from harming the system.”</td>
 </tr>
 </tbody>
-</table>
-<hr />
-<h2 id="714-key-takeaways">7.14 Key Takeaways</h2>
-<ol type="1">
+</table></div>
+<hr/>
+<h2 id="714-key-takeaways">7.14 Key Takeaways<a aria-label="Link to this section" class="anchor" href="#714-key-takeaways">#</a></h2>
+<ol>
 <li>A kernel is worth optimizing only when it affects an end-to-end metric that matters.</li>
 <li>GPU execution hierarchy — grid, block, warp, thread, SM — determines scheduling, synchronization, and resource limits.</li>
 <li>Memory coalescing is the first global-memory performance rule: neighboring lanes should usually access neighboring addresses.</li>
@@ -826,9 +1327,9 @@ write output</code></pre>
 <li>Triton is a productivity layer for custom kernels, not a substitute for performance reasoning.</li>
 <li>The correct profiling loop is <code>nsys → ncu → fix → verify</code>, with end-to-end validation.</li>
 </ol>
-<hr />
-<h2 id="review-questions">Review Questions</h2>
-<ol type="1">
+<hr/>
+<h2 id="715-review-questions">7.15 Review Questions<a aria-label="Link to this section" class="anchor" href="#715-review-questions">#</a></h2>
+<ol>
 <li>Explain the hierarchy of grid, block/CTA, warp, thread, and SM in a CUDA kernel launch.</li>
 <li>Why does memory coalescing matter for HBM bandwidth utilization?</li>
 <li>Give an example where shared memory improves performance and an example where it could hurt performance.</li>
@@ -845,10 +1346,27 @@ write output</code></pre>
 <li>Use Amdahl’s law to explain why a 2× speedup to a 1% kernel is usually low priority.</li>
 <li>In a principal-level design review, what evidence would you require before approving custom CUDA work?</li>
 </ol>
-<hr />
-  <nav class="nav-bottom"><a href="ch06_training_inference_workloads.html">← Previous: Ch06</a><a href="../index.html">Home</a><a href="ch08_quantization.html">Next: Ch08 →</a></nav>
-  <div class="footer">Chapter 7 · GPU Kernels and CUDA Optimization · AI/ML Infrastructure from Silicon to Scale · Current as of 2026 edition</div>
-</main>
+<hr/>
+<hr/>
+<h2 id="717-bridge-to-chapter-8">7.17 Bridge to Chapter 8<a aria-label="Link to this section" class="anchor" href="#717-bridge-to-chapter-8">#</a></h2>
+<p>Chapter 7 explained how kernels, memory access, fusion, Tensor Cores, Triton, and profiler evidence determine single-GPU execution efficiency.</p>
+<p>Chapter 8 moves from execution efficiency into numeric representation:</p>
+<pre class="code-block"><code class="language-text">How can lower precision reduce memory, bandwidth, latency, and cost without destroying model quality?
+</code></pre>
+<p>The next chapter connects quantization formats, calibration, accuracy risk, hardware support, and serving economics.</p>
+
+
+    <nav class="nav-row" aria-label="Previous and next chapter navigation">
+      <a href="ch06_training_inference_workloads.html">
+        <small>Previous Chapter</small>
+        <strong>Ch06</strong>
+      </a>
+      <a href="ch08_quantization.html">
+        <small>Next</small>
+        <strong>Ch08</strong>
+      </a>
+    </nav>
+  </main>
 </div>
 </body>
 </html>

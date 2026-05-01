@@ -1,25 +1,6 @@
 # Chapter 7 — GPU Kernels and CUDA Optimization
-## AI/ML Infrastructure from Silicon to Scale
-### Production Source Pack — Markdown
 
-**Author:** Venkat Vinjam  
-**Book:** AI/ML Infrastructure from Silicon to Scale  
-**Chapter slug:** `ch07_gpu_kernels_cuda_optimization`  
-**Edition note:** Current as of 2026 edition  
-**Production status:** Reader-facing production source with separated production notes
-
----
-
-## Confidence Label Key
-
-| Label | Meaning |
-|---|---|
-| [SHIPPED] | Verified behavior from shipping hardware/software or official documentation. |
-| [ANNOUNCED] | Vendor-announced or published but not yet broadly production-proven. |
-| [DERIVED FROM SHIPPED] | Formula or conclusion derived from shipped specs or stable performance models. |
-| [ESTIMATED] | Engineering estimate; methodology should be shown. |
-| [REPRESENTATIVE] | Illustrative example, not a universal benchmark result. |
-| [ENV-SPECIFIC] | Depends strongly on model, shape, framework, kernel version, runtime configuration, or cluster environment. |
+> “A kernel is where model math becomes memory transactions, warp scheduling, Tensor Core issue, and measured throughput.”
 
 ---
 
@@ -36,9 +17,11 @@ This chapter is not a full CUDA programming textbook. Its goal is to build the p
 
 A principal AI/ML performance architect does not optimize kernels because kernels are interesting. They optimize kernels only when the kernel is on the critical path of a meaningful metric: training step time, tokens/sec/GPU, TTFT, TPOT, P95/P99 latency, cost per token, or fleet utilization.
 
+> **Current as of 2026 edition:** CUDA, ROCm, Triton, PyTorch compiler paths, profiler metrics, and GPU microarchitectures evolve quickly. Use confidence labels and verify exact behavior against the final hardware, driver, framework, and model shape used in production.
+
 ---
 
-## 7.0 Chapter Manifesto — Kernel Optimization Is a Systems Decision
+## 7.0 Kernel Optimization in One Page
 
 GPU kernel optimization sits at a dangerous point in the stack. It is technically deep enough to attract engineering attention, but local enough to mislead teams into optimizing the wrong thing. A 2× speedup to a kernel that consumes 1% of wall time improves total runtime by at most about 0.5%. That is not a strategy; it is a distraction. [DERIVED FROM SHIPPED]
 
@@ -58,7 +41,7 @@ That question requires three layers of evidence:
 
 This chapter teaches that evidence chain.
 
-### Table 7.1 — Kernel Bottleneck Taxonomy
+## Table 7.1 — Kernel Bottleneck Taxonomy
 
 | Bottleneck | Typical symptom | Profiler signal | Likely cause | First fix | Confidence |
 |---|---|---|---|---|---|
@@ -85,12 +68,21 @@ The hierarchy matters because different levels have different synchronization an
 - A **grid** spans the full kernel launch but does not provide cheap global synchronization inside a normal kernel.
 - An **SM** schedules resident blocks and warps subject to resource limits.
 
-> **Figure 7.1 — GPU Kernel Execution Hierarchy**  
-> _Placeholder: Grid → CTA/block → warp → thread hierarchy, with blocks assigned to SMs and warps shown as 32-thread scheduling groups._  
-> **Caption:** A CUDA kernel launches a grid of blocks. Each block runs on an SM as one or more warps. The hierarchy determines scheduling, memory access, synchronization, and occupancy.  
-> **Placement:** §7.1 The GPU Kernel Execution Model.  
-> **Key takeaway:** Kernel performance starts with execution mapping: enough independent work must exist to fill SMs and hide latency.  
-> **Production note:** Create or adapt from `diagrams_batch3.html#d27`; keep NVIDIA-specific warp wording separate from AMD wavefront terminology.
+## Figure Placeholder — Fig 7.1
+
+```markdown
+![Fig 7.1 — GPU Kernel Execution Hierarchy](../assets/diagrams/svg/ch07_fig_7_1_gpu_kernel_execution_hierarchy.svg)
+
+**Fig 7.1 — GPU Kernel Execution Hierarchy.** A CUDA kernel launches a grid of blocks. Each block runs on an SM as one or more warps of 32 CUDA threads. The hierarchy determines scheduling, memory access, synchronization, and occupancy.
+```
+
+**Figure intro:**  
+Before optimizing a GPU kernel, identify what the hardware is actually scheduling: grid, block, warp, and thread work mapped onto SMs.
+
+**Figure explanation:**  
+The figure should show a kernel launch feeding a grid of blocks, blocks assigned to SMs, each block decomposed into warps, and each warp containing 32 CUDA threads. Include a note that warp size is NVIDIA CUDA-specific.
+
+> **Key Takeaway:** Kernel optimization starts with the execution hierarchy, not with a random counter.
 
 ### Blocks, warps, and SM residency
 
@@ -116,12 +108,21 @@ Many slow kernels do not perform too many FLOPs. They move data in a pattern tha
 
 A coalesced global-memory access occurs when neighboring lanes in a warp access neighboring addresses. This allows the memory system to serve the warp with fewer, wider memory transactions. A scattered or strided pattern can require more transactions for the same useful data, wasting bandwidth. [SHIPPED]
 
-> **Figure 7.2 — Memory Coalescing: Consecutive Threads, Consecutive Addresses**  
-> _Placeholder: Good case shows lanes 0–31 reading contiguous addresses. Bad case shows lanes reading strided/scattered addresses across cache lines._  
-> **Caption:** Coalesced memory access lets neighboring threads in a warp load neighboring addresses, minimizing wasted memory transactions. Strided or scattered access wastes bandwidth even when arithmetic work is unchanged.  
-> **Placement:** §7.2 Memory Coalescing.  
-> **Key takeaway:** Memory bandwidth is not just a spec-sheet number; access pattern determines how much bandwidth a kernel can actually use.  
-> **Production note:** Use architecture-agnostic transaction wording; avoid claiming one fixed transaction size for all GPUs.
+## Figure Placeholder — Fig 7.2
+
+```markdown
+![Fig 7.2 — Memory Coalescing: Consecutive Threads, Consecutive Addresses](../assets/diagrams/svg/ch07_fig_7_2_memory_coalescing.svg)
+
+**Fig 7.2 — Memory Coalescing: Consecutive Threads, Consecutive Addresses.** Coalesced access lets neighboring lanes access neighboring addresses so memory transactions are efficient. Strided or scattered access can waste bandwidth and increase latency.
+```
+
+**Figure intro:**  
+Memory coalescing is the first global-memory rule because most AI kernels move large tensors through HBM.
+
+**Figure explanation:**  
+Show a good pattern where lanes 0–31 access contiguous elements and a bad pattern where lanes access separated or scattered addresses, requiring more memory transactions.
+
+> **Key Takeaway:** The GPU wants predictable, contiguous memory access whenever possible.
 
 ### Whiteboard rule
 
@@ -150,7 +151,7 @@ The principal lesson is simple: before inventing a new algorithm, verify that th
 
 The GPU memory hierarchy was introduced earlier in the book. Chapter 7 focuses on what that hierarchy means for kernel implementation.
 
-### Table 7.2 — CUDA Memory Spaces and What They Are Good For
+## Table 7.2 — CUDA Memory Spaces and What They Are Good For
 
 | Memory space | Scope | Typical use | Risk | Confidence |
 |---|---|---|---|---|
@@ -171,12 +172,21 @@ Registers are the fastest storage visible to a thread. Accumulators in GEMM frag
 
 Shared memory is explicitly managed scratchpad memory shared by threads in a block. It is useful when data is reused by multiple threads, as in tiled GEMM, reductions, scans, and staging patterns. It is not automatically faster in every situation because staging has overhead: loads, stores, synchronization, bank layout constraints, and occupancy pressure. [ENV-SPECIFIC]
 
-> **Figure 7.5 — Shared Memory Bank Conflicts: When Fast Memory Serializes**  
-> _Placeholder: 32 conceptual shared-memory banks. Good path maps lanes to distinct banks. Bad path maps many lanes to the same bank, causing serialization._  
-> **Caption:** Shared memory is fast when a warp accesses distinct banks or broadcast-friendly addresses. Conflicting bank access patterns can serialize requests and reduce effective bandwidth.  
-> **Placement:** §7.3 Shared Memory, Registers, and Bank Conflicts.  
-> **Key takeaway:** Shared memory is a tool for data reuse, but bad access patterns can turn it into a bottleneck.  
-> **Production note:** Label conflict behavior as architecture-dependent and cite CUDA documentation in the final bibliography/source notes.
+## Figure Placeholder — Fig 7.5
+
+```markdown
+![Fig 7.5 — Shared Memory Bank Conflicts](../assets/diagrams/svg/ch07_fig_7_5_shared_memory_bank_conflicts.svg)
+
+**Fig 7.5 — Shared Memory Bank Conflicts.** Shared memory is fast when a warp accesses distinct banks or broadcast-friendly addresses. Conflicting bank access patterns can serialize requests and reduce effective bandwidth.
+```
+
+**Figure intro:**  
+Shared memory is not automatically fast. It is fast only when the access pattern cooperates with the bank organization.
+
+**Figure explanation:**  
+Show conceptual banks. In the good case, lanes map to different banks. In the bad case, multiple lanes contend for the same bank, causing serialization. Exact behavior varies by architecture.
+
+> **Key Takeaway:** Shared memory is a tool for reuse, but bad access patterns can turn it into a bottleneck.
 
 ### Bank conflicts
 
@@ -211,14 +221,23 @@ Occupancy is the ratio of active warps resident on an SM to the maximum possible
 
 High occupancy can help hide latency. But maximum occupancy is not always optimal. Some high-performance kernels intentionally use more registers or shared memory per block to increase data reuse, even if occupancy drops. [ENV-SPECIFIC]
 
-> **Figure 7.6 — Occupancy Is Limited by Threads, Registers, Shared Memory, and Blocks**  
-> _Placeholder: SM resource budget showing register file, shared memory, resident block slots, resident warp slots, and two example kernels: register-limited and shared-memory-limited._  
-> **Caption:** Occupancy is constrained by multiple per-SM resources. More occupancy is useful only until enough independent work exists to hide latency.  
-> **Placement:** §7.4 Warp Divergence, Occupancy, and Latency Hiding.  
-> **Key takeaway:** Treat occupancy as a diagnostic clue, not a performance objective by itself.  
-> **Production note:** Exact limits vary by architecture and compilation choices.
+## Figure Placeholder — Fig 7.6
 
-### Table 7.6 — Occupancy Limiters and Mitigation Options
+```markdown
+![Fig 7.6 — Occupancy Limiters](../assets/diagrams/svg/ch07_fig_7_6_occupancy_limiters.svg)
+
+**Fig 7.6 — Occupancy Limiters.** Occupancy is constrained by multiple per-SM resources. More occupancy is useful only until enough independent work exists to hide latency.
+```
+
+**Figure intro:**  
+Occupancy is useful only when interpreted with its limiting factor.
+
+**Figure explanation:**  
+Show an SM resource budget divided into register file, shared memory, maximum resident blocks, and maximum resident warps. Demonstrate one kernel limited by registers and another limited by shared memory.
+
+> **Key Takeaway:** Treat occupancy as a diagnostic clue, not a performance objective by itself.
+
+## Table 7.6 — Occupancy Limiters and Mitigation Options
 
 | Limiter | Symptom | Mitigation | Confidence |
 |---|---|---|---|
@@ -261,14 +280,23 @@ Tensor Cores accelerate matrix multiply-accumulate operations for supported prec
 
 This is why GEMM optimization is primarily a data-reuse problem. The kernel wants to move tiles from HBM to on-chip storage, reuse those tiles many times, and keep Tensor Cores fed.
 
-> **Figure 7.3 — GEMM Tiling: HBM → Shared Memory → Registers → Tensor Cores**  
-> _Placeholder: Matrices A and B loaded as tiles from HBM into shared memory, fragments moved into registers, Tensor Cores perform MMA, output tile accumulated into C._  
-> **Caption:** High-performance GEMM is a data-reuse problem. Tiles are loaded from HBM into shared memory, fragments are staged into registers, Tensor Cores perform matrix multiply-accumulate, and output tiles are written back.  
-> **Placement:** §7.5 Tensor Cores, GEMM, and Library-First Optimization.  
-> **Key takeaway:** GEMM is fast because it turns memory traffic into repeated compute through tiling and reuse.  
-> **Production note:** Label this as conceptual; real kernels vary by architecture, library, precision, and shape.
+## Figure Placeholder — Fig 7.3
 
-### Table 7.5 — GEMM Tuning Levers and When They Matter
+```markdown
+![Fig 7.3 — GEMM Tiling: HBM → Shared Memory → Registers → Tensor Cores](../assets/diagrams/svg/ch07_fig_7_3_gemm_tiling_pipeline.svg)
+
+**Fig 7.3 — GEMM Tiling: HBM → Shared Memory → Registers → Tensor Cores.** High-performance GEMM kernels use tiling to reuse data close to compute. The goal is to load tiles from HBM fewer times and feed Tensor Cores from registers and shared memory efficiently.
+```
+
+**Figure intro:**  
+GEMM is the dominant math operation in transformer workloads, but good GEMM performance is mostly a data-movement and tiling problem.
+
+**Figure explanation:**  
+Show A and B tiles moving from HBM to shared memory, then to register fragments, then into Tensor Core MMA operations, with accumulators written back to HBM.
+
+> **Key Takeaway:** Tensor Core peak is reachable only when the memory schedule feeds the math pipeline.
+
+## Table 7.5 — GEMM Tuning Levers and When They Matter
 
 | Lever | Why it matters | First check | Confidence |
 |---|---|---|---|
@@ -301,12 +329,21 @@ Do not describe FlashAttention as simply “changing attention from O(S²) to O(
 
 > FlashAttention reduces HBM IO by avoiding materialization of the full `S × S` score matrix while preserving exact attention semantics for supported attention patterns. [SHIPPED]
 
-> **Figure 7.4 — FlashAttention: Compute Attention Without Materializing the S×S Score Matrix in HBM**  
-> _Placeholder: Left side naive attention path writes QKᵀ scores to HBM. Right side FlashAttention path streams Q tiles over K/V tiles, performs online softmax, and writes final output only._  
-> **Caption:** FlashAttention tiles Q, K, and V so attention can be computed through on-chip memory without writing the full `S × S` attention matrix to HBM.  
-> **Placement:** §7.6 FlashAttention — IO-Aware Kernel Design.  
-> **Key takeaway:** FlashAttention is the canonical example of IO-aware algorithm design: same mathematical output, less HBM traffic.  
-> **Production note:** Existing `diagrams_batch1.html#d5` can be adapted for Ch07.
+## Figure Placeholder — Fig 7.4
+
+```markdown
+![Fig 7.4 — FlashAttention: IO-Aware Attention Kernel](../assets/diagrams/svg/ch07_fig_7_4_flashattention_io_aware_kernel.svg)
+
+**Fig 7.4 — FlashAttention: IO-Aware Attention Kernel.** FlashAttention-style kernels reduce HBM reads and writes by tiling attention and keeping intermediate softmax state in on-chip memory instead of materializing the full attention matrix in HBM.
+```
+
+**Figure intro:**  
+FlashAttention is the canonical example of a kernel that wins by changing the memory schedule while preserving exact attention semantics.
+
+**Figure explanation:**  
+Contrast naive attention that writes the S×S score matrix to HBM with tiled online-softmax attention that keeps partial results on chip.
+
+> **Key Takeaway:** FlashAttention is an IO-aware kernel: the primary win is fewer bytes moved through HBM.
 
 ### The memory-traffic argument
 
@@ -348,7 +385,7 @@ That is why FlashAttention appears here, and KV-cache serving appears later in C
 
 FlashAttention evolved because GPUs evolved. New GPU generations expose new scheduling, memory movement, and matrix-instruction capabilities. A production chapter should not promise universal speedups; it should teach the reader to ask whether their stack, precision, sequence length, and GPU generation use the intended path.
 
-### Table 7.4 — FlashAttention Version Comparison
+## Table 7.4 — FlashAttention Version Comparison
 
 | Version | Main idea | Best suited for | Safe performance wording | Confidence |
 |---|---|---|---|---|
@@ -433,14 +470,23 @@ Nsight Systems and Nsight Compute answer different questions.
 
 The most common mistake is starting with `ncu` before proving the kernel matters.
 
-> **Figure 7.7 — The Kernel Profiling Workflow**  
-> _Placeholder: System symptom → Nsight Systems timeline → identify critical kernel/gap → Nsight Compute counters → classify bottleneck → apply fix → re-run workload benchmark. Include stop branch for “kernel not on critical path.”_  
-> **Caption:** Start with Nsight Systems to find where time goes. Use Nsight Compute only after a specific kernel is proven important. Then fix one hypothesis and verify end-to-end impact.  
-> **Placement:** §7.10 Kernel Profiling Workflow.  
-> **Key takeaway:** Nsight Systems answers “where did time go?” Nsight Compute answers “why was this kernel slow?”  
-> **Production note:** Add a reproducibility note because profiler settings can perturb performance.
+## Figure Placeholder — Fig 7.7
 
-### Table 7.3 — Nsight Compute Metrics: What to Look At First
+```markdown
+![Fig 7.7 — The Kernel Profiling Workflow](../assets/diagrams/svg/ch07_fig_7_7_kernel_profiling_workflow.svg)
+
+**Fig 7.7 — The Kernel Profiling Workflow.** Start with Nsight Systems to find where time goes. Use Nsight Compute only after a specific kernel is proven important. Then fix one hypothesis and verify end-to-end impact.
+```
+
+**Figure intro:**  
+The most common profiling mistake is opening a kernel profiler before proving that the kernel is on the critical path.
+
+**Figure explanation:**  
+Show the loop from system symptom to Nsight Systems timeline, critical kernel identification, Nsight Compute counters, bottleneck classification, one fix, and system-level verification.
+
+> **Key Takeaway:** Nsight Systems answers where time went; Nsight Compute answers why a selected kernel was slow.
+
+## Table 7.3 — Nsight Compute Metrics: What to Look At First
 
 | Metric family | What it indicates | When to care | Typical response | Confidence |
 |---|---|---|---|---|
@@ -470,14 +516,23 @@ Exact metric names change across Nsight Compute versions and GPU architectures. 
 
 Custom kernels are powerful, but expensive. They create maintenance burden, portability risk, testing load, shape coverage issues, numerical risk, and future hardware risk. A principal engineer protects the team from custom work unless the leverage is clear.
 
-> **Figure 7.8 — Should You Write a Custom Kernel?**  
-> _Placeholder: Decision tree: Is operation >10% of end-to-end time? Is a library path available? Is layout/precision correct? Can fusion/compiler/CUDA Graphs solve it? Is shape stable? Then consider Triton/CUDA custom work._  
-> **Caption:** A custom kernel is justified only after library, layout, batching, fusion, compiler, and configuration options are ruled out or shown insufficient.  
-> **Placement:** §7.11 Principal-Level Optimization Prioritization.  
-> **Key takeaway:** The highest-leverage kernel optimization is often to avoid writing a kernel.  
-> **Production note:** Keep compiler details shallow here; Chapter 9 covers compiler internals.
+## Figure Placeholder — Fig 7.8
 
-### Table 7.7 — Should This Kernel Be Optimized?
+```markdown
+![Fig 7.8 — Should You Write a Custom Kernel?](../assets/diagrams/svg/ch07_fig_7_8_custom_kernel_decision_tree.svg)
+
+**Fig 7.8 — Should You Write a Custom Kernel?.** A custom kernel is justified only after library, layout, batching, fusion, compiler, and configuration options are ruled out or shown insufficient.
+```
+
+**Figure intro:**  
+Principal engineers protect teams from expensive low-leverage optimization projects. The decision tree makes that judgment explicit.
+
+**Figure explanation:**  
+Decision nodes should include end-to-end share, library availability, data-movement bottleneck, fusion opportunity, shape stability, numerical risk, and maintenance cost.
+
+> **Key Takeaway:** Custom kernels are powerful, but the highest-leverage optimization is often avoiding one.
+
+## Table 7.7 — Should This Kernel Be Optimized?
 
 | Situation | Optimize kernel now? | Better first move | Priority | Confidence |
 |---|---|---|---|---|
@@ -593,7 +648,7 @@ Strong principal answer:
 
 ---
 
-## Review Questions
+## 7.15 Review Questions
 
 1. Explain the hierarchy of grid, block/CTA, warp, thread, and SM in a CUDA kernel launch.
 2. Why does memory coalescing matter for HBM bandwidth utilization?
@@ -613,7 +668,7 @@ Strong principal answer:
 
 ---
 
-## Production Notes — Not Reader-Facing
+## 7.16 Production Notes for This Chapter
 
 ### Files expected in repository
 
@@ -642,3 +697,17 @@ Strong principal answer:
 - Do not claim occupancy should be maximized.
 - Treat performance gains as workload-specific unless measured in this book’s benchmark harness.
 
+
+---
+
+## 7.17 Bridge to Chapter 8
+
+Chapter 7 explained how kernels, memory access, fusion, Tensor Cores, Triton, and profiler evidence determine single-GPU execution efficiency.
+
+Chapter 8 moves from execution efficiency into numeric representation:
+
+```text
+How can lower precision reduce memory, bandwidth, latency, and cost without destroying model quality?
+```
+
+The next chapter connects quantization formats, calibration, accuracy risk, hardware support, and serving economics.

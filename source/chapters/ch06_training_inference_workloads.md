@@ -1,25 +1,14 @@
----
-title: "Chapter 6 — Training and Inference Workloads: From Batch Training to Real-Time Serving"
-book: "AI/ML Infrastructure from Silicon to Scale"
-author: "Venkat Vinjam"
-edition_note: "Current as of 2026 edition"
-status: "Production Source Pack"
-source_path: "source/chapters/ch06_training_inference_workloads.md"
-html_path: "chapters/ch06_training_inference_workloads.html"
-confidence_labels:
-  - "[SHIPPED]"
-  - "[ANNOUNCED]"
-  - "[DERIVED FROM SHIPPED]"
-  - "[ESTIMATED]"
-  - "[REPRESENTATIVE]"
-  - "[ENV-SPECIFIC]"
----
-
 # Chapter 6 — Training and Inference Workloads: From Batch Training to Real-Time Serving
 
-> **Current as of 2026 edition.** Hardware, framework features, serving engines, and runtime APIs change quickly. Quantitative claims in this chapter use confidence labels so the reader can distinguish shipped behavior, first-principles estimates, representative examples, and environment-specific production outcomes.
+> “A GPU cluster does not run AI in the abstract. It runs workload modes, each with its own bottleneck, metric, and operating point.”
 
-## 6.0 Chapter Manifesto — Why This Chapter Exists
+---
+
+## Chapter Overview
+
+Chapter 5 explained why power, thermal design, and physical infrastructure determine whether AI hardware can sustain performance.
+
+Chapter 6 moves from physical infrastructure into workload execution.
 
 The first five chapters built the foundation: roofline thinking, transformer arithmetic, GPU architecture, HBM behavior, and the power and thermal limits of AI infrastructure. Chapter 6 changes the unit of analysis from **hardware** to **workload**.
 
@@ -42,21 +31,62 @@ A principal performance architect should be able to look at a workload and immed
 
 This chapter gives that operating model.
 
+> **Current as of 2026 edition:** Hardware, framework features, serving engines, and runtime APIs change quickly. Quantitative claims in this chapter use confidence labels so the reader can distinguish shipped behavior, first-principles estimates, representative examples, and environment-specific production outcomes.
+
+---
+
+## 6.0 Workloads in One Page
+
+Training and inference are not two versions of the same performance problem.
+
+They optimize different objectives:
+
+```text
+Training:
+  maximize useful tokens/sec/GPU, MFU, stability, and recoverability
+
+Offline inference:
+  maximize batch throughput and cost efficiency
+
+Batch API serving:
+  maximize throughput under bounded latency
+
+Interactive serving:
+  minimize TTFT and TPOT tail latency at acceptable cost/token
+```
+
+The fastest way to reason about any workload is to name four things:
+
+1. The objective function.
+2. The dominant resource.
+3. The health metric.
+4. The failure metric.
+
+> **Key Takeaway:** Workload classification comes before optimization. A training bottleneck, an offline inference bottleneck, and an interactive serving bottleneck require different evidence and different fixes.
+
 ---
 
 ## 6.1 Workload Taxonomy: Four Modes, Four Objective Functions
 
 “Training vs inference” is the common split, but production systems need a finer taxonomy. The most useful first classification is not model type. It is **how much the system can control the batch** and **how much the user cares about latency**.
 
-> **Figure 6.1 — Training vs Inference Workload Map**  
-> _Placeholder: Four-mode workload classification map showing batch training, offline inference, batch API serving, and interactive serving._
->
-> **Intro:** Start this chapter by showing that “AI workload” is not one performance problem. Place batch training, offline inference, batch API serving, and interactive serving on a 2D map.  
-> **Explanation:** The X-axis should represent latency sensitivity. The Y-axis should represent batch dynamism. Training is stable and throughput-oriented; interactive serving is dynamic and tail-latency-oriented.  
-> **Key takeaway:** The first production mistake is treating all workload modes as if they should maximize the same metric.  
-> **Production status:** Must be created as `fig_06_01_workload_map.html` or embedded directly in the HTML chapter.
+## Figure Placeholder — Fig 6.1
 
-### Table 6.1 — Training vs Inference Workload Comparison
+```markdown
+![Fig 6.1 — Training vs Inference Workload Map](../assets/diagrams/svg/ch06_fig_6_1_training_inference_workload_map.svg)
+
+**Fig 6.1 — Training vs Inference Workload Map.** Training, offline inference, batch API serving, and interactive serving optimize different objective functions. The first production mistake is treating all four as the same performance problem.
+```
+
+**Figure intro:**  
+Start this chapter by showing that “AI workload” is not one performance problem. Place batch training, offline inference, batch API serving, and interactive serving on a two-axis workload map.
+
+**Figure explanation:**  
+The X-axis should represent latency sensitivity. The Y-axis should represent batch dynamism. Training is stable and throughput-oriented; interactive serving is dynamic and tail-latency-oriented.
+
+> **Key Takeaway:** The first production mistake is treating all workload modes as if they should maximize the same metric.
+
+## Table 6.1 — Training vs Inference Workload Comparison
 
 | Workload mode | Primary objective | Batch shape | Dominant resources | Main failure mode | First metric to inspect | Confidence |
 |---|---|---|---|---|---|---|
@@ -95,15 +125,23 @@ for batch in dataloader:
 
 This loop hides the real performance story. The wall-clock step is not only forward and backward compute.
 
-> **Figure 6.2 — Training Step Waterfall**  
-> _Placeholder: Timeline from data load through checkpoint showing compute, communication, memory, and I/O regions._
->
-> **Intro:** Show a horizontal training step waterfall: data load, host-to-device transfer, forward pass, loss, backward pass, gradient synchronization, optimizer step, and checkpoint.  
-> **Explanation:** Color forward/backward as compute-heavy, optimizer update as memory-heavy, gradient synchronization as communication-heavy, and checkpoint as I/O-heavy.  
-> **Key takeaway:** A training step is not just matrix math. At scale, data stalls, gradient synchronization, optimizer state updates, and checkpointing can dominate.  
-> **Existing source:** `diagrams_batch3.html#d29` can be reused or adapted.
+## Figure Placeholder — Fig 6.2
 
-### Table 6.2 — Training Step Breakdown
+```markdown
+![Fig 6.2 — Training Step Waterfall](../assets/diagrams/svg/ch06_fig_6_2_training_step_waterfall.svg)
+
+**Fig 6.2 — Training Step Waterfall.** A training step is not just forward and backward compute. Data stalls, gradient synchronization, optimizer state updates, and checkpoint I/O can dominate at scale.
+```
+
+**Figure intro:**  
+Show a horizontal training-step waterfall: data load, host-to-device transfer, forward pass, loss, backward pass, gradient synchronization, optimizer step, and checkpoint.
+
+**Figure explanation:**  
+Color forward/backward as compute-heavy, optimizer update as memory-heavy, gradient synchronization as communication-heavy, and checkpoint as I/O-heavy. Leave room for future measured examples.
+
+> **Key Takeaway:** A training step is a pipeline; the slowest stage, not the Python loop, determines throughput.
+
+## Table 6.2 — Training Step Breakdown
 
 | Stage | What happens | Common bottleneck | What to measure first | Typical mitigation | Confidence |
 |---|---|---|---|---|---|
@@ -290,15 +328,23 @@ Autoregressive LLM inference has two phases:
 1. **Prefill:** process the input prompt and populate the KV cache.
 2. **Decode:** generate output tokens one at a time, reusing the KV cache.
 
-> **Figure 6.3 — Prefill vs Decode Regime Split**  
-> _Placeholder: Two-panel diagram contrasting compute-bound prefill with memory-bandwidth-bound decode._
->
-> **Intro:** Show a two-panel diagram: prefill processes many prompt tokens in parallel; decode emits one new token at a time.  
-> **Explanation:** Prefill uses large batched GEMMs and is often compute-heavy for long prompts. Decode repeatedly reads weights and KV state and is often memory-bandwidth-sensitive at small batch.  
-> **Key takeaway:** LLM serving is not one forward pass. It is a phase-split workload, and each phase has different bottlenecks.  
-> **Existing source:** `diagrams_batch1.html#d7` can be reused or adapted.
+## Figure Placeholder — Fig 6.3
 
-### Table 6.3 — Prefill vs Decode Regime Comparison
+```markdown
+![Fig 6.3 — Prefill vs Decode Regime Split](../assets/diagrams/svg/ch06_fig_6_3_prefill_decode_regime_split.svg)
+
+**Fig 6.3 — Prefill vs Decode Regime Split.** Prefill processes the prompt in parallel and is usually compute-heavy. Decode generates one token at a time and is often bounded by HBM bandwidth and KV-cache traffic at small batch.
+```
+
+**Figure intro:**  
+Show a two-panel diagram: prefill processes many prompt tokens in parallel; decode emits one new token at a time.
+
+**Figure explanation:**  
+Prefill uses large batched GEMMs and is often compute-heavy for long prompts. Decode repeatedly reads weights and KV state and is often memory-bandwidth-sensitive at small batch.
+
+> **Key Takeaway:** LLM serving is not one forward pass; it is a phase-split workload with different bottlenecks per phase.
+
+## Table 6.3 — Prefill vs Decode Regime Comparison
 
 | Dimension | Prefill | Decode | Confidence |
 |---|---|---|---|
@@ -344,7 +390,7 @@ This is not a prediction of actual latency. Real TPOT is higher because kernels 
 
 Training usually optimizes long-window throughput. Serving must optimize the user-visible latency distribution.
 
-### Table 6.4 — Serving Metrics and Root Causes
+## Table 6.4 — Serving Metrics and Root Causes
 
 | Metric | Meaning | Why it matters | Common root causes when bad | Confidence |
 |---|---|---|---|---|
@@ -395,17 +441,25 @@ Dynamic batching forms a batch from requests that arrive within a small time win
 
 Continuous batching admits and removes requests at decode iteration boundaries. When a sequence finishes, a new sequence can enter the next iteration.
 
-> **Figure 6.4 — Static vs Continuous Batching Timeline**  
-> _Placeholder: Request timeline showing straggler waste under static batching and slot refill under continuous batching._
->
-> **Intro:** Use two timelines: static batching with idle slots, and continuous batching with new requests entering when old requests finish.  
-> **Explanation:** Static batching wastes decode capacity when shorter outputs finish early. Continuous batching keeps more slots occupied across token iterations.  
-> **Key takeaway:** Continuous batching improves serving utilization because it schedules at the token-iteration level instead of the whole-request level.  
-> **Existing source:** `diagrams_batch1.html#d9` can be reused or adapted.
+## Figure Placeholder — Fig 6.4
+
+```markdown
+![Fig 6.4 — Static vs Continuous Batching Timeline](../assets/diagrams/svg/ch06_fig_6_4_static_vs_continuous_batching_timeline.svg)
+
+**Fig 6.4 — Static vs Continuous Batching Timeline.** Static batching wastes GPU slots when shorter sequences finish early. Continuous batching admits new requests at token-iteration boundaries, keeping the decode batch full.
+```
+
+**Figure intro:**  
+Make continuous batching intuitive with a timeline of requests that finish at different decode lengths.
+
+**Figure explanation:**  
+The static-batching panel should show idle slots waiting for the longest request. The continuous-batching panel should show new requests entering as soon as a slot becomes free at an iteration boundary.
+
+> **Key Takeaway:** Continuous batching improves utilization by keeping decode slots full without waiting for a whole batch to finish.
 
 Confidence label: **[SHIPPED]** for continuous batching as a modern serving-engine feature; **[ENV-SPECIFIC]** for the throughput improvement in a specific deployment.
 
-### Table 6.5 — Scheduling and Runtime Levers
+## Table 6.5 — Scheduling and Runtime Levers
 
 | Lever | Helps most when | Main benefit | Main risk | Confidence |
 |---|---|---|---|---|
@@ -425,12 +479,21 @@ A long prompt can be a latency hazard. Without chunking, a 32K-token prefill can
 
 Chunked prefill breaks a long prefill into smaller chunks and interleaves decode iterations between chunks.
 
-> **Figure 6.5 — Chunked Prefill Scheduler**  
-> _Placeholder: Scheduler timeline interleaving long-prefill chunks with decode iterations._
->
-> **Intro:** Show the bad case first: long prefill blocks decode. Then show chunked prefill: prefill chunk, decode step, prefill chunk, decode step.  
-> **Explanation:** Chunking reduces head-of-line blocking and gives the scheduler opportunities to protect active decode traffic.  
-> **Key takeaway:** Chunked prefill is a scheduler fairness technique as much as a performance optimization.
+## Figure Placeholder — Fig 6.5
+
+```markdown
+![Fig 6.5 — Chunked Prefill Scheduler](../assets/diagrams/svg/ch06_fig_6_5_chunked_prefill_scheduler.svg)
+
+**Fig 6.5 — Chunked Prefill Scheduler.** Chunking a long prompt prevents prefill from monopolizing the GPU and protects active decode traffic from large TPOT spikes.
+```
+
+**Figure intro:**  
+Long prompts can monopolize the runtime and delay active decode traffic. The figure should show how chunked prefill creates scheduling points.
+
+**Figure explanation:**  
+The bad case shows a long prompt blocking decode. The chunked case alternates prefill chunks with decode iterations so active users continue receiving tokens.
+
+> **Key Takeaway:** Chunked prefill trades some prefill scheduling complexity for better decode fairness and tail latency.
 
 A safe production statement is:
 
@@ -449,13 +512,21 @@ At small scale, one engine may handle both prefill and decode on the same GPU. A
 - **KV transfer path:** moves KV state from prefill workers to decode workers.
 - **Router/admission controller:** decides which path a request takes.
 
-> **Figure 6.8 — Disaggregated Prefill/Decode Architecture**  
-> _Placeholder: Prefill pool, KV transfer, decode pool, admission controller, and observability path._
->
-> **Intro:** Show request routing into a prefill pool, KV transfer, and decode pool. Include short-prompt local path and long-prompt disaggregated path.  
-> **Explanation:** Separating prefill and decode can improve fleet specialization, but it introduces KV-transfer latency, routing complexity, and failure handling.  
-> **Key takeaway:** Disaggregation is valuable only when the benefit of phase specialization exceeds the cost of KV transfer and orchestration.
-> **Existing source:** `diagrams_batch2.html#d20` can be reused or adapted.
+## Figure Placeholder — Fig 6.8
+
+```markdown
+![Fig 6.8 — Disaggregated Prefill/Decode Architecture](../assets/diagrams/svg/ch06_fig_6_8_disaggregated_prefill_decode_architecture.svg)
+
+**Fig 6.8 — Disaggregated Prefill/Decode Architecture.** Prefill and decode stress different hardware resources. Disaggregation can improve utilization at fleet scale, but introduces KV-transfer latency, routing, and reliability complexity.
+```
+
+**Figure intro:**  
+Show why larger fleets may separate prefill from decode when the two phases stress different resources.
+
+**Figure explanation:**  
+The figure should show a router deciding between local and disaggregated paths, a compute-oriented prefill pool, a KV transfer path, a decode pool, and observability around TTFT, TPOT, and KV-transfer latency.
+
+> **Key Takeaway:** Disaggregation is a fleet-level optimization, not a free speedup; it exchanges utilization gains for transfer and routing complexity.
 
 Confidence labels: **[SHIPPED]** where a framework documents the feature; **[ENV-SPECIFIC]** for any throughput, latency, or cost gain.
 
@@ -499,14 +570,23 @@ Avoid saying “82% is always the threshold.” In this book, treat it as a prod
 
 A serving request touches more layers than the model runtime alone.
 
-> **Figure 6.7 — Runtime Serving Stack**  
-> _Placeholder: Layered stack from API gateway and scheduler down to runtime, kernels, HBM weights, and KV cache._
->
-> **Intro:** Show the full serving path: client, gateway, tokenizer, model-aware router, scheduler, runtime, kernels, GPU memory, and streaming response.  
-> **Explanation:** User-visible latency is shaped by every layer, not only the GPU kernels.  
-> **Key takeaway:** Serving performance is a stack problem: routing, queueing, scheduling, runtime, kernels, and HBM all contribute.
+## Figure Placeholder — Fig 6.7
 
-### Table 6.6 — Runtime Framework Comparison
+```markdown
+![Fig 6.7 — Runtime Serving Stack](../assets/diagrams/svg/ch06_fig_6_7_runtime_serving_stack.svg)
+
+**Fig 6.7 — Runtime Serving Stack.** Serving performance is a stack problem: API routing, scheduler policy, runtime implementation, kernels, and GPU memory all shape user-visible latency.
+```
+
+**Figure intro:**  
+Connect product request flow to runtime and GPU execution. The serving system is more than a model.forward call.
+
+**Figure explanation:**  
+Show client, gateway, router, scheduler, runtime, kernels, GPU, HBM weights, KV cache, and streaming tokens. Side metrics should include TTFT, TPOT, KV utilization, and prefix-cache hit rate.
+
+> **Key Takeaway:** Serving latency is created across the stack; profiler evidence must be correlated with request-level metrics.
+
+## Table 6.6 — Runtime Framework Comparison
 
 | Runtime / stack | Strong fit | Key features to validate before production | Main caution | Confidence |
 |---|---|---|---|---|
@@ -525,12 +605,21 @@ A safe framework statement is:
 
 Interactive serving should not blindly maximize average GPU utilization. Queueing systems have a knee: as request rate approaches service capacity, latency increases nonlinearly. P50 may remain acceptable while P99 becomes unacceptable.
 
-> **Figure 6.6 — Throughput-Latency Knee Curve**  
-> _Placeholder: P99 TTFT curve vs utilization/request rate showing efficient range, knee, and SLA cliff._
->
-> **Intro:** Plot request rate or GPU utilization on the X-axis and P99 TTFT/TPOT on the Y-axis. Mark efficient region, knee region, and overload region.  
-> **Explanation:** P99 latency climbs sharply when queues build, KV memory tightens, and scheduler choices become constrained.  
-> **Key takeaway:** A serving system with a strict P99 SLO must reserve headroom; average utilization is not enough.
+## Figure Placeholder — Fig 6.6
+
+```markdown
+![Fig 6.6 — Throughput-Latency Knee Curve](../assets/diagrams/svg/ch06_fig_6_6_throughput_latency_knee_curve.svg)
+
+**Fig 6.6 — Throughput-Latency Knee Curve.** Interactive serving should operate below the queueing cliff. The highest tokens/sec point is often not the best production operating point.
+```
+
+**Figure intro:**  
+Serving systems often look healthy until they approach a utilization knee, where queueing delay grows faster than throughput.
+
+**Figure explanation:**  
+The curve should label underutilized, efficient operating range, knee, and SLA breach regions. Values are representative and environment-specific.
+
+> **Key Takeaway:** Maximizing utilization can violate P99 latency; production serving needs headroom.
 
 Representative operating targets such as 65–75% utilization for interactive serving are teaching examples only. The real target must be derived from trace replay and load testing.
 
@@ -550,7 +639,7 @@ A principal design should explicitly define fairness and isolation, not just thr
 
 ## 6.15 Symptom-to-Bottleneck Diagnostic Matrix
 
-### Table 6.7 — Symptom-to-Bottleneck Diagnostic Matrix
+## Table 6.7 — Symptom-to-Bottleneck Diagnostic Matrix
 
 | Symptom | Likely bottleneck | First evidence to collect | First safe experiment | Confidence |
 |---|---|---|---|---|
@@ -644,7 +733,7 @@ Avoid these production mistakes:
 
 ---
 
-## Review Questions
+## 6.19 Review Questions
 
 1. Explain the difference between batch training, offline inference, batch API serving, and interactive serving.
 2. Why is useful tokens/sec/GPU better than padded tokens/sec/GPU for training?
@@ -669,7 +758,7 @@ Avoid these production mistakes:
 
 ---
 
-## Production Notes — Separate from Reader-Facing Chapter
+## 6.20 Production Notes for This Chapter
 
 ### Source files used
 
@@ -700,3 +789,17 @@ Avoid these production mistakes:
 - Re-check framework feature wording against the exact release versions used in the final 2026 edition.
 - Keep all exact benchmark values marked `[REPRESENTATIVE]` or `[ENV-SPECIFIC]` unless measured or cited.
 - Do not over-expand Ch06 into Ch10 or Ch11; keep those deep dives separate.
+
+---
+
+## 6.21 Bridge to Chapter 7
+
+Chapter 6 showed why training and serving workloads stress AI infrastructure differently.
+
+Chapter 7 moves one level lower into the execution unit behind many of those workload behaviors:
+
+```text
+What actually happens inside a GPU kernel, and how do memory access, occupancy, Tensor Cores, fusion, and profiling determine performance?
+```
+
+The next chapter connects workload symptoms to kernel-level causes and teaches how to decide when kernel work is the right optimization move.
