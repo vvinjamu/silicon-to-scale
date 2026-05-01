@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 3A — GPU and Accelerator Architecture Fundamentals | Silicon to Scale</title>
+<meta name="description" content="Production web chapter on GPU and accelerator architecture fundamentals: CPU vs GPU mental model, SMs, warps, SIMT, Tensor Cores, HBM, NVLink, PCIe, InfiniBand, SXM/OAM form factors, and GPU spec-sheet analysis.">
+<meta name="author" content="Venkat Vinjam">
+<meta property="og:title" content="Chapter 3A — GPU and Accelerator Architecture Fundamentals">
+<meta property="og:description" content="Learn GPU architecture as a performance system: SMs, warps, Tensor Cores, HBM, NVLink/NVSwitch, PCIe, InfiniBand, and accelerator selection for AI/ML infrastructure.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c10;
+  --bg2: #0d1117;
+  --bg3: #161b22;
+  --bg4: #1c2128;
+  --border: #21262d;
+  --border2: #30363d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #6e7681;
+  --accent: #58a6ff;
+  --gold: #d4a017;
+  --gold2: #f0c040;
+  --green: #3fb950;
+  --orange: #ff6b35;
+  --purple: #bc8cff;
+  --red: #f85149;
+  --teal: #39d0d8;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.65;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(88,166,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(88,166,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(13,17,23,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 22px;
+}
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.brand a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.brand span {
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.topnav {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.topnav a {
+  color: var(--accent);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.topnav a:hover {
+  border-color: var(--accent);
+  background: rgba(88,166,255,0.08);
+}
+.layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 300px minmax(0, 940px);
+  gap: 36px;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 36px 24px 80px;
+}
+.sidebar {
+  position: sticky;
+  top: 76px;
+  align-self: start;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+}
+.sidebar h2 {
+  margin: 0 0 12px;
+  font-family: var(--mono);
+  color: var(--gold2);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+.sidebar a {
+  display: block;
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 13px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.35);
+}
+.sidebar a:hover {
+  color: var(--accent);
+}
+.sidebar .toc-l3 {
+  padding-left: 14px;
+  font-size: 12px;
+  color: var(--text3);
+}
+.content {
+  background: rgba(13,17,23,0.72);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 38px 44px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+}
+.content h1 {
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -1.4px;
+  margin: 0 0 18px;
+}
+.content h2 {
+  margin-top: 46px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 25px;
+  letter-spacing: -0.5px;
+}
+.content h3 {
+  margin-top: 30px;
+  color: var(--accent);
+  font-size: 18px;
+}
+.content h4 {
+  margin-top: 24px;
+  color: var(--gold2);
+}
+.anchor {
+  margin-left: 8px;
+  color: var(--text3);
+  opacity: 0;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 0.8em;
+}
+h1:hover .anchor, h2:hover .anchor, h3:hover .anchor, h4:hover .anchor {
+  opacity: 1;
+}
+p {
+  color: var(--text);
+  font-size: 16px;
+}
+blockquote {
+  margin: 24px 0;
+  padding: 18px 22px;
+  border-left: 4px solid var(--gold2);
+  background: rgba(212,160,23,0.08);
+  color: var(--text);
+  border-radius: 0 10px 10px 0;
+  font-size: 17px;
+}
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 28px 0;
+}
+ul, ol {
+  padding-left: 24px;
+}
+li {
+  margin: 6px 0;
+}
+code {
+  font-family: var(--mono);
+  background: var(--bg4);
+  color: var(--gold2);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-size: 0.92em;
+}
+.code-block {
+  background: #05080c;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 18px 0;
+}
+.code-block code {
+  background: transparent;
+  border: 0;
+  color: #d8dee9;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.table-wrap {
+  overflow-x: auto;
+  margin: 22px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+  background: var(--bg3);
+}
+th {
+  background: var(--bg4);
+  color: var(--accent);
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.2px;
+}
+th, td {
+  padding: 11px 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+td {
+  color: var(--text2);
+  font-size: 14px;
+}
+tr:last-child td {
+  border-bottom: 0;
+}
+.confidence {
+  border-left: 4px solid var(--green);
+  background: rgba(63,185,80,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.takeaway {
+  border-left: 4px solid var(--gold2);
+  background: rgba(212,160,23,0.08);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+}
+.figure-note {
+  color: var(--text2);
+  font-size: 14px;
+}
+.figure-placeholder {
+  margin: 28px 0;
+  background: linear-gradient(135deg, rgba(88,166,255,0.08), rgba(57,208,216,0.05));
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 20px;
+}
+.figure-kicker {
+  color: var(--gold2);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.figure-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.figure-body {
+  display: grid;
+  grid-template-columns: 72px minmax(0,1fr);
+  gap: 16px;
+  align-items: center;
+  background: rgba(13,17,23,0.65);
+  border: 1px dashed var(--border2);
+  border-radius: 12px;
+  padding: 18px;
+}
+.figure-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: var(--teal);
+  border: 1px solid var(--teal);
+  font-size: 32px;
+  background: rgba(57,208,216,0.08);
+}
+.figure-path, .figure-status {
+  color: var(--text2);
+  margin: 6px 0;
+  font-size: 13px;
+}
+.figure-source {
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 12px;
+  text-decoration: none;
+}
+.figure-source:hover {
+  text-decoration: underline;
+}
+.muted {
+  color: var(--text3);
+}
+figcaption {
+  color: var(--text2);
+  font-size: 13px;
+  margin-top: 12px;
+}
+.nav-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 44px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+.nav-row a {
+  flex: 1;
+  text-decoration: none;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--text);
+}
+.nav-row a:hover {
+  border-color: var(--accent);
+}
+.nav-row small {
+  display: block;
+  color: var(--text3);
+  font-family: var(--mono);
+  margin-bottom: 4px;
+}
+.nav-row strong {
+  color: var(--accent);
+}
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 22px 16px 60px;
+  }
+  .sidebar {
+    position: static;
+    max-height: none;
+  }
+  .content {
+    padding: 26px 20px;
+  }
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (max-width: 640px) {
+  .figure-body {
+    grid-template-columns: 1fr;
+  }
+  .nav-row {
+    flex-direction: column;
+  }
+  p {
+    font-size: 15px;
+  }
+}
+@media print {
+  body {
+    background: #fff;
+    color: #111;
+  }
+  body::before, .topbar, .sidebar, .anchor {
+    display: none !important;
+  }
+  .layout {
+    display: block;
+    max-width: none;
+    padding: 0;
+  }
+  .content {
+    box-shadow: none;
+    border: 0;
+    padding: 0;
+  }
+  .content h1, .content h2, .content h3, .content h4, p, li, td, th, blockquote {
+    color: #111 !important;
+  }
+  .code-block, code, table, .figure-placeholder {
+    border-color: #999;
+  }
+  a {
+    color: #111;
+    text-decoration: none;
+  }
+  h2 {
+    page-break-before: auto;
+  }
+  .figure-placeholder, table, pre, blockquote {
+    break-inside: avoid;
+  }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <a href="../index.html">AI/ML Infrastructure from Silicon to Scale</a>
+    <span>Chapter 3A · GPU and Accelerator Architecture</span>
+  </div>
+  <nav class="topnav" aria-label="Top navigation">
+    <a href="../index.html">Home</a>
+    <a href="ch02_transformer_architecture.html">Previous: Ch02</a>
+    <a href="../index.html">Next: Ch03B soon</a>
+    <a href="../pdfs/ch03a_gpu_fundamentals.pdf">PDF</a>
+    <a href="../diagrams/diagrams_batch3.html">Related Diagrams</a>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" aria-label="Chapter table of contents">
+    <h2>Chapter Contents</h2>
+    <a class="toc-l2" href="#chapter-overview">Chapter Overview</a>
+<a class="toc-l2" href="#3a0-the-gpu-mental-model">3A.0 The GPU Mental Model</a>
+<a class="toc-l2" href="#figure-placeholder-fig-3a1">Figure Placeholder — Fig 3A.1</a>
+<a class="toc-l2" href="#3a1-gpu-in-one-page">3A.1 GPU in One Page</a>
+<a class="toc-l2" href="#3a2-the-gpu-memory-hierarchy">3A.2 The GPU Memory Hierarchy</a>
+<a class="toc-l2" href="#figure-placeholder-fig-3a2">Figure Placeholder — Fig 3A.2</a>
+<a class="toc-l2" href="#table-3a1-gpu-memory-hierarchy-summary">Table 3A.1 — GPU Memory Hierarchy Summary</a>
+<a class="toc-l2" href="#3a3-hbm-the-scarce-resource-behind-modern-ai">3A.3 HBM: The Scarce Resource Behind Modern AI</a>
+<a class="toc-l3" href="#key-hbm-reference-values">Key HBM Reference Values</a>
+<a class="toc-l3" href="#why-hbm-capacity-matters">Why HBM Capacity Matters</a>
+<a class="toc-l2" href="#3a4-streaming-multiprocessors-where-gpu-execution-happens">3A.4 Streaming Multiprocessors: Where GPU Execution Happens</a>
+<a class="toc-l2" href="#figure-placeholder-fig-3a3">Figure Placeholder — Fig 3A.3</a>
+<a class="toc-l2" href="#table-3a2-streaming-multiprocessor-resource-summary">Table 3A.2 — Streaming Multiprocessor Resource Summary</a>
+<a class="toc-l2" href="#3a5-warps-simt-and-occupancy">3A.5 Warps, SIMT, and Occupancy</a>
+<a class="toc-l2" href="#figure-placeholder-fig-3a4">Figure Placeholder — Fig 3A.4</a>
+<a class="toc-l2" href="#3a6-occupancy-is-not-utilization">3A.6 Occupancy Is Not Utilization</a>
+<a class="toc-l2" href="#3a7-cuda-thread-hierarchy">3A.7 CUDA Thread Hierarchy</a>
+<a class="toc-l2" href="#figure-placeholder-fig-3a5">Figure Placeholder — Fig 3A.5</a>
+<a class="toc-l2" href="#3a8-tensor-cores-the-inner-loop-of-ai-compute">3A.8 Tensor Cores: The Inner Loop of AI Compute</a>
+<a class="toc-l2" href="#figure-placeholder-fig-3a6">Figure Placeholder — Fig 3A.6</a>
+<a class="toc-l2" href="#table-3a3-tensor-core-datatype-support-by-gpu-generation">Table 3A.3 — Tensor Core Datatype Support by GPU Generation</a>
+<a class="toc-l2" href="#3a9-dense-vs-sparse-tflops-the-h100-example">3A.9 Dense vs Sparse TFLOPS: The H100 Example</a>
+<a class="toc-l3" href="#why-this-matters">Why This Matters</a>
+<a class="toc-l2" href="#3a10-hardware-reference-values-used-in-this-book">3A.10 Hardware Reference Values Used in This Book</a>
+<a class="toc-l2" href="#3a11-nvlink-and-nvswitch-the-intra-node-fabric">3A.11 NVLink and NVSwitch: The Intra-Node Fabric</a>
+<a class="toc-l2" href="#figure-placeholder-fig-3a7">Figure Placeholder — Fig 3A.7</a>
+<a class="toc-l2" href="#3a12-pcie-infiniband-and-directionality">3A.12 PCIe, InfiniBand, and Directionality</a>
+<a class="toc-l2" href="#table-3a4-gpu-interconnect-comparison">Table 3A.4 — GPU Interconnect Comparison</a>
+<a class="toc-l2" href="#3a13-pcie-vs-sxmhgx-vs-oam-form-factors">3A.13 PCIe vs SXM/HGX vs OAM Form Factors</a>
+<a class="toc-l3" href="#pcie-gpus">PCIe GPUs</a>
+<a class="toc-l3" href="#sxm-hgx-systems">SXM / HGX Systems</a>
+<a class="toc-l3" href="#oam-style-systems">OAM-Style Systems</a>
+<a class="toc-l2" href="#figure-placeholder-fig-3a8">Figure Placeholder — Fig 3A.8</a>
+<a class="toc-l2" href="#3a14-topology-guidance-without-overclaiming">3A.14 Topology Guidance Without Overclaiming</a>
+<a class="toc-l3" href="#safer-topology-rules">Safer Topology Rules</a>
+<a class="toc-l2" href="#3a15-alternative-accelerators-a-neutral-framework">3A.15 Alternative Accelerators: A Neutral Framework</a>
+<a class="toc-l2" href="#table-3a5-accelerator-selection-matrix">Table 3A.5 — Accelerator Selection Matrix</a>
+<a class="toc-l2" href="#3a16-reading-a-gpu-spec-sheet-like-a-performance-architect">3A.16 Reading a GPU Spec Sheet Like a Performance Architect</a>
+<a class="toc-l2" href="#table-3a6-how-to-read-a-gpu-spec-sheet-like-a-performance-architect">Table 3A.6 — How to Read a GPU Spec Sheet Like a Performance Architect</a>
+<a class="toc-l2" href="#3a17-worked-example-choosing-hardware-for-70b-inference">3A.17 Worked Example: Choosing Hardware for 70B Inference</a>
+<a class="toc-l2" href="#3a18-worked-example-why-tensor-parallelism-needs-local-fabric">3A.18 Worked Example: Why Tensor Parallelism Needs Local Fabric</a>
+<a class="toc-l2" href="#3a19-how-to-explain-gpu-architecture-in-a-principal-interview">3A.19 How to Explain GPU Architecture in a Principal Interview</a>
+<a class="toc-l3" href="#scenario-1-why-is-a-gpu-not-just-a-fast-cpu">Scenario 1 — Why Is a GPU Not Just a Fast CPU?</a>
+<a class="toc-l3" href="#scenario-2-why-do-tensor-cores-matter">Scenario 2 — Why Do Tensor Cores Matter?</a>
+<a class="toc-l3" href="#scenario-3-why-can-high-occupancy-still-be-slow">Scenario 3 — Why Can High Occupancy Still Be Slow?</a>
+<a class="toc-l3" href="#scenario-4-why-does-hbm-matter-for-llm-inference">Scenario 4 — Why Does HBM Matter for LLM Inference?</a>
+<a class="toc-l3" href="#scenario-5-why-does-nvlink-matter">Scenario 5 — Why Does NVLink Matter?</a>
+<a class="toc-l3" href="#scenario-6-when-is-pcie-good-enough">Scenario 6 — When Is PCIe Good Enough?</a>
+<a class="toc-l3" href="#scenario-7-how-do-you-choose-h100-vs-h200-vs-mi300x">Scenario 7 — How Do You Choose H100 vs H200 vs MI300X?</a>
+<a class="toc-l2" href="#3a20-chapter-cheat-sheet">3A.20 Chapter Cheat Sheet</a>
+<a class="toc-l3" href="#cpu-vs-gpu">CPU vs GPU</a>
+<a class="toc-l3" href="#gpu-execution">GPU Execution</a>
+<a class="toc-l3" href="#occupancy-vs-utilization">Occupancy vs Utilization</a>
+<a class="toc-l3" href="#h100-sxm5-reference">H100 SXM5 Reference</a>
+<a class="toc-l3" href="#h200-reference">H200 Reference</a>
+<a class="toc-l3" href="#mi300x-reference">MI300X Reference</a>
+<a class="toc-l3" href="#pcie-50-x16">PCIe 5.0 x16</a>
+<a class="toc-l3" href="#ndr-infiniband">NDR InfiniBand</a>
+<a class="toc-l3" href="#spec-sheet-rule">Spec-Sheet Rule</a>
+<a class="toc-l2" href="#3a21-key-takeaways">3A.21 Key Takeaways</a>
+<a class="toc-l2" href="#3a22-review-questions">3A.22 Review Questions</a>
+<a class="toc-l3" href="#conceptual">Conceptual</a>
+<a class="toc-l3" href="#calculation">Calculation</a>
+<a class="toc-l3" href="#principal-level-interview-practice">Principal-Level Interview Practice</a>
+<a class="toc-l2" href="#3a23-bridge-to-chapter-3b">3A.23 Bridge to Chapter 3B</a>
+  </aside>
+
+  <main class="content">
+    <h1 id="chapter-3a-gpu-and-accelerator-architecture-fundamentals">Chapter 3A — GPU and Accelerator Architecture Fundamentals<a class="anchor" href="#chapter-3a-gpu-and-accelerator-architecture-fundamentals" aria-label="Link to this section">#</a></h1>
+<blockquote>“A GPU is not a faster CPU. It is a throughput machine built around parallel execution, memory hierarchy, matrix engines, and communication fabric.”</blockquote>
+<hr>
+<h2 id="chapter-overview">Chapter Overview<a class="anchor" href="#chapter-overview" aria-label="Link to this section">#</a></h2>
+<p>Chapter 1 gave us the performance mindset: classify the bottleneck before optimizing.</p>
+<p>Chapter 2 showed that a transformer is not just a model architecture. It is a workload made of GEMMs, attention, normalization, KV-cache state, and memory movement.</p>
+<p>Chapter 3A moves down into the hardware.</p>
+<p>The goal of this chapter is not to memorize every GPU specification. Hardware changes too fast for that. The goal is to build a mental model that lets you read any accelerator spec sheet and ask the right questions:</p>
+<ul>
+<li>Does the model fit in HBM?</li>
+<li>Is the workload compute-bound, memory-bound, communication-bound, or overhead-bound?</li>
+<li>Does the workload use Tensor Cores or equivalent matrix engines efficiently?</li>
+<li>Does the topology support the parallelism strategy?</li>
+<li>Does the software stack expose the hardware capability?</li>
+<li>What does the system cost in power, cooling, latency, and operational risk?</li>
+</ul>
+<p>A principal AI/ML performance architect does not choose a GPU because one number is large. They choose a system because the hardware, software stack, workload shape, and cost model fit together.</p>
+<p>By the end of this chapter, you should be able to:</p>
+<ul>
+<li>Explain why GPUs are throughput machines, not latency machines.</li>
+<li>Explain the CPU vs GPU architectural tradeoff.</li>
+<li>Describe Streaming Multiprocessors, warps, SIMT execution, occupancy, and CUDA hierarchy.</li>
+<li>Explain why Tensor Cores matter for AI workloads.</li>
+<li>Explain why Tensor Core peak throughput is not automatic.</li>
+<li>Reason about GPU memory hierarchy: registers, shared memory/L1, L2, HBM, host memory, and network memory paths.</li>
+<li>Correctly distinguish dense vs sparse peak TFLOPS.</li>
+<li>Explain H100, H200, MI300X, and Blackwell-class hardware values with confidence labels.</li>
+<li>Explain PCIe, NVLink, NVSwitch, and InfiniBand directionality.</li>
+<li>Explain PCIe vs SXM/HGX vs OAM form-factor tradeoffs.</li>
+<li>Compare NVIDIA, AMD, TPU, and Gaudi-style accelerators neutrally.</li>
+<li>Read a GPU spec sheet like a performance architect.</li>
+<li>Explain GPU architecture in a principal-level interview.</li>
+</ul>
+<hr>
+<h2 id="3a0-the-gpu-mental-model">3A.0 The GPU Mental Model<a class="anchor" href="#3a0-the-gpu-mental-model" aria-label="Link to this section">#</a></h2>
+<p>Most engineers first learn performance on CPUs.</p>
+<p>That shapes their instincts:</p>
+<pre class="code-block"><code>CPU instinct:
+Make one thread fast.
+Avoid branch misprediction.
+Improve cache locality.
+Reduce latency.</code></pre>
+<p>Those instincts are useful, but incomplete for AI infrastructure.</p>
+<p>A GPU is designed differently:</p>
+<pre class="code-block"><code>GPU instinct:
+Run many threads.
+Hide latency with occupancy.
+Use massive memory bandwidth.
+Feed matrix engines.
+Maximize throughput.</code></pre>
+<p>A CPU spends a large fraction of its silicon budget on sophisticated control logic: branch prediction, out-of-order execution, speculative execution, large caches, and latency optimization.</p>
+<p>A GPU spends more of its silicon budget on parallel execution units, high-bandwidth memory interfaces, and matrix-multiply engines.</p>
+<p>That is why the GPU is powerful for transformers.</p>
+<p>A transformer exposes enormous amounts of parallel matrix work:</p>
+<ul>
+<li>QKV projection GEMMs</li>
+<li>Output projection GEMMs</li>
+<li>FFN / SwiGLU GEMMs</li>
+<li>Attention kernels</li>
+<li>Batched inference</li>
+<li>Large training batches</li>
+<li>Distributed collective operations</li>
+</ul>
+<p>But the GPU is not magic. It needs the workload to be shaped correctly. A small, divergent, memory-bound, poorly aligned workload can leave most of the GPU idle.</p>
+<hr>
+<h2 id="figure-placeholder-fig-3a1">Figure Placeholder — Fig 3A.1<a class="anchor" href="#figure-placeholder-fig-3a1" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-3a1-gpu-vs-cpu-architecture-comparison">
+  <div class="figure-kicker">Fig 3A.1</div>
+  <div class="figure-title">GPU vs CPU Architecture Comparison</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A comparison of CPU latency-optimized design and GPU throughput-optimized design for parallel AI workloads.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/png_300dpi/ch03a_fig_3a_1_gpu_vs_cpu_architecture.png</code></p>
+      <p class="figure-status">Existing diagram; print export needed</p>
+      <a class="figure-source" href="../diagrams/diagrams_batch3.html#d25">View source diagram</a>
+    </div>
+  </div>
+  <figcaption><strong>Fig 3A.1 — GPU vs CPU Architecture Comparison.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> The first mistake many engineers make is treating a GPU as a faster CPU. It is not. CPUs and GPUs make different architectural tradeoffs. CPUs spend more silicon on control and low-latency execution. GPUs spend more silicon on parallel execution units and memory bandwidth.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> This difference explains why GPUs are powerful for transformer workloads. Training and prefill contain large GEMMs and attention kernels that expose massive parallelism. But the same difference also explains why branch divergence, small batches, poor memory locality, and decode memory pressure can underutilize the GPU.</p>
+<blockquote><strong>Key Takeaway:</strong> A CPU is a latency machine. A GPU is a throughput machine. AI performance depends on exposing enough parallel work to keep the GPU’s execution units and memory system busy.</blockquote>
+<hr>
+<h2 id="3a1-gpu-in-one-page">3A.1 GPU in One Page<a class="anchor" href="#3a1-gpu-in-one-page" aria-label="Link to this section">#</a></h2>
+<p>A GPU can be summarized like this:</p>
+<pre class="code-block"><code>Threads are grouped into warps.
+Warps are scheduled on SMs.
+SMs execute instructions on CUDA cores, Tensor Cores, load/store units, and special-function units.
+Tensor Cores provide the matrix math throughput that powers modern AI.
+Registers and shared memory are closest to compute.
+L2 and HBM feed the whole GPU.
+NVLink/NVSwitch connect GPUs inside a node.
+InfiniBand/Ethernet connect nodes across a cluster.</code></pre>
+<p>This chapter expands that summary one layer at a time.</p>
+<hr>
+<h2 id="3a2-the-gpu-memory-hierarchy">3A.2 The GPU Memory Hierarchy<a class="anchor" href="#3a2-the-gpu-memory-hierarchy" aria-label="Link to this section">#</a></h2>
+<p>Most GPU performance problems are data movement problems.</p>
+<p>The arithmetic units are fast. The question is whether data arrives on time, in the right layout, at the right reuse distance.</p>
+<p>For transformer workloads:</p>
+<ul>
+<li>QKV and FFN GEMMs want high Tensor Core utilization.</li>
+<li>FlashAttention wants on-chip tile reuse.</li>
+<li>LayerNorm and RMSNorm often stream through HBM.</li>
+<li>RoPE should usually be fused with nearby operations.</li>
+<li>KV cache stresses HBM capacity and bandwidth.</li>
+<li>Tensor parallelism stresses interconnect bandwidth and latency.</li>
+</ul>
+<p>The memory hierarchy explains why.</p>
+<p>The closer data is to the SM, the faster and more efficient it is. But closer memory is smaller. Farther memory is larger but slower and more expensive to access.</p>
+<hr>
+<h2 id="figure-placeholder-fig-3a2">Figure Placeholder — Fig 3A.2<a class="anchor" href="#figure-placeholder-fig-3a2" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-3a2-gpu-memory-hierarchy">
+  <div class="figure-kicker">Fig 3A.2</div>
+  <div class="figure-title">GPU Memory Hierarchy</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A hierarchy view showing registers, shared memory/L1, L2, HBM, host memory, and network paths.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/png_300dpi/ch03a_fig_3a_2_gpu_memory_hierarchy.png</code></p>
+      <p class="figure-status">Existing diagram; print export needed</p>
+      <a class="figure-source" href="../diagrams/diagram_01_memory_hierarchy.html">View source diagram</a>
+    </div>
+  </div>
+  <figcaption><strong>Fig 3A.2 — GPU Memory Hierarchy.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> Most GPU performance problems are data movement problems. Tensor Cores can execute enormous amounts of math, but they are only useful if data arrives in the right shape at the right time.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> Registers and shared memory are close to the math but limited in capacity. HBM provides high bandwidth but is much slower and more energy-expensive than on-chip storage. PCIe and host memory are farther away still. A strong GPU performance engineer tries to maximize reuse before data leaves the closest usable memory tier.</p>
+<blockquote><strong>Key Takeaway:</strong> GPU optimization is often the art of moving data fewer times and reusing it closer to the compute units.</blockquote>
+<hr>
+<h2 id="table-3a1-gpu-memory-hierarchy-summary">Table 3A.1 — GPU Memory Hierarchy Summary<a class="anchor" href="#table-3a1-gpu-memory-hierarchy-summary" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Tier</th><th>Scope</th><th>Capacity</th><th>Performance Role</th><th>Common Optimization</th></tr></thead><tbody><tr><td>Registers</td><td>Per thread</td><td>Tiny</td><td>Fastest operand storage</td><td>Keep hot values in registers</td></tr><tr><td>Shared memory / L1</td><td>Per SM</td><td>Small</td><td>Explicit tile reuse and low-latency sharing</td><td>Tiling, bank-conflict avoidance</td></tr><tr><td>L2 cache</td><td>Whole GPU</td><td>Medium</td><td>Cross-SM reuse and HBM traffic reduction</td><td>Locality, reuse, streaming behavior</td></tr><tr><td>HBM</td><td>Whole GPU</td><td>Large</td><td>Main high-bandwidth model, activation, and KV storage</td><td>Coalescing, fusion, quantization, cache layout</td></tr><tr><td>PCIe / Host memory</td><td>CPU-GPU path</td><td>Very large</td><td>Data staging, offload, slow fallback</td><td>Avoid in critical path, prefetch, pin memory</td></tr><tr><td>Network memory path</td><td>Multi-node</td><td>Remote</td><td>Distributed training and serving communication</td><td>Overlap, topology-aware placement</td></tr></tbody></table></div>
+<p>The same transformer operation can behave differently depending on which memory tier it stresses.</p>
+<p>A GEMM with good tile reuse can be compute-bound. A normalization kernel that streams through HBM with little reuse can be memory-bound. A distributed training step can become network-bound even when local GPU behavior is excellent.</p>
+<blockquote><strong>Key Takeaway:</strong> The right optimization depends on which memory tier is the bottleneck. Do not treat all data movement as the same.</blockquote>
+<hr>
+<h2 id="3a3-hbm-the-scarce-resource-behind-modern-ai">3A.3 HBM: The Scarce Resource Behind Modern AI<a class="anchor" href="#3a3-hbm-the-scarce-resource-behind-modern-ai" aria-label="Link to this section">#</a></h2>
+<p>High Bandwidth Memory, or HBM, is one of the most important resources in AI systems.</p>
+<p>HBM determines:</p>
+<ul>
+<li>Whether the model fits.</li>
+<li>How large the KV cache can be.</li>
+<li>How many concurrent requests can be served.</li>
+<li>How much tensor parallelism is required.</li>
+<li>Whether decode is bandwidth-limited.</li>
+<li>Whether long context is practical.</li>
+</ul>
+<h3 id="key-hbm-reference-values">Key HBM Reference Values<a class="anchor" href="#key-hbm-reference-values" aria-label="Link to this section">#</a></h3>
+<div class="table-wrap"><table><thead><tr><th>Accelerator</th><th>HBM Capacity</th><th>HBM Bandwidth</th><th>Confidence</th></tr></thead><tbody><tr><td>NVIDIA H100 SXM5</td><td>80 GB HBM3</td><td>3.35 TB/s</td><td><code>[SHIPPED]</code></td></tr><tr><td>NVIDIA H200</td><td>141 GB HBM3e</td><td>4.8 TB/s</td><td><code>[SHIPPED]</code></td></tr><tr><td>AMD MI300X</td><td>192 GB HBM3</td><td>≈5.3 TB/s</td><td><code>[SHIPPED]</code></td></tr></tbody></table></div>
+<p class="confidence">[SHIPPED] H100 SXM5 80 GB provides 80 GB of HBM3 with 3.35 TB/s peak memory bandwidth.</p>
+<p class="confidence">[SHIPPED] H200 provides 141 GB of HBM3e with 4.8 TB/s peak memory bandwidth.</p>
+<p class="confidence">[SHIPPED] AMD Instinct MI300X provides 192 GB of HBM3 and approximately 5.3 TB/s peak memory bandwidth.</p>
+<h3 id="why-hbm-capacity-matters">Why HBM Capacity Matters<a class="anchor" href="#why-hbm-capacity-matters" aria-label="Link to this section">#</a></h3>
+<p>For a 70B dense model:</p>
+<pre class="code-block"><code>BF16 weight memory ≈ 70B parameters × 2 bytes = 140 GB
+FP8 weight memory  ≈ 70B parameters × 1 byte  = 70 GB
+INT4 weight memory ≈ 70B parameters × 0.5 byte = 35 GB</code></pre>
+<p>An 80 GB H100 can hold FP8 weights for a 70B model, but KV cache, activations, runtime buffers, and fragmentation still matter.</p>
+<p>An H200 changes the serving economics because 141 GB leaves much more room for KV cache.</p>
+<p>An MI300X changes a different dimension because 192 GB HBM can reduce or eliminate some model-sharding pressure for memory-heavy workloads.</p>
+<blockquote><strong>Key Takeaway:</strong> For LLM inference, HBM capacity can matter as much as peak TFLOPS. If weights and KV cache do not fit, the theoretical compute roof is irrelevant.</blockquote>
+<hr>
+<h2 id="3a4-streaming-multiprocessors-where-gpu-execution-happens">3A.4 Streaming Multiprocessors: Where GPU Execution Happens<a class="anchor" href="#3a4-streaming-multiprocessors-where-gpu-execution-happens" aria-label="Link to this section">#</a></h2>
+<p>The Streaming Multiprocessor, or SM, is the central execution unit of an NVIDIA GPU.</p>
+<p>A kernel launch creates work. That work is divided into blocks and warps. Blocks are scheduled onto SMs. Warps execute on the SM’s functional units.</p>
+<p>An SM contains resources such as:</p>
+<ul>
+<li>Warp schedulers</li>
+<li>CUDA cores</li>
+<li>Tensor Cores</li>
+<li>Load/store units</li>
+<li>Registers</li>
+<li>Shared memory / L1</li>
+<li>Special function units</li>
+<li>Instruction pipelines</li>
+</ul>
+<p class="confidence">[SHIPPED] The H100 SXM5 80 GB configuration exposes 132 SMs. Treat SM count as SKU-specific when comparing PCIe, NVL, SXM, or future derivatives.</p>
+<p class="confidence">[SHIPPED] H100 SXM5 includes 50 MB of unified L2 cache.</p>
+<p class="confidence">[SHIPPED] H100 provides a large per-SM shared-memory/L1 subsystem, with up to 228 KB of shared memory per SM depending on configuration. Effective kernel behavior depends on shared-memory allocation, cache configuration, access pattern, and compiler/kernel implementation.</p>
+<hr>
+<h2 id="figure-placeholder-fig-3a3">Figure Placeholder — Fig 3A.3<a class="anchor" href="#figure-placeholder-fig-3a3" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-3a3-h100-streaming-multiprocessor-internal-block-diagram">
+  <div class="figure-kicker">Fig 3A.3</div>
+  <div class="figure-title">H100 Streaming Multiprocessor Internal Block Diagram</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>An SM-level view of warp schedulers, CUDA cores, Tensor Cores, load/store units, registers, and shared memory/L1.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/png_300dpi/ch03a_fig_3a_3_h100_sm_internal_block.png</code></p>
+      <p class="figure-status">Existing diagram; print export needed</p>
+      <a class="figure-source" href="../diagrams/diagrams_batch1.html#d3">View source diagram</a>
+    </div>
+  </div>
+  <figcaption><strong>Fig 3A.3 — H100 Streaming Multiprocessor Internal Block Diagram.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> The SM is where GPU work actually executes. When a kernel launches, blocks are scheduled onto SMs, warps are issued by warp schedulers, and instructions execute on functional units such as CUDA cores, Tensor Cores, and load/store pipelines.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> A kernel can be limited by Tensor Core utilization, load/store throughput, register pressure, shared-memory usage, occupancy, instruction scheduling, or memory stalls. The SM is the bridge between code-level choices and hardware-level execution.</p>
+<blockquote><strong>Key Takeaway:</strong> The SM is the unit where GPU performance becomes real. Occupancy, warp scheduling, Tensor Core use, memory stalls, and register pressure all meet inside the SM.</blockquote>
+<hr>
+<h2 id="table-3a2-streaming-multiprocessor-resource-summary">Table 3A.2 — Streaming Multiprocessor Resource Summary<a class="anchor" href="#table-3a2-streaming-multiprocessor-resource-summary" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Resource</th><th>What It Does</th><th>Why It Matters</th></tr></thead><tbody><tr><td>Warp schedulers</td><td>Issue instructions for resident warps</td><td>Determines ability to hide latency</td></tr><tr><td>CUDA cores</td><td>Execute scalar/vector FP32/INT-style instructions</td><td>Handles non-Tensor-Core math and control-heavy code</td></tr><tr><td>Tensor Cores</td><td>Execute matrix-multiply-accumulate operations</td><td>Main source of AI GEMM throughput</td></tr><tr><td>Load/store units</td><td>Move data between memory hierarchy and registers</td><td>Critical for memory-bound kernels</td></tr><tr><td>Registers</td><td>Fast per-thread storage</td><td>Too much register use can reduce occupancy</td></tr><tr><td>Shared memory / L1</td><td>On-chip data sharing and tile reuse</td><td>Enables high-performance tiling</td></tr><tr><td>L2 cache</td><td>Shared cache across SMs</td><td>Reduces HBM traffic</td></tr><tr><td>Occupancy slots</td><td>Resident warps/blocks</td><td>Helps hide latency but is not the same as utilization</td></tr></tbody></table></div>
+<p>When a kernel is slow, this table helps route the investigation.</p>
+<ul>
+<li>High register usage may limit occupancy.</li>
+<li>Poor memory coalescing may stress load/store units.</li>
+<li>A GEMM that does not use Tensor Cores may leave most AI throughput unused.</li>
+<li>A memory-bound kernel may not improve even if occupancy is high.</li>
+</ul>
+<blockquote><strong>Key Takeaway:</strong> SM performance is not one number. It is the interaction of schedulers, Tensor Cores, memory pipelines, registers, shared memory, and occupancy.</blockquote>
+<hr>
+<h2 id="3a5-warps-simt-and-occupancy">3A.5 Warps, SIMT, and Occupancy<a class="anchor" href="#3a5-warps-simt-and-occupancy" aria-label="Link to this section">#</a></h2>
+<p>A warp is the basic scheduling unit on NVIDIA GPUs.</p>
+<p>On NVIDIA GPUs, a warp contains 32 threads.</p>
+<p>GPU programming often looks like scalar programming:</p>
+<pre class="code-block"><code>if (condition) {
+    do_path_A();
+} else {
+    do_path_B();
+}</code></pre>
+<p>But the hardware executes groups of lanes together. This is called SIMT: Single Instruction, Multiple Threads.</p>
+<p>When all threads in a warp follow the same path, execution is efficient.</p>
+<p>When different threads take different branches, the warp may execute both paths serially while masking off inactive lanes. This is called divergence.</p>
+<hr>
+<h2 id="figure-placeholder-fig-3a4">Figure Placeholder — Fig 3A.4<a class="anchor" href="#figure-placeholder-fig-3a4" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-3a4-simt-warp-execution-divergence-and-occupancy">
+  <div class="figure-kicker">Fig 3A.4</div>
+  <div class="figure-title">SIMT Warp Execution: Divergence and Occupancy</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A visual explanation of warp lockstep execution, branch divergence, and why occupancy is not utilization.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/png_300dpi/ch03a_fig_3a_4_simt_warp_execution.png</code></p>
+      <p class="figure-status">Existing diagram; print export needed</p>
+      <a class="figure-source" href="../diagrams/diagrams_batch3.html#d26">View source diagram</a>
+    </div>
+  </div>
+  <figcaption><strong>Fig 3A.4 — SIMT Warp Execution: Divergence and Occupancy.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> GPUs execute groups of threads called warps. The SIMT model lets the programmer write scalar-looking code while the hardware issues instructions across a warp of lanes.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> Warp execution is efficient when threads follow the same path and access memory coherently. Divergence causes the warp to execute multiple paths serially. Occupancy measures how many warps are resident, but high occupancy does not guarantee high useful throughput.</p>
+<blockquote><strong>Key Takeaway:</strong> Warp divergence wastes parallel lanes. Occupancy helps hide latency, but it is not the same as useful hardware utilization.</blockquote>
+<hr>
+<h2 id="3a6-occupancy-is-not-utilization">3A.6 Occupancy Is Not Utilization<a class="anchor" href="#3a6-occupancy-is-not-utilization" aria-label="Link to this section">#</a></h2>
+<p>This concept is important enough to isolate.</p>
+<pre class="code-block"><code>Occupancy = how many warps are resident.
+Utilization = how much useful work the hardware is doing.</code></pre>
+<p>High occupancy can help hide memory latency. But high occupancy is not always the goal.</p>
+<p>A low-occupancy kernel can be excellent if it:</p>
+<ul>
+<li>Uses Tensor Cores efficiently.</li>
+<li>Reduces HBM traffic.</li>
+<li>Uses shared memory well.</li>
+<li>Avoids unnecessary synchronization.</li>
+<li>Saturates the true bottleneck.</li>
+</ul>
+<p>A high-occupancy kernel can still be slow if it:</p>
+<ul>
+<li>Performs uncoalesced memory accesses.</li>
+<li>Diverges heavily.</li>
+<li>Spills registers to local memory.</li>
+<li>Uses the wrong datatype path.</li>
+<li>Misses Tensor Core acceleration.</li>
+<li>Stalls on memory or synchronization.</li>
+</ul>
+<p class="confidence">[REPRESENTATIVE] Occupancy is a diagnostic signal, not a performance goal by itself.</p>
+<blockquote><strong>Key Takeaway:</strong> Do not optimize occupancy blindly. First identify whether the bottleneck is compute, memory, latency hiding, synchronization, or instruction mix.</blockquote>
+<hr>
+<h2 id="3a7-cuda-thread-hierarchy">3A.7 CUDA Thread Hierarchy<a class="anchor" href="#3a7-cuda-thread-hierarchy" aria-label="Link to this section">#</a></h2>
+<p>CUDA exposes a hierarchy:</p>
+<pre class="code-block"><code>Grid
+  └── Blocks
+        └── Warps
+              └── Threads</code></pre>
+<p>A kernel launch creates a grid. The grid contains blocks. Blocks contain threads. Threads execute in warps.</p>
+<p>The hardware schedules blocks onto SMs based on available resources:</p>
+<ul>
+<li>Registers per thread</li>
+<li>Shared memory per block</li>
+<li>Threads per block</li>
+<li>Warps per block</li>
+<li>Hardware limits per SM</li>
+</ul>
+<p>This is why block size, register pressure, and shared-memory usage matter.</p>
+<hr>
+<h2 id="figure-placeholder-fig-3a5">Figure Placeholder — Fig 3A.5<a class="anchor" href="#figure-placeholder-fig-3a5" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-3a5-cuda-thread-hierarchy-grid-block-warp-thread">
+  <div class="figure-kicker">Fig 3A.5</div>
+  <div class="figure-title">CUDA Thread Hierarchy: Grid, Block, Warp, Thread</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A diagram connecting CUDA programming hierarchy to GPU scheduling and SM execution.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/png_300dpi/ch03a_fig_3a_5_cuda_thread_hierarchy.png</code></p>
+      <p class="figure-status">Existing diagram; print export needed</p>
+      <a class="figure-source" href="../diagrams/diagrams_batch3.html#d27">View source diagram</a>
+    </div>
+  </div>
+  <figcaption><strong>Fig 3A.5 — CUDA Thread Hierarchy: Grid, Block, Warp, Thread.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> To connect code to hardware, the reader needs the CUDA execution hierarchy. A kernel launch creates a grid. The grid contains blocks. Blocks contain threads. Threads are executed in warps. Blocks are assigned to SMs based on available resources.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> This hierarchy explains why block size, shared-memory use, register count, and occupancy matter. A kernel with too many registers or too much shared memory per block may reduce the number of blocks that fit on an SM. A kernel with poor thread mapping may produce uncoalesced memory access or divergence.</p>
+<blockquote><strong>Key Takeaway:</strong> CUDA programming choices become hardware scheduling choices. Grid, block, warp, and thread layout affect occupancy, memory access, and SM utilization.</blockquote>
+<hr>
+<h2 id="3a8-tensor-cores-the-inner-loop-of-ai-compute">3A.8 Tensor Cores: The Inner Loop of AI Compute<a class="anchor" href="#3a8-tensor-cores-the-inner-loop-of-ai-compute" aria-label="Link to this section">#</a></h2>
+<p>Tensor Cores are specialized matrix-multiply-accumulate engines.</p>
+<p>They are one of the biggest reasons modern GPUs are effective for AI workloads.</p>
+<p>Most transformer arithmetic is matrix multiplication:</p>
+<pre class="code-block"><code>C = A × B + C</code></pre>
+<p>Tensor Cores accelerate this operation for supported datatypes and tile shapes.</p>
+<p>Examples include:</p>
+<ul>
+<li>FP16</li>
+<li>BF16</li>
+<li>TF32</li>
+<li>FP8</li>
+<li>INT8</li>
+<li>FP4-related paths on newer Blackwell-class systems</li>
+</ul>
+<p>But peak Tensor Core throughput is not automatic.</p>
+<p>A workload must satisfy requirements such as:</p>
+<ul>
+<li>Supported datatype</li>
+<li>Compatible dimensions</li>
+<li>Efficient layout</li>
+<li>Proper alignment</li>
+<li>Good memory access pattern</li>
+<li>Kernel path that actually emits Tensor Core instructions</li>
+<li>Enough work to amortize overhead</li>
+</ul>
+<p class="confidence">[REPRESENTATIVE] Tensor Core efficiency depends on datatype, matrix dimensions, tile shape, memory layout, and kernel selection. Poorly aligned dimensions may trigger padding, a less efficient kernel path, or reduced Tensor Core utilization depending on framework, library, and hardware generation.</p>
+<p>Do not say:</p>
+<pre class="code-block"><code>Misaligned shapes always fall back to CUDA cores.</code></pre>
+<p>Safer:</p>
+<pre class="code-block"><code>Misaligned shapes can reduce Tensor Core efficiency or cause framework/kernel-dependent padding, fallback, or slower kernel selection.</code></pre>
+<hr>
+<h2 id="figure-placeholder-fig-3a6">Figure Placeholder — Fig 3A.6<a class="anchor" href="#figure-placeholder-fig-3a6" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-3a6-tensor-core-wgmma-conceptual-data-path">
+  <div class="figure-kicker">Fig 3A.6</div>
+  <div class="figure-title">Tensor Core / WGMMA Conceptual Data Path</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A conceptual view of matrix tiles, accumulator tiles, supported datatypes, and Tensor Core execution paths.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch03a_fig_3a_6_tensor_core_wgmma_concept.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+      <span class="figure-source muted">Source diagram pending</span>
+    </div>
+  </div>
+  <figcaption><strong>Fig 3A.6 — Tensor Core / WGMMA Conceptual Data Path.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> Tensor Cores are the hardware reason modern GPUs can deliver enormous AI throughput. But peak Tensor Core throughput is only available when the workload uses compatible datatypes, shapes, layouts, and kernels.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> A GEMM that maps cleanly to Tensor Core tiles can approach high throughput. A GEMM with poor alignment, unsupported dtype, excessive layout conversion, or a fallback kernel may use much less of the theoretical peak. Hopper and later GPUs also introduce more advanced matrix instructions and scheduling patterns such as WGMMA, which should be introduced conceptually before deep kernel work.</p>
+<blockquote><strong>Key Takeaway:</strong> Tensor Core peak TFLOPS is not automatic. The kernel must use the right datatype, tile shape, alignment, memory layout, and instruction path.</blockquote>
+<hr>
+<h2 id="table-3a3-tensor-core-datatype-support-by-gpu-generation">Table 3A.3 — Tensor Core Datatype Support by GPU Generation<a class="anchor" href="#table-3a3-tensor-core-datatype-support-by-gpu-generation" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Generation</th><th>Example GPUs</th><th>Representative Tensor Core Formats</th><th>Production Note</th></tr></thead><tbody><tr><td>Volta</td><td>V100</td><td>FP16</td><td><code>[SHIPPED]</code> Introduced Tensor Cores for FP16 mixed-precision matrix math</td></tr><tr><td>Ampere</td><td>A100</td><td>TF32, FP16, BF16, INT8, sparsity paths</td><td><code>[SHIPPED]</code> Important generation for mixed-precision training and TF32</td></tr><tr><td>Hopper</td><td>H100/H200</td><td>FP8, BF16, FP16, TF32, INT8, Transformer Engine</td><td><code>[SHIPPED]</code> Key generation for FP8 LLM training/inference</td></tr><tr><td>Blackwell</td><td>B100/B200/GB200 family</td><td>FP4/FP6/FP8 and newer Tensor Core paths as applicable</td><td><code>[SHIPPED/ANNOUNCED]</code> Product-specific; verify exact SKU and release status</td></tr></tbody></table></div>
+<p>The practical lesson is not to memorize this table forever. The practical lesson is that precision choice, quantization strategy, and hardware generation must be evaluated together.</p>
+<blockquote><strong>Key Takeaway:</strong> Precision is a hardware decision as much as a model decision. If the datatype does not map to fast matrix-engine paths, theoretical model efficiency may not become real system throughput.</blockquote>
+<hr>
+<h2 id="3a9-dense-vs-sparse-tflops-the-h100-example">3A.9 Dense vs Sparse TFLOPS: The H100 Example<a class="anchor" href="#3a9-dense-vs-sparse-tflops-the-h100-example" aria-label="Link to this section">#</a></h2>
+<p>This is one of the most common hardware-number mistakes.</p>
+<p>Vendor tables often list Tensor Core throughput with sparsity enabled. That number is not the dense model peak.</p>
+<p>For H100 SXM5 BF16:</p>
+<p class="confidence">[DERIVED FROM SHIPPED]</p>
+<pre class="code-block"><code>Sparse BF16 peak ≈ 1,978.9 TFLOPS
+Dense BF16 peak  ≈ 1,978.9 / 2
+                 ≈ 989.4 TFLOPS</code></pre>
+<p>Use:</p>
+<pre class="code-block"><code>H100 SXM5 dense/non-sparse BF16 Tensor Core peak ≈ 989.4 TFLOPS</code></pre>
+<p>Use separately:</p>
+<pre class="code-block"><code>H100 SXM5 sparse BF16 Tensor Core peak ≈ 1,978.9 TFLOPS</code></pre>
+<p>Do not write:</p>
+<pre class="code-block"><code>H100 BF16 peak = 1,979 TFLOPS</code></pre>
+<p>unless you clearly say:</p>
+<pre class="code-block"><code>with structured sparsity</code></pre>
+<h3 id="why-this-matters">Why This Matters<a class="anchor" href="#why-this-matters" aria-label="Link to this section">#</a></h3>
+<p>If you use sparse peak for dense model MFU, you understate your utilization by 2×.</p>
+<p>Example:</p>
+<pre class="code-block"><code>Measured dense BF16 throughput = 500 TFLOPS
+
+Using dense peak:
+MFU = 500 / 989.4 ≈ 50.5%
+
+Using sparse peak incorrectly:
+MFU = 500 / 1978.9 ≈ 25.3%</code></pre>
+<p>The same workload looks half as efficient because the wrong denominator was used.</p>
+<blockquote><strong>Key Takeaway:</strong> Always compare dense workloads to dense peak and sparse workloads to sparse peak.</blockquote>
+<hr>
+<h2 id="3a10-hardware-reference-values-used-in-this-book">3A.10 Hardware Reference Values Used in This Book<a class="anchor" href="#3a10-hardware-reference-values-used-in-this-book" aria-label="Link to this section">#</a></h2>
+<p>The values below are included for Chapter 3A reasoning. Treat Appendix A as the canonical hardware reference table.</p>
+<div class="table-wrap"><table><thead><tr><th>GPU / Accelerator</th><th>Memory</th><th>Bandwidth</th><th>Dense BF16 Peak</th><th>Sparse BF16 Peak</th><th>Label</th></tr></thead><tbody><tr><td>H100 SXM5</td><td>80 GB HBM3</td><td>3.35 TB/s</td><td>≈989.4 TFLOPS</td><td>≈1,978.9 TFLOPS</td><td><code>[SHIPPED]</code> / <code>[DERIVED FROM SHIPPED]</code></td></tr><tr><td>H200</td><td>141 GB HBM3e</td><td>4.8 TB/s</td><td>Hopper-generation compute; verify exact SKU table</td><td>Hopper-generation sparse/dense distinction applies</td><td><code>[SHIPPED]</code></td></tr><tr><td>MI300X</td><td>192 GB HBM3</td><td>≈5.3 TB/s</td><td>≈1,307.4 TFLOPS</td><td>≈2,614.9 TFLOPS</td><td><code>[SHIPPED]</code></td></tr><tr><td>B200 / GB200 family</td><td>Product-specific</td><td>Product/system/rack-specific</td><td>Product-specific</td><td>Product-specific</td><td><code>[SHIPPED/ANNOUNCED]</code></td></tr></tbody></table></div>
+<p class="confidence">[SHIPPED] AMD Instinct MI300X peak theoretical dense BF16 performance is approximately 1,307.4 TFLOPS. With structured sparsity, AMD lists approximately 2,614.9 TFLOPS. Compare dense-to-dense and sparse-to-sparse values only.</p>
+<p>[SHIPPED/ANNOUNCED] Blackwell values should be stated by product: B200 GPU, DGX B200 8-GPU system, GB200 Superchip, or GB200 NVL72 rack. Do not quote a single “B200 number” without saying which product and whether the number is per GPU, per system, or per rack.</p>
+<hr>
+<h2 id="3a11-nvlink-and-nvswitch-the-intra-node-fabric">3A.11 NVLink and NVSwitch: The Intra-Node Fabric<a class="anchor" href="#3a11-nvlink-and-nvswitch-the-intra-node-fabric" aria-label="Link to this section">#</a></h2>
+<p>Single-GPU performance is not enough for large models.</p>
+<p>When a model is partitioned across GPUs, the interconnect becomes part of the model execution path.</p>
+<p>Tensor parallelism, pipeline parallelism, expert parallelism, context parallelism, KV movement, and collective operations all depend on communication.</p>
+<p>NVLink and NVSwitch provide high-bandwidth GPU-to-GPU communication inside a node or local domain.</p>
+<p class="confidence">[SHIPPED] H100 SXM5 systems list up to 900 GB/s aggregate NVLink bandwidth per GPU. When comparing this value with PCIe or InfiniBand, always state whether the number is per-direction, bidirectional aggregate, or effective application bandwidth.</p>
+<hr>
+<h2 id="figure-placeholder-fig-3a7">Figure Placeholder — Fig 3A.7<a class="anchor" href="#figure-placeholder-fig-3a7" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-3a7-nvlink-nvswitch-domain">
+  <div class="figure-kicker">Fig 3A.7</div>
+  <div class="figure-title">NVLink / NVSwitch Domain</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A topology view showing how high-bandwidth local GPU fabric supports tensor parallelism and fast collectives.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/png_300dpi/ch03a_fig_3a_7_nvlink_nvswitch_domain.png</code></p>
+      <p class="figure-status">Existing diagram; print export needed</p>
+      <a class="figure-source" href="../diagrams/diagrams_batch2.html#d14">View source diagram</a>
+    </div>
+  </div>
+  <figcaption><strong>Fig 3A.7 — NVLink / NVSwitch Domain.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> Single-GPU performance is not enough for large models. When a model is partitioned across GPUs, the interconnect becomes part of the model execution path. Tensor parallelism, pipeline parallelism, KV movement, and collective operations all depend on GPU-to-GPU bandwidth and latency.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> NVLink and NVSwitch provide much higher GPU-to-GPU bandwidth than PCIe-only paths. This is why HGX/SXM-class systems are often preferred for large multi-GPU training and tensor-parallel serving. However, topology guidance should remain workload-specific. Not every workload needs the highest-bandwidth fabric.</p>
+<blockquote><strong>Key Takeaway:</strong> Multi-GPU AI performance depends on topology. A model split across GPUs is only as fast as the compute, memory, and communication schedule together.</blockquote>
+<hr>
+<h2 id="3a12-pcie-infiniband-and-directionality">3A.12 PCIe, InfiniBand, and Directionality<a class="anchor" href="#3a12-pcie-infiniband-and-directionality" aria-label="Link to this section">#</a></h2>
+<p>Bandwidth numbers are often misleading because they mix:</p>
+<ul>
+<li>Per-direction bandwidth</li>
+<li>Bidirectional aggregate bandwidth</li>
+<li>Per-link bandwidth</li>
+<li>Per-GPU aggregate bandwidth</li>
+<li>Per-system aggregate bandwidth</li>
+<li>Line rate</li>
+<li>Effective application bandwidth</li>
+</ul>
+<p>A principal architect always asks:</p>
+<pre class="code-block"><code>What exactly does this bandwidth number mean?</code></pre>
+<p class="confidence">[DERIVED FROM SHIPPED] PCIe 5.0 x16 is commonly treated as approximately 64 GB/s per direction, or approximately 128 GB/s aggregate bidirectional theoretical bandwidth. Sustained bandwidth depends on platform topology, NUMA placement, payload size, DMA path, and software stack.</p>
+<p class="confidence">[SHIPPED] NDR InfiniBand is commonly described as 400 Gb/s, or about 50 GB/s line rate per direction before protocol overhead. Effective NCCL throughput is lower and depends on message size, topology, congestion, routing, and overlap.</p>
+<p>[SHIPPED/ANNOUNCED] 800 Gb/s InfiniBand or Ethernet-class products correspond to about 100 GB/s line rate per direction before overhead. Treat product availability and effective bandwidth as platform-specific.</p>
+<hr>
+<h2 id="table-3a4-gpu-interconnect-comparison">Table 3A.4 — GPU Interconnect Comparison<a class="anchor" href="#table-3a4-gpu-interconnect-comparison" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Interconnect</th><th>Typical Scope</th><th>What It Connects</th><th>Production Use</th><th>Watchouts</th></tr></thead><tbody><tr><td>PCIe</td><td>Host/device and sometimes GPU-GPU path</td><td>CPU ↔ GPU, GPU ↔ NIC, sometimes GPU ↔ GPU</td><td>General attachment, lower-cost systems, development</td><td>Lower bandwidth than NVLink; topology matters</td></tr><tr><td>NVLink</td><td>Intra-node GPU fabric</td><td>GPU ↔ GPU</td><td>Tensor parallelism, fast collectives, large model serving/training</td><td>SKU and generation specific</td></tr><tr><td>NVSwitch</td><td>Intra-node or rack-scale switch fabric</td><td>Many GPUs through switched NVLink</td><td>All-to-all GPU communication within a domain</td><td>System design and generation specific</td></tr><tr><td>InfiniBand / Ethernet fabric</td><td>Inter-node</td><td>GPU nodes ↔ GPU nodes</td><td>Distributed training, multi-node serving</td><td>Latency, congestion, collectives, overlap</td></tr><tr><td>GPUDirect RDMA</td><td>GPU ↔ NIC path</td><td>GPU memory ↔ network</td><td>Reduces CPU staging overhead</td><td>Requires platform and driver support</td></tr></tbody></table></div>
+<p>The important distinction is scope.</p>
+<p>PCIe is not the same role as NVLink. NVLink is not the same role as InfiniBand. A strong architecture decision maps each workload communication pattern to the correct interconnect tier.</p>
+<blockquote><strong>Key Takeaway:</strong> Always ask what the link connects and whether that link sits on the critical path of the workload.</blockquote>
+<hr>
+<h2 id="3a13-pcie-vs-sxmhgx-vs-oam-form-factors">3A.13 PCIe vs SXM/HGX vs OAM Form Factors<a class="anchor" href="#3a13-pcie-vs-sxmhgx-vs-oam-form-factors" aria-label="Link to this section">#</a></h2>
+<p>GPU form factor is not just packaging.</p>
+<p>It changes:</p>
+<ul>
+<li>Power delivery</li>
+<li>Cooling design</li>
+<li>Physical density</li>
+<li>Local topology</li>
+<li>GPU-to-GPU bandwidth</li>
+<li>Serviceability</li>
+<li>Cost structure</li>
+<li>Platform availability</li>
+</ul>
+<h3 id="pcie-gpus">PCIe GPUs<a class="anchor" href="#pcie-gpus" aria-label="Link to this section">#</a></h3>
+<p>PCIe GPUs are flexible and widely deployable.</p>
+<p>They are useful for:</p>
+<ul>
+<li>Development</li>
+<li>Single-GPU inference</li>
+<li>Smaller models</li>
+<li>Cost-sensitive serving</li>
+<li>Workloads that do not require tight GPU-to-GPU collectives</li>
+<li>Environments where standard server compatibility matters</li>
+</ul>
+<h3 id="sxm-hgx-systems">SXM / HGX Systems<a class="anchor" href="#sxm-hgx-systems" aria-label="Link to this section">#</a></h3>
+<p>SXM/HGX-class systems are designed for dense multi-GPU performance.</p>
+<p>They are usually preferred when:</p>
+<ul>
+<li>The workload requires high-bandwidth GPU-to-GPU communication.</li>
+<li>Tensor parallelism is central.</li>
+<li>Training jobs require fast collectives.</li>
+<li>Power and cooling infrastructure can support high-density accelerators.</li>
+<li>NVLink/NVSwitch topology matters.</li>
+</ul>
+<h3 id="oam-style-systems">OAM-Style Systems<a class="anchor" href="#oam-style-systems" aria-label="Link to this section">#</a></h3>
+<p>AMD MI300X uses an OAM-style module in high-density accelerator platforms.</p>
+<p>The production idea is similar: build a platform where power delivery, cooling, and scale-up fabric are designed around dense accelerator operation.</p>
+<p class="confidence">[REPRESENTATIVE] SXM/HGX-class and OAM-style platforms are usually preferred when dense multi-GPU communication, high power delivery, and high cooling capacity are required. PCIe systems remain valuable for development, single-GPU inference, smaller models, and workloads that do not depend on tight GPU-to-GPU collectives.</p>
+<hr>
+<h2 id="figure-placeholder-fig-3a8">Figure Placeholder — Fig 3A.8<a class="anchor" href="#figure-placeholder-fig-3a8" aria-label="Link to this section">#</a></h2>
+
+<figure class="figure-placeholder" id="fig-3a8-pcie-vs-sxm-oam-form-factors">
+  <div class="figure-kicker">Fig 3A.8</div>
+  <div class="figure-title">PCIe vs SXM / OAM Form Factors</div>
+  <div class="figure-body">
+    <div class="figure-icon">▧</div>
+    <div>
+      <p>A side-by-side view showing how packaging affects power, cooling, local topology, and GPU-to-GPU bandwidth.</p>
+      <p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch03a_fig_3a_8_pcie_vs_sxm_oam.svg</code></p>
+      <p class="figure-status">Figure to be created</p>
+      <span class="figure-source muted">Source diagram pending</span>
+    </div>
+  </div>
+  <figcaption><strong>Fig 3A.8 — PCIe vs SXM / OAM Form Factors.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+
+<p class="figure-note"><strong>Figure intro:</strong> GPU form factor is not just packaging. It determines power envelope, cooling approach, physical density, and the available communication fabric. This is why the same GPU family may behave differently in PCIe and SXM/HGX-class systems.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> PCIe systems can be excellent for development, smaller inference, single-GPU serving, or cost-sensitive workloads. SXM/HGX-class and OAM-style systems are usually preferred when the workload requires high-bandwidth GPU-to-GPU communication, high power delivery, and dense multi-GPU topology.</p>
+<blockquote><strong>Key Takeaway:</strong> Form factor is an architecture choice. It changes power, cooling, topology, and the communication budget available to the model.</blockquote>
+<hr>
+<h2 id="3a14-topology-guidance-without-overclaiming">3A.14 Topology Guidance Without Overclaiming<a class="anchor" href="#3a14-topology-guidance-without-overclaiming" aria-label="Link to this section">#</a></h2>
+<p>Avoid absolute rules.</p>
+<p>Bad:</p>
+<pre class="code-block"><code>Never run tensor parallelism across InfiniBand.</code></pre>
+<p>Better:</p>
+<pre class="code-block"><code>[REPRESENTATIVE] Keep latency-sensitive tensor-parallel groups within the highest-bandwidth local GPU fabric whenever possible. Avoid extending TP across inter-node InfiniBand unless the model partitioning, collective schedule, overlap strategy, and network topology are explicitly designed and measured for it.</code></pre>
+<p>Why?</p>
+<p>Because tensor parallelism often requires frequent collectives inside the model layer. If those collectives cross a slower or more variable network fabric, latency and synchronization can dominate.</p>
+<p>But “never” is too strong. Some systems deliberately design around inter-node communication with careful overlap, partitioning, and topology-aware scheduling.</p>
+<h3 id="safer-topology-rules">Safer Topology Rules<a class="anchor" href="#safer-topology-rules" aria-label="Link to this section">#</a></h3>
+<div class="table-wrap"><table><thead><tr><th>Unsafe Wording</th><th>Production Wording</th></tr></thead><tbody><tr><td>“Never TP across IB.”</td><td>Avoid latency-sensitive TP across inter-node fabric unless validated.</td></tr><tr><td>“SXM is mandatory.”</td><td>SXM/HGX is usually preferred for high-performance multi-GPU training/serving.</td></tr><tr><td>“PCIe is too slow for AI.”</td><td>PCIe can be excellent when the workload is not dominated by tight GPU-to-GPU collectives.</td></tr><tr><td>“NVLink fixes scaling.”</td><td>NVLink helps local collectives, but algorithms, placement, and overlap still matter.</td></tr></tbody></table></div>
+<blockquote><strong>Key Takeaway:</strong> Topology rules are workload rules. Always validate them with communication traces.</blockquote>
+<hr>
+<h2 id="3a15-alternative-accelerators-a-neutral-framework">3A.15 Alternative Accelerators: A Neutral Framework<a class="anchor" href="#3a15-alternative-accelerators-a-neutral-framework" aria-label="Link to this section">#</a></h2>
+<p>The AI accelerator market includes multiple families:</p>
+<ul>
+<li>NVIDIA GPUs</li>
+<li>AMD Instinct accelerators</li>
+<li>Google TPUs</li>
+<li>Intel Gaudi-style accelerators</li>
+<li>Custom ASICs and cloud-specific accelerators</li>
+</ul>
+<p>The goal is not to declare a universal winner.</p>
+<p>The goal is to match the accelerator to the workload and organization.</p>
+<p class="confidence">[REPRESENTATIVE] Accelerator choice should be workload-driven. NVIDIA GPUs often provide the broadest CUDA/NVLink software ecosystem. AMD Instinct systems can offer strong memory capacity and bandwidth, with ROCm/HIP as the software path. TPUs are tightly integrated with cloud/provider software stacks. Gaudi-style systems emphasize Ethernet-oriented accelerator fabrics. The correct choice depends on model fit, precision support, interconnect, kernel maturity, framework support, team expertise, power/cooling, cost, and supply risk.</p>
+<hr>
+<h2 id="table-3a5-accelerator-selection-matrix">Table 3A.5 — Accelerator Selection Matrix<a class="anchor" href="#table-3a5-accelerator-selection-matrix" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Accelerator Family</th><th>Common Strengths</th><th>Watchouts</th><th>Best-Fit Questions</th></tr></thead><tbody><tr><td>NVIDIA GPU</td><td>Mature CUDA ecosystem, Tensor Cores, NVLink/NVSwitch, broad framework support</td><td>Cost, supply, power, vendor lock-in</td><td>Do we need strongest CUDA/software support and NVLink topology?</td></tr><tr><td>AMD CDNA / MI300X</td><td>Large HBM capacity, strong BF16/HBM specs, ROCm/HIP ecosystem, OAM/Infinity Fabric</td><td>Software maturity varies by workload and framework</td><td>Does memory capacity/bandwidth matter more than ecosystem friction?</td></tr><tr><td>TPU</td><td>Cloud-integrated systolic-array model, large-scale training/inference focus</td><td>Cloud/provider-specific stack and programming model</td><td>Are we aligned with the TPU software and cloud ecosystem?</td></tr><tr><td>Intel Gaudi-style accelerator</td><td>Ethernet-oriented accelerator fabric, cost-sensitive training/inference positioning</td><td>Framework/kernel maturity and ecosystem coverage</td><td>Does the workload fit the stack and network approach?</td></tr></tbody></table></div>
+<p>A principal architect evaluates accelerator choice across multiple dimensions:</p>
+<ul>
+<li>Model fit in memory</li>
+<li>Arithmetic intensity</li>
+<li>HBM bandwidth</li>
+<li>Precision support</li>
+<li>Kernel availability</li>
+<li>Compiler maturity</li>
+<li>Interconnect</li>
+<li>Framework support</li>
+<li>Team expertise</li>
+<li>Power and cooling</li>
+<li>Supply and procurement risk</li>
+<li>Cost per token or cost per training run</li>
+</ul>
+<blockquote><strong>Key Takeaway:</strong> Choose accelerators by workload and system constraints. Peak TFLOPS alone is not an architecture decision.</blockquote>
+<hr>
+<h2 id="3a16-reading-a-gpu-spec-sheet-like-a-performance-architect">3A.16 Reading a GPU Spec Sheet Like a Performance Architect<a class="anchor" href="#3a16-reading-a-gpu-spec-sheet-like-a-performance-architect" aria-label="Link to this section">#</a></h2>
+<p>A spec sheet is not a shopping list.</p>
+<p>It is a set of ceilings and constraints.</p>
+<p>A weak reading asks:</p>
+<pre class="code-block"><code>Which GPU has the biggest TFLOPS number?</code></pre>
+<p>A strong reading asks:</p>
+<pre class="code-block"><code>Which resource limits my workload?</code></pre>
+<p>For LLM inference, that resource might be:</p>
+<ul>
+<li>HBM capacity</li>
+<li>HBM bandwidth</li>
+<li>KV-cache memory</li>
+<li>Decode latency</li>
+<li>Tensor Core throughput</li>
+<li>Scheduler overhead</li>
+<li>PCIe/NVLink transfer</li>
+<li>Power/cooling limit</li>
+<li>Cost per token</li>
+</ul>
+<p>For distributed training, that resource might be:</p>
+<ul>
+<li>Tensor Core throughput</li>
+<li>HBM bandwidth</li>
+<li>Activation memory</li>
+<li>Optimizer state memory</li>
+<li>NVLink bandwidth</li>
+<li>InfiniBand bisection bandwidth</li>
+<li>Checkpoint I/O</li>
+<li>Failure recovery time</li>
+<li>Power envelope</li>
+</ul>
+<hr>
+<h2 id="table-3a6-how-to-read-a-gpu-spec-sheet-like-a-performance-architect">Table 3A.6 — How to Read a GPU Spec Sheet Like a Performance Architect<a class="anchor" href="#table-3a6-how-to-read-a-gpu-spec-sheet-like-a-performance-architect" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Step</th><th>Question</th><th>Why It Matters</th></tr></thead><tbody><tr><td>1</td><td>Does the model and KV cache fit in HBM?</td><td>Capacity determines whether sharding, quantization, or paging is required</td></tr><tr><td>2</td><td>Is the workload compute-bound or memory-bound?</td><td>Determines whether TFLOPS or bandwidth matters more</td></tr><tr><td>3</td><td>What precision will the workload use?</td><td>Must map to supported fast Tensor Core or matrix-engine paths</td></tr><tr><td>4</td><td>Does the workload require tensor parallelism?</td><td>Determines need for high-bandwidth GPU-to-GPU links</td></tr><tr><td>5</td><td>What is the local topology?</td><td>NVLink/NVSwitch/PCIe affect communication bottlenecks</td></tr><tr><td>6</td><td>What is the node-to-node fabric?</td><td>Distributed training and large-scale serving depend on network design</td></tr><tr><td>7</td><td>Does the software stack support the workload well?</td><td>Kernels, compilers, serving frameworks, and drivers matter</td></tr><tr><td>8</td><td>What is the power/cooling/TCO impact?</td><td>Sustained performance depends on operating conditions and cost</td></tr><tr><td>9</td><td>What telemetry will prove success?</td><td>Choose metrics before deployment</td></tr><tr><td>10</td><td>What is the fallback plan?</td><td>Hardware choice affects operational risk</td></tr></tbody></table></div>
+<p>The framework turns hardware comparison into an engineering process.</p>
+<p>A memory-bound decode workload may care more about HBM capacity and bandwidth than peak dense TFLOPS. A tensor-parallel training workload may care more about NVLink topology and NCCL performance. A production service may care most about cost per token and failure behavior.</p>
+<blockquote><strong>Key Takeaway:</strong> A GPU spec sheet only becomes meaningful after you know the workload regime and the system bottleneck.</blockquote>
+<hr>
+<h2 id="3a17-worked-example-choosing-hardware-for-70b-inference">3A.17 Worked Example: Choosing Hardware for 70B Inference<a class="anchor" href="#3a17-worked-example-choosing-hardware-for-70b-inference" aria-label="Link to this section">#</a></h2>
+<p>Suppose you need to serve a 70B dense model.</p>
+<p>Start with memory:</p>
+<pre class="code-block"><code>BF16 weights ≈ 70B × 2 bytes = 140 GB
+FP8 weights  ≈ 70B × 1 byte  = 70 GB
+INT4 weights ≈ 70B × 0.5 byte = 35 GB</code></pre>
+<p>Now compare hardware:</p>
+<div class="table-wrap"><table><thead><tr><th>Hardware</th><th>Memory Impact</th><th>Serving Implication</th></tr></thead><tbody><tr><td>H100 80 GB</td><td>FP8 70B weights may fit, but KV headroom is tight</td><td>Good for TP or quantized serving, but KV planning is critical</td></tr><tr><td>H200 141 GB</td><td>FP8 weights leave significant KV headroom</td><td>Stronger 70B serving fit due to larger HBM</td></tr><tr><td>MI300X 192 GB</td><td>Large memory footprint can reduce sharding pressure</td><td>Strong candidate for memory-heavy serving if software stack fits</td></tr><tr><td>B200/GB200 family</td><td>Product-specific larger/faster memory and newer precision support</td><td>Verify exact product, availability, software stack, and cost</td></tr></tbody></table></div>
+<p>This example shows why “TFLOPS” is not enough. The serving system might be limited by memory capacity before it is limited by compute.</p>
+<hr>
+<h2 id="3a18-worked-example-why-tensor-parallelism-needs-local-fabric">3A.18 Worked Example: Why Tensor Parallelism Needs Local Fabric<a class="anchor" href="#3a18-worked-example-why-tensor-parallelism-needs-local-fabric" aria-label="Link to this section">#</a></h2>
+<p>Tensor parallelism splits layers across GPUs.</p>
+<p>That means some operations need communication inside every layer or every few operations.</p>
+<p>For example:</p>
+<pre class="code-block"><code>Layer GEMM shard on GPU 0
+Layer GEMM shard on GPU 1
+...
+Combine partial results with collective communication</code></pre>
+<p>If that communication is frequent and latency-sensitive, it should stay on the fastest local fabric when possible.</p>
+<p class="confidence">[REPRESENTATIVE] Keep latency-sensitive tensor-parallel groups within NVLink/NVSwitch or equivalent high-bandwidth local fabric whenever possible.</p>
+<p>If tensor parallelism crosses a slower inter-node fabric, the communication can dominate.</p>
+<p>But do not overgeneralize. Some model schedules can hide communication. Some systems may be built specifically for inter-node parallelism. Always measure.</p>
+<hr>
+<h2 id="3a19-how-to-explain-gpu-architecture-in-a-principal-interview">3A.19 How to Explain GPU Architecture in a Principal Interview<a class="anchor" href="#3a19-how-to-explain-gpu-architecture-in-a-principal-interview" aria-label="Link to this section">#</a></h2>
+<p>Do not answer like this:</p>
+<pre class="code-block"><code>A GPU has many cores and is faster for parallel tasks.</code></pre>
+<p>That is true, but too shallow.</p>
+<p>A principal-level answer sounds like this:</p>
+<blockquote>I do not treat a GPU as a faster CPU. I treat it as a throughput engine built around SMs, warps, Tensor Cores, and a steep memory hierarchy. The first question is whether the workload is compute-bound, memory-bound, communication-bound, or overhead-bound. For AI workloads, Tensor Core alignment, HBM bandwidth, KV-cache capacity, and NVLink topology often matter more than raw peak TFLOPS alone.</blockquote>
+<h3 id="scenario-1-why-is-a-gpu-not-just-a-fast-cpu">Scenario 1 — Why Is a GPU Not Just a Fast CPU?<a class="anchor" href="#scenario-1-why-is-a-gpu-not-just-a-fast-cpu" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<blockquote>A GPU has more cores.</blockquote>
+<p>Better answer:</p>
+<blockquote>A CPU is optimized for low-latency execution of a small number of complex threads. A GPU is optimized for high-throughput execution of many simpler threads. The GPU hides latency with massive parallelism and relies on a memory hierarchy and matrix engines to keep throughput high.</blockquote>
+<h3 id="scenario-2-why-do-tensor-cores-matter">Scenario 2 — Why Do Tensor Cores Matter?<a class="anchor" href="#scenario-2-why-do-tensor-cores-matter" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<blockquote>Tensor Cores make AI faster.</blockquote>
+<p>Better answer:</p>
+<blockquote>Transformers are dominated by matrix multiplications in QKV projections, output projections, and FFN layers. Tensor Cores are specialized matrix-multiply engines that provide far higher throughput than general scalar cores when the workload uses supported datatypes, aligned shapes, and efficient kernels.</blockquote>
+<h3 id="scenario-3-why-can-high-occupancy-still-be-slow">Scenario 3 — Why Can High Occupancy Still Be Slow?<a class="anchor" href="#scenario-3-why-can-high-occupancy-still-be-slow" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<blockquote>Higher occupancy is better.</blockquote>
+<p>Better answer:</p>
+<blockquote>Occupancy only tells us how many warps are resident. It does not tell us whether useful hardware units are busy. A high-occupancy kernel can still be memory-bound, divergent, synchronization-heavy, or missing Tensor Core paths. I use occupancy as one diagnostic signal, not the objective.</blockquote>
+<h3 id="scenario-4-why-does-hbm-matter-for-llm-inference">Scenario 4 — Why Does HBM Matter for LLM Inference?<a class="anchor" href="#scenario-4-why-does-hbm-matter-for-llm-inference" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<blockquote>HBM is fast memory.</blockquote>
+<p>Better answer:</p>
+<blockquote>LLM inference, especially decode, repeatedly reads model weights and KV-cache state. If the workload is memory-bandwidth or memory-capacity constrained, HBM determines concurrency, context length, latency, and cost per token. HBM capacity can decide whether tensor parallelism or quantization is required.</blockquote>
+<h3 id="scenario-5-why-does-nvlink-matter">Scenario 5 — Why Does NVLink Matter?<a class="anchor" href="#scenario-5-why-does-nvlink-matter" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<blockquote>NVLink is faster than PCIe.</blockquote>
+<p>Better answer:</p>
+<blockquote>NVLink matters when GPU-to-GPU communication is on the critical path. Tensor-parallel workloads need frequent collectives or exchanges inside the model execution loop. A high-bandwidth local fabric reduces the communication penalty and makes multi-GPU partitioning more viable.</blockquote>
+<h3 id="scenario-6-when-is-pcie-good-enough">Scenario 6 — When Is PCIe Good Enough?<a class="anchor" href="#scenario-6-when-is-pcie-good-enough" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<blockquote>PCIe is slow.</blockquote>
+<p>Better answer:</p>
+<blockquote>PCIe can be good enough when the workload does not require frequent GPU-to-GPU collectives: development, single-GPU inference, smaller models, or cost-sensitive serving. PCIe becomes a problem when tight model-parallel communication or high-rate GPU-GPU exchange sits on the critical path.</blockquote>
+<h3 id="scenario-7-how-do-you-choose-h100-vs-h200-vs-mi300x">Scenario 7 — How Do You Choose H100 vs H200 vs MI300X?<a class="anchor" href="#scenario-7-how-do-you-choose-h100-vs-h200-vs-mi300x" aria-label="Link to this section">#</a></h3>
+<p>Weak answer:</p>
+<blockquote>Pick the fastest GPU.</blockquote>
+<p>Better answer:</p>
+<blockquote>I first classify the workload. If the model or KV cache does not fit, memory capacity dominates. If decode is memory-bound, HBM bandwidth matters. If training requires tensor parallelism, topology matters. H100 has strong Hopper compute and NVLink ecosystem; H200 improves memory capacity and bandwidth; MI300X offers very large HBM capacity and bandwidth with a different software ecosystem. The right answer depends on model size, precision, serving/training regime, software stack, interconnect, power, and cost.</blockquote>
+<hr>
+<h2 id="3a20-chapter-cheat-sheet">3A.20 Chapter Cheat Sheet<a class="anchor" href="#3a20-chapter-cheat-sheet" aria-label="Link to this section">#</a></h2>
+<h3 id="cpu-vs-gpu">CPU vs GPU<a class="anchor" href="#cpu-vs-gpu" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>CPU: latency-optimized, complex control, fewer powerful cores.
+GPU: throughput-optimized, many parallel lanes, high memory bandwidth, matrix engines.</code></pre>
+<h3 id="gpu-execution">GPU Execution<a class="anchor" href="#gpu-execution" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>Grid → Blocks → Warps → Threads
+Blocks scheduled on SMs.
+Warps execute inside SMs.</code></pre>
+<h3 id="occupancy-vs-utilization">Occupancy vs Utilization<a class="anchor" href="#occupancy-vs-utilization" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>Occupancy = resident warps.
+Utilization = useful hardware work.</code></pre>
+<h3 id="h100-sxm5-reference">H100 SXM5 Reference<a class="anchor" href="#h100-sxm5-reference" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>[SHIPPED] H100 SXM5 HBM: 80 GB, 3.35 TB/s
+[DERIVED FROM SHIPPED] Dense BF16 peak ≈ 989.4 TFLOPS
+[SHIPPED] Sparse BF16 peak ≈ 1,978.9 TFLOPS
+[SHIPPED] NVLink aggregate bandwidth per GPU: up to 900 GB/s</code></pre>
+<h3 id="h200-reference">H200 Reference<a class="anchor" href="#h200-reference" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>[SHIPPED] H200 HBM3e: 141 GB, 4.8 TB/s</code></pre>
+<h3 id="mi300x-reference">MI300X Reference<a class="anchor" href="#mi300x-reference" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>[SHIPPED] MI300X HBM3: 192 GB, ≈5.3 TB/s
+[SHIPPED] MI300X dense BF16 peak: ≈1,307.4 TFLOPS</code></pre>
+<h3 id="pcie-50-x16">PCIe 5.0 x16<a class="anchor" href="#pcie-50-x16" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>[DERIVED FROM SHIPPED] ≈64 GB/s per direction
+[DERIVED FROM SHIPPED] ≈128 GB/s aggregate bidirectional theoretical</code></pre>
+<h3 id="ndr-infiniband">NDR InfiniBand<a class="anchor" href="#ndr-infiniband" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>[SHIPPED] 400 Gb/s ≈ 50 GB/s line rate per direction before overhead</code></pre>
+<h3 id="spec-sheet-rule">Spec-Sheet Rule<a class="anchor" href="#spec-sheet-rule" aria-label="Link to this section">#</a></h3>
+<pre class="code-block"><code>Do not ask: Which number is biggest?
+Ask: Which resource limits my workload?</code></pre>
+<hr>
+<h2 id="3a21-key-takeaways">3A.21 Key Takeaways<a class="anchor" href="#3a21-key-takeaways" aria-label="Link to this section">#</a></h2>
+<ol>
+<li>A GPU is not a faster CPU. It is a throughput machine.</li>
+<li>CPU architecture optimizes low-latency execution; GPU architecture optimizes parallel throughput.</li>
+<li>The SM is where GPU execution becomes real: warps, schedulers, CUDA cores, Tensor Cores, registers, shared memory, and load/store units interact there.</li>
+<li>Warps execute in SIMT style. Divergence wastes lanes.</li>
+<li>Occupancy is not utilization. It is one diagnostic signal.</li>
+<li>Tensor Cores are the main source of AI matrix throughput, but peak throughput requires supported datatypes, aligned shapes, efficient layouts, and correct kernel paths.</li>
+<li>H100 dense BF16 and sparse BF16 peaks must not be mixed: dense ≈989.4 TFLOPS, sparse ≈1,978.9 TFLOPS.</li>
+<li>HBM capacity and bandwidth often dominate LLM inference economics.</li>
+<li>H200 improves the HBM capacity/bandwidth story relative to H100.</li>
+<li>MI300X offers large HBM capacity and strong dense BF16/HBM specs, but the full system choice depends on software and workload fit.</li>
+<li>NVLink/NVSwitch matter when GPU-to-GPU communication is on the critical path.</li>
+<li>PCIe, NVLink, NVSwitch, and InfiniBand numbers must state directionality and scope.</li>
+<li>SXM/HGX, PCIe, and OAM are form-factor and topology decisions, not just packaging.</li>
+<li>Accelerator selection must be neutral and workload-driven.</li>
+<li>A spec sheet is meaningful only after the workload regime is known.</li>
+</ol>
+<hr>
+<h2 id="3a22-review-questions">3A.22 Review Questions<a class="anchor" href="#3a22-review-questions" aria-label="Link to this section">#</a></h2>
+<h3 id="conceptual">Conceptual<a class="anchor" href="#conceptual" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>Why is a GPU not simply a faster CPU?</li>
+<li>What is the difference between latency optimization and throughput optimization?</li>
+<li>What is an SM?</li>
+<li>What is a warp?</li>
+<li>What is SIMT execution?</li>
+<li>Why does warp divergence hurt performance?</li>
+<li>Why is occupancy not the same as utilization?</li>
+<li>What role do Tensor Cores play in transformer workloads?</li>
+<li>Why is Tensor Core peak throughput not automatic?</li>
+<li>Why does HBM capacity matter for LLM serving?</li>
+<li>Why does HBM bandwidth matter for decode?</li>
+<li>Why does NVLink matter for tensor parallelism?</li>
+<li>When might PCIe be good enough?</li>
+<li>Why should accelerator comparisons avoid universal rankings?</li>
+</ol>
+<h3 id="calculation">Calculation<a class="anchor" href="#calculation" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>If a 70B model is stored in BF16, approximately how much memory do the weights require?</li>
+<li>If the same 70B model is stored in FP8, approximately how much memory do the weights require?</li>
+<li>If H100 sparse BF16 peak is approximately 1,978.9 TFLOPS, what is the approximate dense BF16 peak?</li>
+<li>If a kernel measures 500 TFLOPS dense BF16 on H100 SXM5, what is its MFU using the dense BF16 peak?</li>
+<li>PCIe 5.0 x16 is approximately 64 GB/s per direction. What is the aggregate bidirectional theoretical bandwidth?</li>
+<li>If NDR InfiniBand is 400 Gb/s, approximately how many GB/s is that as line rate before overhead?</li>
+</ol>
+<h3 id="principal-level-interview-practice">Principal-Level Interview Practice<a class="anchor" href="#principal-level-interview-practice" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>Explain GPU architecture in two minutes to a hiring manager.</li>
+<li>Explain why HBM can matter more than TFLOPS for LLM inference.</li>
+<li>Explain dense vs sparse peak TFLOPS using H100 as the example.</li>
+<li>Explain when you would prefer H200 over H100 for inference.</li>
+<li>Explain when MI300X’s large memory footprint could be valuable.</li>
+<li>Explain why tensor parallelism usually wants high-bandwidth local GPU fabric.</li>
+<li>Explain why “never tensor-parallel across InfiniBand” is too absolute.</li>
+<li>Explain how you would choose between NVIDIA, AMD, TPU, and Gaudi-style accelerators.</li>
+<li>Explain what metrics you would collect to prove a GPU system is underutilized.</li>
+<li>Explain how you would read a GPU spec sheet for a new accelerator generation.</li>
+</ol>
+<hr>
+<h2 id="3a23-bridge-to-chapter-3b">3A.23 Bridge to Chapter 3B<a class="anchor" href="#3a23-bridge-to-chapter-3b" aria-label="Link to this section">#</a></h2>
+<p>Chapter 3A built the core hardware mental model:</p>
+<pre class="code-block"><code>SMs + warps + Tensor Cores + HBM + topology = accelerator performance system</code></pre>
+<p>Chapter 3B moves from fundamentals to roadmap.</p>
+<p>The next question is:</p>
+<blockquote>How do accelerator generations evolve, and which hardware changes actually matter for AI/ML infrastructure architecture?</blockquote>
+<p>That is where we compare Ampere, Hopper, Blackwell, Rubin, CDNA generations, HBM evolution, NVLink evolution, and the hardware roadmap signals that stay stable across product cycles.</p>
+
+    <nav class="nav-row" aria-label="Previous and next chapter navigation">
+      <a href="ch02_transformer_architecture.html">
+        <small>Previous Chapter</small>
+        <strong>Chapter 2 — Transformer Architecture</strong>
+      </a>
+      <a href="../index.html">
+        <small>Next</small>
+        <strong>Chapter 3B — Coming Soon</strong>
+      </a>
+    </nav>
+  </main>
+</div>
+</body>
+</html>
