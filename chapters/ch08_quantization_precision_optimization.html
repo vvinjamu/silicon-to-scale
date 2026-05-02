@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 8 — Quantization and Precision Optimization | Silicon to Scale</title>
+<meta name="description" content="Production web chapter on quantization and precision optimization for AI infrastructure: BF16, FP8, INT8, INT4, NVFP4, GPTQ, AWQ, SmoothQuant, KV-cache quantization, QAT, QLoRA, and production deployment decisions.">
+<meta name="author" content="Venkat Vinjam">
+<meta property="og:title" content="Chapter 8 — Quantization and Precision Optimization">
+<meta property="og:description" content="Learn how precision formats, scale, zero point, outliers, GPTQ, AWQ, SmoothQuant, FP8, KV-cache quantization, QAT, and QLoRA affect AI performance and serving cost.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c10;
+  --bg2: #0d1117;
+  --bg3: #161b22;
+  --bg4: #1c2128;
+  --border: #21262d;
+  --border2: #30363d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #6e7681;
+  --accent: #58a6ff;
+  --gold2: #f0c040;
+  --green: #3fb950;
+  --orange: #ff8b3d;
+  --purple: #bc8cff;
+  --teal: #39d0d8;
+  --red: #f85149;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); line-height: 1.65; }
+body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(88,166,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(88,166,255,0.025) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
+.topbar { position: sticky; top: 0; z-index: 100; background: rgba(13,17,23,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 22px; }
+.brand { display: flex; flex-direction: column; gap: 2px; }
+.brand a { color: var(--text); text-decoration: none; font-weight: 700; letter-spacing: -0.2px; }
+.brand span { color: var(--text2); font-family: var(--mono); font-size: 11px; }
+.topnav { display: flex; gap: 10px; flex-wrap: wrap; }
+.topnav a { color: var(--accent); text-decoration: none; font-family: var(--mono); font-size: 12px; border: 1px solid var(--border2); border-radius: 8px; padding: 6px 10px; }
+.topnav a:hover { border-color: var(--accent); background: rgba(88,166,255,0.08); }
+.layout { position: relative; z-index: 1; display: grid; grid-template-columns: 310px minmax(0, 960px); gap: 36px; max-width: 1360px; margin: 0 auto; padding: 36px 24px 80px; }
+.sidebar { position: sticky; top: 76px; align-self: start; max-height: calc(100vh - 96px); overflow-y: auto; background: var(--bg3); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+.sidebar h2 { margin: 0 0 12px; font-family: var(--mono); color: var(--gold2); font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; }
+.sidebar a { display: block; color: var(--text2); text-decoration: none; font-size: 13px; padding: 5px 0; border-bottom: 1px solid rgba(48,54,61,0.35); }
+.sidebar a:hover { color: var(--accent); }
+.sidebar .toc-l3 { padding-left: 14px; font-size: 12px; color: var(--text3); }
+.content { background: rgba(13,17,23,0.72); border: 1px solid var(--border); border-radius: 18px; padding: 38px 44px; box-shadow: 0 18px 50px rgba(0,0,0,0.35); }
+.content h1 { font-size: clamp(30px, 4vw, 48px); line-height: 1.1; letter-spacing: -1.4px; margin: 0 0 18px; }
+.content h2 { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 25px; letter-spacing: -0.5px; }
+.content h3 { margin-top: 30px; color: var(--accent); font-size: 18px; }
+.content h4 { margin-top: 24px; color: var(--gold2); }
+.anchor { margin-left: 8px; color: var(--text3); opacity: 0; text-decoration: none; font-family: var(--mono); font-size: 0.8em; }
+h1:hover .anchor, h2:hover .anchor, h3:hover .anchor, h4:hover .anchor { opacity: 1; }
+p { color: var(--text); font-size: 16px; }
+blockquote { margin: 24px 0; padding: 18px 22px; border-left: 4px solid var(--gold2); background: rgba(212,160,23,0.08); color: var(--text); border-radius: 0 10px 10px 0; font-size: 17px; }
+hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
+ul, ol { padding-left: 24px; }
+li { margin: 6px 0; }
+code { font-family: var(--mono); background: var(--bg4); color: var(--gold2); border: 1px solid var(--border2); border-radius: 5px; padding: 1px 5px; font-size: 0.92em; }
+.code-block { background: #05080c; border: 1px solid var(--border2); border-radius: 12px; padding: 16px; overflow-x: auto; margin: 18px 0; }
+.code-block code { background: transparent; border: 0; color: #d8dee9; padding: 0; font-size: 13px; line-height: 1.6; }
+.table-wrap { overflow-x: auto; margin: 22px 0; border: 1px solid var(--border); border-radius: 12px; }
+table { width: 100%; border-collapse: collapse; min-width: 760px; background: var(--bg3); }
+th { background: var(--bg4); color: var(--accent); text-align: left; font-family: var(--mono); font-size: 12px; }
+th, td { padding: 11px 13px; border-bottom: 1px solid var(--border); vertical-align: top; }
+td { color: var(--text2); font-size: 14px; }
+tr:last-child td { border-bottom: 0; }
+.confidence-label { display: inline-block; font-family: var(--mono); font-size: 11px; line-height: 1; padding: 4px 6px; border-radius: 999px; border: 1px solid var(--border2); margin-right: 4px; white-space: nowrap; }
+.label-shipped { color: var(--green); background: rgba(63,185,80,0.10); border-color: rgba(63,185,80,0.35); }
+.label-announced { color: var(--purple); background: rgba(188,140,255,0.10); border-color: rgba(188,140,255,0.35); }
+.label-derived { color: var(--teal); background: rgba(57,208,216,0.10); border-color: rgba(57,208,216,0.35); }
+.label-estimated { color: var(--gold2); background: rgba(240,192,64,0.10); border-color: rgba(240,192,64,0.35); }
+.label-representative { color: var(--accent); background: rgba(88,166,255,0.10); border-color: rgba(88,166,255,0.35); }
+.label-env { color: var(--orange); background: rgba(255,139,61,0.10); border-color: rgba(255,139,61,0.35); }
+.confidence-box { border-left: 4px solid var(--green); background: rgba(63,185,80,0.08); padding: 12px 14px; border-radius: 0 10px 10px 0; }
+.takeaway { border-left: 4px solid var(--gold2); background: rgba(212,160,23,0.08); padding: 12px 14px; border-radius: 0 10px 10px 0; }
+.figure-note { color: var(--text2); font-size: 14px; }
+.figure-placeholder { margin: 28px 0; background: linear-gradient(135deg, rgba(188,140,255,0.08), rgba(57,208,216,0.06)); border: 1px solid var(--border2); border-radius: 16px; padding: 20px; }
+.figure-kicker { color: var(--gold2); font-family: var(--mono); font-size: 12px; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 8px; }
+.figure-title { font-size: 20px; font-weight: 700; margin-bottom: 14px; }
+.figure-body { display: grid; grid-template-columns: 72px minmax(0,1fr); gap: 16px; align-items: center; background: rgba(13,17,23,0.65); border: 1px dashed var(--border2); border-radius: 12px; padding: 18px; }
+.figure-icon { width: 64px; height: 64px; border-radius: 14px; display: grid; place-items: center; color: var(--purple); border: 1px solid var(--purple); font-size: 32px; background: rgba(188,140,255,0.08); }
+.figure-path, .figure-status { color: var(--text2); margin: 6px 0; font-size: 13px; }
+.figure-source { color: var(--accent); font-family: var(--mono); font-size: 12px; text-decoration: none; }
+.figure-source:hover { text-decoration: underline; }
+.muted { color: var(--text3); }
+figcaption { color: var(--text2); font-size: 13px; margin-top: 12px; }
+.nav-row { display: flex; justify-content: space-between; gap: 16px; margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--border); }
+.nav-row a { flex: 1; text-decoration: none; background: var(--bg3); border: 1px solid var(--border2); border-radius: 12px; padding: 14px 16px; color: var(--text); }
+.nav-row a:hover { border-color: var(--accent); }
+.nav-row small { display: block; color: var(--text3); font-family: var(--mono); margin-bottom: 4px; }
+.nav-row strong { color: var(--accent); }
+@media (max-width: 980px) { .layout { grid-template-columns: 1fr; padding: 22px 16px 60px; } .sidebar { position: static; max-height: none; } .content { padding: 26px 20px; } .topbar { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 640px) { .figure-body { grid-template-columns: 1fr; } .nav-row { flex-direction: column; } p { font-size: 15px; } }
+@media print { body { background: #fff; color: #111; } body::before, .topbar, .sidebar, .anchor { display: none !important; } .layout { display: block; max-width: none; padding: 0; } .content { box-shadow: none; border: 0; padding: 0; } .content h1, .content h2, .content h3, .content h4, p, li, td, th, blockquote { color: #111 !important; } .code-block, code, table, .figure-placeholder, .confidence-label { border-color: #999; } .confidence-label { color: #111 !important; background: #eee !important; } a { color: #111; text-decoration: none; } .figure-placeholder, table, pre, blockquote { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <a href="../index.html">AI/ML Infrastructure from Silicon to Scale</a>
+    <span>Chapter 8 · Quantization and Precision Optimization</span>
+  </div>
+  <nav class="topnav" aria-label="Top navigation">
+    <a href="../index.html">Home</a>
+    <a href="ch07_gpu_kernels_cuda_optimization.html">Previous: Ch07</a>
+    <a href="ch09_operator_fusion_compiler_optimization.html">Next: Ch09</a>
+    <a href="../pdfs/ch08_quantization_precision_optimization.pdf">PDF</a>
+    <a href="../diagrams/diagrams_batch1.html#d10">Mixed Precision Diagram</a>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" aria-label="Chapter table of contents">
+    <h2>Chapter Contents</h2>
+    <a class="toc-l2" href="#chapter-overview">Chapter Overview</a>
+<a class="toc-l2" href="#8-0-quantization-in-one-page">8.0 Quantization in One Page</a>
+<a class="toc-l2" href="#8-1-floating-point-formats-the-precision-landscape">8.1 Floating Point Formats — The Precision Landscape</a>
+<a class="toc-l2" href="#figure-placeholder-fig-81">Figure Placeholder — Fig 8.1</a>
+<a class="toc-l2" href="#table-8-1-precision-format-bit-layouts">Table 8.1 — Precision Format Bit Layouts</a>
+<a class="toc-l2" href="#8-2-model-size-mental-math">8.2 Model Size Mental Math</a>
+<a class="toc-l2" href="#table-8-2-70b-model-size-by-precision">Table 8.2 — 70B Model Size by Precision</a>
+<a class="toc-l2" href="#8-3-quantization-fundamentals-scale-and-zero-point">8.3 Quantization Fundamentals — Scale and Zero Point</a>
+<a class="toc-l2" href="#figure-placeholder-fig-82">Figure Placeholder — Fig 8.2</a>
+<a class="toc-l2" href="#8-4-the-outlier-problem">8.4 The Outlier Problem</a>
+<a class="toc-l2" href="#figure-placeholder-fig-83">Figure Placeholder — Fig 8.3</a>
+<a class="toc-l2" href="#8-5-granularity-the-most-important-quality-lever">8.5 Granularity — The Most Important Quality Lever</a>
+<a class="toc-l2" href="#table-8-3-quantization-granularity-comparison">Table 8.3 — Quantization Granularity Comparison</a>
+<a class="toc-l2" href="#figure-placeholder-fig-84">Figure Placeholder — Fig 8.4</a>
+<a class="toc-l2" href="#8-6-post-training-quantization-gptq-awq-and-smoothquant">8.6 Post-Training Quantization: GPTQ, AWQ, and SmoothQuant</a>
+<a class="toc-l3" href="#gptq">GPTQ</a>
+<a class="toc-l3" href="#awq">AWQ</a>
+<a class="toc-l3" href="#smoothquant">SmoothQuant</a>
+<a class="toc-l2" href="#table-8-4-gptq-vs-awq-vs-smoothquant">Table 8.4 — GPTQ vs AWQ vs SmoothQuant</a>
+<a class="toc-l2" href="#figure-placeholder-fig-85">Figure Placeholder — Fig 8.5</a>
+<a class="toc-l2" href="#8-7-fp8-and-transformer-engine">8.7 FP8 and Transformer Engine</a>
+<a class="toc-l2" href="#figure-placeholder-fig-86">Figure Placeholder — Fig 8.6</a>
+<a class="toc-l3" href="#nvfp4-and-fp4">NVFP4 and FP4</a>
+<a class="toc-l2" href="#8-8-kv-cache-quantization">8.8 KV Cache Quantization</a>
+<a class="toc-l2" href="#figure-placeholder-fig-87">Figure Placeholder — Fig 8.7</a>
+<a class="toc-l2" href="#table-8-5-weight-quantization-vs-kv-cache-quantization">Table 8.5 — Weight Quantization vs KV-Cache Quantization</a>
+<a class="toc-l2" href="#8-9-quantization-aware-training-and-qlora">8.9 Quantization-Aware Training and QLoRA</a>
+<a class="toc-l3" href="#qlora">QLoRA</a>
+<a class="toc-l2" href="#8-10-quantization-on-amd-and-rocm">8.10 Quantization on AMD and ROCm</a>
+<a class="toc-l3" href="#cdna-4-mi350-class-claims">CDNA 4 / MI350-Class Claims</a>
+<a class="toc-l2" href="#8-11-deployment-decision-framework">8.11 Deployment Decision Framework</a>
+<a class="toc-l2" href="#figure-placeholder-fig-88">Figure Placeholder — Fig 8.8</a>
+<a class="toc-l2" href="#table-8-6-production-quantization-deployment-framework">Table 8.6 — Production Quantization Deployment Framework</a>
+<a class="toc-l2" href="#8-12-production-decision-table">8.12 Production Decision Table</a>
+<a class="toc-l2" href="#table-8-7-format-selection-by-use-case">Table 8.7 — Format Selection by Use Case</a>
+<a class="toc-l2" href="#8-13-quantization-evaluation-checklist">8.13 Quantization Evaluation Checklist</a>
+<a class="toc-l2" href="#table-8-8-quantization-evaluation-checklist">Table 8.8 — Quantization Evaluation Checklist</a>
+<a class="toc-l2" href="#8-14-wrong-fix-vs-right-first-question">8.14 Wrong Fix vs Right First Question</a>
+<a class="toc-l2" href="#table-8-9-wrong-fix-vs-right-first-question-for-quantization-problems">Table 8.9 — Wrong Fix vs Right First Question for Quantization Problems</a>
+<a class="toc-l2" href="#8-15-how-to-discuss-quantization-in-a-principal-interview">8.15 How to Discuss Quantization in a Principal Interview</a>
+<a class="toc-l3" href="#scenario-1-why-is-quantization-a-decode-optimization">Scenario 1 — Why Is Quantization a Decode Optimization?</a>
+<a class="toc-l3" href="#scenario-2-why-did-bf16-replace-fp16-for-training">Scenario 2 — Why Did BF16 Replace FP16 for Training?</a>
+<a class="toc-l3" href="#scenario-3-fp8-or-awq-int4">Scenario 3 — FP8 or AWQ INT4?</a>
+<a class="toc-l3" href="#scenario-4-why-is-mmlu-not-enough">Scenario 4 — Why Is MMLU Not Enough?</a>
+<a class="toc-l3" href="#scenario-5-how-would-you-deploy-a-70b-model-on-h100">Scenario 5 — How Would You Deploy a 70B Model on H100?</a>
+<a class="toc-l2" href="#8-16-chapter-cheat-sheet">8.16 Chapter Cheat Sheet</a>
+<a class="toc-l3" href="#raw-weight-memory">Raw Weight Memory</a>
+<a class="toc-l3" href="#quantization-formula">Quantization Formula</a>
+<a class="toc-l3" href="#symmetric-quantization">Symmetric Quantization</a>
+<a class="toc-l3" href="#maximum-rounding-error">Maximum Rounding Error</a>
+<a class="toc-l3" href="#kv-cache-formula">KV Cache Formula</a>
+<a class="toc-l3" href="#production-rule">Production Rule</a>
+<a class="toc-l2" href="#8-17-key-takeaways">8.17 Key Takeaways</a>
+<a class="toc-l2" href="#8-18-review-questions">8.18 Review Questions</a>
+<a class="toc-l3" href="#conceptual">Conceptual</a>
+<a class="toc-l3" href="#calculation">Calculation</a>
+<a class="toc-l3" href="#principal-level-interview-practice">Principal-Level Interview Practice</a>
+<a class="toc-l2" href="#8-19-bridge-to-chapter-9">8.19 Bridge to Chapter 9</a>
+  </aside>
+
+  <main class="content">
+    <h1 id="chapter-8-quantization-and-precision-optimization">Chapter 8 — Quantization and Precision Optimization<a aria-label="Link to this section" class="anchor" href="#chapter-8-quantization-and-precision-optimization">#</a></h1>
+<blockquote>
+<p>“Quantization is not about making your model less accurate. It is about using exactly as many bits as the task requires — no more, no less.”</p>
+</blockquote>
+<hr/>
+<h2 id="chapter-overview">Chapter Overview<a aria-label="Link to this section" class="anchor" href="#chapter-overview">#</a></h2>
+<p>Chapter 7 explained how GPU kernels convert model operations into real hardware execution.</p>
+<p>Chapter 8 changes the question from:</p>
+<pre class="code-block"><code class="language-text">How do we execute the operation faster?
+</code></pre>
+<p>to:</p>
+<pre class="code-block"><code class="language-text">How many bits does this operation actually need?
+</code></pre>
+<p>A dense 70B parameter model has a simple raw weight-memory ladder:</p>
+<pre class="code-block"><code class="language-text">FP32: 70B × 4 bytes   = 280 GB
+BF16: 70B × 2 bytes   = 140 GB
+FP8:  70B × 1 byte    = 70 GB
+INT4: 70B × 0.5 byte  = 35 GB
+</code></pre>
+<p>That is why quantization is one of the highest-ROI optimizations in AI infrastructure. It reduces model bytes, HBM traffic, KV-cache footprint, memory pressure, and sometimes the number of GPUs needed to serve a model.</p>
+<p>This chapter answers:</p>
+<ul>
+<li>Why did BF16 replace FP16 for training?</li>
+<li>Why does FP8 matter for H100/H200/Blackwell-class systems?</li>
+<li>Why does naive INT4 often fail?</li>
+<li>What do scale and zero point actually do?</li>
+<li>Why do per-group scales matter?</li>
+<li>How do GPTQ, AWQ, and SmoothQuant differ?</li>
+<li>Why is KV-cache quantization independent from weight quantization?</li>
+<li>How should a principal engineer choose FP8, INT8, INT4, GGUF, QAT, or BF16 fallback?</li>
+</ul>
+<blockquote>
+<p><strong>Current as of 2026 edition:</strong> Quantization support changes quickly across hardware generations, runtimes, kernels, and serving frameworks. Treat model-quality numbers, throughput numbers, and cost/token numbers as workload- and environment-specific unless validated on your own model, prompt distribution, hardware, and serving stack.</p>
+</blockquote>
+<hr/>
+<h2 id="8-0-quantization-in-one-page">8.0 Quantization in One Page<a aria-label="Link to this section" class="anchor" href="#8-0-quantization-in-one-page">#</a></h2>
+<p>Quantization reduces numeric precision.</p>
+<p>But the production reason to quantize is not merely smaller files.</p>
+<p>The production reason is:</p>
+<pre class="code-block"><code class="language-text">fewer bytes moved
+  → less HBM pressure
+  → more model/KV headroom
+  → higher throughput when memory-bound
+  → lower cost per token when quality remains acceptable
+</code></pre>
+<p>A practical mental model:</p>
+<pre class="code-block"><code class="language-text">Training:
+  Use enough range to avoid overflow and unstable gradients.
+  BF16 and FP8 mixed precision are training tools.
+
+Inference:
+  Use enough precision to preserve task quality.
+  FP8, INT8, INT4, FP4, and KV-cache quantization are serving tools.
+
+Serving economics:
+  Bytes per parameter and bytes per KV token often dominate capacity and cost.
+</code></pre>
+<p>Quantization is not a single technique. It is a stack:</p>
+<pre class="code-block"><code class="language-text">numeric format
+  + scaling recipe
+  + granularity
+  + calibration data
+  + kernel support
+  + serving runtime
+  + task-specific evaluation
+</code></pre>
+<blockquote>
+<p><strong>Key Takeaway:</strong> Quantization is a memory-bandwidth and capacity optimization that must be validated as a quality and production-runtime decision.</p>
+</blockquote>
+<hr/>
+<h2 id="8-1-floating-point-formats-the-precision-landscape">8.1 Floating Point Formats — The Precision Landscape<a aria-label="Link to this section" class="anchor" href="#8-1-floating-point-formats-the-precision-landscape">#</a></h2>
+<p>Every floating-point format divides bits across three fields:</p>
+<pre class="code-block"><code class="language-text">sign     → positive or negative
+exponent → representable range
+mantissa → precision within that range
+</code></pre>
+<p>The tradeoff is fundamental:</p>
+<pre class="code-block"><code class="language-text">more exponent bits  → wider range
+more mantissa bits  → finer precision
+fewer total bits    → lower storage and bandwidth, but more scaling risk
+</code></pre>
+<p>For AI training, range is often more important than mantissa precision because gradients can vary by many orders of magnitude. For AI inference, storage and bandwidth often dominate because the model repeatedly reads weights and KV state.</p>
+<h2 id="figure-placeholder-fig-81">Figure Placeholder — Fig 8.1<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-81">#</a></h2>
+<figure class="figure-placeholder" id="fig-8-1-precision-format-spectrum">
+<div class="figure-kicker">Fig 8.1</div>
+<div class="figure-title">Precision Format Spectrum</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A spectrum view of FP32, TF32, BF16, FP16, FP8 E4M3/E5M2, INT8, INT4, and FP4 showing storage size, range, precision, and hardware support.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch08_fig_8_1_precision_format_spectrum.svg</code></p>
+<p class="figure-status">Adapt from existing Mixed Precision diagram</p>
+<a class="figure-source" href="../diagrams/diagrams_batch1.html#d10">View source diagram</a>
+</div>
+</div>
+<figcaption><strong>Fig 8.1 — Precision Format Spectrum.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong> Before choosing FP8, INT8, INT4, or FP4, the reader must understand the bit layout that defines range and precision.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The figure should show that BF16 keeps FP32-like exponent range with fewer mantissa bits, while FP8 and FP4 reduce storage and bandwidth but require scaling and hardware/runtime support.</p>
+<blockquote><strong>Key Takeaway:</strong> Numeric format is a hardware/software contract, not just a smaller data type.</blockquote>
+<hr/>
+<h2 id="table-8-1-precision-format-bit-layouts">Table 8.1 — Precision Format Bit Layouts<a aria-label="Link to this section" class="anchor" href="#table-8-1-precision-format-bit-layouts">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Format</th>
+<th style="text-align:right">Sign</th>
+<th style="text-align:right">Exponent</th>
+<th style="text-align:right">Mantissa</th>
+<th style="text-align:right">Total</th>
+<th>Practical Use</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FP32</td>
+<td style="text-align:right">1</td>
+<td style="text-align:right">8</td>
+<td style="text-align:right">23</td>
+<td style="text-align:right">32 bits</td>
+<td>Reference precision, optimizer/master state</td>
+<td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code></td>
+</tr>
+<tr>
+<td>BF16</td>
+<td style="text-align:right">1</td>
+<td style="text-align:right">8</td>
+<td style="text-align:right">7</td>
+<td style="text-align:right">16 bits</td>
+<td>Standard modern training/inference baseline</td>
+<td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code></td>
+</tr>
+<tr>
+<td>FP16</td>
+<td style="text-align:right">1</td>
+<td style="text-align:right">5</td>
+<td style="text-align:right">10</td>
+<td style="text-align:right">16 bits</td>
+<td>Older mixed precision, vision, some inference</td>
+<td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code></td>
+</tr>
+<tr>
+<td>TF32</td>
+<td style="text-align:right">1</td>
+<td style="text-align:right">8</td>
+<td style="text-align:right">10 effective</td>
+<td style="text-align:right">19-bit compute path, 32-bit storage</td>
+<td>NVIDIA Tensor Core acceleration for FP32 inputs</td>
+<td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code></td>
+</tr>
+<tr>
+<td>FP8 E4M3</td>
+<td style="text-align:right">1</td>
+<td style="text-align:right">4</td>
+<td style="text-align:right">3</td>
+<td style="text-align:right">8 bits</td>
+<td>FP8 weights/activations in many recipes</td>
+<td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code></td>
+</tr>
+<tr>
+<td>FP8 E5M2</td>
+<td style="text-align:right">1</td>
+<td style="text-align:right">5</td>
+<td style="text-align:right">2</td>
+<td style="text-align:right">8 bits</td>
+<td>Wider-range FP8, often gradients or KV cache depending stack</td>
+<td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code></td>
+</tr>
+<tr>
+<td>INT8</td>
+<td style="text-align:right">integer</td>
+<td style="text-align:right">—</td>
+<td style="text-align:right">—</td>
+<td style="text-align:right">8 bits</td>
+<td>W8A8 inference, activation/weight quantization</td>
+<td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code></td>
+</tr>
+<tr>
+<td>INT4</td>
+<td style="text-align:right">integer</td>
+<td style="text-align:right">—</td>
+<td style="text-align:right">—</td>
+<td style="text-align:right">4 bits</td>
+<td>Weight-only low-bit inference, GGUF/AWQ/GPTQ families</td>
+<td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code></td>
+</tr>
+<tr>
+<td>NVFP4 / E2M1-style FP4</td>
+<td style="text-align:right">1</td>
+<td style="text-align:right">2</td>
+<td style="text-align:right">1</td>
+<td style="text-align:right">4 bits plus scaling</td>
+<td>Blackwell-class low-precision path</td>
+<td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code> for supported hardware/software, performance <code><span class="confidence-label label-env">[ENV-SPECIFIC]</span></code></td>
+</tr>
+</tbody>
+</table></div>
+<p><span class="confidence-label label-shipped">[SHIPPED]</span> BF16 keeps the same exponent width as FP32, which gives it FP32-like dynamic range while cutting storage in half. That is why BF16 became a practical default for large-scale model training.</p>
+<p><span class="confidence-label label-shipped">[SHIPPED]</span> NVIDIA Transformer Engine documents FP8 formats such as E4M3 and E5M2, with hybrid recipes that can use E4M3 in the forward path and E5M2 in the backward path depending on scaling strategy and implementation.</p>
+<p><span class="confidence-label label-shipped">[SHIPPED]</span> TF32 is a compute path: FP32 tensors can be consumed by Tensor Cores with reduced mantissa precision while keeping FP32-like exponent range and FP32-style programming behavior.</p>
+<blockquote>
+<p><strong>Key Takeaway:</strong> The exponent protects range; the mantissa protects precision; the total bit count controls storage and bandwidth.</p>
+</blockquote>
+<hr/>
+<h2 id="8-2-model-size-mental-math">8.2 Model Size Mental Math<a aria-label="Link to this section" class="anchor" href="#8-2-model-size-mental-math">#</a></h2>
+<p>The first quantization calculation is raw weight memory:</p>
+<pre class="code-block"><code class="language-text">weight memory = parameter count × bytes per parameter
+</code></pre>
+<p>For a dense 70B parameter model:</p>
+<pre class="code-block"><code class="language-text">FP32 weights ≈ 70B × 4 bytes   = 280 GB
+BF16 weights ≈ 70B × 2 bytes   = 140 GB
+FP8 weights  ≈ 70B × 1 byte    = 70 GB
+INT4 weights ≈ 70B × 0.5 byte  = 35 GB
+</code></pre>
+<p><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span> These are raw parameter-storage estimates. Production serving also needs KV cache, activation/workspace buffers, quantization metadata, allocator headroom, runtime overhead, communication buffers, and safety margin.</p>
+<p>Do not say:</p>
+<pre class="code-block"><code class="language-text">FP8 always fits a 70B model on one 80 GB GPU.
+</code></pre>
+<p>Say:</p>
+<pre class="code-block"><code class="language-text">Raw FP8 weights for a 70B dense model are about 70 GB.
+Whether production serving fits on one 80 GB GPU depends on runtime overhead, KV-cache budget, context length, batch/concurrency, tensor parallelism, and serving stack.
+</code></pre>
+<hr/>
+<h2 id="table-8-2-70b-model-size-by-precision">Table 8.2 — 70B Model Size by Precision<a aria-label="Link to this section" class="anchor" href="#table-8-2-70b-model-size-by-precision">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Format</th>
+<th style="text-align:right">Bytes / Parameter</th>
+<th style="text-align:right">Raw 70B Weight Size</th>
+<th>What It Usually Means</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FP32</td>
+<td style="text-align:right">4.0</td>
+<td style="text-align:right">280 GB</td>
+<td>Too large for single-GPU serving; used for master/optimizer states</td>
+<td><code><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></code></td>
+</tr>
+<tr>
+<td>BF16</td>
+<td style="text-align:right">2.0</td>
+<td style="text-align:right">140 GB</td>
+<td>Common training/inference baseline; needs sharding for 80 GB GPUs</td>
+<td><code><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></code></td>
+</tr>
+<tr>
+<td>FP8</td>
+<td style="text-align:right">1.0</td>
+<td style="text-align:right">70 GB</td>
+<td>Can reduce model memory by about 2× vs BF16</td>
+<td><code><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></code></td>
+</tr>
+<tr>
+<td>INT8</td>
+<td style="text-align:right">1.0</td>
+<td style="text-align:right">70 GB</td>
+<td>Similar raw storage to FP8, different arithmetic and scaling</td>
+<td><code><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></code></td>
+</tr>
+<tr>
+<td>INT4</td>
+<td style="text-align:right">0.5</td>
+<td style="text-align:right">35 GB</td>
+<td>About 4× smaller than BF16 before metadata</td>
+<td><code><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span></code></td>
+</tr>
+<tr>
+<td>FP4/NVFP4-style</td>
+<td style="text-align:right">~0.5 plus scales</td>
+<td style="text-align:right">~35–40 GB representative</td>
+<td>Hardware/runtime-specific; scale overhead matters</td>
+<td><code><span class="confidence-label label-representative">[REPRESENTATIVE]</span></code></td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p><strong>Key Takeaway:</strong> Weight memory math is simple. Production fit is not.</p>
+</blockquote>
+<hr/>
+<h2 id="8-3-quantization-fundamentals-scale-and-zero-point">8.3 Quantization Fundamentals — Scale and Zero Point<a aria-label="Link to this section" class="anchor" href="#8-3-quantization-fundamentals-scale-and-zero-point">#</a></h2>
+<p>Quantization maps high-precision values onto a smaller numeric grid.</p>
+<p>A common affine quantization form is:</p>
+<pre class="code-block"><code class="language-text">Quantize:
+Q(x) = clamp(round(x / scale + zero_point), q_min, q_max)
+
+Dequantize:
+x_hat = scale × (Q(x) − zero_point)
+</code></pre>
+<p>Where:</p>
+<pre class="code-block"><code class="language-text">x           = original floating-point value
+Q(x)        = quantized value
+scale       = grid spacing
+zero_point  = integer value that represents real zero
+q_min/q_max = representable quantized range
+x_hat       = reconstructed value
+</code></pre>
+<p>For symmetric quantization:</p>
+<pre class="code-block"><code class="language-text">zero_point = 0
+scale = max(abs(x)) / q_max
+Q(x) = round(x / scale)
+</code></pre>
+<p>For asymmetric quantization:</p>
+<pre class="code-block"><code class="language-text">scale = (max(x) − min(x)) / (q_max − q_min)
+zero_point ≈ q_min − round(min(x) / scale)
+</code></pre>
+<p><span class="confidence-label label-representative">[REPRESENTATIVE]</span> Symmetric quantization is simpler and common for weight quantization and hardware-friendly GEMM paths. Asymmetric quantization can use the integer range more fully when distributions are shifted away from zero, but it adds implementation complexity.</p>
+<p>Maximum rounding error for a value that is inside range is roughly:</p>
+<pre class="code-block"><code class="language-text">max rounding error ≈ scale / 2
+</code></pre>
+<p>That simple formula explains why outliers are dangerous. If one large value makes <code>scale</code> large, the entire grid becomes coarse.</p>
+<h2 id="figure-placeholder-fig-82">Figure Placeholder — Fig 8.2<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-82">#</a></h2>
+<figure class="figure-placeholder" id="fig-8-2-quantization-formula-and-dequantization-flow">
+<div class="figure-kicker">Fig 8.2</div>
+<div class="figure-title">Quantization Formula and Dequantization Flow</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A flow from floating-point values to min/max range, scale, zero point, rounded quantized values, and reconstructed values.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch08_fig_8_2_quantization_formula_flow.svg</code></p>
+<p class="figure-status">Figure to be created</p>
+<span class="figure-source muted">Source diagram pending</span>
+</div>
+</div>
+<figcaption><strong>Fig 8.2 — Quantization Formula and Dequantization Flow.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong> Quantization is easiest to understand as a mapping problem: continuous values are rounded onto a smaller grid.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The figure should show input values, min/max range, computed scale, rounded quantized values, and reconstructed values. It should include symmetric and asymmetric variants but keep symmetric as the primary mental model.</p>
+<blockquote><strong>Key Takeaway:</strong> Quantization error is controlled by scale, granularity, clipping, and outliers.</blockquote>
+<blockquote>
+<p><strong>Key Takeaway:</strong> Scale decides the grid spacing. The grid spacing decides how much information survives.</p>
+</blockquote>
+<hr/>
+<h2 id="8-4-the-outlier-problem">8.4 The Outlier Problem<a aria-label="Link to this section" class="anchor" href="#8-4-the-outlier-problem">#</a></h2>
+<p>Naive quantization fails when one extreme value controls the scale for many normal values.</p>
+<p>Suppose an activation tensor has an outlier:</p>
+<pre class="code-block"><code class="language-text">max(|x|) = 72.1
+</code></pre>
+<p>For symmetric INT8:</p>
+<pre class="code-block"><code class="language-text">scale = 72.1 / 127 ≈ 0.568
+</code></pre>
+<p>A small value such as <code>0.02</code> becomes:</p>
+<pre class="code-block"><code class="language-text">Q(0.02) = round(0.02 / 0.568)
+        = round(0.035)
+        = 0
+
+x_hat = 0 × 0.568 = 0
+</code></pre>
+<p>The small value is destroyed.</p>
+<p><span class="confidence-label label-representative">[REPRESENTATIVE]</span> Transformer outliers can appear in attention, residual streams, normalization-adjacent channels, and activation distributions. The exact distribution is model- and layer-specific, but the failure pattern is stable: a few large values can force a coarse scale that damages many smaller values.</p>
+<h2 id="figure-placeholder-fig-83">Figure Placeholder — Fig 8.3<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-83">#</a></h2>
+<figure class="figure-placeholder" id="fig-8-3-outlier-dominated-quantization-error">
+<div class="figure-kicker">Fig 8.3</div>
+<div class="figure-title">Outlier-Dominated Quantization Error</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A visual showing how one extreme activation expands the scale and causes small values to round to zero.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch08_fig_8_3_outlier_quantization_error.svg</code></p>
+<p class="figure-status">Adapt from existing Quant Error diagram</p>
+<a class="figure-source" href="../diagrams/diagrams_batch2.html#d18">View source diagram</a>
+</div>
+</div>
+<figcaption><strong>Fig 8.3 — Outlier-Dominated Quantization Error.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong> The most common reason naive transformer quantization fails is not the average value; it is the outlier.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The figure should compare a normal range with an outlier-expanded range and show how values near zero lose precision when the quantization step becomes too coarse.</p>
+<blockquote><strong>Key Takeaway:</strong> Outliers can make most values quantize poorly even when the model looks stable in BF16.</blockquote>
+<p>This is why the naive idea:</p>
+<pre class="code-block"><code class="language-text">Just convert every weight to INT4.
+</code></pre>
+<p>usually fails for large language models.</p>
+<p>The better production question is:</p>
+<pre class="code-block"><code class="language-text">Which values need protection, which values can tolerate error, and what scale granularity gives enough quality at acceptable runtime cost?
+</code></pre>
+<blockquote>
+<p><strong>Key Takeaway:</strong> Outliers make quantization a distribution problem, not only a bit-width problem.</p>
+</blockquote>
+<hr/>
+<hr/>
+<h2 id="8-5-granularity-the-most-important-quality-lever">8.5 Granularity — The Most Important Quality Lever<a aria-label="Link to this section" class="anchor" href="#8-5-granularity-the-most-important-quality-lever">#</a></h2>
+<p>A quantized tensor needs scale information.</p>
+<p>The question is:</p>
+<pre class="code-block"><code class="language-text">How many values share one scale?
+</code></pre>
+<p>The answer is granularity.</p>
+<p>Three common choices:</p>
+<pre class="code-block"><code class="language-text">Per-tensor:   one scale for the whole tensor
+Per-channel:  one scale per output/input channel or row/column
+Per-group:    one scale per small group of weights, such as 64 or 128 values
+</code></pre>
+<p>The same INT4 format can be unusable or production-acceptable depending on this choice.</p>
+<hr/>
+<h2 id="table-8-3-quantization-granularity-comparison">Table 8.3 — Quantization Granularity Comparison<a aria-label="Link to this section" class="anchor" href="#table-8-3-quantization-granularity-comparison">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Granularity</th>
+<th style="text-align:right">Scale Count</th>
+<th style="text-align:right">Metadata Overhead</th>
+<th>INT8 Quality</th>
+<th>INT4 Quality</th>
+<th>Typical Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Per-tensor</td>
+<td style="text-align:right">1 per tensor</td>
+<td style="text-align:right">Lowest</td>
+<td>Sometimes acceptable</td>
+<td>Often poor</td>
+<td>Legacy/simple demos</td>
+</tr>
+<tr>
+<td>Per-channel</td>
+<td style="text-align:right">1 per channel/row</td>
+<td style="text-align:right">Low</td>
+<td>Good</td>
+<td>Mixed</td>
+<td>INT8 weights/activations, some PTQ</td>
+</tr>
+<tr>
+<td>Per-group</td>
+<td style="text-align:right">1 per group, e.g. 64/128 weights</td>
+<td style="text-align:right">Moderate</td>
+<td>Very good</td>
+<td>Often acceptable</td>
+<td>GPTQ, AWQ, GGUF-like low-bit formats</td>
+</tr>
+<tr>
+<td>Per-token KV</td>
+<td style="text-align:right">1 scale per token position or block/token policy</td>
+<td style="text-align:right">Runtime-dependent</td>
+<td>Useful for KV cache</td>
+<td>Stack-specific</td>
+<td>KV-cache quantization</td>
+</tr>
+</tbody>
+</table></div>
+<p><span class="confidence-label label-representative">[REPRESENTATIVE]</span> Group size 128 is common in many low-bit LLM examples, but the best group size is model-, kernel-, runtime-, and quality-budget-specific.</p>
+<h2 id="figure-placeholder-fig-84">Figure Placeholder — Fig 8.4<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-84">#</a></h2>
+<figure class="figure-placeholder" id="fig-8-4-per-tensor-vs-per-channel-vs-per-group-quantization">
+<div class="figure-kicker">Fig 8.4</div>
+<div class="figure-title">Per-Tensor vs Per-Channel vs Per-Group Quantization</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>One matrix shown three ways: one global scale, one scale per output channel, and many small group scales.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch08_fig_8_4_granularity_comparison.svg</code></p>
+<p class="figure-status">Figure to be created</p>
+<span class="figure-source muted">Source diagram pending</span>
+</div>
+</div>
+<figcaption><strong>Fig 8.4 — Per-Tensor vs Per-Channel vs Per-Group Quantization.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong> The same bit width can perform badly or acceptably depending on scale granularity.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The figure should show one matrix with one global scale, row/channel scales, and small group scales. The visual should emphasize quality versus metadata overhead.</p>
+<blockquote><strong>Key Takeaway:</strong> For INT4, granularity is often the difference between unusable and production-acceptable quality.</blockquote>
+<blockquote>
+<p><strong>Key Takeaway:</strong> Low-bit quality is often won or lost by scale granularity, not only by the number of bits.</p>
+</blockquote>
+<hr/>
+<h2 id="8-6-post-training-quantization-gptq-awq-and-smoothquant">8.6 Post-Training Quantization: GPTQ, AWQ, and SmoothQuant<a aria-label="Link to this section" class="anchor" href="#8-6-post-training-quantization-gptq-awq-and-smoothquant">#</a></h2>
+<p>Post-training quantization, or PTQ, tries to quantize a pretrained model without fully retraining it.</p>
+<p>Naive PTQ is simple:</p>
+<pre class="code-block"><code class="language-text">1. Run calibration data.
+2. Collect min/max or activation statistics.
+3. Compute scales.
+4. Convert weights/activations to lower precision.
+5. Evaluate quality.
+</code></pre>
+<p>For INT8, naive or simple calibration may be acceptable for many models.</p>
+<p>For INT4 LLMs, naive PTQ is usually not enough.</p>
+<p>Three major methods address different failure modes.</p>
+<h3 id="gptq">GPTQ<a aria-label="Link to this section" class="anchor" href="#gptq">#</a></h3>
+<p>GPTQ is weight-error compensation.</p>
+<p>The core idea:</p>
+<pre class="code-block"><code class="language-text">When quantizing one weight column causes error,
+adjust later weights so the output error is reduced.
+</code></pre>
+<p>GPTQ uses calibration activations and a second-order approximation to estimate which weight errors matter most. It is stronger than naive INT4 because it does not treat every rounding error independently.</p>
+<p><span class="confidence-label label-representative">[REPRESENTATIVE]</span> GPTQ can deliver production-usable INT4 weight-only models, but calibration time, group size, kernel support, and task-specific quality vary by model and runtime.</p>
+<h3 id="awq">AWQ<a aria-label="Link to this section" class="anchor" href="#awq">#</a></h3>
+<p>AWQ is activation-aware weight quantization.</p>
+<p>The core idea:</p>
+<pre class="code-block"><code class="language-text">A small fraction of channels are especially important because their activations are large.
+Protect those salient channels before quantizing the weights.
+</code></pre>
+<p>AWQ identifies activation-salient channels from calibration data, rescales the corresponding weights and activations so the mathematical output is preserved, then quantizes the weights more safely.</p>
+<p>A simplified identity:</p>
+<pre class="code-block"><code class="language-text">Y = X × W
+  = (X / s) × (W × s)
+</code></pre>
+<p>The output stays the same before quantization, but the scaled weights can use the low-bit range more effectively.</p>
+<p><span class="confidence-label label-representative">[REPRESENTATIVE]</span> AWQ often calibrates faster than GPTQ and can work well for production INT4 serving, especially where activation outliers dominate. It still requires task-specific evaluation.</p>
+<h3 id="smoothquant">SmoothQuant<a aria-label="Link to this section" class="anchor" href="#smoothquant">#</a></h3>
+<p>SmoothQuant targets W8A8 INT8 deployment.</p>
+<p>The core idea:</p>
+<pre class="code-block"><code class="language-text">Activations are hard to quantize because of outliers.
+Weights are easier to quantize.
+Move some quantization difficulty from activations into weights.
+</code></pre>
+<p>The mathematical identity is similar:</p>
+<pre class="code-block"><code class="language-text">Y = X × W
+  = (X × diag(s)^-1) × (diag(s) × W)
+</code></pre>
+<p>Activations become smoother; weights absorb the scaling.</p>
+<p><span class="confidence-label label-representative">[REPRESENTATIVE]</span> SmoothQuant is especially useful on hardware and stacks where INT8 Tensor Core or matrix paths are mature but native FP8 is unavailable or not preferred.</p>
+<hr/>
+<h2 id="table-8-4-gptq-vs-awq-vs-smoothquant">Table 8.4 — GPTQ vs AWQ vs SmoothQuant<a aria-label="Link to this section" class="anchor" href="#table-8-4-gptq-vs-awq-vs-smoothquant">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Main Target</th>
+<th>Core Idea</th>
+<th>Calibration Signal</th>
+<th>Typical Output</th>
+<th>Best Fit</th>
+<th>Watchouts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPTQ</td>
+<td>Weight-only low-bit quantization</td>
+<td>Compensate weight quantization error using calibration activations</td>
+<td>Hessian/second-order approximation</td>
+<td>INT4 W4A16-style weights</td>
+<td>INT4 serving where GPTQ kernels are strong</td>
+<td>Slower calibration; quality varies by task</td>
+</tr>
+<tr>
+<td>AWQ</td>
+<td>Weight-only low-bit quantization</td>
+<td>Protect activation-salient weight channels</td>
+<td>Activation magnitude / salient channels</td>
+<td>INT4 W4A16-style weights</td>
+<td>Production INT4 serving, outlier-heavy models</td>
+<td>Needs compatible kernels and evals</td>
+</tr>
+<tr>
+<td>SmoothQuant</td>
+<td>W8A8 INT8</td>
+<td>Migrate activation outliers into weights</td>
+<td>Activation/weight scale balance</td>
+<td>INT8 W8A8</td>
+<td>A100/INT8-friendly stacks</td>
+<td>Less relevant if FP8 path is better on target hardware</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="figure-placeholder-fig-85">Figure Placeholder — Fig 8.5<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-85">#</a></h2>
+<figure class="figure-placeholder" id="fig-8-5-gptq-vs-awq-vs-smoothquant-method-map">
+<div class="figure-kicker">Fig 8.5</div>
+<div class="figure-title">GPTQ vs AWQ vs SmoothQuant Method Map</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A method comparison mapping GPTQ to weight-error compensation, AWQ to activation-salient channels, and SmoothQuant to activation-outlier migration.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch08_fig_8_5_ptq_method_map.svg</code></p>
+<p class="figure-status">Figure to be created</p>
+<span class="figure-source muted">Source diagram pending</span>
+</div>
+</div>
+<figcaption><strong>Fig 8.5 — GPTQ vs AWQ vs SmoothQuant Method Map.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong> GPTQ, AWQ, and SmoothQuant solve related but different quantization problems.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The figure should show the input problem, core idea, calibration signal, and output format for each method.</p>
+<blockquote><strong>Key Takeaway:</strong> Choose the quantization method based on the failure mode.</blockquote>
+<blockquote>
+<p><strong>Key Takeaway:</strong> GPTQ fixes weight-error accumulation, AWQ protects salient channels, and SmoothQuant makes activations easier to quantize.</p>
+</blockquote>
+<hr/>
+<h2 id="8-7-fp8-and-transformer-engine">8.7 FP8 and Transformer Engine<a aria-label="Link to this section" class="anchor" href="#8-7-fp8-and-transformer-engine">#</a></h2>
+<p>FP8 is not just a smaller storage format.</p>
+<p>FP8 is a mixed-precision execution strategy that requires scaling.</p>
+<p>A practical FP8 recipe keeps sensitive operations in higher precision and uses FP8 where Tensor Core GEMMs can benefit.</p>
+<p>Typical pattern:</p>
+<pre class="code-block"><code class="language-text">GEMM-heavy paths: FP8 inputs with higher-precision accumulation
+Norms/residual-sensitive paths: BF16/FP16/FP32 depending recipe
+Scaling: dynamic, delayed, current, blockwise, or framework-specific
+</code></pre>
+<p><span class="confidence-label label-shipped">[SHIPPED]</span> NVIDIA Transformer Engine documents FP8 support and scaling recipes for Hopper and newer NVIDIA GPUs. FP8 E4M3 and E5M2 have different range/precision tradeoffs, and hybrid recipes can use different formats for forward and backward tensors.</p>
+<p><span class="confidence-label label-env">[ENV-SPECIFIC]</span> FP8 can improve training or inference throughput when GEMM time and memory traffic are major bottlenecks, but end-to-end speedup depends on non-GEMM operations, communication, batch shape, kernels, compiler/runtime behavior, and quality constraints.</p>
+<p>A simplified FP8 flow:</p>
+<pre class="code-block"><code class="language-text">Track tensor amax
+  → choose scale
+  → cast BF16/FP32 tensor to FP8
+  → run Tensor Core GEMM
+  → accumulate in higher precision
+  → descale output
+  → continue mixed-precision pipeline
+</code></pre>
+<h2 id="figure-placeholder-fig-86">Figure Placeholder — Fig 8.6<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-86">#</a></h2>
+<figure class="figure-placeholder" id="fig-8-6-fp8-transformer-engine-dynamic-scaling-pipeline">
+<div class="figure-kicker">Fig 8.6</div>
+<div class="figure-title">FP8 Transformer Engine Dynamic Scaling Pipeline</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A pipeline showing amax tracking, scale selection, FP8 casting, Tensor Core GEMM, accumulation, descale, and higher-precision residual/norm paths.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch08_fig_8_6_fp8_transformer_engine_pipeline.svg</code></p>
+<p class="figure-status">Figure to be created</p>
+<span class="figure-source muted">Source diagram pending</span>
+</div>
+</div>
+<figcaption><strong>Fig 8.6 — FP8 Transformer Engine Dynamic Scaling Pipeline.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong> FP8 is not just a smaller format; it requires scaling recipes that keep tensors inside representable range.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The figure should show BF16/FP32 source tensors, amax history, scale computation, FP8 casting, Tensor Core GEMM, accumulation, descale, and output path.</p>
+<blockquote><strong>Key Takeaway:</strong> FP8 quality depends on recipe, scaling, accumulation, and which tensors remain in higher precision.</blockquote>
+<h3 id="nvfp4-and-fp4">NVFP4 and FP4<a aria-label="Link to this section" class="anchor" href="#nvfp4-and-fp4">#</a></h3>
+<p>FP4 pushes the same idea further: fewer bits, more need for scaling and hardware/runtime support.</p>
+<p><span class="confidence-label label-shipped">[SHIPPED]</span> NVIDIA Blackwell-class software documentation describes NVFP4 as an E2M1-style 4-bit floating format with block scaling support in Transformer Engine contexts.</p>
+<p><span class="confidence-label label-env">[ENV-SPECIFIC]</span> FP4 performance and quality depend heavily on Blackwell-class hardware support, scaling recipe, model architecture, calibration/fine-tuning path, and serving framework. Do not compare FP4 peak numbers directly to BF16 or FP8 without specifying dense/sparse mode, accumulation type, batch shape, and quality target.</p>
+<blockquote>
+<p><strong>Key Takeaway:</strong> FP8 and FP4 are not only formats. They are format plus scaling plus kernel plus runtime plus quality validation.</p>
+</blockquote>
+<hr/>
+<h2 id="8-8-kv-cache-quantization">8.8 KV Cache Quantization<a aria-label="Link to this section" class="anchor" href="#8-8-kv-cache-quantization">#</a></h2>
+<p>The KV cache is independent from weight quantization.</p>
+<p>A model can use:</p>
+<pre class="code-block"><code class="language-text">FP8 weights + BF16 KV
+BF16 weights + FP8 KV
+INT4 weights + FP8 KV
+AWQ weights + INT8 KV
+</code></pre>
+<p>The KV-cache memory estimate should stay consistent with Chapters 4 and 11:</p>
+<pre class="code-block"><code class="language-text">KV cache bytes ≈ 2 × L × B × S × n_kv × d_head × bytes_per_element
+</code></pre>
+<p>Where:</p>
+<pre class="code-block"><code class="language-text">2       = K and V tensors
+L       = number of transformer layers
+B       = concurrent sequences / batch
+S       = sequence length
+n_kv    = number of KV heads, not query heads
+ d_head = head dimension
+bytes   = bytes per KV element
+</code></pre>
+<p>For one sequence, remove <code>B</code> or set <code>B = 1</code>.</p>
+<p>Example for a LLaMA-like 70B model with GQA-8, <code>L = 80</code>, <code>n_kv = 8</code>, <code>d_head = 128</code>, <code>S = 4096</code>:</p>
+<pre class="code-block"><code class="language-text">BF16 KV per sequence
+≈ 2 × 80 × 1 × 4096 × 8 × 128 × 2 bytes
+≈ 1.34 GB
+
+FP8/INT8 KV per sequence
+≈ 2 × 80 × 1 × 4096 × 8 × 128 × 1 byte
+≈ 0.67 GB
+</code></pre>
+<p><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span> These are formula-derived estimates. Exact production memory depends on block size, metadata, page tables, allocator behavior, prefix sharing, fragmentation, runtime overhead, and serving stack.</p>
+<h2 id="figure-placeholder-fig-87">Figure Placeholder — Fig 8.7<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-87">#</a></h2>
+<figure class="figure-placeholder" id="fig-8-7-kv-cache-quantization-memory-reduction">
+<div class="figure-kicker">Fig 8.7</div>
+<div class="figure-title">KV Cache Quantization Memory Reduction</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A fixed HBM budget comparing BF16 KV blocks against FP8/INT8 KV blocks, with GQA/MQA called out as a separate multiplier.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch08_fig_8_7_kv_cache_quantization_reduction.svg</code></p>
+<p class="figure-status">Adapt from existing KV-cache diagram with Ch08 overlay</p>
+<a class="figure-source" href="../diagrams/diagram_02_kv_cache.html">View source diagram</a>
+</div>
+</div>
+<figcaption><strong>Fig 8.7 — KV Cache Quantization Memory Reduction.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong> Weight quantization and KV-cache quantization solve different memory problems and can be combined.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The figure should compare how many sequence blocks fit with BF16 KV versus FP8/INT8 KV and separate KV precision from GQA/MQA architecture choices.</p>
+<blockquote><strong>Key Takeaway:</strong> KV-cache quantization improves concurrency and context capacity, not necessarily single-token compute speed.</blockquote>
+<hr/>
+<h2 id="table-8-5-weight-quantization-vs-kv-cache-quantization">Table 8.5 — Weight Quantization vs KV-Cache Quantization<a aria-label="Link to this section" class="anchor" href="#table-8-5-weight-quantization-vs-kv-cache-quantization">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Technique</th>
+<th>Reduces</th>
+<th>Usually Improves</th>
+<th>Does Not Automatically Improve</th>
+<th>Key Risk</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FP8 weights</td>
+<td>Weight memory and weight bandwidth</td>
+<td>Model fit, prefill/decode throughput when weight reads dominate</td>
+<td>Task quality without validation</td>
+<td>Runtime/kernel support</td>
+<td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code> / <code><span class="confidence-label label-env">[ENV-SPECIFIC]</span></code></td>
+</tr>
+<tr>
+<td>INT4/AWQ/GPTQ weights</td>
+<td>Weight memory strongly</td>
+<td>Model fit, cost/token, decode bandwidth pressure</td>
+<td>Quality-sensitive tasks</td>
+<td>Accuracy regressions, kernel support</td>
+<td><code><span class="confidence-label label-representative">[REPRESENTATIVE]</span></code></td>
+</tr>
+<tr>
+<td>FP8/INT8 KV cache</td>
+<td>KV-cache capacity and bandwidth</td>
+<td>Concurrency, long-context headroom</td>
+<td>Raw model-weight size</td>
+<td>Attention quality, scale handling</td>
+<td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code> / <code><span class="confidence-label label-env">[ENV-SPECIFIC]</span></code></td>
+</tr>
+<tr>
+<td>GQA/MQA</td>
+<td>Number of KV heads</td>
+<td>KV memory and decode bandwidth</td>
+<td>Weight memory</td>
+<td>Architecture-specific; not a deployment switch</td>
+<td><code><span class="confidence-label label-shipped">[SHIPPED]</span></code> when model architecture uses it</td>
+</tr>
+<tr>
+<td>Prefix caching</td>
+<td>Redundant prefill compute and KV duplication</td>
+<td>TTFT and capacity for shared-prefix workloads</td>
+<td>Random unrelated prompts</td>
+<td>Cache hit rate and routing</td>
+<td><code><span class="confidence-label label-env">[ENV-SPECIFIC]</span></code></td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p><strong>Key Takeaway:</strong> Weight quantization reduces model bytes. KV-cache quantization reduces serving-state bytes. Production systems often need both.</p>
+</blockquote>
+<hr/>
+<h2 id="8-9-quantization-aware-training-and-qlora">8.9 Quantization-Aware Training and QLoRA<a aria-label="Link to this section" class="anchor" href="#8-9-quantization-aware-training-and-qlora">#</a></h2>
+<p>Post-training quantization is not always enough.</p>
+<p>Quantization-aware training, or QAT, exposes the model to quantization error during training or fine-tuning so weights can adapt.</p>
+<p>A simplified fake-quantization path:</p>
+<pre class="code-block"><code class="language-text">forward pass:
+  x_quant_like = round(x / scale) × scale
+
+backward pass:
+  use straight-through estimator so learning can continue
+</code></pre>
+<p><span class="confidence-label label-representative">[REPRESENTATIVE]</span> QAT can recover quality for aggressive low-bit formats, but it is much more expensive than PTQ because it requires training or fine-tuning cycles. It is usually justified only when deployment volume is high enough to repay the extra engineering and compute cost.</p>
+<h3 id="qlora">QLoRA<a aria-label="Link to this section" class="anchor" href="#qlora">#</a></h3>
+<p>QLoRA is a fine-tuning method, not a general-purpose serving quantization format.</p>
+<p>The core idea:</p>
+<pre class="code-block"><code class="language-text">Keep the base model in 4-bit NF4.
+Dequantize on the fly for compute.
+Train small BF16 LoRA adapter weights.
+Update only the adapter weights.
+</code></pre>
+<p>QLoRA is useful when full fine-tuning is too expensive, but you still need task adaptation.</p>
+<p><span class="confidence-label label-representative">[REPRESENTATIVE]</span> QLoRA memory usage depends on model size, adapter rank, sequence length, activation checkpointing, optimizer state, and framework implementation. Treat single-GPU fine-tuning examples as workload-specific, not universal.</p>
+<blockquote>
+<p><strong>Key Takeaway:</strong> PTQ is usually the first production step; QAT and QLoRA are used when quality recovery or fine-tuning economics justify the extra complexity.</p>
+</blockquote>
+<hr/>
+<h2 id="8-10-quantization-on-amd-and-rocm">8.10 Quantization on AMD and ROCm<a aria-label="Link to this section" class="anchor" href="#8-10-quantization-on-amd-and-rocm">#</a></h2>
+<p>Quantization is not only an NVIDIA topic.</p>
+<p>AMD Instinct systems also support low-precision inference and training paths through ROCm, HIP, Composable Kernel, vLLM ROCm support, and framework/runtime integrations.</p>
+<p><span class="confidence-label label-shipped">[SHIPPED]</span> AMD ROCm documentation describes FP8 quantization support for MI300X inference workflows, including FP8 weight/activation quantization with hardware acceleration in supported stacks.</p>
+<p><span class="confidence-label label-env">[ENV-SPECIFIC]</span> Performance and feature availability on AMD depend on ROCm version, model, kernel path, vLLM/serving version, quantization format, and whether the workload uses supported optimized kernels.</p>
+<p>A safe production framing:</p>
+<pre class="code-block"><code class="language-text">For MI300X/ROCm:
+  evaluate FP8 first when the runtime and model path support it;
+  evaluate AWQ/INT4 when memory or bandwidth pressure dominates;
+  validate accuracy and kernel availability before making a procurement or deployment claim.
+</code></pre>
+<p>MI300X has a large-HBM advantage for memory-heavy inference. A raw 70B BF16 model is about 140 GB, and MI300X-class 192 GB HBM capacity can reduce the need for tensor parallelism in some serving configurations. But raw fit does not guarantee production fit.</p>
+<p><span class="confidence-label label-derived">[DERIVED FROM SHIPPED]</span> Larger HBM capacity can improve model-fit and KV-cache headroom, but final capacity depends on runtime overhead, context length, concurrency, tensor parallelism, and quantization strategy.</p>
+<h3 id="cdna-4-mi350-class-claims">CDNA 4 / MI350-Class Claims<a aria-label="Link to this section" class="anchor" href="#cdna-4-mi350-class-claims">#</a></h3>
+<p><span class="confidence-label label-announced">[ANNOUNCED]</span> AMD has discussed newer low-precision formats and MI350-class roadmap/product capabilities. Use current official AMD product and ROCm documentation before making final FP4/FP6 performance or availability claims.</p>
+<blockquote>
+<p><strong>Key Takeaway:</strong> AMD quantization support should be discussed as hardware plus ROCm plus serving runtime plus kernel maturity, not as a paper format alone.</p>
+</blockquote>
+<hr/>
+<h2 id="8-11-deployment-decision-framework">8.11 Deployment Decision Framework<a aria-label="Link to this section" class="anchor" href="#8-11-deployment-decision-framework">#</a></h2>
+<p>A production quantization decision starts with constraints.</p>
+<p>Do not start with:</p>
+<pre class="code-block"><code class="language-text">Which quantization method is popular?
+</code></pre>
+<p>Start with:</p>
+<pre class="code-block"><code class="language-text">What must be true for this deployment to succeed?
+</code></pre>
+<h2 id="figure-placeholder-fig-88">Figure Placeholder — Fig 8.8<a aria-label="Link to this section" class="anchor" href="#figure-placeholder-fig-88">#</a></h2>
+<figure class="figure-placeholder" id="fig-8-8-production-quantization-decision-tree">
+<div class="figure-kicker">Fig 8.8</div>
+<div class="figure-title">Production Quantization Decision Tree</div>
+<div class="figure-body">
+<div class="figure-icon">▧</div>
+<div>
+<p>A decision tree starting from model fit, hardware support, quality budget, calibration budget, serving stack, and task-specific validation.</p>
+<p class="figure-path"><strong>Planned asset:</strong> <code>../assets/diagrams/svg/ch08_fig_8_8_quantization_decision_tree.svg</code></p>
+<p class="figure-status">Figure to be created</p>
+<span class="figure-source muted">Source diagram pending</span>
+</div>
+</div>
+<figcaption><strong>Fig 8.8 — Production Quantization Decision Tree.</strong> Placeholder for production diagram integration.</figcaption>
+</figure>
+<p class="figure-note"><strong>Figure intro:</strong> Quantization should not be chosen by trend or format name. It should be chosen by constraints.</p>
+<p class="figure-note"><strong>Figure explanation:</strong> The figure should guide the reader from hardware and memory constraints toward FP8, SmoothQuant, AWQ, GPTQ, GGUF, QAT, or BF16 fallback.</p>
+<blockquote><strong>Key Takeaway:</strong> A production quantization choice is a constraint-satisfaction problem.</blockquote>
+<hr/>
+<h2 id="table-8-6-production-quantization-deployment-framework">Table 8.6 — Production Quantization Deployment Framework<a aria-label="Link to this section" class="anchor" href="#table-8-6-production-quantization-deployment-framework">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Question</th>
+<th>Decision Logic</th>
+<th>Example Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Does the model fit comfortably at BF16?</td>
+<td>If not, quantization or sharding is required.</td>
+<td>70B BF16 is about 140 GB, so one 80 GB GPU is not enough for raw weights.</td>
+</tr>
+<tr>
+<td>1</td>
+<td>What hardware is targeted?</td>
+<td>H100/H200/Blackwell may favor FP8/FP4 paths; A100 may favor INT8/SmoothQuant; CPU may favor GGUF.</td>
+<td>Hardware chooses the realistic format menu.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>What is the quality budget?</td>
+<td>Tight budget favors BF16/FP8; moderate budget may allow AWQ/GPTQ INT4.</td>
+<td>Code/math may reject INT4 even when MMLU looks fine.</td>
+</tr>
+<tr>
+<td>3</td>
+<td>What is the memory target?</td>
+<td>2× weight reduction suggests FP8/INT8; 4× suggests INT4.</td>
+<td>INT4 can reduce GPU count but increases quality risk.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>What calibration budget is available?</td>
+<td>FP8 may require little or no offline calibration; AWQ/GPTQ require calibration; QAT is expensive.</td>
+<td>Choose method based on engineering time and ROI.</td>
+</tr>
+<tr>
+<td>5</td>
+<td>What serving stack supports it well?</td>
+<td>Kernel/runtime support decides whether theoretical savings become real.</td>
+<td>vLLM/TRT-LLM/SGLang/ROCm support must be checked.</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Did task-specific eval pass?</td>
+<td>Never ship on aggregate benchmarks only.</td>
+<td>Run MMLU plus real production prompts and failure cases.</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p><strong>Key Takeaway:</strong> Quantization is not complete until the deployment task passes evaluation under the intended serving stack.</p>
+</blockquote>
+<hr/>
+<h2 id="8-12-production-decision-table">8.12 Production Decision Table<a aria-label="Link to this section" class="anchor" href="#8-12-production-decision-table">#</a></h2>
+<p>The following table is a starting point, not a universal rule.</p>
+<hr/>
+<h2 id="table-8-7-format-selection-by-use-case">Table 8.7 — Format Selection by Use Case<a aria-label="Link to this section" class="anchor" href="#table-8-7-format-selection-by-use-case">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Use Case</th>
+<th>Recommended Starting Point</th>
+<th>Second Choice</th>
+<th>Avoid / Be Careful With</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H100/H200 production serving, high quality</td>
+<td>FP8 W8A8 + FP8 KV eval</td>
+<td>AWQ INT4 if cost pressure dominates</td>
+<td>Naive INT4</td>
+</tr>
+<tr>
+<td>A100 production serving</td>
+<td>SmoothQuant W8A8 or AWQ INT4</td>
+<td>GPTQ INT4</td>
+<td>FP8 if not supported by the stack</td>
+</tr>
+<tr>
+<td>Blackwell-class maximum performance</td>
+<td>FP8 or NVFP4 path with official stack</td>
+<td>AWQ/GPTQ for compatibility</td>
+<td>Comparing peak FP4 to BF16 without quality and mode labels</td>
+</tr>
+<tr>
+<td>AMD MI300X production</td>
+<td>FP8 ROCm/vLLM path if supported</td>
+<td>AWQ INT4</td>
+<td>Assuming NVIDIA-specific kernels apply</td>
+</tr>
+<tr>
+<td>Local CPU inference</td>
+<td>GGUF Q4/Q5 family</td>
+<td>GGUF Q6 for quality</td>
+<td>GPU-only AWQ/GPTQ assumptions</td>
+</tr>
+<tr>
+<td>Code/math quality-sensitive serving</td>
+<td>FP8 or BF16 fallback</td>
+<td>AWQ only after code/math eval</td>
+<td>Shipping based on MMLU alone</td>
+</tr>
+<tr>
+<td>Long-context serving</td>
+<td>Weight quantization + FP8/INT8 KV + GQA/MQA architecture</td>
+<td>Prefix caching and routing</td>
+<td>Ignoring KV-cache budget</td>
+</tr>
+<tr>
+<td>Fine-tuning with limited memory</td>
+<td>QLoRA/NF4 + LoRA adapters</td>
+<td>Smaller model full fine-tune</td>
+<td>Treating QLoRA as the same as production serving quantization</td>
+</tr>
+<tr>
+<td>Research baseline</td>
+<td>BF16</td>
+<td>FP8 if validated</td>
+<td>Low-bit formats before baseline quality is known</td>
+</tr>
+</tbody>
+</table></div>
+<p><span class="confidence-label label-representative">[REPRESENTATIVE]</span> This table is a decision guide. Real deployments should validate latency, throughput, quality, memory, and cost on target hardware and workload.</p>
+<hr/>
+<h2 id="8-13-quantization-evaluation-checklist">8.13 Quantization Evaluation Checklist<a aria-label="Link to this section" class="anchor" href="#8-13-quantization-evaluation-checklist">#</a></h2>
+<p>Quantization is not ready when the model loads.</p>
+<p>It is ready when it passes a staged evaluation.</p>
+<hr/>
+<h2 id="table-8-8-quantization-evaluation-checklist">Table 8.8 — Quantization Evaluation Checklist<a aria-label="Link to this section" class="anchor" href="#table-8-8-quantization-evaluation-checklist">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>What to Test</th>
+<th>Why It Matters</th>
+<th>Pass/Fail Signal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Language modeling</td>
+<td>Perplexity on held-out data</td>
+<td>Detects broad degradation</td>
+<td>PPL increase within budget</td>
+</tr>
+<tr>
+<td>Broad knowledge</td>
+<td>MMLU / HellaSwag / ARC / TruthfulQA</td>
+<td>Catches general capability loss</td>
+<td>Delta within quality budget</td>
+</tr>
+<tr>
+<td>Task-specific</td>
+<td>Your production prompts and labels</td>
+<td>Aggregate benchmarks can hide failures</td>
+<td>No unacceptable business/task regression</td>
+</tr>
+<tr>
+<td>Code/math</td>
+<td>HumanEval, MBPP, GSM8K, MATH if relevant</td>
+<td>Low-bit quantization can hurt reasoning precision</td>
+<td>Delta acceptable for product</td>
+</tr>
+<tr>
+<td>Latency</td>
+<td>TTFT, TPOT, P50/P95/P99</td>
+<td>Quantization can change scheduler and kernel behavior</td>
+<td>SLA met under load</td>
+</tr>
+<tr>
+<td>Throughput</td>
+<td>tokens/sec, requests/sec</td>
+<td>Cost and capacity planning</td>
+<td>Sustained throughput improves</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>weights, KV, fragmentation, overhead</td>
+<td>Raw model size is not enough</td>
+<td>Headroom remains at target concurrency</td>
+</tr>
+<tr>
+<td>Stability</td>
+<td>long-run serving, mixed prompts, long context</td>
+<td>Quantized kernels may have edge cases</td>
+<td>No unacceptable crash/quality drift</td>
+</tr>
+<tr>
+<td>Observability</td>
+<td>per-format metrics and rollback path</td>
+<td>Production safety</td>
+<td>Can compare and revert quickly</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p><strong>Key Takeaway:</strong> A quantized model must pass quality, performance, memory, stability, and rollback tests.</p>
+</blockquote>
+<hr/>
+<h2 id="8-14-wrong-fix-vs-right-first-question">8.14 Wrong Fix vs Right First Question<a aria-label="Link to this section" class="anchor" href="#8-14-wrong-fix-vs-right-first-question">#</a></h2>
+<p>Quantization failures are often misdiagnosed.</p>
+<p>A senior engineer may jump to a different format.</p>
+<p>A principal engineer asks which constraint failed.</p>
+<hr/>
+<h2 id="table-8-9-wrong-fix-vs-right-first-question-for-quantization-problems">Table 8.9 — Wrong Fix vs Right First Question for Quantization Problems<a aria-label="Link to this section" class="anchor" href="#table-8-9-wrong-fix-vs-right-first-question-for-quantization-problems">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Wrong Fix</th>
+<th>Right First Question</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>INT4 quality collapses</td>
+<td>Try random lower-bit format</td>
+<td>Is scale granularity too coarse or are outliers dominating?</td>
+</tr>
+<tr>
+<td>MMLU looks fine but code quality drops</td>
+<td>Ship anyway</td>
+<td>Did we evaluate the production task and code/math benchmarks?</td>
+</tr>
+<tr>
+<td>FP8 speedup is small</td>
+<td>Claim FP8 does not work</td>
+<td>Is the workload GEMM-bound, memory-bound, communication-bound, or scheduler-bound?</td>
+</tr>
+<tr>
+<td>Model fits by raw weight math but OOMs</td>
+<td>Blame framework</td>
+<td>Did we include KV cache, runtime overhead, fragmentation, and workspace buffers?</td>
+</tr>
+<tr>
+<td>KV quantization increases errors</td>
+<td>Disable all quantization</td>
+<td>Is the issue KV scale, dtype, long context, or attention kernel support?</td>
+</tr>
+<tr>
+<td>AMD deployment underperforms NVIDIA example</td>
+<td>Blame hardware</td>
+<td>Are ROCm version, kernel path, model format, and serving stack comparable?</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p><strong>Key Takeaway:</strong> Quantization is a multi-layer system. Diagnose the failed layer before changing the format.</p>
+</blockquote>
+<hr/>
+<h2 id="8-15-how-to-discuss-quantization-in-a-principal-interview">8.15 How to Discuss Quantization in a Principal Interview<a aria-label="Link to this section" class="anchor" href="#8-15-how-to-discuss-quantization-in-a-principal-interview">#</a></h2>
+<p>A weak answer sounds like this:</p>
+<pre class="code-block"><code class="language-text">Quantization makes the model smaller and faster.
+</code></pre>
+<p>That is true, but too shallow.</p>
+<p>A principal-level answer sounds like this:</p>
+<blockquote>
+<p>I treat quantization as a memory-bandwidth, capacity, and quality tradeoff. First I calculate raw weight memory and KV-cache memory. Then I check hardware support, kernel/runtime support, and quality budget. For H100/H200-class inference, I usually evaluate FP8 first because it offers strong quality and hardware support. If cost or memory pressure remains high, I evaluate AWQ or GPTQ INT4 with task-specific evals. I never ship based on MMLU alone; I validate the production task, latency percentiles, KV-cache behavior, and rollback path.</p>
+</blockquote>
+<h3 id="scenario-1-why-is-quantization-a-decode-optimization">Scenario 1 — Why Is Quantization a Decode Optimization?<a aria-label="Link to this section" class="anchor" href="#scenario-1-why-is-quantization-a-decode-optimization">#</a></h3>
+<p>Answer:</p>
+<pre class="code-block"><code class="language-text">LLM decode is often memory-bandwidth-sensitive because each output token repeatedly touches model weights and prior KV state. Reducing weight bytes from BF16 to FP8 or INT4 reduces HBM traffic. When decode is memory-bound, fewer bytes can improve tokens/sec and cost/token. If decode is not memory-bound, the speedup may be smaller.
+</code></pre>
+<h3 id="scenario-2-why-did-bf16-replace-fp16-for-training">Scenario 2 — Why Did BF16 Replace FP16 for Training?<a aria-label="Link to this section" class="anchor" href="#scenario-2-why-did-bf16-replace-fp16-for-training">#</a></h3>
+<p>Answer:</p>
+<pre class="code-block"><code class="language-text">BF16 keeps FP32-like exponent range with fewer mantissa bits. FP16 has more mantissa precision but much smaller range. Large-model training needs range to avoid overflow and NaNs in gradients, so BF16 is safer for training even though it has less mantissa precision.
+</code></pre>
+<h3 id="scenario-3-fp8-or-awq-int4">Scenario 3 — FP8 or AWQ INT4?<a aria-label="Link to this section" class="anchor" href="#scenario-3-fp8-or-awq-int4">#</a></h3>
+<p>Answer:</p>
+<pre class="code-block"><code class="language-text">I start with hardware and quality budget. On H100/H200/Blackwell, FP8 is often the first candidate because the hardware and Transformer Engine-style recipes are mature and quality can be near BF16 for many tasks. AWQ INT4 is attractive when memory or cost pressure is stronger, but I validate quality carefully, especially for code, math, and domain-specific tasks.
+</code></pre>
+<h3 id="scenario-4-why-is-mmlu-not-enough">Scenario 4 — Why Is MMLU Not Enough?<a aria-label="Link to this section" class="anchor" href="#scenario-4-why-is-mmlu-not-enough">#</a></h3>
+<p>Answer:</p>
+<pre class="code-block"><code class="language-text">MMLU is a useful broad benchmark, but it is not the production task. A quantized model can lose little on MMLU and still regress on code completion, math, structured extraction, or safety-critical prompts. I run broad benchmarks plus the target workload's real eval set before shipping.
+</code></pre>
+<h3 id="scenario-5-how-would-you-deploy-a-70b-model-on-h100">Scenario 5 — How Would You Deploy a 70B Model on H100?<a aria-label="Link to this section" class="anchor" href="#scenario-5-how-would-you-deploy-a-70b-model-on-h100">#</a></h3>
+<p>Answer:</p>
+<pre class="code-block"><code class="language-text">I calculate raw memory first: BF16 is about 140 GB, FP8 is about 70 GB, INT4 is about 35 GB. On an 80 GB H100, raw FP8 weights may fit, but production serving also needs KV cache and runtime headroom. I would evaluate FP8 weights, FP8 KV cache, and no tensor parallelism only if overhead and context targets fit. If not, I would use tensor parallelism or INT4 weight-only quantization, then validate TTFT, TPOT, P95/P99, and task quality.
+</code></pre>
+<hr/>
+<h2 id="8-16-chapter-cheat-sheet">8.16 Chapter Cheat Sheet<a aria-label="Link to this section" class="anchor" href="#8-16-chapter-cheat-sheet">#</a></h2>
+<h3 id="raw-weight-memory">Raw Weight Memory<a aria-label="Link to this section" class="anchor" href="#raw-weight-memory">#</a></h3>
+<pre class="code-block"><code class="language-text">weight memory = parameters × bytes per parameter
+
+70B FP32 ≈ 280 GB
+70B BF16 ≈ 140 GB
+70B FP8  ≈ 70 GB
+70B INT4 ≈ 35 GB
+</code></pre>
+<h3 id="quantization-formula">Quantization Formula<a aria-label="Link to this section" class="anchor" href="#quantization-formula">#</a></h3>
+<pre class="code-block"><code class="language-text">Q(x) = clamp(round(x / scale + zero_point), q_min, q_max)
+x_hat = scale × (Q(x) − zero_point)
+</code></pre>
+<h3 id="symmetric-quantization">Symmetric Quantization<a aria-label="Link to this section" class="anchor" href="#symmetric-quantization">#</a></h3>
+<pre class="code-block"><code class="language-text">zero_point = 0
+scale = max(abs(x)) / q_max
+</code></pre>
+<h3 id="maximum-rounding-error">Maximum Rounding Error<a aria-label="Link to this section" class="anchor" href="#maximum-rounding-error">#</a></h3>
+<pre class="code-block"><code class="language-text">max error ≈ scale / 2
+</code></pre>
+<h3 id="kv-cache-formula">KV Cache Formula<a aria-label="Link to this section" class="anchor" href="#kv-cache-formula">#</a></h3>
+<pre class="code-block"><code class="language-text">KV cache bytes ≈ 2 × L × B × S × n_kv × d_head × bytes_per_element
+</code></pre>
+<h3 id="production-rule">Production Rule<a aria-label="Link to this section" class="anchor" href="#production-rule">#</a></h3>
+<pre class="code-block"><code class="language-text">Do not ship a quantized model until the production task passes evaluation.
+</code></pre>
+<hr/>
+<h2 id="8-17-key-takeaways">8.17 Key Takeaways<a aria-label="Link to this section" class="anchor" href="#8-17-key-takeaways">#</a></h2>
+<ol>
+<li>Quantization is a bandwidth, capacity, and cost optimization.</li>
+<li>FP32, BF16, FP16, TF32, FP8, INT8, INT4, and FP4 differ in range, precision, storage, and hardware support.</li>
+<li>BF16 became a training default because it preserves FP32-like exponent range.</li>
+<li>FP8 is a format plus scaling recipe plus hardware/runtime path.</li>
+<li>Raw 70B weight memory is about 280 GB in FP32, 140 GB in BF16, 70 GB in FP8, and 35 GB in INT4.</li>
+<li>Raw fit is not production fit; KV cache and runtime headroom matter.</li>
+<li>Quantization maps values onto a smaller grid using scale and sometimes zero point.</li>
+<li>Outliers can force large scale values and destroy small-magnitude information.</li>
+<li>Granularity is one of the most important quality levers.</li>
+<li>GPTQ compensates weight quantization error.</li>
+<li>AWQ protects activation-salient channels.</li>
+<li>SmoothQuant migrates activation outlier difficulty into weights.</li>
+<li>KV-cache quantization is independent from weight quantization.</li>
+<li>QAT can recover quality but costs far more than PTQ.</li>
+<li>QLoRA is a fine-tuning strategy, not simply a serving quantization format.</li>
+<li>AMD/ROCm quantization decisions require hardware, ROCm, kernel, and serving-stack validation.</li>
+<li>MMLU is not enough; production tasks need their own evals.</li>
+<li>Principal-level quantization decisions start with constraints and end with measured quality, latency, memory, and cost.</li>
+</ol>
+<hr/>
+<h2 id="8-18-review-questions">8.18 Review Questions<a aria-label="Link to this section" class="anchor" href="#8-18-review-questions">#</a></h2>
+<h3 id="conceptual">Conceptual<a aria-label="Link to this section" class="anchor" href="#conceptual">#</a></h3>
+<ol>
+<li>Why is quantization more than model compression?</li>
+<li>Why did BF16 replace FP16 for large-model training?</li>
+<li>What is the difference between exponent range and mantissa precision?</li>
+<li>Why is TF32 called a compute path rather than a storage format?</li>
+<li>Why does FP8 require scaling recipes?</li>
+<li>What is the difference between FP8 E4M3 and E5M2?</li>
+<li>Why is naive INT4 risky for large transformers?</li>
+<li>What does scale do in quantization?</li>
+<li>What is zero point?</li>
+<li>Why does per-group quantization usually outperform per-tensor quantization for INT4?</li>
+<li>What is the outlier problem?</li>
+<li>How do GPTQ, AWQ, and SmoothQuant differ?</li>
+<li>Why is KV-cache quantization independent from weight quantization?</li>
+<li>Why is GGUF not the same kind of deployment choice as TensorRT-LLM FP8?</li>
+<li>Why should AMD quantization claims be tied to ROCm version and serving stack?</li>
+</ol>
+<h3 id="calculation">Calculation<a aria-label="Link to this section" class="anchor" href="#calculation">#</a></h3>
+<ol>
+<li>Estimate FP32, BF16, FP8, and INT4 raw weight memory for a 70B parameter model.</li>
+<li>For symmetric INT8 with <code>max(abs(x)) = 72.1</code>, compute the scale.</li>
+<li>Using that scale, quantize and dequantize <code>x = 0.02</code>. What information is lost?</li>
+<li>Write the KV-cache memory formula and explain each variable.</li>
+<li>Estimate BF16 KV memory for one 4096-token sequence with <code>L=80</code>, <code>n_kv=8</code>, <code>d_head=128</code>.</li>
+<li>Estimate FP8 KV memory for the same sequence.</li>
+<li>If KV precision changes from BF16 to FP8, what happens to raw KV bytes before metadata?</li>
+<li>If weight precision changes from BF16 to INT4, what happens to raw weight bytes before metadata?</li>
+</ol>
+<h3 id="principal-level-interview-practice">Principal-Level Interview Practice<a aria-label="Link to this section" class="anchor" href="#principal-level-interview-practice">#</a></h3>
+<ol>
+<li>Explain quantization as a memory-bandwidth optimization for decode.</li>
+<li>Explain how you would choose between FP8 and AWQ INT4 on H100.</li>
+<li>Explain why a 70B FP8 model may still fail to serve on one 80 GB GPU.</li>
+<li>Explain why MMLU alone is not enough for quantization validation.</li>
+<li>Explain how you would debug INT4 quality collapse.</li>
+<li>Explain how KV-cache quantization changes serving capacity.</li>
+<li>Explain what additional checks you would run before shipping a quantized model in production.</li>
+<li>Explain how you would evaluate AMD MI300X quantization support without assuming NVIDIA-specific kernels.</li>
+<li>Explain when you would use QAT instead of PTQ.</li>
+<li>Explain QLoRA in a way that distinguishes fine-tuning memory savings from production serving quantization.</li>
+</ol>
+<hr/>
+<h2 id="8-19-bridge-to-chapter-9">8.19 Bridge to Chapter 9<a aria-label="Link to this section" class="anchor" href="#8-19-bridge-to-chapter-9">#</a></h2>
+<p>Chapter 8 explained how precision controls bytes, bandwidth, memory capacity, and quality.</p>
+<p>Chapter 9 moves to the next optimization layer: operator fusion and compiler optimization.</p>
+<p>Quantization reduces how much data must move. Fusion reduces how many times data must move. Compiler systems such as <code>torch.compile</code>, Triton, XLA, and TensorRT try to automate these transformations so model code becomes efficient GPU execution.</p>
+<blockquote>
+<p><strong>Bridge:</strong> If Chapter 8 asks “how many bits are enough?”, Chapter 9 asks “how many kernel launches and memory round trips are actually necessary?”</p>
+</blockquote>
+
+    <nav class="nav-row" aria-label="Chapter navigation">
+      <a href="ch07_gpu_kernels_cuda_optimization.html"><small>Previous Chapter</small><strong>Ch07 · GPU Kernels and CUDA Optimization</strong></a>
+      <a href="ch09_operator_fusion_compiler_optimization.html"><small>Next Chapter</small><strong>Ch09 · Operator Fusion and Compiler Optimization</strong></a>
+    </nav>
+  </main>
+</div>
+</body>
+</html>
