@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GPU Architecture: From Silicon to FLOPS | AI/ML Infrastructure from Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
+.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
+.mem-tier-body{flex:1}
+.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
+.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+.fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+
+.takeaways{background:#f3f5f8;border:2px solid #1c2438;border-radius:9px;padding:18px 22px;margin:32px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.takeaways h3{color:#1c2438;margin:0 0 14px;font-size:15px;border:none;padding:0}
+.takeaway-group{margin-bottom:14px}.takeaway-group:last-child{margin-bottom:0}
+.tg-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#e3b341;margin-bottom:6px}
+.takeaway-group ul{margin-left:16px}.takeaway-group li{font-size:12.5px;margin-bottom:4px;color:#222}
+.review-questions{margin-top:36px}
+.review-questions h3{font-size:16px;color:#1c2438;margin-bottom:16px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+.rq-tier{border-radius:8px;padding:14px 18px;margin-bottom:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rq-tier.foundational{background:#e8fff0;border-left:5px solid #27ae60}
+.rq-tier.intermediate{background:#fffbf0;border-left:5px solid #e3b341}
+.rq-tier.principal{background:#f0f0ff;border-left:5px solid #7b2d8b}
+.rq-tier-label{font-family:sans-serif;font-size:10px;color:#555;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.rq-badge{font-weight:700;font-size:9px;padding:2px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.foundational .rq-badge{background:#27ae60;color:#fff}
+.intermediate .rq-badge{background:#e3b341;color:#1c2438}
+.principal .rq-badge{background:#7b2d8b;color:#fff}
+.rq-tier ol{margin-left:18px}
+.rq-tier li{margin-bottom:10px;font-size:12.5px;line-height:1.7;color:#222}
+.objectives{background:#f0f6ff;border:1px solid #c5cfe0;border-radius:8px;padding:14px 18px;margin:18px 0}
+.objectives h4{color:#2a4a8a;margin:0 0 8px;font-style:normal;font-size:13px}
+.objectives ul{margin-left:16px}.objectives li{font-size:12px;margin-bottom:3px;color:#333}
+.worked{background:#fff8e0;border:1px solid #e3b341;border-radius:8px;padding:14px 18px;margin:16px 0}
+.worked h4{color:#856404;margin:0 0 8px;font-style:normal;font-size:13px}
+.diag-cookbook{background:#f8f6f0;border:1px solid #d8d4c8;border-radius:8px;padding:14px 18px;margin:16px 0}
+.diag-cookbook h4{color:#1a3060;margin:0 0 8px;font-style:normal;font-size:13px}
+.shipped{display:inline-block;background:#d4edda;color:#155724;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px}
+.announced{display:inline-block;background:#fff3cd;color:#856404;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px}
+.roadmap{display:inline-block;background:#e2d9f3;color:#4a0e8f;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px}
+</style>
+</head>
+<body>
+<div id="nav"><b>Silicon to Scale</b><a class="home" href="index.html">⌂ Index</a><a href="ch02.html">← Ch 2</a><a href="ch03a.html">Ch 3A</a><a href="ch03b.html">Ch 3B</a><a href="ch04.html">Ch 4 →</a><a href="ch05.html">Ch 5</a></div>
+<div id="sidebar"><h4>Chapter 3</h4>
+  <a href="#s31">3.1 The GPU Compute Hierarchy</a>
+  <a href="#s32">3.2 Tensor Cores & GEMM Engine</a>
+  <a href="#s33">3.3 Memory Subsystem</a>
+  <a href="#s34">3.4 The Transformer Engine</a>
+  <a href="#s35">3.5 GPU Generations Overview</a>
+  <a href="#s36">3.6 SXM vs PCIe</a>
+  <a href="#s37">3.7 AMD MI300X</a>
+  <a href="#s38">3.8 Custom Accelerators</a>
+  <a href="#diagrams">Diagrams</a>
+  <a href="#takeaways">Key Takeaways</a>
+  <a href="#review">Review Questions</a>
+</div>
+<div class="page">
+<div class="ch-label">Part I · Chapter 3</div>
+<h1 class="ch-title">GPU Architecture: From Silicon to FLOPS</h1>
+<div class="ch-subtitle">How modern accelerators actually work — and how architecture shapes every design choice</div>
+<div class="ch-meta"><strong>Book:</strong> AI/ML Infrastructure from Silicon to Scale &nbsp;|&nbsp; <strong>Author:</strong> Venkat Vinjam &nbsp;|&nbsp; <strong>Cross-ref:</strong> <span class="xref">Ch 3A: Accelerator landscape</span> <span class="xref">Ch 3B: GPU roadmap</span> <span class="xref">Ch 4: HBM deep dive</span> <span class="xref">Ch 5: Thermal/TCO</span></div>
+<div class="ch-divider"></div>
+
+<blockquote>"The GPU is not a magic compute box. It is a collection of physical tradeoffs — transistor density, wire length, heat dissipation, memory bandwidth — that determine, with mathematical precision, exactly how fast your model can go and why it cannot go faster."
+<cite>— Principal Performance Architect's GPU Principle</cite></blockquote>
+
+<p>This chapter builds the mental model of the GPU that every subsequent chapter depends on. Chapters 3A and 3B go deeper into the accelerator landscape and specific GPU generations respectively. This chapter covers the architectural concepts that are stable across generations — the compute hierarchy, tensor cores, the memory subsystem, and the transformer engine — so you have the vocabulary and mental model to reason about any GPU, current or future.</p>
+
+<h2 id="s31">3.1 The GPU Compute Hierarchy</h2>
+<div class="formula">H100 SXM5 COMPUTE HIERARCHY [SHIPPED]:
+
+  GPU (full chip):
+    132 Streaming Multiprocessors (SMs)
+    Peak BF16: 989 TFLOPS  |  Peak FP8: 1,979 TFLOPS
+    Peak FP32: 67 TFLOPS (non-Tensor Core)
+    TDP: 700W
+
+  Streaming Multiprocessor (SM):
+    4 warp schedulers (can issue 4 independent warps/cycle)
+    4 × 16 = 64 CUDA Cores (FP32 units)
+    4 × 1 Tensor Core (4th gen) — handles 16×16×16 BF16 GEMM per cycle
+    228 KB L1 Cache / Shared Memory (SMEM) — programmer-configurable
+    65,536 × 32-bit Registers
+
+  Warp (fundamental execution unit):
+    32 threads executing in lockstep (SIMT — Single Instruction, Multiple Thread)
+    Thread divergence causes serialization (branches in GPU kernels are expensive)
+    Memory access: 32 threads issue coalesced 128-byte HBM transactions
+
+  Key occupancy formula:
+    Occupancy = min(active_warps, max_warps) / max_warps
+    At 64 regs/thread: 65536/64 = 1024 threads = 32 warps → 50% occupancy
+    At 32 regs/thread: 65536/32 = 2048 threads = 64 warps → 100% occupancy
+    Register spilling: overflow → L2 → 200-800× latency penalty</div>
+
+<div class="diagram-wrap" id="diagrams">
+<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="700" height="300" fill="#fff"/>
+  <text x="350" y="22" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#1c2438">H100 GPU Compute Hierarchy</text>
+  <!-- GPU box -->
+  <rect x="20" y="35" width="660" height="250" rx="8" fill="#f5f3ec" stroke="#d8d4c8"/>
+  <text x="350" y="55" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#1c2438">H100 SXM5 — 132 SMs · 989 TFLOPS BF16 · 80 GB HBM3</text>
+  <!-- SM grid (show 12 representative SMs) -->
+  <g transform="translate(30,65)">
+    <!-- Row 1: 6 SMs -->
+    <rect x="0" y="0" width="88" height="50" rx="4" fill="#1c2438"/>
+    <text x="44" y="18" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#e3b341" font-weight="700">SM 0</text>
+    <text x="44" y="30" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#b8ddf0">64 CUDA Cores</text>
+    <text x="44" y="41" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#e3b341">1 Tensor Core</text>
+    <rect x="98" y="0" width="88" height="50" rx="4" fill="#1c2438"/>
+    <text x="142" y="18" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#e3b341" font-weight="700">SM 1</text>
+    <text x="142" y="30" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#b8ddf0">64 CUDA Cores</text>
+    <text x="142" y="41" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#e3b341">1 Tensor Core</text>
+    <rect x="196" y="0" width="88" height="50" rx="4" fill="#1c2438"/>
+    <text x="240" y="18" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#e3b341" font-weight="700">SM 2</text>
+    <text x="240" y="30" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#b8ddf0">228 KB SMEM</text>
+    <text x="240" y="41" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#b8ddf0">65K Regs</text>
+    <!-- dots -->
+    <text x="320" y="30" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#888">···</text>
+    <rect x="356" y="0" width="88" height="50" rx="4" fill="#1c2438"/>
+    <text x="400" y="30" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#e3b341" font-weight="700">SM 131</text>
+    <!-- Row 2: SMs -->
+    <rect x="0" y="60" width="88" height="50" rx="4" fill="#2a4580"/>
+    <text x="44" y="90" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#fff">SM 4</text>
+    <rect x="98" y="60" width="88" height="50" rx="4" fill="#2a4580"/>
+    <text x="142" y="90" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#fff">SM 5</text>
+    <text x="280" y="90" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#888">···  132 SMs total</text>
+  </g>
+  <!-- L2 cache -->
+  <rect x="30" y="180" width="640" height="30" rx="4" fill="#27ae60" opacity="0.85"/>
+  <text x="350" y="199" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#fff" font-weight="700">L2 Cache — 50 MB (unified, all SMs share) · ~12 TB/s</text>
+  <!-- HBM -->
+  <rect x="30" y="218" width="640" height="30" rx="4" fill="#c0392b" opacity="0.85"/>
+  <text x="350" y="237" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#fff" font-weight="700">HBM3 — 80 GB · 3.35 TB/s · 5× HBM3 stacks × 1024-bit bus</text>
+  <!-- NVLink callout -->
+  <rect x="30" y="256" width="640" height="24" rx="4" fill="#1c2438"/>
+  <text x="350" y="271" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#e3b341" font-weight="700">NVLink 4.0 — 900 GB/s bidirectional · NVSwitch 3.0 · 8-GPU full mesh</text>
+</svg>
+<figcaption>Figure 3.1 — H100 SXM5 compute hierarchy. 132 SMs each contain 64 CUDA Cores, one 4th-gen Tensor Core, 228 KB SMEM, and 65K registers. All SMs share a 50 MB L2 cache and 80 GB HBM3 at 3.35 TB/s. NVLink 4.0 provides 900 GB/s for intra-node tensor parallelism.</figcaption>
+</div>
+
+<h2 id="s32">3.2 Tensor Cores and the GEMM Engine</h2>
+<div class="formula">TENSOR CORE GENERATIONS:
+                    V100 (1st)  A100 (3rd)  H100 (4th)  B200 (5th)
+  Peak BF16 (TC):   112 TFLOPS  312 TFLOPS  989 TFLOPS  ~4,500 TFLOPS
+  Min FP format:    FP16        BF16        FP8         NVFP4
+  Tile size:        16×16×16    16×16×16    16×16×16    WGMMA (larger)
+  Sparse support:   No          2:4          2:4         Structured
+
+TENSOR CORE OPERATION (4th gen, H100):
+  Input:  A [16×16 BF16] × B [16×16 BF16]
+  Output: C [16×16 FP32] accumulated
+  Throughput: one 16×16×16 GEMM per warp per cycle
+
+CRITICAL ALIGNMENT REQUIREMENTS (the silent 30% tax):
+  BF16 GEMM: matrix dimensions must be multiples of 16
+  FP8 GEMM:  matrix dimensions must be multiples of 16
+  If M=4097 instead of 4096: padded to 4112 → 0.4% waste (negligible)
+  If M=13 instead of 16: padded to 16 → 18.75% compute waste (significant!)
+  
+  Production consequence: attention head count × d_head must be ≡ 0 mod 16.
+  LLaMA-3 70B: H_q=64, d_head=128 → 64×128=8192 ✓ (multiple of 16)</div>
+
+<h2 id="s33">3.3 The Memory Subsystem</h2>
+<p>The H100 has a six-tier memory hierarchy. See Chapter 4 (§4.2) for the complete five-tier breakdown from registers through HBM. The sixth tier in multi-GPU systems is peer GPU HBM accessed via NVLink.</p>
+<table>
+  <tr><th>Tier</th><th>H100 Capacity</th><th>Bandwidth</th><th>Latency</th><th>Programming Model</th></tr>
+  <tr><td>Registers</td><td>256 KB/SM (~33 MB total)</td><td>~unlimited (0 cycles)</td><td>1 cycle</td><td>Compiler-managed; register pressure → spill</td></tr>
+  <tr><td>L1 / SMEM</td><td>228 KB/SM (configurable)</td><td>~80–100 TB/s aggregate</td><td>20–30 cycles</td><td>Explicit: __shared__ memory</td></tr>
+  <tr><td>L2 Cache</td><td>50 MB (unified)</td><td>~12 TB/s</td><td>200–400 cycles</td><td>Hardware-managed; cannot be bypassed</td></tr>
+  <tr><td>HBM3</td><td>80 GB</td><td>3.35 TB/s</td><td>400–800 cycles</td><td>Global memory; primary bottleneck</td></tr>
+  <tr><td>NVLink peer</td><td>Neighbor GPU HBM</td><td>~900 GB/s (NVSwitch fabric)</td><td>~1–5 µs</td><td>NCCL collective; transparent to framework</td></tr>
+  <tr><td>Host DRAM</td><td>1–2 TB via PCIe</td><td>128 GB/s (PCIe Gen5)</td><td>~10–50 µs</td><td>cudaMemcpy; avoid during inference</td></tr>
+</table>
+
+<h2 id="s34">3.4 The Transformer Engine (H100 Innovation)</h2>
+<div class="formula">THE TRANSFORMER ENGINE — the key H100 architectural differentiator:
+
+Problem: FP16/BF16 is accurate but has 2× the bytes of FP8.
+         FP8 is fast but requires per-tensor scaling to prevent overflow.
+
+Solution: Hardware unit that:
+  1. Monitors activation magnitudes per tensor (automatic, no user code)
+  2. Computes per-tensor scale factors dynamically
+  3. Casts to FP8 E4M3 (weights) or FP8 E5M2 (gradients) for GEMM
+  4. Accumulates in FP32 (prevents numerical degradation)
+  5. Outputs in BF16 for next layer
+
+  FP8 E4M3: 1 sign + 4 exponent + 3 mantissa bits → range ±448, more precision
+  FP8 E5M2: 1 sign + 5 exponent + 2 mantissa bits → range ±57344, more range
+
+RESULT: ~1.9× GEMM throughput over BF16 with automatic quality preservation.
+  This is the primary reason H100 delivers ~3× training speedup over A100
+  (FP8 TC throughput × NVLink BW improvement × architectural improvements).
+
+FP8 on H100 [SHIPPED]: 1,979 TFLOPS (2× BF16 989 TFLOPS)
+NVFP4 on B200 [SHIPPED]: 9,000 TFLOPS (FP4 doubles over FP8)</div>
+
+<h2 id="s35">3.5 GPU Generations at a Glance</h2>
+<table>
+  <tr><th>GPU</th><th>Year</th><th>Peak BF16</th><th>HBM</th><th>HBM BW</th><th>NVLink BW</th><th>TDP</th><th>Key Innovation</th></tr>
+  <tr><td>V100 SXM2</td><td>2018</td><td>112 TFLOPS</td><td>32 GB HBM2</td><td>900 GB/s</td><td>300 GB/s</td><td>300W</td><td>First Tensor Cores (FP16)</td></tr>
+  <tr><td>A100 SXM4</td><td>2020</td><td>312 TFLOPS</td><td>80 GB HBM2e</td><td>2.0 TB/s</td><td>600 GB/s</td><td>400W</td><td>3rd gen TC, BF16 native, MIG</td></tr>
+  <tr><td class="warn">H100 SXM5</td><td>2022</td><td class="warn">989 TFLOPS</td><td>80 GB HBM3</td><td class="warn">3.35 TB/s</td><td>900 GB/s</td><td>700W</td><td>Transformer Engine, FP8, NVLink 4.0</td></tr>
+  <tr><td>H200 SXM5</td><td>2024</td><td>989 TFLOPS</td><td class="good">141 GB HBM3e</td><td class="good">4.8 TB/s</td><td>900 GB/s</td><td>700W</td><td>HBM3e (memory upgrade only)</td></tr>
+  <tr><td>B200 SXM</td><td>2024</td><td class="good">~2,250 TFLOPS (FP8: 4,500)</td><td>192 GB HBM3e</td><td class="good">8.0 TB/s</td><td>1,800 GB/s</td><td>1,000W</td><td>Dual-die MCM, NVFP4, NVLink 5.0</td></tr>
+  <tr><td>GB300</td><td>2025</td><td>~2,800 TFLOPS (FP4: 9,000)</td><td>288 GB HBM4</td><td>12.0 TB/s</td><td>1,800 GB/s</td><td>1,400W</td><td>HBM4, FP4 training (MLPerf v5.1)</td></tr>
+</table>
+<p><span class="shipped">[SHIPPED]</span> for V100–B200. <span class="roadmap">[ROADMAP]</span> for GB300 specs except MLPerf-verified performance.</p>
+
+<h2 id="s36">3.6 SXM vs PCIe: The NVLink Question</h2>
+<div class="formula">SXM vs PCIe FORM FACTOR:
+  
+  SXM (Server eXchange Module):
+    Direct die-to-die connection to NVSwitch via copper traces (no PCIe)
+    NVLink BW: 900 GB/s (H100 SXM) vs 400 GB/s (H100 PCIe)
+    TDP: 700W (SXM) vs 350W (PCIe) — SXM requires liquid or active air
+    Deployment: In HGX/DGX/OVX servers — not in standard PCIe servers
+    
+  PCIe:
+    Standard GPU card with PCIe x16 host interface
+    Half the NVLink bandwidth → TP communication is 2× slower
+    Lower power envelope → fits in standard datacenter racks
+    
+  WHEN SXM MATTERS:
+    TP=2 or TP=4 within a node: 900 vs 400 GB/s (SXM 2.25× faster)
+    A 70B model at TP=2 with one AllReduce per layer (80 layers, ~0.5 GB each):
+      SXM: 0.5 GB / 900 GB/s = 0.56 ms overhead per layer
+      PCIe: 0.5 GB / 400 GB/s = 1.25 ms overhead per layer
+      Difference: 0.69 ms × 80 layers = 55 ms per sequence → significant at short output
+      
+  WHEN PCIe IS ACCEPTABLE:
+    DP-only (no TP/PP): no NVLink communication during inference
+    Small models fitting on single GPU: no inter-GPU communication needed</div>
+
+<h2 id="s37">3.7 AMD MI300X — The Memory Moat</h2>
+<div class="callout blue"><strong>Architectural approach:</strong> MI300X uses a chiplet design — 6 compute XCDs (CDNA 3) + 4 memory controller MCDs on a passive silicon interposer — to break the reticle-limit constraint that forces NVIDIA to use dual-die MCM on Blackwell. The payoff is 192 GB HBM3 in a single package.</div>
+<table>
+  <tr><th>Property</th><th>H100 SXM5</th><th>MI300X</th><th>H200 SXM5</th></tr>
+  <tr><td>Peak BF16</td><td>989 TFLOPS</td><td>1,307 TFLOPS</td><td>989 TFLOPS</td></tr>
+  <tr><td>HBM Capacity</td><td>80 GB HBM3</td><td class="good">192 GB HBM3</td><td>141 GB HBM3e</td></tr>
+  <tr><td>HBM Bandwidth</td><td>3.35 TB/s</td><td>5.3 TB/s</td><td>4.8 TB/s</td></tr>
+  <tr><td>TDP</td><td>700W</td><td>750W</td><td>700W</td></tr>
+  <tr><td>LLaMA-3 70B TPOT (batch=1)</td><td>42 ms</td><td class="good">27 ms</td><td>29 ms</td></tr>
+  <tr><td>70B single-GPU fit (BF16)?</td><td>No (140 GB)</td><td class="good">Yes</td><td>No (140 GB)</td></tr>
+  <tr><td>Ridge point</td><td>295 FLOP/byte</td><td>247 FLOP/byte</td><td>206 FLOP/byte</td></tr>
+</table>
+<p><strong>The Memory Moat — cost consequence:</strong> MI300X can serve LLaMA-3 70B on a single GPU (192 GB HBM3). H100 requires TP=2 (two GPUs, one AllReduce per layer). At $25K/GPU and $3/GPU-hr: one fewer GPU per serving instance saves $25K capex and $13K/year in OpEx on a 5,000-hour annual utilization. At 100 serving instances: $2.5M capex and $1.3M/year OpEx savings.</p>
+
+<h2 id="s38">3.8 Custom Accelerators — When to Look Beyond GPUs</h2>
+<table>
+  <tr><th>Accelerator</th><th>Architecture</th><th>Key Strength</th><th>When to Use</th><th>When NOT to Use</th></tr>
+  <tr><td>Google TPU v5p</td><td>Systolic array (256×256)</td><td>Gemini training at trillion-token scale</td><td>Large-scale training on GCP, JAX ecosystem</td><td>Irregular kernels, non-GCP deployment</td></tr>
+  <tr><td>AWS Trainium2</td><td>Matrix engine + NeuronLink</td><td>60% cost reduction vs H100 for LLM training on AWS</td><td>AWS-native training at scale</td><td>Non-AWS infrastructure; non-Neuron models</td></tr>
+  <tr><td>Intel Gaudi 3</td><td>MME + HBM3e, IBFabric</td><td>Open software stack, OAM form factor</td><td>Open ecosystem, heterogeneous clusters</td><td>CUDA kernel dependency, NVIDIA-only stack</td></tr>
+  <tr><td>Groq LPU</td><td>SRAM-only, streaming dataflow</td><td>Sub-1ms TTFT for small models (&lt;13B)</td><td>Ultra-low latency, real-time inference</td><td>Large models, high-throughput batching</td></tr>
+</table>
+
+<div class="takeaways"><h3>Key Takeaways</h3>
+<div class="takeaway-group"><div class="tg-label">Core Concepts</div><ul><li>The GPU is organized as: GPU → SMs → Warps → Threads. Tensor Cores operate on 16×16×16 tiles; SM occupancy is limited by register pressure (65K regs per SM). At 128 regs/thread, max 512 threads → 25% occupancy. Register spilling adds 200-800× latency per spilled value.</li><li>The Transformer Engine (H100) automatically manages FP8 ↔ BF16 casting per tensor — no user code required. This delivers 1.9× GEMM throughput over BF16 and is the primary driver of H100's 3× improvement over A100 for transformer workloads.</li><li>SXM and PCIe are the same compute die with different host interfaces. SXM provides full NVLink bandwidth (900 GB/s H100). PCIe provides half (400 GB/s). For TP=2 inference on 70B, SXM saves ~55ms per sequence vs PCIe — significant for latency-sensitive applications.</li></ul></div>
+<div class="takeaway-group"><div class="tg-label">Cost &amp; Productivity Impact</div><ul><li>MI300X's 192 GB HBM3 eliminates the need for TP=2 to serve LLaMA-3 70B (140 GB BF16), saving one GPU per serving instance. At 100 concurrent serving deployments: $2.5M capex savings and $1.3M/year OpEx reduction — purely from fitting the model on fewer GPUs.</li><li>H100 → H200 upgrade provides zero compute improvement (same TFLOPS) but 43% bandwidth improvement (3.35 → 4.8 TB/s). ROI is positive only for bandwidth-bound workloads: long-context inference, decode at small batches, models that barely fit in memory. Zero ROI for compute-bound prefill workloads.</li><li>Tensor Core alignment requirements (dimensions must be multiples of 16) are a 'silent tax'. A model with d_head=130 instead of 128 wastes 1.5% of Tensor Core throughput. At 1,000 GPUs running 24/7 at $3/GPU-hr: $39K/year wasted on misalignment alone.</li></ul></div>
+<div class="takeaway-group"><div class="tg-label">Principal-Level Insight</div><ul><li>The H100 ridge point (295 FLOP/byte) represents the regime boundary — not a target. Principal architects design workloads to land on the right side of the ridge for their optimization goal: compute-side for throughput (prefill), memory-side for latency (decode). The same model crosses sides at different batch sizes, requiring different optimization strategies.</li><li>Custom accelerator evaluation requires answering three questions before building a business case: (1) What fraction of your operations are compatible with the accelerator's ISA? (2) What is the team migration cost in engineer-months? (3) At what GPU-spend breakeven does the custom accelerator's per-TFLOP cost advantage amortize the engineering investment? The answer to (3) is typically >$10M/year GPU spend.</li><li>GPU generation transitions change the regime classification of workloads. An operation at AI=200 FLOP/byte is compute-bound on V100 (ridge 124), near-ridge on H200 (ridge 206), and memory-bound on H100 (ridge 295). When your fleet upgrades GPUs, re-evaluate every kernel's regime classification — optimizations valid for V100 may be wrong on H100.</li></ul></div>
+</div><div class="review-questions"><h3>Review Questions</h3>
+<div class="rq-tier foundational"><div class="rq-tier-label"><span class="rq-badge">Foundational</span>Build the mental model — no math required</div><ol><li>Explain what an SM is and how the relationship between SM count, warp count, and register pressure affects GPU occupancy. Why does low occupancy not always mean low performance?</li><li>What is the Transformer Engine in H100, and why does it enable FP8 training without requiring manual scaling from the user? What does it actually do at the hardware level?</li><li>Why does the MI300X's 192 GB HBM matter more for inference than for training? What specific serving scenario does it enable that H100 cannot serve without multi-GPU setup?</li></ol></div>
+<div class="rq-tier intermediate"><div class="rq-tier-label"><span class="rq-badge">Intermediate</span>Apply and calculate — production context</div><ol><li>An H100 cluster is running LLaMA-3 70B training with TP=8. Each AllReduce communicates a tensor of 256 MB (one weight matrix gradient). (a) Calculate the time for this AllReduce over NVLink (900 GB/s, ring algorithm). (b) If the GEMM for that layer takes 8 ms, what is the communication overhead as a percentage? (c) At what tensor size does the AllReduce become the dominant cost?</li><li>A kernel uses 128 registers per thread on H100. (a) What is the maximum SM occupancy? (b) If you reduce to 64 registers by restructuring the kernel (without changing FLOP count), what happens to occupancy and why might throughput increase even if the kernel does more L2 accesses? (c) What Nsight Compute metric would you use to diagnose this?</li><li>Compare TPOT for LLaMA-3 70B BF16 at batch=1 on H100 (80 GB, 3.35 TB/s), H200 (141 GB, 4.8 TB/s), and MI300X (192 GB, 5.3 TB/s). Which GPU is fastest, and by how much? Does the ridge point change matter for batch=1?</li></ol></div>
+<div class="rq-tier principal"><div class="rq-tier-label"><span class="rq-badge">Principal Level</span>Design, decide, and defend — architecture reviews</div><ol><li>Your company is buying 1,000 new GPUs for a 70B inference serving fleet (BF16, P99 TPOT target 20ms, 50K concurrent requests, average 2048-token context). Create a detailed comparison of: H100 (TP=2, $25K/GPU), H200 (TP=1, $35K/GPU), and MI300X (TP=1, $30K/GPU). Include: total GPUs needed, total capex, annual OpEx at $3/GPU-hr, and the breakeven analysis. Show all calculations.</li><li>An engineering team proposes migrating from NVIDIA H100 to Google Cloud TPU v5p for GPT-4 class model training. Design the evaluation framework: what metrics must you measure, what is the minimum trial scale, what quality signals are non-negotiable, and what is the decision timeline? What hidden costs is the team likely underestimating?</li></ol></div>
+</div>
+</div>
+</body>
+</html>

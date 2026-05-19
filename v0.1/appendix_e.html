@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Appendix E — Reading Roadmap & Continued Learning | AI/ML Infrastructure from Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
+.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
+.mem-tier-body{flex:1}
+.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
+.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+.fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+</style>
+</head>
+<body>
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="appendix_d.html">&#8592; App D</a>
+  <a href="index.html">&#8962; Home</a>
+  <a href="ch01.html">Ch 1</a>
+  <a href="ch04.html">Ch 4</a>
+  <a href="ch17.html">Ch 17</a>
+</div>
+<div id="sidebar">
+  <h4>Appendix E — Roadmap</h4>
+  <a href="#s1">E.1 Foundational Papers</a>
+  <a href="#s2">E.2 Inference Papers ★</a>
+  <a href="#s3">E.3 Training Papers</a>
+  <a href="#s4">E.4 Systems &amp; Kernels</a>
+  <a href="#s5">E.5 Profiling &amp; Observability</a>
+  <a href="#s6">E.6 Key Codebases</a>
+  <a href="#s7">E.7 12-Month Path ★</a>
+  <a href="#s8">E.8 Community</a>
+</div>
+<div class="page">
+<div class="ch-label">Back Matter &middot; Appendix E</div>
+<h1 class="ch-title">Reading Roadmap &amp; Continued Learning</h1>
+<div class="ch-subtitle">The canonical papers · Essential tools and codebases · 12-month structured learning path · Community resources for the Principal AI Performance Architect</div>
+<div class="ch-meta"><strong>Book:</strong> AI/ML Infrastructure from Silicon to Scale &nbsp;|&nbsp; <strong>Author:</strong> Venkat Vinjam &nbsp;|&nbsp; <strong>Cross-ref:</strong> All chapters</div>
+<div class="ch-divider"></div>
+
+<div class="callout green"><strong>How to use this appendix</strong>
+Papers marked ★ are the ones every principal-level engineer has read and can discuss. Start there. The 12-month learning path in §E.7 maps these papers to specific chapters in sequence. Read each paper after completing the corresponding chapter — theory without system context is abstract; system context without theory is fragile.</div>
+
+<h2 id="s1">E.1 Foundational Papers — GPU Architecture &amp; Memory</h2>
+<table>
+<tr><th>Paper</th><th>Year</th><th>Why It Matters</th><th>Read With</th></tr>
+<tr><td><strong>Roofline: An Insightful Visual Performance Model</strong> — Williams et al.</td><td>2009</td><td>The roofline model. Every AI infrastructure conversation starts here. ★</td><td>Ch 1 §1.4</td></tr>
+<tr><td><strong>Attention Is All You Need</strong> — Vaswani et al.</td><td>2017</td><td>The transformer architecture. Mandatory reading. ★</td><td>Ch 2</td></tr>
+<tr><td><strong>FlashAttention: Fast and Memory-Efficient Exact Attention</strong> — Dao et al.</td><td>2022</td><td>How tiling eliminates the S² memory wall. Changes how you think about GPU kernels. ★</td><td>Ch 4 §4.8</td></tr>
+<tr><td><strong>FlashAttention-2</strong> — Dao et al.</td><td>2023</td><td>Work partitioning, reduced non-matmul FLOPs, 2× speedup. ★</td><td>Ch 4</td></tr>
+<tr><td><strong>FlashAttention-3</strong> — Shah et al.</td><td>2024</td><td>Hopper-specific: async pipelining, FP8, WGMMA — 75% MFU in practice.</td><td>Ch 4, Ch 7</td></tr>
+<tr><td><strong>GQA: Training Generalized Multi-Query Transformer Models</strong> — Ainslie et al.</td><td>2023</td><td>KV cache reduction with negligible quality loss. Used in every modern LLM. ★</td><td>Ch 2 §2.8</td></tr>
+<tr><td><strong>Efficiently Scaling Transformer Inference</strong> — Pope et al. (Google)</td><td>2022</td><td>PaLM inference analysis: partitioning strategies, cost models, MQA. ★</td><td>Ch 2, Ch 6</td></tr>
+</table>
+
+<h2 id="s2">E.2 Inference Systems Papers ★</h2>
+<table>
+<tr><th>Paper</th><th>Year</th><th>Why It Matters</th><th>Read With</th></tr>
+<tr><td><strong>Orca: A Distributed Serving System for Transformer-Based LLMs</strong> — Yu et al.</td><td>2022</td><td>Continuous batching — the most impactful inference optimization (10–30× gain). ★</td><td>Ch 6 §6.2</td></tr>
+<tr><td><strong>Efficient Memory Management for LLM Serving with PagedAttention</strong> — Kwon et al.</td><td>2023</td><td>PagedAttention, vLLM. Eliminates 87% KV fragmentation. ★</td><td>Ch 6 §6.3, Ch 11</td></tr>
+<tr><td><strong>Splitwise: Efficient Generative LLM Inference Using Phase Splitting</strong> — Patel et al.</td><td>2023</td><td>First disaggregated prefill-decode paper. The architecture blueprint. ★</td><td>Ch 6 §6.4</td></tr>
+<tr><td><strong>Sarathi: Efficient LLM Inference by Piggybacking Decodes with Chunked Prefills</strong> — Agrawal et al.</td><td>2023</td><td>Chunked prefill — eliminates prefill-decode interference without full disaggregation.</td><td>Ch 6</td></tr>
+<tr><td><strong>Speculative Decoding: Exploiting Speculative Execution</strong> — Leviathan et al.</td><td>2023</td><td>Draft-verify loop, acceptance rate math, 2–4× decode speedup. ★</td><td>Ch 13 §13.1</td></tr>
+<tr><td><strong>Medusa: Simple LLM Inference Acceleration Framework</strong> — Cai et al.</td><td>2024</td><td>Multi-head speculative decoding — no separate draft model required.</td><td>Ch 13 §13.2</td></tr>
+<tr><td><strong>RadixAttention: Effective Prefix Caching for LLM Serving</strong> — Zheng et al.</td><td>2023</td><td>Tree-structured KV prefix caching — 50–80% TTFT reduction for system prompts. ★</td><td>Ch 11, Ch 6 §6.8</td></tr>
+<tr><td><strong>DejaVu: Contextual Sparsity for Efficient LLMs at Inference Time</strong> — Liu et al.</td><td>2023</td><td>Dynamic attention and FFN sparsity — skipping 80% of compute at inference.</td><td>Ch 6, Ch 8</td></tr>
+</table>
+
+<h2 id="s3">E.3 Distributed Training Papers</h2>
+<table>
+<tr><th>Paper</th><th>Year</th><th>Why It Matters</th><th>Read With</th></tr>
+<tr><td><strong>Megatron-LM: Training Multi-Billion Parameter Language Models</strong> — Shoeybi et al.</td><td>2019</td><td>Tensor parallelism for transformers. The reference implementation. ★</td><td>Ch 10 §10.3</td></tr>
+<tr><td><strong>Efficient Large Scale Language Modeling with Mixtures of Experts</strong> — Artetxe et al.</td><td>2021</td><td>MoE scaling laws, training stability. Basis for Mixtral/Grok/Switch.</td><td>Ch 13 §13.3</td></tr>
+<tr><td><strong>ZeRO: Memory Optimizations Toward Training Trillion Parameter Models</strong> — Rajbhandari et al.</td><td>2020</td><td>ZeRO stages 1/2/3 — the memory partitioning foundation for all large training. ★</td><td>Ch 10 §10.4</td></tr>
+<tr><td><strong>Reducing Activation Recomputation in Large Transformer Models</strong> — Korthikanti et al.</td><td>2022</td><td>Sequence parallelism — removes activation memory from TP, enables longer sequences.</td><td>Ch 10 §10.3</td></tr>
+<tr><td><strong>GPipe: Efficient Training of Giant Neural Networks Using Pipeline Parallelism</strong> — Huang et al.</td><td>2019</td><td>Microbatching for pipeline parallel training — bubble fraction derivation. ★</td><td>Ch 10 §10.2</td></tr>
+<tr><td><strong>PipeDream: Fast and Efficient Pipeline Parallel DNN Training</strong> — Narayanan et al.</td><td>2019</td><td>1F1B pipeline schedule — reduces bubble vs GPipe. Used in Megatron-LM.</td><td>Ch 10</td></tr>
+<tr><td><strong>Llama 2: Open Foundation and Fine-Tuned Chat Models</strong> — Touvron et al.</td><td>2023</td><td>GQA at scale, detailed training setup. The reference 70B configuration. ★</td><td>Ch 2, Ch 10</td></tr>
+</table>
+
+<h2 id="s4">E.4 Systems, Kernels &amp; Infrastructure Papers</h2>
+<table>
+<tr><th>Paper</th><th>Year</th><th>Why It Matters</th><th>Read With</th></tr>
+<tr><td><strong>Triton: An Intermediate Language and Compiler for Tiled Neural Network Computations</strong> — Tillet et al.</td><td>2019</td><td>The Triton compiler — Python-level GPU kernel writing. ★</td><td>Ch 7</td></tr>
+<tr><td><strong>CUTLASS: CUDA Templates for Linear Algebra Subroutines</strong> — NVIDIA</td><td>2017+</td><td>Production GEMM implementation. Understanding CUTLASS = understanding how CUDA GEMM works.</td><td>Ch 7</td></tr>
+<tr><td><strong>torch.compile: The Next Generation of PyTorch Compilation</strong> — Ansel et al.</td><td>2023</td><td>Dynamo+Inductor+Triton pipeline. How torch.compile actually works. ★</td><td>Ch 9</td></tr>
+<tr><td><strong>NCCL: Net Collective Communication Library</strong> — NVIDIA</td><td>2016+</td><td>AllReduce algorithms, ring topology, bus bandwidth model. ★</td><td>Ch 14</td></tr>
+<tr><td><strong>SmoothQuant: Accurate and Efficient Post-Training Quantization</strong> — Xiao et al.</td><td>2022</td><td>Migrate quantization difficulty from activations to weights. Key INT8 technique. ★</td><td>Ch 8</td></tr>
+<tr><td><strong>AWQ: Activation-aware Weight Quantization for LLM Compression</strong> — Lin et al.</td><td>2023</td><td>INT4 quantization preserving quality. The dominant production INT4 method. ★</td><td>Ch 8</td></tr>
+<tr><td><strong>LLM.int8(): 8-bit Matrix Multiplication for Transformers at Scale</strong> — Dettmers et al.</td><td>2022</td><td>Mixed-precision INT8 inference preserving outlier activations. ★</td><td>Ch 8</td></tr>
+<tr><td><strong>GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers</strong> — Frantar et al.</td><td>2022</td><td>Layer-wise INT4 quantization with Hessian-based calibration.</td><td>Ch 8</td></tr>
+</table>
+
+<h2 id="s5">E.5 Profiling, Observability &amp; Production</h2>
+<table>
+<tr><th>Resource</th><th>Type</th><th>Why It Matters</th><th>Read With</th></tr>
+<tr><td><strong>Nsight Systems Documentation</strong> — NVIDIA</td><td>Documentation</td><td>The timeline profiler. Learn GPU/CPU/NCCL timeline views. ★</td><td>Ch 17 §17.2</td></tr>
+<tr><td><strong>Nsight Compute Documentation</strong> — NVIDIA</td><td>Documentation</td><td>Kernel-level hardware counters, Roofline chart, memory analysis. ★</td><td>Ch 17 §17.3</td></tr>
+<tr><td><strong>DCGM User Guide</strong> — NVIDIA</td><td>Documentation</td><td>Fleet-level GPU health monitoring. Field IDs for every metric. ★</td><td>Ch 17 §17.4</td></tr>
+<tr><td><strong>Prometheus Documentation + node_exporter</strong> — CNCF</td><td>Documentation</td><td>The metrics collection backbone for every production AI cluster.</td><td>Ch 17 §17.6</td></tr>
+<tr><td><strong>vLLM Metrics Documentation</strong> — vLLM Project</td><td>Documentation</td><td>vllm:* Prometheus metrics — the inference observability standard. ★</td><td>Ch 6 §6.10, Ch 17</td></tr>
+<tr><td><strong>MLPerf Training &amp; Inference Benchmark Results</strong> — MLCommons</td><td>Benchmark</td><td>Verified throughput numbers per GPU. The industry performance reference. ★</td><td>Ch 12</td></tr>
+</table>
+
+<h2 id="s6">E.6 Key Frameworks &amp; Codebases to Study</h2>
+<table>
+<tr><th>Framework</th><th>What to Study</th><th>Chapter</th></tr>
+<tr><td><strong>vLLM</strong> (github.com/vllm-project/vllm)</td><td>PagedAttention engine, scheduler, quantization integration, Prometheus metrics</td><td>Ch 6, Ch 11</td></tr>
+<tr><td><strong>TensorRT-LLM</strong> (NVIDIA)</td><td>Kernel fusion patterns, CUDA Graph integration, FP8 quantization pipeline</td><td>Ch 6 §6.5, Ch 9</td></tr>
+<tr><td><strong>Megatron-LM</strong> (NVIDIA)</td><td>4D parallelism implementation, pipeline scheduling, ZeRO integration</td><td>Ch 10</td></tr>
+<tr><td><strong>DeepSpeed</strong> (Microsoft)</td><td>ZeRO stages 1/2/3, gradient checkpointing, inference optimization</td><td>Ch 10 §10.4</td></tr>
+<tr><td><strong>NCCL</strong> (NVIDIA)</td><td>Ring AllReduce algorithm, topology detection, environment variable tuning</td><td>Ch 14</td></tr>
+<tr><td><strong>Triton</strong> (OpenAI)</td><td>@triton.jit decorator, tl.load/store patterns, autotuning configs</td><td>Ch 7</td></tr>
+<tr><td><strong>FlashAttention</strong> (github.com/Dao-AILab)</td><td>CUDA implementation, tiling strategy, forward/backward kernel structure</td><td>Ch 4 §4.8</td></tr>
+<tr><td><strong>CUTLASS</strong> (NVIDIA)</td><td>Tile hierarchy (thread block → warp → thread), epilogue fusion patterns</td><td>Ch 7</td></tr>
+<tr><td><strong>omniperf / rocprof</strong> (AMD)</td><td>AMD-equivalent of Nsight Compute — kernel profiling on MI300X</td><td>Ch 17</td></tr>
+</table>
+
+<h2 id="s7">E.7 The 12-Month Learning Path</h2>
+<div class="formula">MONTHS 1–3: FOUNDATIONS
+
+Month 1: Performance Mindset + GPU Architecture
+  Read: Ch 1 (Roofline, 3 regimes, MFU)
+        Ch 3 + Ch 3B (GPU hierarchy, H100→GB300)
+  Papers: "Roofline" (Williams 2009)
+  Practice: Download Nsight Compute, run on any kernel, find the roofline chart
+  Goal: Classify any operation as compute- or bandwidth-bound from specs alone
+
+Month 2: Transformer Architecture as a Performance Problem
+  Read: Ch 2 (FLOP budget, GQA math, KV cache)
+        Ch 4 (Memory hierarchy, FlashAttention)
+  Papers: "Attention Is All You Need", "FlashAttention", "FlashAttention-2"
+  Practice: Compute LLaMA-3 70B FLOP budget from the model card from scratch
+  Goal: Derive KV cache size, TPOT minimum, and ridge point before checking answers
+
+Month 3: Inference Architecture
+  Read: Ch 6 (Inference systems, fleet sizing)
+        Ch 11 (KV cache engineering)
+  Papers: "Orca", "PagedAttention" (Kwon 2023), "Splitwise"
+  Practice: Deploy vLLM locally, examine Prometheus metrics under load
+  Goal: Explain prefill-decode dichotomy and fleet sizing formula to a colleague
+
+MONTHS 4–6: TECHNICAL DEPTH
+
+Month 4: Kernels + Quantization
+  Read: Ch 7 (GEMM tiling, Triton)
+        Ch 8 (FP8, INT4, AWQ)
+  Papers: "Triton", "SmoothQuant", "AWQ", "LLM.int8()"
+  Practice: Write a simple Triton GEMM kernel; measure against cuBLAS
+
+Month 5: Training Systems
+  Read: Ch 10 (4D parallelism, ZeRO)
+        Ch 14 (Networking, NCCL)
+  Papers: "Megatron-LM", "ZeRO", "GPipe", "PipeDream"
+  Practice: Calculate pipeline bubble fraction for PP=4, M=8 vs PP=4, M=32
+
+Month 6: Compilers + Observability
+  Read: Ch 9 (torch.compile, CUDA Graphs)
+        Ch 17 (Nsight, DCGM, Prometheus)
+  Papers: "torch.compile" (Ansel 2023)
+  Practice: Profile a training step end-to-end with nsys; identify top 3 bottlenecks
+
+MONTHS 7–9: SYSTEMS INTEGRATION
+
+Month 7: Advanced Inference
+  Read: Ch 13 (Speculative decoding, MoE)
+        Ch 12 (Benchmarking)
+  Papers: "Speculative Decoding", "Medusa", "RadixAttention"
+  Practice: Run MLPerf inference benchmark; compare against published results
+
+Month 8: Infrastructure at Scale
+  Read: Ch 15 (Storage/IO), Ch 16 (Cluster management), Ch 19 (Resilience)
+  Practice: Design checkpoint strategy for 1024-GPU training run; calculate overhead
+
+Month 9: Career + System Design
+  Read: Ch 18 (Interviews, STAR framework)
+  Practice: Do a 45-minute mock "Design ChatGPT" interview from scratch; time yourself
+
+MONTHS 10–12: MASTERY
+
+Month 10: Deep Review + Gap Filling
+  Return to any chapter where you could not do all Intermediate review questions
+  Focus: Any formula you had to look up, look up the derivation until you own it
+
+Month 11: Read the Future
+  Read: Ch 20 (Future of AI compute), Ch 5 (Thermal/TCO)
+  Papers: CXL 3.0 spec overview, "Photonic Interconnects for AI" survey
+  Practice: Model the TCO for a 64-GPU cluster at 3 different cooling configurations
+
+Month 12: Publish and Share
+  Write a blog post on one technical topic from this book
+  Open a GitHub issue or PR on vLLM, Triton, or Megatron-LM
+  Do 3 mock system design interviews with a peer
+  Goal: Your name should be known in at least one public AI infrastructure forum</div>
+
+<h2 id="s8">E.8 Community &amp; Staying Current</h2>
+<table>
+<tr><th>Resource</th><th>What You Get</th><th>Signal Quality</th></tr>
+<tr><td><strong>arxiv.org/cs.LG + cs.AR</strong></td><td>All ML and architecture papers, daily</td><td>High — filter by abstract quality</td></tr>
+<tr><td><strong>Hugging Face Papers</strong> (huggingface.co/papers)</td><td>Community-curated daily paper highlights</td><td>High — crowd-filtered</td></tr>
+<tr><td><strong>NVIDIA Developer Blog</strong></td><td>Technical depth on CUDA, Hopper, NVLink, TRT-LLM</td><td>Very high — primary source</td></tr>
+<tr><td><strong>AMD ROCm Blog</strong></td><td>MI300X optimization, ROCm updates</td><td>High — primary source</td></tr>
+<tr><td><strong>MLSys Conference</strong></td><td>Top-tier systems + ML papers, annually</td><td>Very high — peer reviewed</td></tr>
+<tr><td><strong>SC / Hot Chips / ISCA</strong></td><td>HPC, hardware architecture papers</td><td>Very high — peer reviewed</td></tr>
+<tr><td><strong>GitHub: vllm-project/vllm</strong></td><td>Issues, PRs, discussions on production inference</td><td>Very high — real problems</td></tr>
+<tr><td><strong>Tim Dettmers Blog</strong></td><td>Quantization, memory efficiency deep dives</td><td>Extremely high — practitioner</td></tr>
+<tr><td><strong>Lilian Weng Blog (lilianweng.github.io)</strong></td><td>LLM architecture surveys, RL, alignment</td><td>Very high — comprehensive surveys</td></tr>
+<tr><td><strong>PyTorch Dev Discuss</strong></td><td>torch.compile internals, CUDA graph issues</td><td>High — core team discussions</td></tr>
+</table>
+
+<div class="callout navy" style="margin-top:28px">
+  <strong>The Principal's Reading Discipline</strong><br>
+  A principal engineer reads papers differently than a student does. Skim the abstract and conclusion first — if the claim isn't directly relevant to a system you're building or evaluating, move on. When you DO read a paper fully, you should be able to answer: (1) What problem does this solve? (2) What is the key insight? (3) What does this change about how I design or evaluate systems? (4) What are the hidden assumptions? If you can't answer all four, read again.
+</div>
+<div class="ch-end">Appendix E Complete &nbsp;·&nbsp; AI/ML Infrastructure from Silicon to Scale &nbsp;·&nbsp; Venkat Vinjam &nbsp;·&nbsp; 2026</div>
+</div>
+</body>
+</html>

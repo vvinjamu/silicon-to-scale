@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 3B — GPU Generation Roadmap | AI/ML Infrastructure from Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+
+/* ── PRINT ─────────────────────────────────────────────────────────── */
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+
+/* ── NAV ─────────────────────────────────────────────────────────── */
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+
+/* ── SIDEBAR NAV ─────────────────────────────────────────────────── */
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:820px;margin:0 auto 0 216px;padding:42px 52px}
+
+/* ── CHAPTER HEADER ─────────────────────────────────────────────── */
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+
+/* ── TYPOGRAPHY ─────────────────────────────────────────────────── */
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+
+/* ── CALLOUTS ───────────────────────────────────────────────────── */
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+
+/* ── CODE / FORMULA ─────────────────────────────────────────────── */
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 4px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px}
+
+/* ── TABLES ─────────────────────────────────────────────────────── */
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+/* ── STATUS LABELS ──────────────────────────────────────────────── */
+.shipped{display:inline-block;background:#d4edda;color:#155724;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px;vertical-align:middle}
+.announced{display:inline-block;background:#fff3cd;color:#856404;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px;vertical-align:middle}
+.roadmap{display:inline-block;background:#e2d9f3;color:#4a0e8f;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px;vertical-align:middle}
+
+/* ── DIAGRAMS ───────────────────────────────────────────────────── */
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+
+/* ── MISC ───────────────────────────────────────────────────────── */
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">⌂ Index</a>
+  <a href="ch02.html">← Ch 2</a>
+  <a href="ch03a.html">Ch 3A</a>
+  <a href="ch04.html">Ch 4 →</a>
+  <a href="ch05.html">Ch 5</a>
+  <a href="ch06.html">Ch 6</a>
+  <a href="ch07.html">Ch 7</a>
+  <a href="ch08.html">Ch 8</a>
+  <a href="ch17.html">Ch 17</a>
+</div>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <h4>Chapter 3B</h4>
+  <a href="#s1">3B.1 How to Read a GPU Roadmap</a>
+  <a href="#s2">3B.2 NVIDIA Hopper (H100/H200)</a>
+  <a href="#s3">3B.3 Blackwell (B200/GB200)</a>
+  <a href="#s4">3B.4 Blackwell Ultra (GB300)</a>
+  <a href="#s5">3B.5 AMD CDNA3 — MI300X</a>
+  <a href="#s6">3B.6 AMD CDNA3+ — MI325X</a>
+  <a href="#s7">3B.7 AMD CDNA4 — MI355X</a>
+  <a href="#s8">3B.8 AMD MI400 Series</a>
+  <a href="#s9">3B.9 Power &amp; TCO</a>
+  <a href="#s10">3B.10 Competitive Landscape</a>
+  <a href="#diagrams">Diagrams</a>
+  <a href="#qr">Quick Reference</a>
+  <a href="#review">Review Questions</a>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="page">
+
+  <!-- CHAPTER HEADER -->
+  <div class="ch-label">Part II · Chapter 3B</div>
+  <h1 class="ch-title">GPU Generation Roadmap</h1>
+  <div class="ch-subtitle">H100 to GB300, MI300X to MI455X — Three Generations, Two Vendors, $400 Billion in Silicon: How We Got Here and Where It Goes</div>
+  <div class="ch-meta">
+    <strong>Book:</strong> AI/ML Infrastructure from Silicon to Scale — V2 Edition &nbsp;|&nbsp;
+    <strong>Author:</strong> Venkat Vinjam &nbsp;|&nbsp;
+    <strong>Cross-ref:</strong> <span class="xref">Ch 3A: GPU Architecture</span> <span class="xref">Ch 4: Memory Hierarchy</span> <span class="xref">Ch 5: Thermal/TCO</span>
+  </div>
+  <div class="ch-divider"></div>
+
+  <blockquote>
+    "The AI accelerator market is not a race between two companies. It is a race between two paradigms: NVIDIA's closed, fully-optimized stack versus an emerging open ecosystem. The winner shapes how AI is computed for the next decade."
+    <cite>— AI Infrastructure Strategy Perspective, 2026</cite>
+  </blockquote>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 id="s1">3B.1 How to Read a GPU Roadmap</h2>
+
+  <p>Before diving into specific chips, establish the right mental model for evaluating any GPU generation. Four lenses determine whether a generation will dominate workloads in production:</p>
+
+  <div class="callout navy"><strong>The Four Evaluation Lenses</strong>
+    <strong>① Compute Density:</strong> FLOPs per watt, per dollar, per rack unit. Key metrics: Peak TFLOPS (BF16, FP8, FP4), TDP, TFLOPS/W.<br>
+    <strong>② Memory Architecture:</strong> Capacity, speed, scaling. Key: HBM GB, bandwidth TB/s, $/GB.<br>
+    <strong>③ Interconnect:</strong> Scale beyond a single GPU. Key: NVLink/Infinity Fabric GB/s, IB integration, topology.<br>
+    <strong>④ Software Stack:</strong> Programming model maturity. Key: CUDA/ROCm ecosystem, library coverage, framework support, debuggability.
+  </div>
+
+  <p>A GPU that wins on compute but loses on interconnect is useless for training 100B+ parameter models. A GPU with great specs but poor software support costs months of engineering time to deploy productively.</p>
+
+  <h3>Confidence Labels — Required Reading</h3>
+  <p>Every specification in this chapter carries one of three confidence labels reflecting data reliability as of May 2026:</p>
+  <ul>
+    <li><span class="shipped">SHIPPED</span> Verified shipping hardware with measured benchmarks from MLPerf or vendor data sheets</li>
+    <li><span class="announced">ANNOUNCED</span> Vendor-disclosed specifications, not yet shipping at publication date</li>
+    <li><span class="roadmap">ROADMAP</span> From roadmap presentations — treat as directional, subject to change</li>
+  </ul>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 id="s2">3B.2 NVIDIA Hopper Generation — H100 and H200</h2>
+
+  <h3>3B.2.1 H100 — The Defining AI GPU <span class="shipped">SHIPPED</span></h3>
+
+  <p>The H100 (2022–2023) is the chip that defined the modern AI infrastructure era. When historians write about the GPU moment in AI, they will cite the H100 as the inflection point where AI compute became a national strategic resource.</p>
+
+  <div class="formula">H100 SXM5 KEY SPECIFICATIONS:
+  Architecture:    Hopper (GH100 die, 80B transistors, TSMC 4nm)
+  Tensor Cores:    4th generation, FP8 native
+  Peak BF16:       989 TFLOPS
+  Peak FP8:        1,979 TFLOPS  ← Transformer Engine enabled
+  HBM3:            80 GB, 3.35 TB/s bandwidth
+  NVLink 4.0:      900 GB/s bidirectional per GPU
+  NVSwitch 3.0:    Full bisection bandwidth in 8-GPU DGX
+  TDP:             700W (SXM5), 350W (PCIe)
+  Process:         TSMC 4nm</div>
+
+  <h4>Critical Hopper Innovations</h4>
+  <p><strong>① Transformer Engine</strong> — Monitors activation magnitudes, computes per-tensor scaling factors, casts to FP8 for GEMM (near-2× throughput), accumulates in FP32. Result: ~1.9× GEMM throughput over pure BF16 with automatic quality preservation.</p>
+  <p><strong>② FP8 Format Pair (E4M3/E5M2)</strong> — E4M3 for weights/activations (precision, limited range ±448); E5M2 for gradients (range, handles magnitude spikes). Together they enable FP8 mixed-precision training without manual per-layer configuration.</p>
+  <p><strong>③ Thread Block Clusters</strong> — Groups of thread blocks sharing distributed SMEM across SMs, enabling super-large GEMM tiles spanning multiple SMs. Required for H100 to achieve near-peak TFLOPS on large matrix ops.</p>
+  <p><strong>④ NVLink 4.0 / NVSwitch 3.0</strong> — Previous NVLink 3.0: 600 GB/s; H100 NVLink 4.0: 900 GB/s (+50%). NVSwitch 3.0 delivers 3× bandwidth per switch chip, making Tensor Parallelism within 8-GPU DGX dramatically more efficient.</p>
+
+  <table>
+    <tr><th>Metric</th><th>A100 SXM <span class="shipped">SHIPPED</span></th><th>H100 SXM <span class="shipped">SHIPPED</span></th><th>Improvement</th></tr>
+    <tr><td>Peak BF16</td><td>312 TFLOPS</td><td>989 TFLOPS</td><td class="good">+3.2×</td></tr>
+    <tr><td>Peak FP8</td><td>N/A</td><td>1,979 TFLOPS</td><td class="good">New format</td></tr>
+    <tr><td>HBM Capacity</td><td>80 GB</td><td>80 GB</td><td>—</td></tr>
+    <tr><td>HBM Bandwidth</td><td>2.0 TB/s</td><td>3.35 TB/s</td><td class="good">+67%</td></tr>
+    <tr><td>NVLink BW</td><td>600 GB/s</td><td>900 GB/s</td><td class="good">+50%</td></tr>
+    <tr><td>TDP</td><td>400W</td><td>700W</td><td class="warn">+75%</td></tr>
+    <tr><td>LLaMA-2 70B training</td><td>Baseline</td><td>~3×</td><td class="good">3×</td></tr>
+    <tr><td>LLaMA-2 70B inference</td><td>Baseline</td><td>~2.5×</td><td class="good">2.5×</td></tr>
+  </table>
+
+  <div class="callout green"><strong>The Software Flywheel Effect</strong>
+    H100's performance improved ~2.9× over its hardware-only baseline through software updates alone:<br>
+    Launch: ~1,100 tok/s → TRT-LLM (2023): ~1,900 tok/s → FP8 inference: ~2,800 tok/s → FlashAttention v3 + CUDA Graphs: ~3,200 tok/s final peak.<br><br>
+    <strong>Lesson:</strong> Hardware specs at launch are not the final performance number. NVIDIA's software flywheel is its true competitive moat.
+  </div>
+
+  <h3>3B.2.2 H200 — Memory Refresh, Not Architecture Refresh <span class="shipped">SHIPPED</span></h3>
+
+  <div class="callout red"><strong>⚠️ Interview Trap</strong>
+    "H200 has more TFLOPS than H100." — <strong>FALSE.</strong><br>
+    "H200 is faster at everything." — <strong>FALSE.</strong><br>
+    H200 is the same Hopper GH100 die with upgraded HBM. Identical compute-bound performance. Dramatically better memory-bound performance.
+  </div>
+
+  <div class="formula">H200 vs H100 — THE CRITICAL DIFFERENCE:
+
+  H100 → H200 changes:
+    HBM3    → HBM3e       (faster interface standard)
+    80 GB   → 141 GB      (+76% capacity)
+    3.35 TB/s → 4.8 TB/s  (+43% bandwidth)
+    700W    → 700W        (IDENTICAL TDP)
+    TFLOPS  → same        (IDENTICAL compute units)
+
+  LLaMA-3 70B in BF16:
+    H100: 140 GB weights → MUST use TP=2 (2 GPUs to fit)
+    H200: 140 GB weights → fits in 141 GB → SINGLE-GPU serving!
+
+  Result: H200 achieves ~40% more throughput on 70B inference vs H100
+          despite identical compute — purely from memory capacity/bandwidth.</div>
+
+  <p>The H200 shipped in early 2024 as a "soft upgrade" path — same SXM5 form factor, same power envelope, same cooling, allowing customers to swap modules without rack redesign. This is the "server platform continuity" play.</p>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 id="s3">3B.3 NVIDIA Blackwell Generation — B200, GB200, GB200 NVL72</h2>
+
+  <h3>3B.3.1 Blackwell Architecture — The Dual-Die Breakthrough <span class="shipped">SHIPPED</span></h3>
+
+  <p>Blackwell (2024–2025) represents NVIDIA's most dramatic architectural leap since the original GPU. The fundamental design breakthrough is the dual-die MCM (Multi-Chip Module), driven by a hard physical constraint: the EUV reticle limit.</p>
+
+  <div class="formula">BLACKWELL DUAL-DIE DESIGN:
+
+  Problem: Modern EUV has a maximum exposure area (~858 mm²)
+  GH100 (H100): 814 mm² — already at the reticle limit
+  Solution: Two dies connected at high bandwidth (NV-HBI)
+
+  B200 construction:
+    2× B100 compute dies (each ~450 mm², TSMC 4NP)
+    NV-HBI bandwidth:  10 TB/s (3× H100's HBM bandwidth!)
+    Total transistors:  208 billion (vs 80B on H100 — 2.6×)
+    HBM3e:             192 GB, 8.0 TB/s (2.4× H100)
+    TDP:               1,000W
+
+  KEY PERFORMANCE:
+    Peak FP8:     4.5 PFLOPS     (2.3× H100)
+    Peak NVFP4:   9.0 PFLOPS     (new format, B200-native)
+    NVLink 5.0:   1.8 TB/s/GPU   (2× H100 NVLink 4.0)</div>
+
+  <h3>3B.3.2 NVFP4 — The Format That Changes Training Economics</h3>
+  <p>NVFP4 is a 4-bit float: 1 sign bit, 2 exponent bits, 1 mantissa bit. Block scaling lets every 16 weights share one FP8 scale factor, giving better-than-naive-INT4 precision due to floating-point representation.</p>
+
+  <div class="callout"><strong>Why FP4 Matters More Than FP8 Did</strong>
+    FP8 vs BF16: 2× throughput gain (H100 era). FP4 vs FP8: another 2× gain. Cumulative: 4× throughput gain from H100 BF16 → GB300 FP4.<br><br>
+    More critically: GB300 demonstrated <strong>FP4 training</strong> in MLPerf v5.1 — the first vendor to achieve FP4 training at scale with accuracy targets met. NVIDIA is the only vendor to submit FP4 training results.
+  </div>
+
+  <h3>3B.3.3 GB200 NVL72 — The Rack as a Single Computer <span class="shipped">SHIPPED</span></h3>
+
+  <div class="formula">GB200 NVL72 ARCHITECTURE:
+
+  The GB200 "superchip":
+    1× Grace CPU (ARM Neoverse V2, 72 cores)
+    2× B200 GPUs
+    NVLink-C2C: CPU↔GPU = 900 GB/s (7× PCIe Gen5)
+    CPU memory:  480 GB LPDDR5X at 960 GB/s (coherent with GPU HBM!)
+
+  GB200 NVL72 rack — the new unit of compute:
+    72 B200 GPUs + 36 Grace CPUs
+    NVLink fabric:  130 TB/s total rack bandwidth
+    Compute:        1.4 exaFLOPS FP8 / 2.8 exaFLOPS FP4
+    HBM memory:     72 × 192 GB = 13.8 TB GPU HBM
+    CPU memory:     36 × 480 GB = 17.3 TB LPDDR5X (coherent)
+    Total:          ~31 TB unified (GPU + CPU)
+    Power:          ~120 kW per rack
+    Cooling:        Direct liquid cooling MANDATORY
+
+  TENSOR PARALLELISM ADVANTAGE:
+    Standard cluster (H100):  TP=8 within node, PP spans nodes via IB
+    GB200 NVL72:              TP=72 — ENTIRE RACK as one TP group!
+    Practical result: Models needing 8-way TP (H100) can use
+    72-way TP at NVLink speeds. Sub-millisecond intra-GPU latency
+    for trillion-parameter inference throughout.</div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 id="s4">3B.4 NVIDIA Blackwell Ultra — GB300 / B300</h2>
+
+  <table>
+    <tr><th>Spec</th><th>B200 SXM <span class="shipped">SHIPPED</span></th><th>GB300 SXM <span class="announced">ANNOUNCED</span></th><th>Delta</th></tr>
+    <tr><td>HBM type</td><td>HBM3e</td><td>HBM3e (12-high stacks)</td><td>New stacking</td></tr>
+    <tr><td>HBM Capacity</td><td>192 GB</td><td>279 GB</td><td class="good">+45%</td></tr>
+    <tr><td>HBM Bandwidth</td><td>8.0 TB/s</td><td>~12 TB/s</td><td class="good">+50%</td></tr>
+    <tr><td>NVFP4 Compute</td><td>~9 PFLOPS</td><td>~20 PFLOPS</td><td class="good">+122%</td></tr>
+    <tr><td>TDP</td><td>1,000W</td><td>~1,400W</td><td class="warn">+40%</td></tr>
+    <tr><td>Cooling</td><td>Liquid required</td><td>DLC mandatory (98%)</td><td class="warn">Stricter</td></tr>
+  </table>
+
+  <div class="callout green"><strong>MLPerf Training v5.1 — GB300 NVL72 Results</strong>
+    Llama 3.1 405B, 512 GPUs: <strong>64.6 minutes to target accuracy</strong> — industry record.<br>
+    vs H100 equivalent: ~6.2× faster. vs B200: ~2× faster.<br>
+    Won ALL 7 training benchmarks in v5.1. First platform to achieve Llama 405B training in under 2 hours at 512-GPU scale.
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 id="s5">3B.5 AMD CDNA 3 — MI300X</h2>
+
+  <h3>3B.5.1 Architecture: The Memory Moat Strategy <span class="shipped">SHIPPED</span></h3>
+
+  <div class="callout red"><strong>⚠️ Common Misconception — MI300X Architecture</strong>
+    <strong>WRONG:</strong> "MI300X is a 3-chiplet design."<br>
+    <strong>CORRECT:</strong> MI300X has <strong>10 dies total</strong> — 6 XCDs (compute) + 4 MCDs (memory controllers).
+  </div>
+
+  <div class="formula">MI300X CORRECT ARCHITECTURE:
+
+  6 × XCDs (eXtended Compute Dies):
+    CDNA 3 compute architecture, TSMC 5nm
+    ~50 Compute Units per XCD
+    Total CUs: 304 across all 6 XCDs
+
+  4 × MCDs (Memory Controller Dies):
+    HBM controllers, TSMC 6nm
+    3 HBM3 stacks per MCD = 12 HBM3 stacks total
+
+  Package: Silicon interposer connecting all 10 dies
+
+  KEY SPECIFICATIONS:
+    Peak BF16:       ~1.3 PFLOPS (1,307 TFLOPS)
+    HBM3:            192 GB, 5.3 TB/s bandwidth
+    Infinity Fabric: ~896 GB/s GPU-GPU (intra-node)
+    TDP:             750W</div>
+
+  <h3>3B.5.2 The Memory Moat — Why 192 GB Matters</h3>
+  <table>
+    <tr><th>Model</th><th>BF16 Size</th><th>H100 GPUs Needed</th><th>MI300X GPUs Needed</th><th>Winner</th></tr>
+    <tr><td>LLaMA-3 8B</td><td>16 GB</td><td>1×</td><td>1×</td><td>Tie</td></tr>
+    <tr><td>LLaMA-3 70B</td><td>140 GB</td><td>2× (TP=2 required)</td><td class="good">1× (single GPU!)</td><td class="good">MI300X</td></tr>
+    <tr><td>LLaMA-3 405B</td><td>810 GB</td><td>12× (TP=8, PP≥2)</td><td class="good">5×</td><td class="good">MI300X</td></tr>
+    <tr><td>Mixtral 8×22B</td><td>281 GB</td><td>4×</td><td class="good">2×</td><td class="good">MI300X</td></tr>
+  </table>
+
+  <p>Single-GPU serving of 70B eliminates: AllReduce per transformer layer, 1 GPU × $25K cost, networking overhead, and 2-process deployment complexity. <strong>This is AMD's core TCO argument — and it is mathematically valid.</strong></p>
+
+  <h3>3B.5.3 MI300X Performance Reality — Honest Assessment</h3>
+  <div class="formula">WHERE MI300X WINS:
+  ✓ Memory capacity: 192 GB vs 80 GB (2.4× advantage)
+  ✓ LLM inference (large models): 1×MI300X vs 2×H100 → system-level cost win
+  ✓ Memory bandwidth: 5.3 TB/s vs 3.35 TB/s (+58%)
+  ✓ Long-context (128K+ tokens): full KV cache resident in single GPU
+  ✓ MoE models (Mixtral, DeepSeek): larger expert cache fits in HBM
+
+WHERE H100 WINS:
+  ✗ FLOPS/watt: H100 more efficient compute per watt
+  ✗ Tensor Core efficiency: NVIDIA kernel library maturity
+  ✗ Software ecosystem: CUDA, TRT-LLM vs ROCm
+  ✗ Tokens/sec/GPU (small models): H100 wins on latency at batch=1
+
+MLPerf Inference v4.0 — Llama 2 70B, 8-GPU server:
+  MI300X:    ~11,700 tokens/sec/GPU
+  H100:      ~23,500 tokens/sec/GPU
+
+  MI300X at ~50% of H100 tok/s per GPU...
+  BUT for 70B: MI300X serves on 4 GPUs vs H100 requires 8 GPUs!
+
+  System-level (8 GPUs each):
+  H100 (8-GPU, 2× TP groups):   ~23,500 tok/s
+  MI300X (8-GPU, 8 single-GPU): ~93,600 tok/s (8 independent models!)
+
+  AMD's counter: "Compare SYSTEMS not chips." For 70B inference: valid.</div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 id="s6">3B.6 AMD CDNA 3+ — MI325X</h2>
+
+  <div class="formula">MI325X — THE BRIDGE CHIP (2024):
+
+  vs MI300X:
+    Same XCD compute dies (identical CDNA 3 compute)
+    HBM3 → HBM3e: 192 GB → 256 GB (+33% capacity)
+    Bandwidth: 5.3 → 6.0 TB/s (+13%)
+    TDP: 750W → ~1,000W
+
+  KEY TIMING ISSUE:
+    MI325X mass shipments: Q2 2025
+    B200 launch:          Also Q2 2025
+    Result: Most hyperscalers SKIPPED MI325X
+
+  ONE NOTABLE WIN:
+    MLPerf Training v5.0 — Llama 2 70B LoRA fine-tuning:
+      MI325X: 21.1 min  ← AMD's FIRST-EVER MLPerf Training win!
+      H200:   23.1 min
+    Why AMD won: LoRA keeps base model frozen; larger HBM = more
+    adapter candidates resident simultaneously.</div>
+
+  <div class="callout gray"><strong>Lesson: Interim Chip Timing Risk</strong>
+    Interim chip refreshes only succeed if they ship well <em>ahead</em> of the competitor's next generation. AMD learned this with MI325X — shipping simultaneously with B200 meant most buyers skipped straight to MI355X.
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 id="s7">3B.7 AMD CDNA 4 — MI355X</h2>
+
+  <h3>3B.7.1 Specifications and the Competitive Leap <span class="shipped">SHIPPED</span></h3>
+
+  <div class="formula">MI355X — CDNA 4 (2025):
+
+  Architecture: NEW XCD design (not just memory refresh)
+    2 XCDs (vs 6 smaller ones in MI300X) — fewer cross-die crossings
+    185B transistors per XCD (high density)
+    FP4/FP6 support: New Matrix Cores (matching B200)
+    HBM3e:     288 GB (vs 256 GB MI325X)
+    Bandwidth: ~8 TB/s (matching B200's 8 TB/s)
+    TDP:       ~1,400W
+    Peak FP8:  ~5 PFLOPS (vs MI300X ~1.3 PFLOPS — 3.85×)
+
+MLPerf Inference v5.0 vs B200 (Llama 2 70B):
+  Offline throughput:    MI355X at 97% of B200  ← nearly competitive!
+  Server (interactive):  MI355X at 119% of B200 ← AMD WINS latency!
+
+  AMD winning the interactive scenario is strategically significant:
+  for latency-sensitive apps (chatbots, code completion),
+  MI355X is actually FASTER per-GPU than B200.</div>
+
+  <div class="callout blue"><strong>Software vs Hardware Contribution to MI355X Gains</strong>
+    ~30% of MI355X's MLPerf improvement over MI325X came from <strong>software</strong> (ROCm 7.1): better FlashAttention ROCm implementation, improved GEMM kernel selection, reduced CPU overhead in ROCm runtime.<br><br>
+    Lesson: Hardware matters, but closing the software gap mattered equally. This is AMD's most important signal that ROCm is maturing.
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 id="s8">3B.8 AMD MI400 Series — The Next Generation</h2>
+
+  <p>The MI400 series (announced CES 2026, shipping H2 2026) represents AMD's first architecture with HBM4 and is the basis for the landmark Meta and OpenAI customer commitments. <span class="announced">ANNOUNCED</span></p>
+
+  <table>
+    <tr><th>Product</th><th>Target Market</th><th>Memory</th><th>Interconnect</th><th>Availability</th></tr>
+    <tr><td><strong>MI430X</strong></td><td>Sovereign AI / HPC / Hybrid</td><td>HBM4</td><td>UALink</td><td>H2 2026</td></tr>
+    <tr><td><strong>MI440X</strong></td><td>Mainstream AI Training/Inference</td><td>HBM4</td><td>UALink</td><td>H2 2026</td></tr>
+    <tr><td><strong>MI450 / MI450X</strong></td><td>Hyperscale (OpenAI, Meta custom)</td><td>432 GB HBM4</td><td>IF128 Ethernet</td><td>H2 2026 (1 GW)</td></tr>
+    <tr><td><strong>MI455X / Helios Rack</strong></td><td>Rack-Scale / Yotta-Scale</td><td>31 TB HBM4/rack</td><td>UALink fabric</td><td>Q3 2026 est.</td></tr>
+  </table>
+
+  <div class="formula">HBM4 TECHNICAL LEAP (MI450 vs MI355X):
+  MI355X HBM3e: 288 GB at ~8 TB/s
+  MI450  HBM4:  432 GB at 19.6 TB/s
+
+  Capacity: +50%
+  Bandwidth: +145% — the largest single-generation HBM BW jump ever
+
+  HBM4 BW gains come from:
+    1. Wider buses per stack (2048-bit vs 1024-bit HBM3e)
+    2. Higher per-pin data rate
+    3. More stacks per GPU (8 stacks vs ~6 on MI355X)
+
+  Performance implication for decode (LLaMA-3 70B):
+    MI355X (~8 TB/s):  baseline decode tok/s
+    MI450 (~19.6 TB/s): ~2.5× MI355X decode throughput</div>
+
+  <h3>3B.8.1 The Meta and OpenAI Deals — Strategic Significance</h3>
+
+  <table>
+    <tr><th>Dimension</th><th>OpenAI Deal</th><th>Meta Deal</th><th>Combined</th></tr>
+    <tr><td>Announced</td><td>Oct 6, 2025</td><td>~Feb 2026</td><td>—</td></tr>
+    <tr><td>Total committed</td><td>6 GW of GPUs</td><td>6 GW of GPUs</td><td>12 GW</td></tr>
+    <tr><td>First deployment</td><td>1 GW, H2 2026</td><td>1 GW, H2 2026</td><td>2 GW by 2026</td></tr>
+    <tr><td>Est. GPU count</td><td>~550–600K</td><td>~550–600K</td><td>~1.1–1.2M</td></tr>
+    <tr><td>Est. revenue</td><td>~$20B+</td><td>~$20B+</td><td>~$40B+ GPU alone</td></tr>
+    <tr><td>Warrants issued</td><td>160M AMD shares</td><td>160M AMD shares</td><td>320M (~20% dilution)</td></tr>
+    <tr><td>Vesting condition</td><td>GPU shipment</td><td>GPU shipment</td><td>Performance-based</td></tr>
+  </table>
+
+  <p>AMD currently earns ~$16.6B/year in data center revenue total. These two deals alone could represent ~$40B+ in GPU revenue over ~5 years — potentially 2.4× AMD's current annual data center revenue. The equity-for-demand structure is unprecedented in semiconductors: AMD offers performance-based warrants that only vest when GPUs ship.</p>
+
+  <div class="callout blue"><strong>Why Meta and OpenAI Agreed</strong>
+    Both are NVIDIA's largest customers facing: supply constraints (NVIDIA pricing power), price concentration risk ($25–55K/GPU, single vendor), and technology dependency (CUDA lock-in).<br><br>
+    Diversifying to AMD provides: negotiating leverage with NVIDIA, supply chain redundancy, technical co-engineering influence on MI450 architecture, and potential cost savings at hyperscale.
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 id="s9">3B.9 Power and TCO Across Generations</h2>
+
+  <table>
+    <tr><th>Generation</th><th>GPU</th><th>TDP</th><th>Cooling Required</th><th>Rack Density</th></tr>
+    <tr><td>NVIDIA Hopper</td><td>H100 SXM</td><td>700W</td><td>Air or liquid</td><td>~82 kW/rack</td></tr>
+    <tr><td>NVIDIA Hopper+</td><td>H200 SXM</td><td>700W</td><td>Air or liquid</td><td>~82 kW/rack</td></tr>
+    <tr><td>NVIDIA Blackwell</td><td>B200 SXM</td><td>1,000W</td><td class="warn">Liquid MANDATORY</td><td>~115 kW/rack</td></tr>
+    <tr><td>NVIDIA Blk Ultra</td><td>GB300 SXM</td><td>1,400W</td><td class="bad">DLC required (98%)</td><td>~120 kW/rack</td></tr>
+    <tr><td>AMD CDNA 3</td><td>MI300X</td><td>750W</td><td>Air or liquid</td><td>~88 kW/rack</td></tr>
+    <tr><td>AMD CDNA 3+</td><td>MI325X</td><td>~1,000W</td><td class="warn">Liquid recommended</td><td>~115 kW/rack</td></tr>
+    <tr><td>AMD CDNA 4</td><td>MI355X</td><td>~1,400W</td><td class="bad">Liquid mandatory</td><td>~120 kW/rack</td></tr>
+  </table>
+
+  <div class="callout red"><strong>Key Infrastructure Trend</strong>
+    Every new generation requires liquid cooling. Air-cooled datacenters are becoming AI-legacy infrastructure. Operators with only air cooling CANNOT run B200/GB300/MI355X without significant facility upgrades (~$5–15M per 100 kW of new liquid capacity).
+  </div>
+
+  <h3>Tokens-per-Watt Efficiency (LLaMA-2 70B, 8-GPU server)</h3>
+  <table>
+    <tr><th>GPU</th><th>Tokens/sec</th><th>Power Draw</th><th>Tokens/kW</th><th>vs H100</th></tr>
+    <tr><td>H100</td><td>23,500</td><td>5.6 kW</td><td>4,196</td><td>Baseline</td></tr>
+    <tr><td>H200</td><td>33,000</td><td>5.6 kW</td><td>5,893</td><td class="good">+40%</td></tr>
+    <tr><td>B200</td><td>75,000</td><td>8.0 kW</td><td>9,375</td><td class="good">+123%</td></tr>
+    <tr><td>GB300</td><td>1M+ tok/s/rack</td><td>~100 kW</td><td>~10,000</td><td class="good">~2.4×</td></tr>
+    <tr><td>MI325X</td><td>32,350</td><td>8.0 kW</td><td>4,044</td><td>~H100 parity</td></tr>
+    <tr><td>MI355X</td><td>100K+ tok/s</td><td>11.2 kW</td><td>~9,000</td><td class="good">~3×</td></tr>
+  </table>
+
+  <p>Despite rising TDP, efficiency (performance-per-watt) consistently improves. The extra watts buy more tokens-per-watt than the baseline generation — this is the architectural efficiency gain from process node improvements and architectural optimization.</p>
+
+  <h3>3-Year TCO Comparison — Production Decision Making</h3>
+  <table>
+    <tr><th>Metric</th><th>H100</th><th>H200</th><th>B200</th><th>MI300X</th><th>MI355X</th></tr>
+    <tr><td>Hardware (capex)</td><td>$350K</td><td>$450K</td><td>$550K</td><td>$300K</td><td>$500K</td></tr>
+    <tr><td>Power 3yr ($0.07/kWh)</td><td>$43K</td><td>$43K</td><td>$62K</td><td>$46K</td><td>$86K</td></tr>
+    <tr><td>Cooling infra</td><td>Low (air OK)</td><td>Low</td><td class="warn">HIGH (liquid)</td><td>Medium</td><td class="warn">HIGH (liquid)</td></tr>
+    <tr><td>Software risk</td><td>Low (CUDA)</td><td>Low</td><td>Low</td><td>Medium (ROCm)</td><td>Lower (ROCm 7)</td></tr>
+    <tr><td>Total 3yr est.</td><td>$420K</td><td>$520K</td><td>$650K+</td><td>$370K</td><td>$620K</td></tr>
+    <tr><td>Performance vs H100</td><td>Baseline</td><td class="good">1.4×</td><td class="good">~3×</td><td>0.7× (chip-level)</td><td class="good">~2.8×</td></tr>
+    <tr><td>Tokens/$K (normalized)</td><td>100</td><td>108</td><td class="good">184</td><td>95*</td><td class="good">181</td></tr>
+  </table>
+  <p style="font-size:11px;color:#666;margin-top:-8px">*MI300X serves 70B on 1 GPU vs 2 H100s → system-level TCO is actually competitive for large-model inference workloads.</p>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 id="s10">3B.10 Competitive Landscape and Forward Roadmap</h2>
+
+  <h3>NVIDIA Vera Rubin — After Blackwell Ultra <span class="roadmap">ROADMAP</span></h3>
+  <div class="formula">NVIDIA VERA RUBIN (2026–2027, estimated):
+  Named after: Vera Rubin (astronomer who discovered dark matter evidence)
+  Process: TSMC N3 (3nm) — first NVIDIA chip on 3nm
+  Architecture: New "Rubin" GPU (post-Blackwell)
+  Memory: HBM4 (matching/exceeding AMD MI450)
+  NVLink 6: Expected ~3.6 TB/s per GPU
+  NVSwitch 5: Full mesh for NVL rack-scale systems
+
+  Expected performance:
+  GB300 FP4: ~20 PFLOPS → Rubin FP4: ~35–40 PFLOPS (estimated)
+  VR NVL72 equivalent: Target 2–3 exaFLOPS FP4 per rack
+  HBM4 capacity: 400+ GB per GPU (estimated)</div>
+
+  <h3>The Strategic Battle — 2026 Perspective</h3>
+  <table>
+    <tr><th>Dimension</th><th>NVIDIA (Sustainable)</th><th>AMD (Achievable, Uncertain)</th></tr>
+    <tr><td>Software</td><td class="good">CUDA: 18+ year head start, millions of devs</td><td class="warn">ROCm 7.x: 3–5 year gap remains</td></tr>
+    <tr><td>Inference</td><td class="good">TRT-LLM: best-in-class optimization</td><td class="warn">vLLM ROCm: improving but behind</td></tr>
+    <tr><td>Ecosystem</td><td class="good">AWS, Azure, GCP all deeply committed</td><td class="warn">Fewer cloud providers, fewer integrations</td></tr>
+    <tr><td>Memory</td><td>Matched by B200/GB300</td><td class="good">Historically 2–3 gen ahead on HBM</td></tr>
+    <tr><td>Open ecosystem</td><td class="warn">CUDA lock-in</td><td class="good">ROCm + PyTorch + Triton = no lock-in</td></tr>
+    <tr><td>Strategic customers</td><td>All major hyperscalers</td><td class="good">12 GW committed: Meta + OpenAI</td></tr>
+    <tr><td>Compute gap</td><td class="good">GB300 leads MI355X by ~3–4×</td><td>Closed: MI355X at 97–119% of B200</td></tr>
+    <tr><td>Market share (2027 est.)</td><td>~75% (down from ~85%)</td><td class="good">~12–15% (up from ~5–8%)</td></tr>
+  </table>
+
+  <div class="callout gray"><strong>The $12B Question</strong>
+    Can AMD ship 12 GW of MI450 by 2031? This is the execution risk — AMD has never shipped at this volume. The total market is growing fast enough that AMD can gain share without NVIDIA losing absolute revenue. Not a zero-sum game.
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- DIAGRAMS SECTION -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 id="diagrams">Architecture Diagrams</h2>
+
+  <!-- DIAGRAM 1: NVIDIA Timeline -->
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" style="background:#fdfcf7">
+      <!-- Title -->
+      <text x="380" y="26" text-anchor="middle" font-family="Georgia,serif" font-size="14" font-weight="700" fill="#1c2438">NVIDIA GPU Generation Timeline — BF16 TFLOPS &amp; HBM Bandwidth</text>
+      <!-- Axes -->
+      <line x1="80" y1="290" x2="720" y2="290" stroke="#1c2438" stroke-width="2"/>
+      <line x1="80" y1="40" x2="80" y2="290" stroke="#1c2438" stroke-width="2"/>
+      <!-- Y axis labels (TFLOPS) -->
+      <text x="75" y="294" text-anchor="end" font-family="sans-serif" font-size="10" fill="#555">0</text>
+      <text x="75" y="244" text-anchor="end" font-family="sans-serif" font-size="10" fill="#555">500</text>
+      <text x="75" y="194" text-anchor="end" font-family="sans-serif" font-size="10" fill="#555">1000</text>
+      <text x="75" y="144" text-anchor="end" font-family="sans-serif" font-size="10" fill="#555">2500</text>
+      <text x="75" y="94" text-anchor="end" font-family="sans-serif" font-size="10" fill="#555">5000</text>
+      <text x="75" y="44" text-anchor="end" font-family="sans-serif" font-size="10" fill="#555">9000+</text>
+      <!-- Y grid -->
+      <line x1="80" y1="244" x2="720" y2="244" stroke="#e0ddd5" stroke-width="1" stroke-dasharray="4,4"/>
+      <line x1="80" y1="194" x2="720" y2="194" stroke="#e0ddd5" stroke-width="1" stroke-dasharray="4,4"/>
+      <line x1="80" y1="144" x2="720" y2="144" stroke="#e0ddd5" stroke-width="1" stroke-dasharray="4,4"/>
+      <line x1="80" y1="94" x2="720" y2="94" stroke="#e0ddd5" stroke-width="1" stroke-dasharray="4,4"/>
+      <!-- Y axis label -->
+      <text transform="rotate(-90,22,165)" x="22" y="165" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1c2438">BF16 TFLOPS (log-ish scale)</text>
+      <!-- X labels -->
+      <text x="160" y="308" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">2020</text>
+      <text x="280" y="308" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">2022</text>
+      <text x="400" y="308" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">2024</text>
+      <text x="520" y="308" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">2025</text>
+      <text x="640" y="308" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">2026+</text>
+      <!-- Bars: A100=312, H100=989, H200=989, B200=4500, GB300=9000 -->
+      <!-- A100 -->
+      <rect x="130" y="259" width="50" height="31" fill="#1c2438" rx="3"/>
+      <text x="155" y="256" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#1c2438">312</text>
+      <text x="155" y="322" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1c2438" font-weight="700">A100</text>
+      <!-- HBM BW dot A100: 2.0 TB/s -->
+      <circle cx="155" cy="282" r="5" fill="#e3b341" stroke="#fff" stroke-width="1.5"/>
+      <!-- H100 -->
+      <rect x="250" y="195" width="50" height="95" fill="#1c2438" rx="3"/>
+      <text x="275" y="192" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#1c2438">989</text>
+      <text x="275" y="322" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1c2438" font-weight="700">H100</text>
+      <circle cx="275" cy="268" r="5" fill="#e3b341" stroke="#fff" stroke-width="1.5"/>
+      <!-- H200 -->
+      <rect x="370" y="195" width="50" height="95" fill="#2a4a8a" rx="3"/>
+      <text x="395" y="192" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#2a4a8a">989</text>
+      <text x="395" y="322" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#2a4a8a" font-weight="700">H200</text>
+      <circle cx="395" cy="252" r="5" fill="#e3b341" stroke="#fff" stroke-width="1.5"/>
+      <!-- B200 -->
+      <rect x="490" y="120" width="50" height="170" fill="#27ae60" rx="3"/>
+      <text x="515" y="117" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#27ae60">4,500</text>
+      <text x="515" y="322" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1c2438" font-weight="700">B200</text>
+      <circle cx="515" cy="224" r="5" fill="#e3b341" stroke="#fff" stroke-width="1.5"/>
+      <!-- GB300 -->
+      <rect x="610" y="50" width="50" height="240" fill="#e3b341" rx="3"/>
+      <text x="635" y="47" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#e3b341">~9,000+</text>
+      <text x="635" y="322" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1c2438" font-weight="700">GB300</text>
+      <circle cx="635" cy="186" r="5" fill="#e3b341" stroke="#1c2438" stroke-width="1.5"/>
+      <!-- HBM BW line -->
+      <polyline points="155,282 275,268 395,252 515,224 635,186" fill="none" stroke="#e3b341" stroke-width="2" stroke-dasharray="5,3"/>
+      <!-- Legend -->
+      <rect x="540" y="42" width="12" height="12" fill="#1c2438" rx="2"/>
+      <text x="556" y="52" font-family="sans-serif" font-size="9" fill="#555">BF16 TFLOPS</text>
+      <circle cx="546" cy="62" r="4" fill="#e3b341"/>
+      <text x="556" y="65" font-family="sans-serif" font-size="9" fill="#555">HBM BW trend</text>
+      <!-- HBM BW values -->
+      <text x="155" y="278" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#fff">2.0</text>
+      <text x="275" y="265" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#fff">3.35</text>
+      <text x="395" y="249" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#fff">4.8</text>
+      <text x="515" y="221" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#fff">8.0</text>
+      <text x="635" y="183" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#333">12</text>
+    </svg>
+    <figcaption>Figure 3B.1 — NVIDIA GPU generation timeline. Navy bars = BF16 TFLOPS (left scale, log-compressed). Gold circles/dashed line = HBM bandwidth (TB/s). Note the H200 has identical TFLOPS to H100 — its gain is purely from HBM3e capacity and bandwidth. GB300 TFLOPS refers to NVFP4 (FP4 equivalent throughput).</figcaption>
+  </div>
+
+  <!-- DIAGRAM 2: AMD Timeline -->
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" style="background:#fdfcf7">
+      <text x="380" y="26" text-anchor="middle" font-family="Georgia,serif" font-size="14" font-weight="700" fill="#1c2438">AMD CDNA Generation Timeline — BF16 TFLOPS &amp; HBM Bandwidth</text>
+      <line x1="80" y1="290" x2="720" y2="290" stroke="#1c2438" stroke-width="2"/>
+      <line x1="80" y1="40" x2="80" y2="290" stroke="#1c2438" stroke-width="2"/>
+      <text x="75" y="294" text-anchor="end" font-family="sans-serif" font-size="10" fill="#555">0</text>
+      <text x="75" y="244" text-anchor="end" font-family="sans-serif" font-size="10" fill="#555">500</text>
+      <text x="75" y="194" text-anchor="end" font-family="sans-serif" font-size="10" fill="#555">1307</text>
+      <text x="75" y="144" text-anchor="end" font-family="sans-serif" font-size="10" fill="#555">3000</text>
+      <text x="75" y="94" text-anchor="end" font-family="sans-serif" font-size="10" fill="#555">5000</text>
+      <text x="75" y="55" text-anchor="end" font-family="sans-serif" font-size="10" fill="#555">~9000</text>
+      <line x1="80" y1="244" x2="720" y2="244" stroke="#e0ddd5" stroke-width="1" stroke-dasharray="4,4"/>
+      <line x1="80" y1="194" x2="720" y2="194" stroke="#e0ddd5" stroke-width="1" stroke-dasharray="4,4"/>
+      <line x1="80" y1="144" x2="720" y2="144" stroke="#e0ddd5" stroke-width="1" stroke-dasharray="4,4"/>
+      <line x1="80" y1="94" x2="720" y2="94" stroke="#e0ddd5" stroke-width="1" stroke-dasharray="4,4"/>
+      <text transform="rotate(-90,22,165)" x="22" y="165" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1c2438">BF16 TFLOPS (scale)</text>
+      <text x="155" y="308" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">2020</text>
+      <text x="275" y="308" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">2023</text>
+      <text x="395" y="308" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">2024</text>
+      <text x="515" y="308" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">2025</text>
+      <text x="635" y="308" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">2026+</text>
+      <!-- MI100 ~184 TFLOPS -->
+      <rect x="130" y="272" width="50" height="18" fill="#c0392b" rx="3"/>
+      <text x="155" y="268" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#c0392b">184</text>
+      <text x="155" y="322" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#c0392b" font-weight="700">MI100</text>
+      <circle cx="155" cy="281" r="4" fill="#e3b341" stroke="#fff" stroke-width="1.5"/>
+      <!-- MI300X 1307 -->
+      <rect x="250" y="194" width="50" height="96" fill="#c0392b" rx="3"/>
+      <text x="275" y="191" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#c0392b">1,307</text>
+      <text x="275" y="322" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#c0392b" font-weight="700">MI300X</text>
+      <circle cx="275" cy="258" r="4" fill="#e3b341" stroke="#fff" stroke-width="1.5"/>
+      <!-- MI325X 1307 same compute -->
+      <rect x="370" y="194" width="50" height="96" fill="#e67e22" rx="3"/>
+      <text x="395" y="191" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#e67e22">1,307</text>
+      <text x="395" y="322" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#e67e22" font-weight="700">MI325X</text>
+      <circle cx="395" cy="248" r="4" fill="#e3b341" stroke="#fff" stroke-width="1.5"/>
+      <!-- MI355X ~5 PFLOPS FP8 = ~5000 -->
+      <rect x="490" y="94" width="50" height="196" fill="#c0392b" rx="3"/>
+      <text x="515" y="91" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#c0392b">~5,000</text>
+      <text x="515" y="322" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1c2438" font-weight="700">MI355X</text>
+      <circle cx="515" cy="224" r="4" fill="#e3b341" stroke="#fff" stroke-width="1.5"/>
+      <!-- MI450 ~9000+ estimated -->
+      <rect x="610" y="58" width="50" height="232" fill="#e3b341" rx="3"/>
+      <text x="635" y="55" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#e3b341">~9,000+</text>
+      <text x="635" y="322" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1c2438" font-weight="700">MI450</text>
+      <circle cx="635" cy="176" r="4" fill="#e3b341" stroke="#1c2438" stroke-width="1.5"/>
+      <!-- HBM BW line -->
+      <polyline points="155,281 275,258 395,248 515,224 635,176" fill="none" stroke="#e3b341" stroke-width="2" stroke-dasharray="5,3"/>
+      <!-- BW labels -->
+      <text x="155" y="278" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#fff">2.0</text>
+      <text x="275" y="255" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#fff">5.3</text>
+      <text x="395" y="245" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#fff">6.0</text>
+      <text x="515" y="221" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#fff">8.0</text>
+      <text x="635" y="173" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#333">19.6</text>
+      <rect x="540" y="44" width="10" height="10" fill="#c0392b" rx="2"/>
+      <text x="554" y="53" font-family="sans-serif" font-size="9" fill="#555">FP8 TFLOPS (est. equiv.)</text>
+      <circle cx="545" cy="66" r="4" fill="#e3b341"/>
+      <text x="554" y="70" font-family="sans-serif" font-size="9" fill="#555">HBM BW (TB/s)</text>
+      <!-- ROADMAP note for MI450 -->
+      <rect x="608" y="60" width="54" height="14" fill="none" stroke="#e3b341" stroke-width="1.5" rx="3" stroke-dasharray="3,2"/>
+      <text x="635" y="70" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#856404">ANNOUNCED</text>
+    </svg>
+    <figcaption>Figure 3B.2 — AMD CDNA generation timeline. Red bars = FP8/BF16 TFLOPS. Gold dashed line = HBM bandwidth (TB/s). Note MI325X has identical compute to MI300X — it is a memory upgrade only. MI450 specs are ANNOUNCED, subject to change. MI450 BW of 19.6 TB/s represents a 145% jump — the largest single-generation HBM bandwidth increase ever.</figcaption>
+  </div>
+
+  <!-- DIAGRAM 3: Gen-over-Gen Performance Bar Chart -->
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" style="background:#fdfcf7">
+      <text x="380" y="24" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="700" fill="#1c2438">Generation-over-Generation Performance — Normalized to H100 = 1.0×</text>
+      <text x="380" y="40" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#777">LLaMA-2 70B inference throughput (tok/s per 8-GPU server), mixed BF16/FP8</text>
+      <line x1="80" y1="275" x2="720" y2="275" stroke="#1c2438" stroke-width="1.5"/>
+      <line x1="80" y1="55" x2="80" y2="275" stroke="#1c2438" stroke-width="1.5"/>
+      <!-- Grid + labels (max ~7x for GB300) -->
+      <line x1="80" y1="230" x2="720" y2="230" stroke="#e0ddd5" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="80" y1="185" x2="720" y2="185" stroke="#e0ddd5" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="80" y1="140" x2="720" y2="140" stroke="#e0ddd5" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="80" y1="95" x2="720" y2="95" stroke="#e0ddd5" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="75" y="278" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">0×</text>
+      <text x="75" y="234" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">1×</text>
+      <text x="75" y="188" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">2×</text>
+      <text x="75" y="143" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">4×</text>
+      <text x="75" y="98" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">6×</text>
+      <!-- H100 = 1.0, bar height = 45px (1.0 unit) -->
+      <!-- NVIDIA bars -->
+      <rect x="100" y="230" width="38" height="45" fill="#1c2438" rx="3"/>
+      <text x="119" y="227" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#1c2438">1.0×</text>
+      <text x="119" y="293" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="700">H100</text>
+      <!-- H200 = 1.4× -->
+      <rect x="148" y="212" width="38" height="63" fill="#2a4a8a" rx="3"/>
+      <text x="167" y="208" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#2a4a8a">1.4×</text>
+      <text x="167" y="293" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#2a4a8a" font-weight="700">H200</text>
+      <!-- B200 = 3.2× -->
+      <rect x="196" y="130" width="38" height="145" fill="#27ae60" rx="3"/>
+      <text x="215" y="126" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#27ae60">3.2×</text>
+      <text x="215" y="293" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="700">B200</text>
+      <!-- GB300 = 6.5× -->
+      <rect x="244" y="66" width="38" height="209" fill="#e3b341" rx="3"/>
+      <text x="263" y="62" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#e3b341">~6.5×</text>
+      <text x="263" y="293" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="700">GB300</text>
+      <text x="263" y="303" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#777">(NVL72 system)</text>
+      <!-- divider -->
+      <line x1="310" y1="55" x2="310" y2="285" stroke="#e0ddd5" stroke-width="1.5"/>
+      <!-- AMD bars -->
+      <rect x="330" y="230" width="38" height="45" fill="#c0392b" rx="3"/>
+      <text x="349" y="227" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#c0392b">~0.5×</text>
+      <text x="349" y="293" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b" font-weight="700">MI300X</text>
+      <text x="349" y="303" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#777">(per GPU)</text>
+      <!-- MI300X system level ~4× -->
+      <rect x="378" y="185" width="38" height="90" fill="#c0392b" rx="3" opacity="0.6"/>
+      <text x="397" y="182" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#c0392b">~4×</text>
+      <text x="397" y="293" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b" font-weight="700">MI300X</text>
+      <text x="397" y="303" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#777">(8-GPU sys)</text>
+      <!-- MI355X ~3.2× per GPU -->
+      <rect x="426" y="131" width="38" height="144" fill="#e67e22" rx="3"/>
+      <text x="445" y="127" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#e67e22">~3.2×</text>
+      <text x="445" y="293" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="700">MI355X</text>
+      <!-- MI450 ~7× -->
+      <rect x="474" y="60" width="38" height="215" fill="#e3b341" rx="3" stroke="#c0392b" stroke-width="1.5"/>
+      <text x="493" y="56" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#e3b341">~7×</text>
+      <text x="493" y="293" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="700">MI450</text>
+      <text x="493" y="303" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#856404">(ANNOUNCED)</text>
+      <!-- H100 reference line -->
+      <line x1="80" y1="230" x2="720" y2="230" stroke="#1c2438" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <text x="725" y="233" font-family="sans-serif" font-size="9" fill="#1c2438">H100 baseline</text>
+      <!-- Legend -->
+      <rect x="560" y="70" width="12" height="10" fill="#1c2438" rx="2"/><text x="577" y="79" font-family="sans-serif" font-size="9" fill="#555">NVIDIA</text>
+      <rect x="560" y="86" width="12" height="10" fill="#c0392b" rx="2"/><text x="577" y="95" font-family="sans-serif" font-size="9" fill="#555">AMD</text>
+      <rect x="560" y="102" width="12" height="10" fill="#e3b341" rx="2"/><text x="577" y="111" font-family="sans-serif" font-size="9" fill="#555">Next-gen (est.)</text>
+      <text x="110" y="55" font-family="sans-serif" font-size="10" font-weight="700" fill="#1c2438">← NVIDIA</text>
+      <text x="340" y="55" font-family="sans-serif" font-size="10" font-weight="700" fill="#c0392b">← AMD →</text>
+    </svg>
+    <figcaption>Figure 3B.3 — Generation-over-generation performance comparison, normalized to H100=1.0×. AMD MI300X is shown twice: per-GPU (0.5×) and 8-GPU system-level for 70B inference (4×, because MI300X can run 8 independent 70B models vs H100's 4 TP=2 groups). MI450 is ANNOUNCED; numbers are estimates based on HBM4 bandwidth scaling.</figcaption>
+  </div>
+
+  <!-- DIAGRAM 4: HBM Evolution -->
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" style="background:#fdfcf7">
+      <text x="380" y="24" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="700" fill="#1c2438">HBM Technology Evolution — Capacity (GB) and Bandwidth (TB/s) by Generation</text>
+      <!-- Axes -->
+      <line x1="80" y1="270" x2="720" y2="270" stroke="#1c2438" stroke-width="1.5"/>
+      <line x1="80" y1="40" x2="80" y2="270" stroke="#1c2438" stroke-width="1.5"/>
+      <!-- Data: HBM2e(A100)=80GB/2.0, HBM3(H100)=80GB/3.35, HBM3e(H200)=141GB/4.8, HBM3e(B200)=192GB/8.0, HBM3e(GB300)=279GB/12, HBM4(MI450)=432GB/19.6 -->
+      <!-- Scale: GB max=450 → 220px range. BW max=20 → 220px range -->
+      <!-- X positions: 130,220,310,400,490,580,670 -->
+      <!-- Capacity bars (navy) -->
+      <!-- HBM2e: 80GB = 80/450*220=39px -->
+      <rect x="112" y="231" width="35" height="39" fill="#1c2438" rx="2"/>
+      <!-- HBM3 H100: 80GB -->
+      <rect x="202" y="231" width="35" height="39" fill="#1c2438" rx="2"/>
+      <!-- HBM3e H200: 141GB = 141/450*220=69px -->
+      <rect x="292" y="201" width="35" height="69" fill="#2a4a8a" rx="2"/>
+      <!-- HBM3e B200: 192GB = 94px -->
+      <rect x="382" y="176" width="35" height="94" fill="#2a6a8a" rx="2"/>
+      <!-- HBM3e GB300: 279GB = 136px -->
+      <rect x="472" y="134" width="35" height="136" fill="#27ae60" rx="2"/>
+      <!-- HBM4 MI450: 432GB = 211px -->
+      <rect x="562" y="59" width="35" height="211" fill="#e3b341" rx="2"/>
+      <!-- BW line -->
+      <polyline points="129,254 219,247 309,232 399,218 489,196 579,148" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+      <circle cx="129" cy="254" r="5" fill="#c0392b"/><text x="129" y="250" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#fff">2.0</text>
+      <circle cx="219" cy="247" r="5" fill="#c0392b"/><text x="219" y="243" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#fff">3.35</text>
+      <circle cx="309" cy="232" r="5" fill="#c0392b"/><text x="309" y="228" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#fff">4.8</text>
+      <circle cx="399" cy="218" r="5" fill="#c0392b"/><text x="399" y="214" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#fff">8.0</text>
+      <circle cx="489" cy="196" r="5" fill="#c0392b"/><text x="489" y="192" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#fff">12</text>
+      <circle cx="579" cy="148" r="5" fill="#c0392b"/><text x="579" y="144" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#fff">19.6</text>
+      <!-- X labels -->
+      <text x="129" y="287" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">HBM2e</text>
+      <text x="129" y="297" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#777">(A100)</text>
+      <text x="219" y="287" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">HBM3</text>
+      <text x="219" y="297" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#777">(H100)</text>
+      <text x="309" y="287" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">HBM3e</text>
+      <text x="309" y="297" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#777">(H200)</text>
+      <text x="399" y="287" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">HBM3e</text>
+      <text x="399" y="297" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#777">(B200)</text>
+      <text x="489" y="287" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">HBM3e</text>
+      <text x="489" y="297" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#777">(GB300)</text>
+      <text x="579" y="287" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">HBM4</text>
+      <text x="579" y="297" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#856404">(MI450/Rubin)</text>
+      <!-- Capacity labels on bars -->
+      <text x="129" y="228" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">80 GB</text>
+      <text x="219" y="228" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">80 GB</text>
+      <text x="309" y="198" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">141 GB</text>
+      <text x="399" y="173" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">192 GB</text>
+      <text x="489" y="131" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">279 GB</text>
+      <text x="579" y="56" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#1c2438">432 GB</text>
+      <!-- Legend -->
+      <rect x="620" y="50" width="12" height="10" fill="#1c2438" rx="2"/><text x="636" y="59" font-family="sans-serif" font-size="9" fill="#555">Capacity (GB)</text>
+      <line x1="620" y1="74" x2="632" y2="74" stroke="#c0392b" stroke-width="2.5"/><circle cx="626" cy="74" r="3" fill="#c0392b"/>
+      <text x="636" y="78" font-family="sans-serif" font-size="9" fill="#555">BW (TB/s)</text>
+      <text x="22" y="165" transform="rotate(-90,22,165)" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1c2438">Memory capacity (GB)</text>
+      <!-- +145% annotation -->
+      <text x="535" y="130" font-family="sans-serif" font-size="10" fill="#c0392b" font-weight="700">+145% BW!</text>
+      <line x1="534" y1="148" x2="579" y2="148" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="3,2"/>
+    </svg>
+    <figcaption>Figure 3B.4 — HBM technology evolution across GPU generations. Navy/green bars = capacity (GB). Red line = bandwidth (TB/s). The jump from HBM3e (GB300) to HBM4 (MI450/Rubin) represents a 145% bandwidth increase — driven by wider 2048-bit buses and higher per-pin data rates. Capacity nearly doubles to 432 GB per GPU.</figcaption>
+  </div>
+
+  <!-- DIAGRAM 5: NVLink/NVSwitch Topology -->
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 760 360" xmlns="http://www.w3.org/2000/svg" style="background:#fdfcf7">
+      <text x="380" y="22" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="700" fill="#1c2438">NVLink/NVSwitch Topology Evolution — From 8-GPU Node to GB200 NVL72 Rack</text>
+      <!-- 4 topology panels -->
+      <!-- Panel 1: NVLink 3 / A100 (8-GPU DGX, NVSwitch 2) -->
+      <rect x="25" y="35" width="165" height="185" rx="6" fill="#f5f3ec" stroke="#d8d4c8" stroke-width="1.5"/>
+      <text x="107" y="52" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#1c2438">NVLink 3.0 / A100</text>
+      <text x="107" y="63" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#777">600 GB/s · 6 NVSwitches</text>
+      <!-- 8 GPU boxes in 2×4 grid -->
+      <rect x="38" y="70" width="28" height="18" rx="3" fill="#1c2438"/>
+      <rect x="72" y="70" width="28" height="18" rx="3" fill="#1c2438"/>
+      <rect x="106" y="70" width="28" height="18" rx="3" fill="#1c2438"/>
+      <rect x="140" y="70" width="28" height="18" rx="3" fill="#1c2438"/>
+      <rect x="38" y="100" width="28" height="18" rx="3" fill="#1c2438"/>
+      <rect x="72" y="100" width="28" height="18" rx="3" fill="#1c2438"/>
+      <rect x="106" y="100" width="28" height="18" rx="3" fill="#1c2438"/>
+      <rect x="140" y="100" width="28" height="18" rx="3" fill="#1c2438"/>
+      <!-- NVSwitch cluster -->
+      <rect x="50" y="130" width="110" height="22" rx="4" fill="#e3b341" stroke="#1c2438" stroke-width="1"/>
+      <text x="105" y="144" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#1c2438">6 × NVSwitch 2</text>
+      <!-- Lines GPU→NVSwitch -->
+      <line x1="52" y1="118" x2="80" y2="130" stroke="#888" stroke-width="1"/>
+      <line x1="86" y1="118" x2="90" y2="130" stroke="#888" stroke-width="1"/>
+      <line x1="120" y1="118" x2="115" y2="130" stroke="#888" stroke-width="1"/>
+      <line x1="154" y1="118" x2="140" y2="130" stroke="#888" stroke-width="1"/>
+      <line x1="52" y1="100" x2="70" y2="130" stroke="#888" stroke-width="1"/>
+      <line x1="154" y1="100" x2="145" y2="130" stroke="#888" stroke-width="1"/>
+      <text x="107" y="168" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">All-to-all mesh within</text>
+      <text x="107" y="179" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">8-GPU node</text>
+      <text x="107" y="195" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#777">Inter-node: InfiniBand</text>
+      <text x="107" y="207" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#777">only (50 GB/s)</text>
+      <!-- Panel 2: NVLink 4 / H100 -->
+      <rect x="202" y="35" width="165" height="185" rx="6" fill="#f0f3f8" stroke="#c5cfe0" stroke-width="1.5"/>
+      <text x="284" y="52" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#1c2438">NVLink 4.0 / H100</text>
+      <text x="284" y="63" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#777">900 GB/s · 4 NVSwitches</text>
+      <rect x="215" y="70" width="28" height="18" rx="3" fill="#2a4a8a"/>
+      <rect x="249" y="70" width="28" height="18" rx="3" fill="#2a4a8a"/>
+      <rect x="283" y="70" width="28" height="18" rx="3" fill="#2a4a8a"/>
+      <rect x="317" y="70" width="28" height="18" rx="3" fill="#2a4a8a"/>
+      <rect x="215" y="100" width="28" height="18" rx="3" fill="#2a4a8a"/>
+      <rect x="249" y="100" width="28" height="18" rx="3" fill="#2a4a8a"/>
+      <rect x="283" y="100" width="28" height="18" rx="3" fill="#2a4a8a"/>
+      <rect x="317" y="100" width="28" height="18" rx="3" fill="#2a4a8a"/>
+      <rect x="225" y="130" width="110" height="22" rx="4" fill="#e3b341" stroke="#1c2438" stroke-width="1"/>
+      <text x="280" y="144" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#1c2438">4 × NVSwitch 3</text>
+      <line x1="229" y1="118" x2="255" y2="130" stroke="#888" stroke-width="1"/>
+      <line x1="263" y1="118" x2="265" y2="130" stroke="#888" stroke-width="1"/>
+      <line x1="297" y1="118" x2="285" y2="130" stroke="#888" stroke-width="1"/>
+      <line x1="331" y1="118" x2="320" y2="130" stroke="#888" stroke-width="1"/>
+      <text x="284" y="168" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">+50% BW vs NVLink 3</text>
+      <text x="284" y="179" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Fewer switches needed</text>
+      <text x="284" y="195" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#777">TP=8 still within node</text>
+      <!-- Panel 3: NVLink 5 / B200 8-GPU -->
+      <rect x="379" y="35" width="165" height="185" rx="6" fill="#f0fff5" stroke="#c5e0cd" stroke-width="1.5"/>
+      <text x="461" y="52" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#1c2438">NVLink 5.0 / B200</text>
+      <text x="461" y="63" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#777">1,800 GB/s · 2 NVSwitches</text>
+      <rect x="392" y="70" width="28" height="18" rx="3" fill="#27ae60"/>
+      <rect x="426" y="70" width="28" height="18" rx="3" fill="#27ae60"/>
+      <rect x="460" y="70" width="28" height="18" rx="3" fill="#27ae60"/>
+      <rect x="494" y="70" width="28" height="18" rx="3" fill="#27ae60"/>
+      <rect x="392" y="100" width="28" height="18" rx="3" fill="#27ae60"/>
+      <rect x="426" y="100" width="28" height="18" rx="3" fill="#27ae60"/>
+      <rect x="460" y="100" width="28" height="18" rx="3" fill="#27ae60"/>
+      <rect x="494" y="100" width="28" height="18" rx="3" fill="#27ae60"/>
+      <rect x="402" y="130" width="110" height="22" rx="4" fill="#e3b341" stroke="#1c2438" stroke-width="1"/>
+      <text x="457" y="144" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#1c2438">2 × NVSwitch 4</text>
+      <line x1="406" y1="118" x2="430" y2="130" stroke="#888" stroke-width="1"/>
+      <line x1="440" y1="118" x2="440" y2="130" stroke="#888" stroke-width="1"/>
+      <line x1="474" y1="118" x2="460" y2="130" stroke="#888" stroke-width="1"/>
+      <line x1="508" y1="118" x2="495" y2="130" stroke="#888" stroke-width="1"/>
+      <text x="461" y="168" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">2× BW vs NVLink 4</text>
+      <text x="461" y="179" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Fewer switch chips</text>
+      <text x="461" y="195" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#777">GB200 NVL72 extends</text>
+      <text x="461" y="206" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#777">this to 72-GPU rack</text>
+      <!-- Panel 4: GB200 NVL72 -->
+      <rect x="556" y="35" width="180" height="310" rx="6" fill="#fff8e8" stroke="#e3b341" stroke-width="2"/>
+      <text x="646" y="55" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#1c2438">GB200 NVL72 Rack</text>
+      <text x="646" y="67" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#777">130 TB/s fabric · Single NVLink domain</text>
+      <!-- 72 GPU grid (9×8) -->
+      <text x="646" y="82" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">72 × B200 GPUs</text>
+      <!-- small GPU grid -->
+      <g fill="#27ae60">
+      <rect x="566" y="86" width="14" height="8" rx="1.5"/>
+      <rect x="582" y="86" width="14" height="8" rx="1.5"/>
+      <rect x="598" y="86" width="14" height="8" rx="1.5"/>
+      <rect x="614" y="86" width="14" height="8" rx="1.5"/>
+      <rect x="630" y="86" width="14" height="8" rx="1.5"/>
+      <rect x="646" y="86" width="14" height="8" rx="1.5"/>
+      <rect x="662" y="86" width="14" height="8" rx="1.5"/>
+      <rect x="678" y="86" width="14" height="8" rx="1.5"/>
+      <rect x="694" y="86" width="14" height="8" rx="1.5"/>
+      <rect x="566" y="96" width="14" height="8" rx="1.5"/>
+      <rect x="582" y="96" width="14" height="8" rx="1.5"/>
+      <rect x="598" y="96" width="14" height="8" rx="1.5"/>
+      <rect x="614" y="96" width="14" height="8" rx="1.5"/>
+      <rect x="630" y="96" width="14" height="8" rx="1.5"/>
+      <rect x="646" y="96" width="14" height="8" rx="1.5"/>
+      <rect x="662" y="96" width="14" height="8" rx="1.5"/>
+      <rect x="678" y="96" width="14" height="8" rx="1.5"/>
+      <rect x="694" y="96" width="14" height="8" rx="1.5"/>
+      <rect x="566" y="106" width="14" height="8" rx="1.5"/>
+      <rect x="582" y="106" width="14" height="8" rx="1.5"/>
+      <rect x="598" y="106" width="14" height="8" rx="1.5"/>
+      <rect x="614" y="106" width="14" height="8" rx="1.5"/>
+      <rect x="630" y="106" width="14" height="8" rx="1.5"/>
+      <rect x="646" y="106" width="14" height="8" rx="1.5"/>
+      <rect x="662" y="106" width="14" height="8" rx="1.5"/>
+      <rect x="678" y="106" width="14" height="8" rx="1.5"/>
+      <rect x="694" y="106" width="14" height="8" rx="1.5"/>
+      <rect x="566" y="116" width="14" height="8" rx="1.5"/>
+      <rect x="582" y="116" width="14" height="8" rx="1.5"/>
+      <rect x="598" y="116" width="14" height="8" rx="1.5"/>
+      <rect x="614" y="116" width="14" height="8" rx="1.5"/>
+      <rect x="630" y="116" width="14" height="8" rx="1.5"/>
+      <rect x="646" y="116" width="14" height="8" rx="1.5"/>
+      <rect x="662" y="116" width="14" height="8" rx="1.5"/>
+      <rect x="678" y="116" width="14" height="8" rx="1.5"/>
+      <rect x="694" y="116" width="14" height="8" rx="1.5"/>
+      <rect x="566" y="126" width="14" height="8" rx="1.5"/>
+      <rect x="582" y="126" width="14" height="8" rx="1.5"/>
+      <rect x="598" y="126" width="14" height="8" rx="1.5"/>
+      <rect x="614" y="126" width="14" height="8" rx="1.5"/>
+      <rect x="630" y="126" width="14" height="8" rx="1.5"/>
+      <rect x="646" y="126" width="14" height="8" rx="1.5"/>
+      <rect x="662" y="126" width="14" height="8" rx="1.5"/>
+      <rect x="678" y="126" width="14" height="8" rx="1.5"/>
+      <rect x="694" y="126" width="14" height="8" rx="1.5"/>
+      <rect x="566" y="136" width="14" height="8" rx="1.5"/>
+      <rect x="582" y="136" width="14" height="8" rx="1.5"/>
+      <rect x="598" y="136" width="14" height="8" rx="1.5"/>
+      <rect x="614" y="136" width="14" height="8" rx="1.5"/>
+      <rect x="630" y="136" width="14" height="8" rx="1.5"/>
+      <rect x="646" y="136" width="14" height="8" rx="1.5"/>
+      <rect x="662" y="136" width="14" height="8" rx="1.5"/>
+      <rect x="678" y="136" width="14" height="8" rx="1.5"/>
+      <rect x="694" y="136" width="14" height="8" rx="1.5"/>
+      <rect x="566" y="146" width="14" height="8" rx="1.5"/>
+      <rect x="582" y="146" width="14" height="8" rx="1.5"/>
+      <rect x="598" y="146" width="14" height="8" rx="1.5"/>
+      <rect x="614" y="146" width="14" height="8" rx="1.5"/>
+      <rect x="630" y="146" width="14" height="8" rx="1.5"/>
+      <rect x="646" y="146" width="14" height="8" rx="1.5"/>
+      <rect x="662" y="146" width="14" height="8" rx="1.5"/>
+      <rect x="678" y="146" width="14" height="8" rx="1.5"/>
+      <rect x="694" y="146" width="14" height="8" rx="1.5"/>
+      <rect x="566" y="156" width="14" height="8" rx="1.5"/>
+      <rect x="582" y="156" width="14" height="8" rx="1.5"/>
+      <rect x="598" y="156" width="14" height="8" rx="1.5"/>
+      <rect x="614" y="156" width="14" height="8" rx="1.5"/>
+      <rect x="630" y="156" width="14" height="8" rx="1.5"/>
+      <rect x="646" y="156" width="14" height="8" rx="1.5"/>
+      <rect x="662" y="156" width="14" height="8" rx="1.5"/>
+      <rect x="678" y="156" width="14" height="8" rx="1.5"/>
+      <rect x="694" y="156" width="14" height="8" rx="1.5"/>
+      </g>
+      <text x="646" y="176" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">(8 rows × 9 = 72 B200 GPUs)</text>
+      <!-- NVSwitch fabric bar -->
+      <rect x="570" y="185" width="152" height="26" rx="4" fill="#e3b341" stroke="#1c2438" stroke-width="1.5"/>
+      <text x="646" y="201" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#1c2438">NVLink 5 + NVSwitch 4 Fabric</text>
+      <text x="646" y="212" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#1c2438">130 TB/s total · TP=72 possible!</text>
+      <!-- Grace CPUs -->
+      <rect x="570" y="222" width="152" height="20" rx="4" fill="#2a4a8a"/>
+      <text x="646" y="235" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#fff">36 × Grace CPU (ARM 72-core)</text>
+      <!-- Stats -->
+      <text x="646" y="260" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">13.8 TB HBM + 17.3 TB LPDDR5X</text>
+      <text x="646" y="272" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">1.4 exaFLOPS FP8</text>
+      <text x="646" y="284" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">~120 kW · DLC mandatory</text>
+      <text x="646" y="298" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#777">~$10–15M per rack</text>
+      <text x="646" y="311" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="700" fill="#c0392b">[SHIPPED]</text>
+      <!-- Bandwidth comparison note at bottom -->
+      <text x="190" y="240" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="700">NVLink BW per GPU:</text>
+      <text x="107" y="258" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">600 GB/s</text>
+      <text x="284" y="258" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">900 GB/s</text>
+      <text x="461" y="258" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">1,800 GB/s</text>
+      <!-- vs IB -->
+      <text x="190" y="280" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#777">InfiniBand NDR inter-node: 50 GB/s per link (36× slower than NVLink 5)</text>
+    </svg>
+    <figcaption>Figure 3B.5 — NVLink/NVSwitch topology evolution. Left three panels: 8-GPU DGX-style nodes with increasing NVLink bandwidth (600 → 900 → 1,800 GB/s per GPU). Right panel: GB200 NVL72 rack — 72 GPUs unified in a single NVLink domain at 130 TB/s total fabric bandwidth, enabling TP=72 at NVLink latency, eliminating InfiniBand overhead for intra-rack tensor parallelism.</figcaption>
+  </div>
+
+  <!-- DIAGRAM 6: Compute-to-Memory-BW Ratio -->
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 760 310" xmlns="http://www.w3.org/2000/svg" style="background:#fdfcf7">
+      <text x="380" y="22" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="700" fill="#1c2438">Compute-to-Memory-Bandwidth Ratio (Arithmetic Intensity Roof) Across Generations</text>
+      <text x="380" y="38" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#777">Ridge point = TFLOPS ÷ HBM BW (ops/byte). Operations above ridge = compute-bound. Below = memory-bound.</text>
+      <!-- Axes -->
+      <line x1="80" y1="265" x2="720" y2="265" stroke="#1c2438" stroke-width="1.5"/>
+      <line x1="80" y1="50" x2="80" y2="265" stroke="#1c2438" stroke-width="1.5"/>
+      <!-- Y axis: ridge point (ops/byte) -->
+      <text x="75" y="268" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">0</text>
+      <text x="75" y="218" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">50</text>
+      <text x="75" y="168" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">100</text>
+      <text x="75" y="118" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">200</text>
+      <text x="75" y="68" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">300+</text>
+      <line x1="80" y1="218" x2="720" y2="218" stroke="#e0ddd5" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="80" y1="168" x2="720" y2="168" stroke="#e0ddd5" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="80" y1="118" x2="720" y2="118" stroke="#e0ddd5" stroke-width="1" stroke-dasharray="3,3"/>
+      <text transform="rotate(-90,22,157)" x="22" y="157" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1c2438">Ridge Point (ops/byte)</text>
+      <!-- Ridge point calculations:
+        A100: 312e12/2.0e12 = 156 ops/byte
+        H100 BF16: 989e12/3.35e12 = 295 ops/byte
+        H100 FP8: 1979e12/3.35e12 = 591 (cap display at 300)
+        H200 BF16: 989/4.8 = 206
+        B200 FP8: 4500/8.0 = 562 (cap)
+        B200 FP4: 9000/8.0 = 1125 (cap)
+        GB300 FP4: 20000/12 = 1666 (cap at display max)
+        MI300X BF16: 1307/5.3 = 246
+        MI355X FP8: 5000/8.0 = 625 (cap)
+        MI450 FP8: 9000/19.6 = 459 (cap)
+        
+        Scale: 0-350 → 215px range
+        y = 265 - (val/350)*215
+      -->
+      <!-- Points -->
+      <!-- A100: 156 → y=265-96=169 -->
+      <circle cx="140" cy="171" r="8" fill="#888"/>
+      <text x="140" y="168" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">156</text>
+      <text x="140" y="283" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">A100</text>
+      <!-- H100 BF16: 295 → y=265-181=84 -->
+      <circle cx="220" cy="83" r="8" fill="#1c2438"/>
+      <text x="220" y="80" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">295</text>
+      <text x="220" y="283" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">H100 BF16</text>
+      <!-- H100 FP8: 591 → capped → 58 -->
+      <circle cx="270" cy="58" r="7" fill="#1c2438" stroke="#e3b341" stroke-width="1.5"/>
+      <text x="270" y="55" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#e3b341">591↑</text>
+      <text x="270" y="283" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">H100 FP8</text>
+      <!-- H200 BF16: 206 → y=265-127=138 -->
+      <circle cx="340" cy="138" r="8" fill="#2a4a8a"/>
+      <text x="340" y="135" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">206</text>
+      <text x="340" y="283" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#2a4a8a">H200 BF16</text>
+      <!-- B200 FP8: 562 → cap 58 -->
+      <circle cx="410" cy="58" r="8" fill="#27ae60"/>
+      <text x="410" y="55" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">562↑</text>
+      <text x="410" y="283" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#27ae60">B200 FP8</text>
+      <!-- MI300X BF16: 246 → y=265-151=114 -->
+      <circle cx="480" cy="114" r="8" fill="#c0392b"/>
+      <text x="480" y="111" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">246</text>
+      <text x="480" y="283" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b">MI300X</text>
+      <!-- MI355X FP8: 625 → cap 58 -->
+      <circle cx="550" cy="58" r="8" fill="#e67e22"/>
+      <text x="550" y="55" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">625↑</text>
+      <text x="550" y="283" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#e67e22">MI355X FP8</text>
+      <!-- MI450 FP8: 459 → 265-(459/700*215)=265-141=124, but cap at 58 due to scale -->
+      <circle cx="620" cy="58" r="8" fill="#e3b341" stroke="#c0392b" stroke-width="1.5"/>
+      <text x="620" y="55" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#1c2438">459↑</text>
+      <text x="620" y="283" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#856404">MI450(ann)</text>
+      <!-- GB300 FP4 ~1666 -->
+      <circle cx="690" cy="52" r="8" fill="#e3b341" stroke="#1c2438" stroke-width="1.5"/>
+      <text x="690" y="49" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#1c2438">1666↑</text>
+      <text x="690" y="283" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="700">GB300 FP4</text>
+      <!-- Trend line NVIDIA -->
+      <polyline points="140,171 220,83 270,58 340,138 410,58 690,52" fill="none" stroke="#1c2438" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <!-- Trend line AMD -->
+      <polyline points="480,114 550,58 620,58" fill="none" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <!-- Memory-bound / compute-bound annotation -->
+      <rect x="90" y="178" width="130" height="22" rx="4" fill="#fff0f0" stroke="#c0392b" stroke-width="1"/>
+      <text x="155" y="192" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b">⬇ Memory-bound region</text>
+      <rect x="90" y="70" width="130" height="22" rx="4" fill="#f0fff5" stroke="#27ae60" stroke-width="1"/>
+      <text x="155" y="84" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#27ae60">⬆ Compute-bound region</text>
+      <!-- Legend -->
+      <circle cx="560" cy="298" r="5" fill="#1c2438"/><text x="570" y="302" font-family="sans-serif" font-size="9" fill="#555">NVIDIA</text>
+      <circle cx="610" cy="298" r="5" fill="#c0392b"/><text x="620" y="302" font-family="sans-serif" font-size="9" fill="#555">AMD</text>
+      <!-- Note about H200 lower ridge -->
+      <line x1="340" y1="138" x2="295" y2="155" stroke="#2a4a8a" stroke-width="1" stroke-dasharray="2,2"/>
+      <text x="285" y="165" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#2a4a8a">H200: larger HBM</text>
+      <text x="285" y="175" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#2a4a8a">lowers ridge point</text>
+      <text x="285" y="185" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#2a4a8a">(more memory-bound ops</text>
+      <text x="285" y="195" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#2a4a8a">remain practical)</text>
+    </svg>
+    <figcaption>Figure 3B.6 — Arithmetic intensity ridge points across GPU generations. Higher ridge = GPU can execute more compute-bound workloads efficiently. Values above the chart cap (marked ↑) indicate extremely high ridge points where almost all practical LLM operations are memory-bound at batch=1 but compute-bound at batch≥16. Note: H200's lower ridge than H100 FP8 reflects its expanded HBM capacity making memory-bound operations cheaper — a feature, not a regression.</figcaption>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 id="qr">Quick Reference — GPU Generation Numbers</h2>
+
+  <table>
+    <tr><th>GPU</th><th>Vendor</th><th>Process</th><th>TDP</th><th>HBM GB</th><th>HBM TB/s</th><th>Peak BF16 TFLOPS</th><th>Status</th></tr>
+    <tr><td><strong>A100 SXM</strong></td><td>NVIDIA</td><td>TSMC 7nm</td><td>400W</td><td>80</td><td>2.0</td><td>312</td><td><span class="shipped">SHIPPED</span></td></tr>
+    <tr><td><strong>H100 SXM</strong></td><td>NVIDIA</td><td>TSMC 4nm</td><td>700W</td><td>80</td><td>3.35</td><td>989</td><td><span class="shipped">SHIPPED</span></td></tr>
+    <tr><td><strong>H200 SXM</strong></td><td>NVIDIA</td><td>TSMC 4nm</td><td>700W</td><td>141</td><td>4.8</td><td>989 (same!)</td><td><span class="shipped">SHIPPED</span></td></tr>
+    <tr><td><strong>B200 SXM</strong></td><td>NVIDIA</td><td>TSMC 4NP</td><td>1,000W</td><td>192</td><td>8.0</td><td>4,500 (FP8)</td><td><span class="shipped">SHIPPED</span></td></tr>
+    <tr><td><strong>GB300 SXM</strong></td><td>NVIDIA</td><td>TSMC 4NP</td><td>~1,400W</td><td>279</td><td>~12</td><td>~20,000 (FP4)</td><td><span class="announced">ANNOUNCED</span></td></tr>
+    <tr><td><strong>GB200 NVL72</strong></td><td>NVIDIA</td><td>—</td><td>~120 kW</td><td>13,824</td><td>130 TB/s fabric</td><td>1.4 exaFLOPS FP8</td><td><span class="shipped">SHIPPED</span></td></tr>
+    <tr><td><strong>MI300X</strong></td><td>AMD</td><td>TSMC 5/6nm</td><td>750W</td><td>192</td><td>5.3</td><td>1,307 (6XCD+4MCD)</td><td><span class="shipped">SHIPPED</span></td></tr>
+    <tr><td><strong>MI325X</strong></td><td>AMD</td><td>TSMC 5/6nm</td><td>~1,000W</td><td>256</td><td>6.0</td><td>1,307 (same compute)</td><td><span class="shipped">SHIPPED</span></td></tr>
+    <tr><td><strong>MI355X</strong></td><td>AMD</td><td>TSMC 4nm</td><td>~1,400W</td><td>288</td><td>~8.0</td><td>~5,000 (FP8)</td><td><span class="shipped">SHIPPED</span></td></tr>
+    <tr><td><strong>MI450</strong></td><td>AMD</td><td>TSMC 3nm</td><td>TBD</td><td>432</td><td>19.6</td><td>~9,000 (FP8 est.)</td><td><span class="announced">ANNOUNCED</span></td></tr>
+    <tr><td><strong>Vera Rubin</strong></td><td>NVIDIA</td><td>TSMC N3</td><td>TBD</td><td>400+</td><td>TBD</td><td>35–40K (FP4 est.)</td><td><span class="roadmap">ROADMAP</span></td></tr>
+  </table>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 id="review">Chapter 3B Review Questions</h2>
+
+  <ol class="review-q">
+    <li><strong>The H200 has the same Tensor Core count and clock speed as the H100, yet achieves 40% higher throughput on LLaMA-3 70B inference. Explain the exact mechanism.</strong> What class of operation benefits and what does not? Why does fitting the model in a single GPU matter beyond just avoiding a second GPU cost?</li>
+    <li><strong>Explain the Blackwell dual-die design.</strong> What physical constraint drove this architectural decision? What is the bandwidth of the NV-HBI inter-die connection, and why is that bandwidth critical — specifically, what failure mode occurs if inter-die bandwidth is lower than HBM bandwidth?</li>
+    <li><strong>A company is choosing between 8× H100 GPUs and 8× MI300X GPUs for LLaMA-3 70B inference serving (BF16, batch=32).</strong> Compare the two setups including: required tensor parallelism degree, effective tokens/sec per dollar, and the single most important qualitative factor that could swing the decision toward AMD even if H100 wins on raw tok/s.</li>
+    <li><strong>AMD's MI325X shipped in Q2 2025 and most hyperscalers skipped it.</strong> What specific timing dynamic explains this? What does this teach about the economics of GPU generation transitions? Under what conditions would a bridge chip refresh succeed?</li>
+    <li><strong>The Meta and OpenAI deals with AMD include performance-based warrants.</strong> Explain why this structure benefits both parties. What is the maximum dilution AMD faces if all milestones are met, and what must have happened for that dilution to occur? Why would Meta want AMD's stock to appreciate?</li>
+    <li><strong>Compute-to-memory-bandwidth ratio (ridge point) has been increasing with each GPU generation for FP8/FP4 formats, yet decreasing for the memory-upgrade variants (H200 vs H100 BF16).</strong> Is this a contradiction? Explain what practical implication each trajectory has for inference serving at batch=1 vs batch=128.</li>
+  </ol>
+
+  <!-- Cross-references -->
+  <div class="callout navy" style="margin-top:32px">
+    <strong>Chapter Cross-References</strong>
+    <span class="xref">Ch 3A</span> GPU architecture fundamentals — SM structure, CUDA programming model, Tensor Cores<br>
+    <span class="xref">Ch 4</span> Memory Hierarchy — HBM deep dive, bandwidth roofline, KV cache management<br>
+    <span class="xref">Ch 5</span> Thermal &amp; TCO — cooling infrastructure, liquid cooling design, $/token analysis<br>
+    <span class="xref">Ch 6</span> Inference systems — batching strategies, continuous batching, throughput vs latency<br>
+    <span class="xref">Ch 14</span> Networking — InfiniBand vs NVLink, RDMA, collective communications<br>
+    <span class="xref">Ch 17</span> Telemetry — GPU performance monitoring, dcgm-exporter, NVML metrics
+  </div>
+
+  <div class="ch-end">Chapter 3B Complete · AI/ML Infrastructure from Silicon to Scale · Venkat Vinjam · V2 Edition</div>
+</div>
+
+</body>
+</html>

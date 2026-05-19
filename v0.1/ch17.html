@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 17 — Telemetry, Profiling &amp; Tools | AI/ML Infrastructure from Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,"Times New Roman",serif;font-size:13.5px;line-height:1.85;color:#222;background:#fdfcf7}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+  #sidebar{display:none!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45);height:48px}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#cdd;font-family:sans-serif;font-size:10.5px;text-decoration:none;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:3px 9px;white-space:nowrap;transition:background .15s}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav a.cur{background:#e3b341;color:#1c2438;font-weight:700}
+body{padding-top:48px}
+#sidebar{position:fixed;top:48px;left:0;width:210px;height:calc(100vh - 48px);overflow-y:auto;background:#f7f5f0;border-right:1px solid #ddd8cc;padding:18px 0;z-index:900}
+#sidebar h4{font-family:sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#e3b341;padding:0 14px 6px;margin-top:14px;border-bottom:1px solid #e8e2d8;margin-bottom:6px}
+#sidebar a{display:block;font-family:sans-serif;font-size:10.5px;color:#444;text-decoration:none;padding:4px 14px;line-height:1.4;transition:background .12s}
+#sidebar a:hover,#sidebar a.active{background:#e3b341;color:#1c2438;font-weight:600}
+.page{max-width:860px;margin:0 auto 0 216px;padding:38px 50px 80px}
+h1{font-size:27px;color:#1c2438;margin:0 0 8px;line-height:1.2}
+h2{font-size:18.5px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:24px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:16px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px;font-size:13px}
+strong{color:#1c2438}
+a{color:#2a6099}
+.ch-label{font-family:sans-serif;font-size:9.5px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:5px}
+.ch-title{font-size:32px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:7px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:10px}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;margin-bottom:0}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341 0%,#1c2438 60%,transparent 100%);margin:16px 0 22px;border:none}
+blockquote{border-left:4px solid #e3b341;background:#fffbf0;padding:12px 18px;margin:0 0 24px;border-radius:0 6px 6px 0;font-style:italic;color:#444;font-size:13px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+blockquote cite{display:block;margin-top:7px;font-size:11px;color:#888;font-style:normal}
+.objectives{background:#f0f6ff;border:1.5px solid #2a6099;border-radius:8px;padding:16px 20px;margin:20px 0 28px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.objectives h4{color:#1c2438;font-size:11px;font-style:normal;text-transform:uppercase;letter-spacing:1px;margin:0 0 10px}
+.objectives .lvl{font-family:sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin:8px 0 2px}
+.objectives .lvl.l1{color:#27ae60}.objectives .lvl.l2{color:#e3b341}.objectives .lvl.l3{color:#7b2d8b}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.purple{border-color:#7b2d8b;background:#fdf5ff}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout strong{display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:"Courier New",monospace;font-size:10.5px;line-height:1.72;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.formula .cm{color:#6a8a6a}.formula .hl{color:#e3b341;font-weight:bold}.formula .kw{color:#ff79c6}.formula .str{color:#7ec8a0}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:"Courier New",monospace;font-size:10.5px;color:#1c2438}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e0d0;vertical-align:top}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#1a7a3a;font-weight:600}.warn{color:#a55000;font-weight:600}.bad{color:#c0392b;font-weight:600}
+.diagram-wrap{margin:24px 0;text-align:center}
+.diagram-wrap figcaption{font-family:sans-serif;font-size:10.5px;color:#666;margin-top:8px;font-style:italic}
+.worked{background:#fff8e8;border:2px solid #e3b341;border-radius:8px;padding:16px 20px;margin:22px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.worked-label{font-family:sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#e3b341;margin-bottom:8px}
+.box{border:2px solid #1c2438;border-radius:8px;padding:16px 20px;margin:20px 0}
+.box h4{color:#1c2438;margin:0 0 10px;font-size:11px;font-style:normal;text-transform:uppercase;letter-spacing:1px}
+.tip{background:#f0f6ff;border:1px solid #aac4e8;padding:9px 13px;border-radius:6px;margin:12px 0;font-size:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.badge{display:inline-block;font-family:sans-serif;font-size:8.5px;padding:2px 7px;border-radius:10px;margin-left:5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;vertical-align:middle}
+.badge.shipped{background:#e0fff0;color:#1a7a3a;border:1px solid #27ae60}
+.badge.announced{background:#fff8e0;color:#a55000;border:1px solid #e3b341}
+.badge.roadmap{background:#f5e8ff;color:#7b2d8b;border:1px solid #9b59b6}
+.section-anchor{scroll-margin-top:64px}
+.takeaways{background:#f3f5f8;border:2px solid #1c2438;border-radius:9px;padding:18px 22px;margin:32px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.takeaways h3{color:#1c2438;margin:0 0 14px;font-size:15px;border:none;padding:0}
+.takeaway-group{margin-bottom:14px}
+.takeaway-group:last-child{margin-bottom:0}
+.tg-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#e3b341;margin-bottom:6px}
+.takeaway-group ul{margin-left:16px}
+.takeaway-group li{font-size:12.5px;margin-bottom:4px;color:#222}
+.review-questions{margin-top:36px}
+.review-questions h3{font-size:16px;color:#1c2438;margin-bottom:16px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+.rq-tier{border-radius:8px;padding:14px 18px;margin-bottom:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rq-tier.foundational{background:#e8fff0;border-left:5px solid #27ae60}
+.rq-tier.intermediate{background:#fffbf0;border-left:5px solid #e3b341}
+.rq-tier.principal{background:#f0f0ff;border-left:5px solid #7b2d8b}
+.rq-tier-label{font-family:sans-serif;font-size:10px;color:#555;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.rq-badge{font-weight:700;font-size:9px;padding:2px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.foundational .rq-badge{background:#27ae60;color:#fff}
+.intermediate .rq-badge{background:#e3b341;color:#1c2438}
+.principal .rq-badge{background:#7b2d8b;color:#fff}
+.rq-tier ol{margin-left:18px}
+.rq-tier li{margin-bottom:10px;font-size:12.5px;line-height:1.7;color:#222}
+.rq-tier li::marker{font-weight:700}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0d8c8;font-family:sans-serif;font-size:10px;color:#bbb;letter-spacing:2px;text-transform:uppercase}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a href="index.html">Home</a>
+  <a href="ch16.html">← Ch16</a>
+  <a href="ch17.html" class="cur">Ch17 Telemetry</a>
+  <a href="ch18.html">Ch18 →</a>
+  <a href="appendix_a.html">App A</a>
+  <a href="appendix_b.html">App B</a>
+  <a href="appendix_c.html">Glossary</a>
+</div>
+
+<!-- LEFT SIDEBAR -->
+<div id="sidebar">
+  <h4>Chapter 17</h4>
+  <a href="#overview">Overview</a>
+  <h4>Sections</h4>
+  <a href="#s17-1">17.1 Observability Architecture</a>
+  <a href="#s17-2">17.2 Silicon: DCGM</a>
+  <a href="#s17-3">17.3 Kernel: Nsight</a>
+  <a href="#s17-4">17.4 Framework: PyTorch</a>
+  <a href="#s17-5">17.5 System: Prometheus</a>
+  <a href="#s17-6">17.6 Service: SLA Metrics</a>
+  <a href="#s17-7">17.7 Fleet: Grafana</a>
+  <a href="#s17-8">17.8 AMD Toolchain</a>
+  <a href="#s17-9">17.9 Regression CI/CD</a>
+  <a href="#s17-10">17.10 Diagnostic Cookbook</a>
+  <h4>End Matter</h4>
+  <a href="#worked">Worked Example</a>
+  <a href="#takeaways">Key Takeaways</a>
+  <a href="#review">Review Questions</a>
+</div>
+
+<!-- MAIN PAGE -->
+<div class="page">
+
+<!-- CHAPTER HEADER -->
+<div id="overview">
+<div class="ch-label">Chapter 17 &nbsp;·&nbsp; AI/ML Infrastructure from Silicon to Scale</div>
+<div class="ch-title">Telemetry, Profiling &amp; Tools</div>
+<div class="ch-subtitle">You Cannot Optimize What You Cannot Measure — Building the Full Observability Stack from Silicon Counters to Fleet Dashboards</div>
+<div class="ch-meta">Part VIII · Observability &amp; Architecture · ~42 pages · Prerequisites: Ch4 (HBM), Ch7 (Kernels), Ch12 (Benchmarking), Ch14 (Networking)</div>
+<hr class="ch-divider">
+
+<blockquote>
+"The difference between a 40% MFU cluster and a 65% MFU cluster is usually not hardware. It is the quality of the observability stack that lets engineers see exactly where compute is being wasted."
+<cite>— Production AI Infrastructure Principle</cite>
+</blockquote>
+
+<p>A 10,000-GPU training cluster generates tens of thousands of metrics per second from every GPU, NIC, switch, and storage node. Without the right observability stack, a silent performance regression can waste millions of dollars before anyone notices. In one production incident at a large hyperscaler, a driver update degraded Tensor Core utilization by 18%—dropping MFU from 58% to 47%—for 11 days before an engineer noticed the training loss curve was converging slower than expected. By then, the cluster had burned an estimated $2.1M in wasted compute at $3/GPU-hr. With a 15-second DCGM polling cycle feeding a Prometheus alert on <code>DCGM_FI_PROF_PIPE_TENSOR_ACTIVE</code>, the regression would have paged on-call within 4 minutes of the driver rollout.</p>
+
+<p>This chapter builds the complete observability architecture from silicon hardware counters to user-facing dashboards and automated regression CI/CD pipelines. Every tool is covered in depth—when to use it, what specific metrics to examine, and what the numbers mean in context of real hardware behavior.</p>
+
+<div class="objectives">
+<h4>Learning Objectives by Level</h4>
+<div class="lvl l1">Foundational</div>
+<ul>
+<li>Understand the seven layers of AI system observability and why each layer exists</li>
+<li>Know what DCGM measures and why GPU hardware counters differ from framework-level metrics</li>
+<li>Distinguish when to use Nsight Systems (timeline) vs. Nsight Compute (kernel counters)</li>
+</ul>
+<div class="lvl l2">Intermediate</div>
+<ul>
+<li>Configure a complete DCGM → Prometheus → Grafana pipeline with correct scrape intervals and retention</li>
+<li>Write PromQL alert rules that fire before SLA violations occur, not after</li>
+<li>Interpret an Nsight Systems timeline to identify communication/compute overlap gaps</li>
+</ul>
+<div class="lvl l3">Principal Level</div>
+<ul>
+<li>Design the full observability architecture for a 10,000-GPU cluster with metric cardinality management</li>
+<li>Build automated performance regression CI/CD that gates driver/framework updates statistically</li>
+<li>Choose the right tool at each scope: silicon, kernel, job, and fleet — and explain the cost/benefit tradeoffs</li>
+</ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     17.1 THE OBSERVABILITY ARCHITECTURE
+════════════════════════════════════════════════════ -->
+<h2 id="s17-1" class="section-anchor">17.1 The Observability Architecture</h2>
+
+<p>Before writing a single PromQL query, you need a mental model of <em>why</em> the observability stack has multiple layers. Each layer exists because no single tool can efficiently capture information at all granularities simultaneously. A hardware counter that fires every GPU clock cycle (1.98 GHz on H100) would generate 1.98 billion samples per second per GPU—physically impossible to collect. Each layer is a different sampling rate, storage cost, and precision/recall tradeoff.</p>
+
+<h3>17.1.1 The Seven-Layer Telemetry Stack</h3>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 720 480" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif" style="max-width:100%;border-radius:8px">
+<rect width="720" height="480" fill="#f3f5f8" rx="8"/>
+<!-- Title -->
+<text x="360" y="28" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#1c2438">Complete AI System Observability Stack — 7 Layers</text>
+
+<!-- Layer 7 -->
+<rect x="30" y="42" width="660" height="52" rx="5" fill="#1c2438" opacity=".92"/>
+<text x="50" y="61" font-family="sans-serif" font-size="9" font-weight="700" fill="#e3b341" letter-spacing="1">LAYER 7 — REGRESSION &amp; CI/CD</text>
+<text x="50" y="76" font-family="sans-serif" font-size="10" fill="#eee">Statistical baseline tracking · automated perf regression on every driver/framework update · gates releases</text>
+<text x="670" y="70" font-family="sans-serif" font-size="9" fill="#aaa" text-anchor="end">Event-triggered</text>
+
+<!-- Layer 6 -->
+<rect x="30" y="100" width="660" height="52" rx="5" fill="#243050" opacity=".92"/>
+<text x="50" y="119" font-family="sans-serif" font-size="9" font-weight="700" fill="#e3b341" letter-spacing="1">LAYER 6 — FLEET DASHBOARDS &amp; ALERTING</text>
+<text x="50" y="134" font-family="sans-serif" font-size="10" fill="#eee">Grafana · PagerDuty · Slack · Thanos/Mimir long-term storage · anomaly detection</text>
+<text x="670" y="127" font-family="sans-serif" font-size="9" fill="#aaa" text-anchor="end">Human-visible</text>
+
+<!-- Layer 5 -->
+<rect x="30" y="158" width="660" height="52" rx="5" fill="#1a3a1a" opacity=".92"/>
+<text x="50" y="177" font-family="sans-serif" font-size="9" font-weight="700" fill="#7ec8a0" letter-spacing="1">LAYER 5 — SERVICE-LEVEL METRICS</text>
+<text x="50" y="192" font-family="sans-serif" font-size="10" fill="#eee">TTFT · TPOT · tokens/sec · KV cache % · queue depth · vLLM/TRT-LLM telemetry</text>
+<text x="670" y="185" font-family="sans-serif" font-size="9" fill="#aaa" text-anchor="end">1–5 s interval</text>
+
+<!-- Layer 4 -->
+<rect x="30" y="216" width="660" height="52" rx="5" fill="#1a2a3a" opacity=".92"/>
+<text x="50" y="235" font-family="sans-serif" font-size="9" font-weight="700" fill="#79c0ff" letter-spacing="1">LAYER 4 — SYSTEM METRICS</text>
+<text x="50" y="250" font-family="sans-serif" font-size="10" fill="#eee">Prometheus + node_exporter · CPU/RAM/NIC/Storage · NCCL tracing · InfiniBand perf counters</text>
+<text x="670" y="243" font-family="sans-serif" font-size="9" fill="#aaa" text-anchor="end">15 s interval</text>
+
+<!-- Layer 3 -->
+<rect x="30" y="274" width="660" height="52" rx="5" fill="#2a1a3a" opacity=".92"/>
+<text x="50" y="293" font-family="sans-serif" font-size="9" font-weight="700" fill="#bc8cff" letter-spacing="1">LAYER 3 — FRAMEWORK PROFILING</text>
+<text x="50" y="308" font-family="sans-serif" font-size="10" fill="#eee">PyTorch Profiler · TensorBoard · WandB · NVTX annotations · operator-level timing</text>
+<text x="670" y="301" font-family="sans-serif" font-size="9" fill="#aaa" text-anchor="end">On-demand</text>
+
+<!-- Layer 2 -->
+<rect x="30" y="332" width="660" height="52" rx="5" fill="#3a1a1a" opacity=".92"/>
+<text x="50" y="351" font-family="sans-serif" font-size="9" font-weight="700" fill="#f78166" letter-spacing="1">LAYER 2 — KERNEL PROFILING</text>
+<text x="50" y="366" font-family="sans-serif" font-size="10" fill="#eee">Nsight Compute (NVIDIA) · omniperf (AMD) · per-kernel TFLOPS · HBM BW · Tensor Core efficiency · roofline</text>
+<text x="670" y="359" font-family="sans-serif" font-size="9" fill="#aaa" text-anchor="end">On-demand</text>
+
+<!-- Layer 1 -->
+<rect x="30" y="390" width="660" height="52" rx="5" fill="#3a2a0a" opacity=".95"/>
+<text x="50" y="409" font-family="sans-serif" font-size="9" font-weight="700" fill="#ffd700" letter-spacing="1">LAYER 1 — SILICON TELEMETRY</text>
+<text x="50" y="424" font-family="sans-serif" font-size="10" fill="#eee">DCGM hardware counters · XID/ECC error detection · thermal · power · NVLink BW · PCIe health</text>
+<text x="670" y="417" font-family="sans-serif" font-size="9" fill="#aaa" text-anchor="end">1 s interval</text>
+
+<!-- Right side labels -->
+<text x="700" y="70" font-family="sans-serif" font-size="8" fill="#999" transform="rotate(-90,700,300)"/>
+</svg>
+<figcaption>Figure 17.1 — The seven-layer AI observability stack. Lower layers sample faster and are more precise; upper layers aggregate and make data human-actionable. Layers 1–4 are always-on; Layers 2–3 are on-demand due to high overhead.</figcaption>
+</div>
+
+<h3>17.1.2 The Critical Insight: Tool Selection by Scope</h3>
+
+<p>The most common mistake engineers make is using a kernel profiler (Nsight Compute) when they should be using a timeline profiler (Nsight Systems), or the reverse. The choice depends on what question you're answering:</p>
+
+<table>
+<tr><th>Question</th><th>Correct Tool</th><th>Why</th></tr>
+<tr><td>"Why is my training step 40% slower than expected?"</td><td class="good">Nsight Systems (timeline)</td><td>Need to see time decomposition — what fraction is compute vs. AllReduce vs. data loading</td></tr>
+<tr><td>"Why is my attention kernel running at 45% of peak TFLOPS?"</td><td class="good">Nsight Compute (counters)</td><td>Need kernel-level metrics: SM efficiency, HBM BW saturation, occupancy</td></tr>
+<tr><td>"Is GPU 47 overheating on node 23?"</td><td class="good">DCGM / Prometheus</td><td>Fleet-level health; no profiler overhead; persistent monitoring</td></tr>
+<tr><td>"Did our P99 TTFT SLA degrade after the vLLM update?"</td><td class="good">vLLM metrics → Prometheus → Grafana</td><td>Service-level; needs percentile histograms over time</td></tr>
+<tr><td>Using Nsight Compute for every regression</td><td class="bad">Wrong</td><td>Adds 3–10× overhead to kernel execution; cannot run in production</td></tr>
+</table>
+
+<div class="callout blue">
+<strong>Principal Insight: Profiling Overhead Is Never Free</strong>
+Nsight Compute adds 3–10× execution overhead per kernel and is not suitable for production or long-horizon profiling. It also serializes kernel launches, preventing overlap detection. Nsight Systems has much lower overhead (~2–5% CPU, negligible GPU) but still should not run continuously. DCGM runs continuously with &lt;0.5% GPU overhead — it is the only always-on tool for silicon metrics.
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     17.2 SILICON LAYER — DCGM
+════════════════════════════════════════════════════ -->
+<h2 id="s17-2" class="section-anchor">17.2 Silicon Layer — DCGM Hardware Counters</h2>
+
+<p>NVIDIA Data Center GPU Manager (DCGM) is the foundation of GPU cluster observability. It reads hardware performance counters directly from GPU silicon — registers built into the chip that increment as hardware events occur — at 1-second intervals with less than 0.5% GPU utilization overhead. Understanding DCGM is not optional for AI infrastructure engineers: it is the first diagnostic tool to open in every performance investigation.</p>
+
+<h3>17.2.1 Critical DCGM Metrics — What They Measure and Why</h3>
+
+<div class="formula">
+<span class="cm"># ── TIER 1: Must monitor always-on ──────────────────────────────────────────</span>
+
+DCGM_FI_DEV_GPU_UTIL              <span class="hl">SM utilization %</span>  (0–100)
+  └─ % of time ≥1 warp is active on ≥1 SM
+  └─ &lt;60% with a running job → launch gap, comm stall, or data wait
+  └─ Does NOT mean compute-bound: memory-bound kernels can show 100% SM util
+
+DCGM_FI_PROF_PIPE_TENSOR_ACTIVE   <span class="hl">Tensor Core active fraction</span>  (0–1)
+  └─ Fraction of SMs running MMA instructions
+  └─ &lt;0.30 = Tensor Cores underutilized → shape mismatch or scalar ops dominating
+  └─ Healthy range: 0.50–0.80 for mixed training workloads
+
+DCGM_FI_PROF_DRAM_ACTIVE          <span class="hl">HBM bandwidth utilization</span>  (0–1)
+  └─ Fraction of DRAM cycles with active data transfer
+  └─ &gt;0.85 = memory-bound (check roofline)
+  └─ Combined with TENSOR_ACTIVE: if both high → hardware is efficient
+
+DCGM_FI_DEV_GPU_TEMP              <span class="hl">Junction temperature °C</span>
+  └─ H100 SXM max: 83°C; throttle onset: ~80°C
+  └─ Alert threshold: 82°C (before throttle, not after)
+
+DCGM_FI_DEV_POWER_USAGE           <span class="hl">Instantaneous power draw W</span>
+  └─ H100 SXM TDP: 700W; alert if &gt;660W sustained for &gt;60s
+
+DCGM_FI_DEV_ECC_SBE_VOL_TOTAL    <span class="hl">Single-bit ECC errors (correctable)</span>
+  └─ 1 SBE/hour = early hardware failure warning
+  └─ Schedule GPU replacement within 48–72h
+
+DCGM_FI_DEV_ECC_DBE_VOL_TOTAL    <span class="hl">Double-bit ECC errors (UNCORRECTABLE)</span>
+  └─ ANY DBE = immediate GPU quarantine + job evacuation
+
+<span class="cm"># ── TIER 2: Interconnect health ─────────────────────────────────────────────</span>
+
+DCGM_FI_PROF_NVLINK_TX_BYTES      <span class="hl">NVLink TX bytes/sec</span>
+  └─ H100 NVLink 4.0: 900 GB/s total; per-link ~112 GB/s
+  └─ &lt;50% during AllReduce → NVLink link failure or TP misconfiguration
+
+DCGM_FI_PROF_PCIE_TX_BYTES        <span class="hl">PCIe TX bytes/sec (GPU→CPU)</span>
+  └─ H100 PCIe gen5 x16: ~64 GB/s
+  └─ High PCIe BW with low NVLink BW → data incorrectly routed via CPU
+</div>
+
+<h3>17.2.2 XID Error Codes — Production Decision Tree</h3>
+
+<p>XID errors are GPU hardware exception codes reported in the kernel log and via DCGM. Not all XIDs require the same response. Misinterpreting them is a common operations failure mode.</p>
+
+<table>
+<tr><th>XID Code</th><th>Meaning</th><th>Production Action</th></tr>
+<tr><td><code>XID 48</code></td><td>Double-bit ECC (DBE) — uncorrectable memory error</td><td class="bad">IMMEDIATE: Evacuate jobs, quarantine GPU, replace within 24h</td></tr>
+<tr><td><code>XID 63</code></td><td>Single-bit ECC spike — correctable, but HW degrading</td><td class="warn">Schedule replacement within 48–72h; monitor hourly rate</td></tr>
+<tr><td><code>XID 74</code></td><td>NVLink Error — data integrity or link failure</td><td class="warn">Check NVLink link state; may cause silent data corruption in TP</td></tr>
+<tr><td><code>XID 79</code></td><td>GPU has fallen off the bus (catastrophic)</td><td class="bad">IMMEDIATE: Node requires physical inspection and reboot</td></tr>
+<tr><td><code>XID 45</code></td><td>Preemptive cleanup — typically job timeout</td><td class="good">Normal; verify job scheduler timeout settings</td></tr>
+<tr><td><code>XID 31</code></td><td>GPU memory page fault (driver bug or OOM)</td><td class="warn">Check for OOM in application logs; may indicate memory leak</td></tr>
+</table>
+
+<div class="callout red">
+<strong>Silent Corruption Risk: XID 74</strong>
+NVLink errors (XID 74) are particularly dangerous in tensor-parallel training. A partial NVLink failure can deliver wrong values silently — AllReduce succeeds but accumulates incorrect gradients. Training loss will appear to converge but the model will be corrupt. Any XID 74 on a TP training job requires immediate job restart and a 30-minute NVLink bandwidth test before resuming.
+</div>
+
+<h3>17.2.3 DCGM Deployment and Configuration</h3>
+
+<div class="formula">
+<span class="cm"># ── Kubernetes DaemonSet (recommended for container clusters) ────────────────</span>
+<span class="str">apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: dcgm-exporter
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: dcgm-exporter
+  template:
+    spec:
+      nodeSelector:
+        nvidia.com/gpu: "true"
+      containers:
+      - name: dcgm-exporter
+        image: nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5
+        ports:
+        - containerPort: 9400   </span><span class="cm"># Prometheus scrapes this port</span>
+
+<span class="cm"># ── Bare-metal (SLURM clusters) ──────────────────────────────────────────────</span>
+dcgmi discovery -l                     <span class="cm"># List all GPUs</span>
+dcgmi diag -r 1                        <span class="cm"># Quick health check (30 sec)</span>
+dcgmi diag -r 3                        <span class="cm"># Full validation (20 min, pre-job)</span>
+dcgm-exporter --address :9400 &amp;        <span class="cm"># Start Prometheus exporter</span>
+nv-hostengine &amp;                        <span class="cm"># Required background daemon</span>
+
+<span class="cm"># ── Verify DCGM is collecting ──────────────────────────────────────────────</span>
+curl http://localhost:9400/metrics | grep DCGM_FI_DEV_GPU_UTIL
+<span class="cm"># Should return: DCGM_FI_DEV_GPU_UTIL{gpu="0",UUID="GPU-..."} 87</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     DIAGRAM: DCGM → PROMETHEUS → GRAFANA PIPELINE
+════════════════════════════════════════════════════ -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 740 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" style="max-width:100%;border-radius:8px">
+<rect width="740" height="300" fill="#1c2438" rx="8"/>
+<text x="370" y="24" text-anchor="middle" font-size="11" font-weight="700" fill="#e3b341" letter-spacing="1">DCGM → Prometheus → Grafana Pipeline</text>
+
+<!-- GPU Nodes box -->
+<rect x="20" y="40" width="160" height="220" rx="6" fill="#0d1520" stroke="#e3b341" stroke-width="1.5"/>
+<text x="100" y="60" text-anchor="middle" font-size="9" font-weight="700" fill="#e3b341">GPU NODES (×N)</text>
+<!-- Node contents -->
+<rect x="30" y="68" width="140" height="32" rx="3" fill="#1c2438"/>
+<text x="100" y="82" text-anchor="middle" font-size="8" fill="#ffd700">GPU 0..7 Hardware</text>
+<text x="100" y="93" text-anchor="middle" font-size="7.5" fill="#aaa">Silicon counters @ 1Hz</text>
+<rect x="30" y="106" width="140" height="32" rx="3" fill="#1c2438"/>
+<text x="100" y="120" text-anchor="middle" font-size="8" fill="#79c0ff">DCGM Daemon</text>
+<text x="100" y="131" text-anchor="middle" font-size="7.5" fill="#aaa">nv-hostengine</text>
+<rect x="30" y="144" width="140" height="32" rx="3" fill="#1c2438"/>
+<text x="100" y="158" text-anchor="middle" font-size="8" fill="#7ec8a0">dcgm-exporter</text>
+<text x="100" y="169" text-anchor="middle" font-size="7.5" fill="#aaa">:9400/metrics</text>
+<rect x="30" y="182" width="140" height="32" rx="3" fill="#1c2438"/>
+<text x="100" y="196" text-anchor="middle" font-size="8" fill="#bc8cff">node-exporter</text>
+<text x="100" y="207" text-anchor="middle" font-size="7.5" fill="#aaa">:9100/metrics</text>
+<rect x="30" y="220" width="140" height="32" rx="3" fill="#1c2438"/>
+<text x="100" y="234" text-anchor="middle" font-size="8" fill="#f78166">app metrics</text>
+<text x="100" y="245" text-anchor="middle" font-size="7.5" fill="#aaa">vLLM :8000 / custom :8001</text>
+
+<!-- Arrow 1 -->
+<line x1="180" y1="150" x2="220" y2="150" stroke="#e3b341" stroke-width="2" marker-end="url(#arr)"/>
+<text x="200" y="143" text-anchor="middle" font-size="7.5" fill="#aaa">scrape</text>
+<text x="200" y="162" text-anchor="middle" font-size="7.5" fill="#aaa">15s</text>
+
+<!-- Prometheus -->
+<rect x="220" y="50" width="170" height="200" rx="6" fill="#0d1520" stroke="#79c0ff" stroke-width="1.5"/>
+<text x="305" y="70" text-anchor="middle" font-size="9" font-weight="700" fill="#79c0ff">PROMETHEUS SERVER</text>
+<rect x="230" y="78" width="150" height="26" rx="3" fill="#1c2438"/>
+<text x="305" y="91" text-anchor="middle" font-size="8" fill="#eee">prometheus.yml</text>
+<text x="305" y="100" text-anchor="middle" font-size="7.5" fill="#aaa">scrape_interval: 15s</text>
+<rect x="230" y="110" width="150" height="26" rx="3" fill="#1c2438"/>
+<text x="305" y="124" text-anchor="middle" font-size="8" fill="#eee">TSDB Storage</text>
+<text x="305" y="133" text-anchor="middle" font-size="7.5" fill="#aaa">30d local / 1yr Thanos</text>
+<rect x="230" y="142" width="150" height="26" rx="3" fill="#1c2438"/>
+<text x="305" y="156" text-anchor="middle" font-size="8" fill="#ffd700">Alert Rules</text>
+<text x="305" y="165" text-anchor="middle" font-size="7.5" fill="#aaa">gpu_alerts.yml</text>
+<rect x="230" y="174" width="150" height="26" rx="3" fill="#1c2438"/>
+<text x="305" y="188" text-anchor="middle" font-size="8" fill="#eee">PromQL Engine</text>
+<text x="305" y="197" text-anchor="middle" font-size="7.5" fill="#aaa">recording rules, queries</text>
+<rect x="230" y="206" width="150" height="36" rx="3" fill="#1a0f0f"/>
+<text x="305" y="220" text-anchor="middle" font-size="8" fill="#f78166">Alertmanager</text>
+<text x="305" y="230" text-anchor="middle" font-size="7.5" fill="#aaa">→ PagerDuty</text>
+<text x="305" y="240" text-anchor="middle" font-size="7.5" fill="#aaa">→ Slack #gpu-alerts</text>
+
+<!-- Arrow 2 -->
+<line x1="390" y1="150" x2="430" y2="150" stroke="#e3b341" stroke-width="2" marker-end="url(#arr)"/>
+<text x="410" y="143" text-anchor="middle" font-size="7.5" fill="#aaa">PromQL</text>
+
+<!-- Grafana -->
+<rect x="430" y="50" width="150" height="200" rx="6" fill="#0d1520" stroke="#f78166" stroke-width="1.5"/>
+<text x="505" y="70" text-anchor="middle" font-size="9" font-weight="700" fill="#f78166">GRAFANA</text>
+<rect x="440" y="78" width="130" height="22" rx="3" fill="#1c2438"/>
+<text x="505" y="92" text-anchor="middle" font-size="8" fill="#eee">Fleet Health Heatmap</text>
+<rect x="440" y="106" width="130" height="22" rx="3" fill="#1c2438"/>
+<text x="505" y="120" text-anchor="middle" font-size="8" fill="#eee">Inference SLA Dashboard</text>
+<rect x="440" y="134" width="130" height="22" rx="3" fill="#1c2438"/>
+<text x="505" y="148" text-anchor="middle" font-size="8" fill="#eee">Training MFU Trends</text>
+<rect x="440" y="162" width="130" height="22" rx="3" fill="#1c2438"/>
+<text x="505" y="176" text-anchor="middle" font-size="8" fill="#eee">Hardware Health Map</text>
+<rect x="440" y="190" width="130" height="22" rx="3" fill="#1c2438"/>
+<text x="505" y="204" text-anchor="middle" font-size="8" fill="#eee">ECC / XID Tracker</text>
+<rect x="440" y="218" width="130" height="24" rx="3" fill="#1c2438"/>
+<text x="505" y="234" text-anchor="middle" font-size="8" fill="#bc8cff">Thanos Long-term</text>
+
+<!-- Thanos -->
+<rect x="600" y="90" width="120" height="70" rx="6" fill="#0d1520" stroke="#bc8cff" stroke-width="1"/>
+<text x="660" y="110" text-anchor="middle" font-size="9" font-weight="700" fill="#bc8cff">THANOS</text>
+<text x="660" y="124" text-anchor="middle" font-size="7.5" fill="#aaa">&gt;50K metrics/s</text>
+<text x="660" y="136" text-anchor="middle" font-size="7.5" fill="#aaa">Remote write</text>
+<text x="660" y="148" text-anchor="middle" font-size="7.5" fill="#aaa">S3/GCS backend</text>
+<line x1="580" y1="150" x2="600" y2="140" stroke="#bc8cff" stroke-width="1" stroke-dasharray="3,3"/>
+
+<!-- Arrow marker -->
+<defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#e3b341"/></marker></defs>
+</svg>
+<figcaption>Figure 17.2 — DCGM → Prometheus → Grafana data flow. Every GPU node runs DCGM daemon + dcgm-exporter. Prometheus scrapes all exporters every 15 seconds. For clusters &gt;10K GPUs, Thanos handles remote write and long-term storage.</figcaption>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     17.3 KERNEL LAYER — NSIGHT
+════════════════════════════════════════════════════ -->
+<h2 id="s17-3" class="section-anchor">17.3 Kernel Layer — Nsight Compute &amp; Nsight Systems</h2>
+
+<p>When DCGM tells you something is wrong (e.g., Tensor Core utilization dropped from 68% to 41%), Nsight tools answer the follow-up question: <em>exactly which kernel, and why?</em> NVIDIA provides two complementary tools with fundamentally different purposes that engineers routinely confuse:</p>
+
+<table>
+<tr><th>Tool</th><th>Question Answered</th><th>Granularity</th><th>Overhead</th><th>Use Case</th></tr>
+<tr><td><strong>Nsight Systems (nsys)</strong></td><td>"Where is time going in my pipeline?"</td><td>Timeline: CPU+GPU+NCCL</td><td>2–5% (safe for most workloads)</td><td>Step decomposition, overlap gaps, CPU stalls</td></tr>
+<tr><td><strong>Nsight Compute (ncu)</strong></td><td>"Why is this specific kernel slow?"</td><td>Per-kernel hardware counters</td><td>3–10× slowdown</td><td>Roofline analysis, occupancy, memory efficiency</td></tr>
+</table>
+
+<h3>17.3.1 Nsight Systems — Timeline Profiling</h3>
+
+<div class="formula">
+<span class="cm"># ── Basic timeline profile ───────────────────────────────────────────────────</span>
+nsys profile     --trace=cuda,nvtx,nccl,osrt \  <span class="cm"># CUDA + annotations + NCCL + OS runtime</span>
+    --sample=cpu \                  <span class="cm"># Host-side CPU sampling</span>
+    --output=profile_%p \           <span class="cm"># profile_&lt;pid&gt;.nsys-rep</span>
+    --stats=true     python train.py --steps 15
+
+<span class="cm"># ── NVTX annotations (add to training loop) ────────────────────────────────</span>
+<span class="kw">import</span> torch
+<span class="kw">for</span> step, batch <span class="kw">in</span> enumerate(dataloader):
+    <span class="kw">with</span> torch.cuda.nvtx.range(<span class="str">"DataLoading"</span>): data = prepare_batch(batch)
+    <span class="kw">with</span> torch.cuda.nvtx.range(<span class="str">"Forward"</span>):
+        <span class="kw">with</span> torch.cuda.nvtx.range(<span class="str">"Attention"</span>): attn = attention(data)
+        <span class="kw">with</span> torch.cuda.nvtx.range(<span class="str">"FFN"</span>):      ffn  = ffn(attn)
+        loss = criterion(ffn, targets)
+    <span class="kw">with</span> torch.cuda.nvtx.range(<span class="str">"Backward"</span>):  loss.backward()
+    <span class="kw">with</span> torch.cuda.nvtx.range(<span class="str">"AllReduce"</span>):  optimizer.step()
+
+<span class="cm"># ── Reading the stats summary (--stats=true output) ───────────────────────</span>
+<span class="cm"># CUDA Kernel Summary:</span>
+<span class="cm">#   volta_s884gemm_128x128_ldg8_f2f_tn  48.2%   ← dominant: GEMM kernel OK</span>
+<span class="cm">#   ncclAllReduceRingLLKernel            31.1%   ← AllReduce: ~1/3 of step time</span>
+<span class="cm">#   void at::native::elementwise_kernel   8.4%   ← scalar elementwise: investigate</span>
+</div>
+
+<h3>17.3.2 Nsight Systems Timeline — What to Look For</h3>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 720 290" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" style="max-width:100%;border-radius:8px">
+<rect width="720" height="290" fill="#0d1117" rx="8"/>
+<text x="360" y="22" text-anchor="middle" font-size="11" font-weight="700" fill="#e3b341">Nsight Systems Timeline — Good vs. Problematic Pattern</text>
+
+<!-- Labels col -->
+<text x="8" y="58" font-size="9" fill="#8b949e">CUDA API</text>
+<text x="8" y="98" font-size="9" fill="#8b949e">GPU Stream</text>
+<text x="8" y="138" font-size="9" fill="#8b949e">NCCL</text>
+<text x="8" y="178" font-size="9" fill="#8b949e">NVTX</text>
+<text x="8" y="218" font-size="9" fill="#8b949e">CPU util</text>
+
+<!-- GOOD side label -->
+<text x="185" y="38" text-anchor="middle" font-size="9" font-weight="700" fill="#3fb950">← GOOD PATTERN</text>
+<!-- BAD side label -->
+<text x="520" y="38" text-anchor="middle" font-size="9" font-weight="700" fill="#ff6e6e">BAD PATTERN →</text>
+
+<!-- divider -->
+<line x1="360" y1="40" x2="360" y2="260" stroke="#30363d" stroke-width="1" stroke-dasharray="4,4"/>
+
+<!-- GOOD CUDA API row -->
+<rect x="75" y="44" width="270" height="22" rx="2" fill="#1c2128"/>
+<rect x="75" y="44" width="35" height="22" rx="1" fill="#58a6ff" opacity=".7"/>
+<rect x="113" y="44" width="35" height="22" rx="1" fill="#58a6ff" opacity=".7"/>
+<rect x="151" y="44" width="35" height="22" rx="1" fill="#58a6ff" opacity=".7"/>
+<rect x="189" y="44" width="35" height="22" rx="1" fill="#58a6ff" opacity=".7"/>
+<rect x="227" y="44" width="35" height="22" rx="1" fill="#58a6ff" opacity=".7"/>
+<rect x="265" y="44" width="35" height="22" rx="1" fill="#58a6ff" opacity=".7"/>
+<text x="186" y="60" text-anchor="middle" font-size="7.5" fill="#aaa">Dense launches — no gaps</text>
+
+<!-- GOOD GPU row -->
+<rect x="75" y="82" width="270" height="22" rx="2" fill="#1c2128"/>
+<rect x="75" y="82" width="60" height="22" rx="1" fill="#3fb950" opacity=".8"/>
+<rect x="137" y="82" width="80" height="22" rx="1" fill="#bc8cff" opacity=".8"/>
+<rect x="219" y="82" width="60" height="22" rx="1" fill="#3fb950" opacity=".8"/>
+<rect x="281" y="82" width="64" height="22" rx="1" fill="#bc8cff" opacity=".8"/>
+<text x="186" y="118" text-anchor="middle" font-size="7.5" fill="#3fb950">Kernels back-to-back</text>
+
+<!-- GOOD NCCL -->
+<rect x="75" y="122" width="270" height="22" rx="2" fill="#1c2128"/>
+<rect x="137" y="122" width="80" height="22" rx="1" fill="#d29922" opacity=".8"/>
+<rect x="281" y="122" width="64" height="22" rx="1" fill="#d29922" opacity=".8"/>
+<text x="186" y="158" text-anchor="middle" font-size="7.5" fill="#d29922">NCCL overlaps next GEMM</text>
+
+<!-- GOOD NVTX -->
+<rect x="75" y="162" width="270" height="22" rx="2" fill="#1c2128"/>
+<rect x="75" y="162" width="136" height="22" rx="1" fill="#1e3a5f" stroke="#58a6ff" stroke-width=".5"/>
+<text x="143" y="176" text-anchor="middle" font-size="8" fill="#79c0ff">Forward</text>
+<rect x="213" y="162" width="132" height="22" rx="1" fill="#1e3a5f" stroke="#58a6ff" stroke-width=".5"/>
+<text x="279" y="176" text-anchor="middle" font-size="8" fill="#79c0ff">Backward + AllReduce</text>
+
+<!-- BAD CUDA API row -->
+<rect x="370" y="44" width="340" height="22" rx="2" fill="#1c2128"/>
+<rect x="370" y="44" width="30" height="22" rx="1" fill="#58a6ff" opacity=".7"/>
+<rect x="420" y="44" width="30" height="22" rx="1" fill="#58a6ff" opacity=".7"/>
+<rect x="475" y="44" width="30" height="22" rx="1" fill="#58a6ff" opacity=".7"/>
+<rect x="525" y="44" width="30" height="22" rx="1" fill="#58a6ff" opacity=".7"/>
+<rect x="580" y="44" width="30" height="22" rx="1" fill="#58a6ff" opacity=".7"/>
+<rect x="630" y="44" width="30" height="22" rx="1" fill="#58a6ff" opacity=".7"/>
+<!-- gaps shown as red markers -->
+<rect x="400" y="47" width="20" height="16" rx="1" fill="#ff6e6e" opacity=".4"/>
+<rect x="450" y="47" width="25" height="16" rx="1" fill="#ff6e6e" opacity=".4"/>
+<rect x="505" y="47" width="20" height="16" rx="1" fill="#ff6e6e" opacity=".4"/>
+<text x="520" y="60" text-anchor="middle" font-size="7.5" fill="#ff6e6e">CPU overhead gaps</text>
+
+<!-- BAD GPU row -->
+<rect x="370" y="82" width="340" height="22" rx="2" fill="#1c2128"/>
+<rect x="370" y="82" width="40" height="22" rx="1" fill="#3fb950" opacity=".8"/>
+<rect x="420" y="82" width="40" height="22" rx="1" fill="#3fb950" opacity=".8"/>
+<rect x="470" y="82" width="40" height="22" rx="1" fill="#3fb950" opacity=".8"/>
+<rect x="520" y="82" width="40" height="22" rx="1" fill="#3fb950" opacity=".8"/>
+<rect x="570" y="82" width="40" height="22" rx="1" fill="#3fb950" opacity=".8"/>
+<rect x="620" y="82" width="40" height="22" rx="1" fill="#3fb950" opacity=".8"/>
+<!-- GPU idle gaps -->
+<rect x="410" y="85" width="10" height="16" rx="1" fill="#ff6e6e" opacity=".5"/>
+<rect x="460" y="85" width="10" height="16" rx="1" fill="#ff6e6e" opacity=".5"/>
+<rect x="510" y="85" width="10" height="16" rx="1" fill="#ff6e6e" opacity=".5"/>
+<rect x="560" y="85" width="10" height="16" rx="1" fill="#ff6e6e" opacity=".5"/>
+<rect x="610" y="85" width="10" height="16" rx="1" fill="#ff6e6e" opacity=".5"/>
+<text x="520" y="118" text-anchor="middle" font-size="7.5" fill="#ff6e6e">GPU idle between kernels</text>
+
+<!-- Legend -->
+<rect x="30" y="258" width="12" height="8" fill="#3fb950"/>
+<text x="46" y="266" font-size="8" fill="#aaa">GEMM/Compute</text>
+<rect x="130" y="258" width="12" height="8" fill="#bc8cff"/>
+<text x="146" y="266" font-size="8" fill="#aaa">Attention</text>
+<rect x="220" y="258" width="12" height="8" fill="#d29922"/>
+<text x="236" y="266" font-size="8" fill="#aaa">NCCL AllReduce</text>
+<rect x="340" y="258" width="12" height="8" fill="#ff6e6e" opacity=".6"/>
+<text x="356" y="266" font-size="8" fill="#ff6e6e">Idle/Stall</text>
+</svg>
+<figcaption>Figure 17.3 — Nsight Systems timeline patterns. Left (good): dense kernel launches, NCCL overlapping with compute, no GPU idle gaps. Right (bad): CPU launch overhead creates idle gaps between GPU kernels — the GPU is stalling waiting for the host to issue the next kernel.</figcaption>
+</div>
+
+<h3>17.3.3 Nsight Compute — Kernel-Level Analysis</h3>
+
+<div class="formula">
+<span class="cm"># ── Profile a specific kernel ──────────────────────────────────────────────</span>
+ncu     --kernel-name <span class="str">"flash_attention_fwd"</span>     --launch-skip 5 \              <span class="cm"># Skip 5 warmup launches</span>
+    --launch-count 3 \             <span class="cm"># Profile 3 launches</span>
+    --set full     --section SpeedOfLight_RooflineChart     --section MemoryWorkloadAnalysis     -o attention_kernel     python infer.py
+
+<span class="cm"># ── Key metrics to check in the output ────────────────────────────────────</span>
+<span class="cm"># sm__throughput.avg.pct_of_peak_sustained_elapsed    → SM throughput %</span>
+<span class="cm"># l1tex__t_bytes_pipe_lsu_mem_global_op_ld.avg        → L1 load bytes</span>
+<span class="cm"># dram__bytes_read.avg                               → HBM read bytes</span>
+<span class="cm"># sm__pipe_tensor_cycles_active.avg                  → TC cycles active</span>
+
+<span class="cm"># ── Roofline interpretation ────────────────────────────────────────────────</span>
+<span class="cm"># Compute-bound kernel (AI &gt; ridge_point ~295 FLOP/byte on H100):</span>
+<span class="cm">#   → Optimize for throughput: increase batch size, tile sizes</span>
+<span class="cm">#   → Check TC utilization: if low, verify BF16 dtype and tensor dimensions</span>
+<span class="cm">#</span>
+<span class="cm"># Memory-bound kernel (AI &lt; ridge_point):</span>
+<span class="cm">#   → Optimize for BW: reduce HBM traffic (fusion, quantization)</span>
+<span class="cm">#   → Increase arithmetic intensity: fuse elementwise ops into GEMM epilogue</span>
+
+<span class="cm"># ── Compare profiles (regression detection) ──────────────────────────────</span>
+ncu-ui --diff baseline.ncu-rep current.ncu-rep
+<span class="cm"># Red lines = regressions, Green lines = improvements</span>
+</div>
+
+<!-- ===============================================================
+     17.4 FRAMEWORK LAYER — PYTORCH PROFILER
+================================================================ -->
+<h2 id="s17-4" class="section-anchor">17.4 Framework Layer — PyTorch Profiler &amp; WandB</h2>
+
+<p>The framework layer sits between kernel-level profiling and system-level monitoring. PyTorch Profiler captures operator-level timing—<em>which PyTorch operations took how long, on which device</em>—without the physical kernel counter overhead of Nsight Compute. It is the right tool when you know a training step is slow but don't yet know whether the bottleneck is a specific operator, data loading, or gradient synchronization.</p>
+
+<h3>17.4.1 PyTorch Profiler — Production Usage</h3>
+
+<div class="formula">
+import torch
+from torch.profiler import profile, ProfilerActivity, schedule, tensorboard_trace_handler
+
+<span class="cm"># ── Recommended production pattern: skip warmup, profile specific steps ──</span>
+prof_schedule = schedule(
+    wait=2,        <span class="cm"># Skip first 2 steps (warmup)</span>
+    warmup=1,      <span class="cm"># 1 step profiler warmup</span>
+    active=3,      <span class="cm"># Profile 3 steps</span>
+    repeat=1
+)
+
+with profile(
+    activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+    schedule=prof_schedule,
+    on_trace_ready=tensorboard_trace_handler('./prof_logs'),
+    record_shapes=True,      <span class="cm"># Shape info for each op (adds ~5% overhead)</span>
+    with_stack=True,         <span class="cm"># Python call stack (adds ~15% overhead)</span>
+    with_flops=True,         <span class="cm"># Estimated FLOPS per op</span>
+    profile_memory=True,     <span class="cm"># Memory allocation tracking</span>
+) as prof:
+    for step, batch in enumerate(dataloader):
+        loss = model(batch)
+        loss.backward()
+        optimizer.step()
+        prof.step()          <span class="cm"># Required: advance profiler state</span>
+
+<span class="cm"># ── Print summary ───────────────────────────────────────────────────────</span>
+print(prof.key_averages().table(
+    sort_by="cuda_time_total",  <span class="cm"># Sort by GPU time</span>
+    row_limit=20
+))
+<span class="cm"># Output format:</span>
+<span class="cm"># Name                         CPU%   CUDA%    #Calls   FLOPS</span>
+<span class="cm"># aten::mm                     1.2%   38.4%    2048     ---</span>
+<span class="cm"># aten::scaled_dot_product...  0.8%   21.2%    512      ---</span>
+<span class="cm"># nccl:all_reduce              0.1%   18.6%    128      ---</span>
+<span class="cm"># aten::layer_norm             0.4%   4.1%     2048     ---</span>
+<span class="cm"># ProfilerStep*                99.5%  100.0%   1        ---  &lt;-- total</span>
+</div>
+
+<div class="callout">
+<strong>What to Look For in Profiler Output</strong>
+If <code>nccl:all_reduce</code> exceeds 20% of CUDA time, you are communication-bottlenecked (check Ch14 for AllReduce optimization). If <code>aten::copy_</code> or <code>aten::to</code> operations appear in top-10, you have unexpected host-device transfers. If a non-GEMM elementwise op exceeds 5%, consider fusing it into an adjacent kernel with torch.compile.
+</div>
+
+<h3>17.4.2 WandB and Experiment Tracking</h3>
+<p>WandB (Weights &amp; Biases) serves a different purpose from PyTorch Profiler: it tracks <em>experiment-level</em> metrics over the course of a full training run, not step-level internals. The right configuration emits both ML metrics (loss, perplexity, gradient norm) and infrastructure metrics (step time, MFU, GPU memory) to enable correlation during post-run analysis.</p>
+
+<div class="formula">
+import wandb, time, torch
+
+<span class="cm"># ── Initialize with infrastructure-aware tags ──────────────────────────</span>
+wandb.init(
+    project="llama3-70b-pretrain",
+    config={"model": "llama3-70b", "tp": 4, "pp": 1, "dp": 8,
+            "batch_size": 2048, "seq_len": 4096, "dtype": "bf16"},
+    tags=["h100", "tp4", "bf16"]
+)
+
+<span class="cm"># ── Per-step logging (log every 10 steps to avoid Prometheus overhead) ───</span>
+for step, batch in enumerate(train_loop):
+    t0 = time.perf_counter()
+    loss = train_step(batch)
+    step_time = time.perf_counter() - t0
+
+    tokens_per_sec = tokens_in_batch / step_time
+    model_flops = compute_model_flops(batch)           <span class="cm"># from model config</span>
+    peak_flops = 989e12 * num_gpus                     <span class="cm"># H100 SXM BF16 TFLOPS</span>
+    mfu = model_flops / (peak_flops * step_time)
+
+    if step % 10 == 0:
+        wandb.log({
+            "train/loss":       loss.item(),
+            "train/step_time":  step_time,
+            "train/tokens_sec": tokens_per_sec,
+            "train/mfu":        mfu,
+            "train/grad_norm":  grad_norm,
+            "hw/gpu_mem_used":  torch.cuda.memory_allocated() / 1e9,
+            "hw/gpu_mem_peak":  torch.cuda.max_memory_allocated() / 1e9,
+        }, step=step)
+</div>
+
+<!-- ===============================================================
+     17.5 SYSTEM LAYER — PROMETHEUS
+================================================================ -->
+<h2 id="s17-5" class="section-anchor">17.5 System Layer — Prometheus Configuration</h2>
+
+<p>Prometheus is a pull-based time-series database. Every 15 seconds, its scrape engine sends HTTP GET requests to each registered exporter endpoint, parses the metrics text format, and stores samples in its local TSDB. Understanding its data model and configuration options is essential for running it at AI cluster scale.</p>
+
+<h3>17.5.1 Complete prometheus.yml for AI Clusters</h3>
+
+<div class="formula">
+<span class="cm"># prometheus.yml — Production configuration for 1,000-GPU AI cluster</span>
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'gpu-cluster-prod'
+    region:  'us-east-1'
+
+scrape_configs:
+  <span class="cm"># GPU metrics via dcgm-exporter on every GPU node</span>
+  - job_name: 'dcgm'
+    file_sd_configs:                  <span class="cm"># file-based service discovery</span>
+      - files: ['/etc/prometheus/gpu_nodes.json']
+        refresh_interval: 60s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - target_label: __metrics_path__
+        replacement: /metrics
+
+  <span class="cm"># OS-level (CPU, RAM, NIC, storage)</span>
+  - job_name: 'node'
+    file_sd_configs:
+      - files: ['/etc/prometheus/all_nodes.json']
+
+  <span class="cm"># vLLM inference server metrics</span>
+  - job_name: 'vllm'
+    static_configs:
+      - targets: ['inference-01:8000', 'inference-02:8000']
+    metrics_path: '/metrics'
+
+  <span class="cm"># SLURM scheduler metrics</span>
+  - job_name: 'slurm'
+    static_configs:
+      - targets: ['slurm-head:9341']
+
+rule_files:
+  - "gpu_alerts.yml"
+  - "recording_rules.yml"
+
+storage:
+  tsdb:
+    retention.time: 30d
+    retention.size: 500GB
+
+remote_write:
+  <span class="cm"># For fleets &gt;10K GPUs: write to Thanos for long-term storage</span>
+  - url: "http://thanos-receive:10908/api/v1/receive"
+    queue_config:
+      max_samples_per_send: 5000
+      batch_send_deadline: 5s
+</div>
+
+<h3>17.5.2 Production Alert Rules</h3>
+
+<div class="formula">
+<span class="cm"># gpu_alerts.yml — Production-validated alert rules</span>
+groups:
+  - name: gpu_critical
+    rules:
+      <span class="cm"># DBE = uncorrectable: immediate GPU quarantine</span>
+      - alert: GPUDoubleBitECC
+        expr: increase(DCGM_FI_DEV_ECC_DBE_VOL_TOTAL[1m]) > 0
+        for: 0m           <span class="cm"># Fire immediately — no tolerance</span>
+        labels:
+          severity: critical
+        annotations:
+          summary: "UNCORRECTABLE ECC error on {{ $labels.gpu_uuid }}"
+          runbook: "Quarantine immediately. Job evacuation required."
+
+      <span class="cm"># Thermal throttle prevention: alert before threshold, not after</span>
+      - alert: GPUHighTemperature
+        expr: DCGM_FI_DEV_GPU_TEMP > 82
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "GPU {{ $labels.gpu_uuid }} at {{ $value }}°C (throttle at 83°C)"
+
+      <span class="cm"># MFU regression detection: &gt;10% sustained drop</span>
+      - alert: TrainingMFURegression
+        expr: |
+          (avg_over_time(training_mfu[5m]) 
+           < 0.9 * avg_over_time(training_mfu[30m] offset 1h))
+           and avg_over_time(training_mfu[30m] offset 1h) > 0.4
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Training MFU dropped >10% on job {{ $labels.job_id }}"
+
+      <span class="cm"># KV cache pressure: inference SLA risk</span>
+      - alert: KVCachePressure
+        expr: vllm:gpu_cache_usage_perc > 0.92
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "KV cache at {{ $value | humanizePercentage }} — preemption risk"
+
+      <span class="cm"># SBE rate: early hardware failure warning</span>
+      - alert: GPUSingleBitECCRate
+        expr: rate(DCGM_FI_DEV_ECC_SBE_VOL_TOTAL[1h]) > 1
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "GPU {{ $labels.Hostname }} showing >1 SBE/hour — schedule replacement"
+</div>
+
+<h3>17.5.3 Key PromQL Queries for AI Infrastructure</h3>
+
+<div class="formula">
+<span class="cm"># ── Fleet-wide Tensor Core utilization ──────────────────────────────────</span>
+avg(DCGM_FI_PROF_PIPE_TENSOR_ACTIVE) by (job_id)
+
+<span class="cm"># ── GPU straggler detection: any GPU &gt;20pp below its node average ───────</span>
+(DCGM_FI_DEV_GPU_UTIL - avg by (Hostname)(DCGM_FI_DEV_GPU_UTIL)) < -20
+
+<span class="cm"># ── TTFT P99 for inference SLA tracking ─────────────────────────────────</span>
+histogram_quantile(0.99,
+  rate(vllm:time_to_first_token_seconds_bucket[5m]))
+
+<span class="cm"># ── Inference decode throughput (tokens/sec fleet-wide) ─────────────────</span>
+sum(rate(vllm:request_generation_tokens_sum[1m]))
+
+<span class="cm"># ── GPUs in thermal throttle state ──────────────────────────────────────</span>
+count(DCGM_FI_DEV_GPU_TEMP > 80) by (cluster)
+
+<span class="cm"># ── NVLink utilization fraction (saturated = good in AllReduce) ─────────</span>
+(DCGM_FI_PROF_NVLINK_TX_BYTES + DCGM_FI_PROF_NVLINK_RX_BYTES) / 900e9
+</div>
+
+<!-- ===============================================================
+     17.6 SERVICE LAYER — SLA METRICS
+================================================================ -->
+<h2 id="s17-6" class="section-anchor">17.6 Service Layer — TTFT, TPOT, and SLA Monitoring</h2>
+
+<p>For inference systems, hardware utilization is a means to an end. The end is serving user requests within a Service Level Objective (SLO): TTFT P99 under 500ms, TPOT P50 under 30ms, availability 99.9%. The service layer tracks these end-user-visible metrics and connects them to the infrastructure layer so you know whether a TTFT violation is caused by GPU compute saturation, KV cache eviction, or request queuing.</p>
+
+<h3>17.6.1 Critical vLLM Metrics</h3>
+
+<table>
+<tr><th>Metric</th><th>Type</th><th>Healthy Range</th><th>When Degraded</th></tr>
+<tr><td><code>vllm:gpu_cache_usage_perc</code></td><td>Gauge</td><td>&lt;0.85</td><td>&gt;0.92: preemption risk; swap begins; TTFT spikes</td></tr>
+<tr><td><code>vllm:num_requests_running</code></td><td>Gauge</td><td>&lt;max_batch</td><td>= max_batch saturated: queuing begins</td></tr>
+<tr><td><code>vllm:num_requests_waiting</code></td><td>Gauge</td><td>&lt;10</td><td>&gt;50: queue building; p99 TTFT will exceed SLO</td></tr>
+<tr><td><code>vllm:time_to_first_token_seconds</code></td><td>Histogram</td><td>P99 &lt; SLO</td><td>P99 spike: compute contention, KV swap, or prefill queue</td></tr>
+<tr><td><code>vllm:time_per_output_token_seconds</code></td><td>Histogram</td><td>P50 &lt; 30ms</td><td>P50 rise: decode batching suboptimal or HBM BW saturation</td></tr>
+<tr><td><code>vllm:spec_decode_draft_acceptance_rate</code></td><td>Gauge</td><td>&gt;0.60</td><td>&lt;0.45: disable speculative decoding; overhead exceeds benefit</td></tr>
+</table>
+
+<div class="callout blue">
+<strong>KV Cache Occupancy: The #1 Inference Operations Metric</strong>
+<code>vllm:gpu_cache_usage_perc</code> is the single most actionable inference metric. When it crosses 85%, preemption becomes likely. When it crosses 92%, GPU-to-CPU KV swap begins — adding 400–800ms of HBM→PCIe→CPU latency per evicted sequence. Alert at 85% to give operators time to respond; alert critical at 92% to trigger auto-scaling. (See Chapter 11 for KV cache management architecture.)
+</div>
+<!-- ===============================================================
+     17.7 FLEET LAYER — GRAFANA DASHBOARDS
+================================================================ -->
+<h2 id="s17-7" class="section-anchor">17.7 Fleet Layer — Grafana Dashboard Design</h2>
+
+<p>Grafana translates Prometheus time-series data into human-readable dashboards. The design of these dashboards is as important as the metrics themselves: a poorly designed dashboard will be ignored; a well-designed one catches problems in 30 seconds. For AI clusters, four dashboards cover 95% of daily operational needs.</p>
+
+<h3>17.7.1 The Four Essential AI Cluster Dashboards</h3>
+
+<table>
+<tr><th>Dashboard</th><th>Primary Metric</th><th>Key Panel Types</th><th>Alert Integration</th></tr>
+<tr><td><strong>Fleet Health Heatmap</strong></td><td>SM utilization per GPU</td><td>Heatmap (hostname × time), stat panels</td><td>Green &gt;70%, yellow 40-70%, red &lt;40%</td></tr>
+<tr><td><strong>Inference SLA</strong></td><td>TTFT P50/P99, KV cache %</td><td>Time series, gauge, histogram panels</td><td>Annotation when SLO fires</td></tr>
+<tr><td><strong>Training MFU Tracker</strong></td><td>MFU per job</td><td>Time series with expected baseline band</td><td>Red fill when MFU &gt;10% below baseline</td></tr>
+<tr><td><strong>Hardware Health</strong></td><td>Temp, ECC, power</td><td>Temperature heatmap, ECC error table</td><td>Red row = GPU needing replacement</td></tr>
+</table>
+
+<div class="callout green">
+<strong>Principal Tip: Recording Rules Are Mandatory at Scale</strong>
+At 1,000 GPUs x 15s scrape x 10 metrics = 667 data points/second. A 24h Grafana query at 15s resolution must process 5.7M points per panel and will time out. Recording rules pre-aggregate to 60s, reducing query load 4x. At 10,000 GPUs with Thanos, recording rules are non-negotiable.
+</div>
+
+<!-- ===============================================================
+     17.8 AMD TOOLCHAIN
+================================================================ -->
+<h2 id="s17-8" class="section-anchor">17.8 AMD Toolchain — omniperf, ROCprofiler, AMDSMI</h2>
+
+<p>AMD GPU clusters (MI300X, MI355X) require a different toolchain but the <em>same conceptual layers</em>. The mapping is direct: DCGM maps to AMDSMI, Nsight Systems maps to ROCprofiler-systems, Nsight Compute maps to omniperf. Framework and fleet layers (PyTorch Profiler, Prometheus, Grafana) are vendor-neutral on both platforms.</p>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 720 280" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" style="max-width:100%;border-radius:8px">
+<rect width="720" height="280" fill="#f3f5f8" rx="8"/>
+<text x="360" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#1c2438">NVIDIA vs AMD Tool Equivalents by Layer</text>
+<rect x="20" y="34" width="100" height="24" rx="3" fill="#1c2438"/>
+<text x="70" y="50" text-anchor="middle" font-size="9" font-weight="700" fill="#e3b341">LAYER</text>
+<rect x="130" y="34" width="265" height="24" rx="3" fill="#76b900" opacity=".9"/>
+<text x="262" y="50" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">NVIDIA (H100 / H200 / B200)</text>
+<rect x="405" y="34" width="295" height="24" rx="3" fill="#c0392b" opacity=".85"/>
+<text x="552" y="50" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">AMD (MI300X / MI355X)</text>
+<line x1="400" y1="34" x2="400" y2="268" stroke="#ccc" stroke-width="1"/>
+<!-- rows -->
+<rect x="20" y="60" width="680" height="30" rx="2" fill="#fff" stroke="#ddd"/>
+<text x="70" y="79" text-anchor="middle" font-size="9" font-weight="700" fill="#1c2438">Silicon</text>
+<text x="262" y="72" text-anchor="middle" font-size="9" fill="#1c2438">DCGM + nv-hostengine</text>
+<text x="262" y="83" text-anchor="middle" font-size="8" fill="#666">dcgm-exporter :9400 / Prometheus</text>
+<text x="552" y="72" text-anchor="middle" font-size="9" fill="#1c2438">AMDSMI / amd-smi</text>
+<text x="552" y="83" text-anchor="middle" font-size="8" fill="#666">amd-smi-exporter :2021 / Prometheus</text>
+<rect x="20" y="92" width="680" height="30" rx="2" fill="#f8f8f8" stroke="#ddd"/>
+<text x="70" y="111" text-anchor="middle" font-size="9" font-weight="700" fill="#1c2438">Timeline</text>
+<text x="262" y="104" text-anchor="middle" font-size="9" fill="#1c2438">Nsight Systems (nsys)</text>
+<text x="262" y="115" text-anchor="middle" font-size="8" fill="#666">cuda,nvtx,nccl traces .nsys-rep</text>
+<text x="552" y="104" text-anchor="middle" font-size="9" fill="#1c2438">ROCprofiler-systems</text>
+<text x="552" y="115" text-anchor="middle" font-size="8" fill="#666">hip-trace,hsa-trace .json</text>
+<rect x="20" y="124" width="680" height="30" rx="2" fill="#fff" stroke="#ddd"/>
+<text x="70" y="143" text-anchor="middle" font-size="9" font-weight="700" fill="#1c2438">Kernel</text>
+<text x="262" y="136" text-anchor="middle" font-size="9" fill="#1c2438">Nsight Compute (ncu)</text>
+<text x="262" y="147" text-anchor="middle" font-size="8" fill="#666">Hardware counters, roofline section</text>
+<text x="552" y="136" text-anchor="middle" font-size="9" fill="#1c2438">omniperf</text>
+<text x="552" y="147" text-anchor="middle" font-size="8" fill="#666">Built-in roofline, per-CU counters [SHIPPED]</text>
+<rect x="20" y="156" width="680" height="30" rx="2" fill="#f8f8f8" stroke="#ddd"/>
+<text x="70" y="175" text-anchor="middle" font-size="9" font-weight="700" fill="#1c2438">Framework</text>
+<text x="262" y="168" text-anchor="middle" font-size="9" fill="#1c2438">PyTorch Profiler / WandB / TensorBoard</text>
+<text x="262" y="179" text-anchor="middle" font-size="8" fill="#666">Vendor-neutral — same Python API</text>
+<text x="552" y="168" text-anchor="middle" font-size="9" fill="#1c2438">PyTorch Profiler / WandB / TensorBoard</text>
+<text x="552" y="179" text-anchor="middle" font-size="8" fill="#666">ROCm backend, identical Python API</text>
+<rect x="20" y="188" width="680" height="30" rx="2" fill="#fff" stroke="#ddd"/>
+<text x="70" y="207" text-anchor="middle" font-size="9" font-weight="700" fill="#1c2438">Collective</text>
+<text x="262" y="200" text-anchor="middle" font-size="9" fill="#1c2438">NCCL + NCCL_DEBUG=INFO</text>
+<text x="262" y="211" text-anchor="middle" font-size="8" fill="#666">nccl-tests bandwidth validation</text>
+<text x="552" y="200" text-anchor="middle" font-size="9" fill="#1c2438">RCCL (same API as NCCL)</text>
+<text x="552" y="211" text-anchor="middle" font-size="8" fill="#666">rccl-tests identical syntax</text>
+<rect x="20" y="220" width="680" height="30" rx="2" fill="#f8f8f8" stroke="#ddd"/>
+<text x="70" y="239" text-anchor="middle" font-size="9" font-weight="700" fill="#1c2438">Fleet</text>
+<text x="262" y="232" text-anchor="middle" font-size="9" fill="#1c2438">Prometheus + Grafana</text>
+<text x="262" y="243" text-anchor="middle" font-size="8" fill="#666">DCGM_FI_* metric namespace</text>
+<text x="552" y="232" text-anchor="middle" font-size="9" fill="#1c2438">Prometheus + Grafana</text>
+<text x="552" y="243" text-anchor="middle" font-size="8" fill="#666">amd_gpu_* metric namespace</text>
+</svg>
+<figcaption>Figure 17.4 — NVIDIA vs AMD observability tool mapping. Framework and fleet layers are vendor-neutral. The silicon, timeline, and kernel layers require platform-specific tooling.</figcaption>
+</div>
+<h3>17.8.1 omniperf Roofline on MI300X</h3>
+<div class="formula"><span class="cm"># Profile with roofline data only (faster)</span>
+omniperf profile --name attention_run --roof-only -- python eval_attention.py
+omniperf analyze -p attention_run/ --filter-kernel "flash_attention" --roof-only
+
+<span class="cm"># MI300X ridge point:</span>
+<span class="cm"># FP16 peak:  1307 TFLOPS | HBM3 BW: 5.3 TB/s</span>
+<span class="cm"># Ridge:      1307 / 5300 = 247 FLOP/byte</span>
+<span class="cm"># Decode at batch=1: ~4-10 FLOP/byte → deeply memory-bound on MI300X too</span>
+
+<span class="cm"># AMD-SMI live monitoring</span>
+amd-smi monitor --watch 1 --watch-time 60
+amd-smi static -g 0 --ras              <span class="cm"># RAS error info (ECC equivalent)</span>
+rocm-smi --showrasinfo all | grep uncorrect  <span class="cm"># Any uncorrectable error = quarantine</span>
+</div>
+
+<!-- ===============================================================
+     17.9 REGRESSION CI/CD
+================================================================ -->
+<h2 id="s17-9" class="section-anchor">17.9 Performance Regression CI/CD Pipeline</h2>
+
+<p>Every driver update, framework version bump, or model change is a potential performance regression. Without an automated CI pipeline, regressions surface in production after users complain — often days later. With a statistical regression pipeline, a 5% GEMM throughput drop fires a failing CI check before the PR merges.</p>
+
+<div class="formula"><span class="cm">#!/bin/bash  # kernel_regression_check.sh</span>
+KERNEL="flash_attention_fwd"
+BASELINE_DIR="/benchmarks/baseline"
+CURRENT_DIR="/tmp/current_profile"
+REGRESSION_THRESHOLD=0.05
+
+<span class="cm"># Step 1: Profile current code (10 runs for statistical validity)</span>
+ncu --kernel-name ${KERNEL} --launch-count 10 --csv \
+    -o ${CURRENT_DIR}/profile python eval_attention.py > metrics.csv
+
+<span class="cm"># Step 2: Statistical comparison via t-test (not naive point comparison)</span>
+python3 compare_profiles.py \
+    --baseline ${BASELINE_DIR}/metrics.csv \
+    --current  metrics.csv \
+    --threshold ${REGRESSION_THRESHOLD} \
+    --confidence 0.95
+
+<span class="cm"># Exit 0 = OK, Exit 1 = regression detected (CI fails, PR blocked)</span>
+</div>
+
+<div class="callout blue">
+<strong>Statistical Baseline, Not Point Comparison</strong>
+Kernel metrics vary ±2-4% per run due to clock jitter and thermal state. A naive comparison fires false alerts constantly. The correct approach: collect 10+ baseline runs, compute mean ± 1.5 standard deviations as the confidence interval, and flag only regressions that fall below the lower bound with p &lt; 0.05 (two-sample t-test). This eliminates false positives while catching real regressions above 3-4%.
+</div>
+
+
+<!-- ===============================================================
+     17.10 DIAGNOSTIC COOKBOOK
+================================================================ -->
+<h2 id="s17-10" class="section-anchor">17.10 Profiling Diagnostic Cookbook</h2>
+
+<p>The following decision tree gives you a systematic path from symptom to root cause for the most common AI infrastructure performance problems. Each node specifies: the first metric to examine, the command to run, and the decision branch based on the result.</p>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 740 540" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" style="max-width:100%;border-radius:8px">
+<rect width="740" height="540" fill="#1c2438" rx="8"/>
+<text x="370" y="26" text-anchor="middle" font-size="12" font-weight="700" fill="#e3b341">Performance Diagnostic Decision Tree</text>
+
+<!-- Root -->
+<rect x="270" y="36" width="200" height="36" rx="5" fill="#e3b341"/>
+<text x="370" y="57" text-anchor="middle" font-size="10" font-weight="700" fill="#1c2438">Problem: Low MFU or High Latency</text>
+<line x1="370" y1="72" x2="370" y2="90" stroke="#aaa" stroke-width="1.5"/>
+
+<!-- Check 1: SM util -->
+<rect x="270" y="90" width="200" height="36" rx="5" fill="#243050"/>
+<text x="370" y="103" text-anchor="middle" font-size="9" fill="#79c0ff">1. Check DCGM_FI_DEV_GPU_UTIL</text>
+<text x="370" y="116" text-anchor="middle" font-size="9" fill="#aaa">What is SM utilization?</text>
+
+<!-- Low SM branch (left) -->
+<line x1="270" y1="108" x2="150" y2="108" stroke="#f78166" stroke-width="1.5"/>
+<line x1="150" y1="108" x2="150" y2="160" stroke="#f78166" stroke-width="1.5"/>
+<text x="210" y="104" text-anchor="middle" font-size="8" fill="#f78166">&lt;60%</text>
+<rect x="70" y="160" width="160" height="52" rx="5" fill="#3a1a1a"/>
+<text x="150" y="177" text-anchor="middle" font-size="9" fill="#f78166">Low SM Util</text>
+<text x="150" y="190" text-anchor="middle" font-size="8" fill="#eee">Run: nsys profile</text>
+<text x="150" y="200" text-anchor="middle" font-size="8" fill="#aaa">Find: comm/data/CPU stall?</text>
+
+<!-- High SM branch (right) -->
+<line x1="470" y1="108" x2="590" y2="108" stroke="#3fb950" stroke-width="1.5"/>
+<line x1="590" y1="108" x2="590" y2="160" stroke="#3fb950" stroke-width="1.5"/>
+<text x="530" y="104" text-anchor="middle" font-size="8" fill="#3fb950">&gt;90%</text>
+<rect x="510" y="160" width="160" height="52" rx="5" fill="#1a3a1a"/>
+<text x="590" y="177" text-anchor="middle" font-size="9" fill="#3fb950">High SM Util</text>
+<text x="590" y="190" text-anchor="middle" font-size="8" fill="#eee">Check: Tensor Core %</text>
+<text x="590" y="200" text-anchor="middle" font-size="8" fill="#aaa">DCGM_FI_PROF_PIPE_TENSOR</text>
+
+<!-- Low SM sub-branches -->
+<line x1="150" y1="212" x2="80" y2="270" stroke="#f78166" stroke-width="1"/>
+<rect x="20" y="270" width="130" height="52" rx="4" fill="#2a1a1a"/>
+<text x="85" y="287" text-anchor="middle" font-size="8.5" fill="#d29922">AllReduce stall</text>
+<text x="85" y="300" text-anchor="middle" font-size="8" fill="#eee">NCCL band visible</text>
+<text x="85" y="312" text-anchor="middle" font-size="8" fill="#aaa">Fix: TP/overlap tuning</text>
+
+<line x1="150" y1="212" x2="150" y2="270" stroke="#f78166" stroke-width="1"/>
+<rect x="87" y="270" width="126" height="52" rx="4" fill="#1a1a2a"/>
+<text x="150" y="287" text-anchor="middle" font-size="8.5" fill="#79c0ff">Data loading stall</text>
+<text x="150" y="300" text-anchor="middle" font-size="8" fill="#eee">CPU idle while GPU waits</text>
+<text x="150" y="312" text-anchor="middle" font-size="8" fill="#aaa">Fix: prefetch / DALI</text>
+
+<line x1="150" y1="212" x2="220" y2="270" stroke="#f78166" stroke-width="1"/>
+<rect x="160" y="270" width="130" height="52" rx="4" fill="#1a2a1a"/>
+<text x="225" y="287" text-anchor="middle" font-size="8.5" fill="#3fb950">CPU launch overhead</text>
+<text x="225" y="300" text-anchor="middle" font-size="8" fill="#eee">GPU idle between kernels</text>
+<text x="225" y="312" text-anchor="middle" font-size="8" fill="#aaa">Fix: torch.compile / CUDAGraph</text>
+
+<!-- High SM sub-branches -->
+<line x1="590" y1="212" x2="490" y2="270" stroke="#3fb950" stroke-width="1"/>
+<rect x="415" y="270" width="150" height="52" rx="4" fill="#2a1a2a"/>
+<text x="490" y="287" text-anchor="middle" font-size="8.5" fill="#bc8cff">Low Tensor Core %</text>
+<text x="490" y="300" text-anchor="middle" font-size="8" fill="#eee">Run: ncu --kernel-name</text>
+<text x="490" y="312" text-anchor="middle" font-size="8" fill="#aaa">Fix: shape/dtype for TC</text>
+
+<line x1="590" y1="212" x2="590" y2="270" stroke="#3fb950" stroke-width="1"/>
+<rect x="520" y="270" width="140" height="52" rx="4" fill="#1a2a1a"/>
+<text x="590" y="287" text-anchor="middle" font-size="8.5" fill="#3fb950">High HBM BW util</text>
+<text x="590" y="300" text-anchor="middle" font-size="8" fill="#eee">DCGM_DRAM_ACTIVE &gt;0.85</text>
+<text x="590" y="312" text-anchor="middle" font-size="8" fill="#aaa">Fix: quant / KV reduce</text>
+
+<line x1="590" y1="212" x2="680" y2="270" stroke="#3fb950" stroke-width="1"/>
+<rect x="625" y="270" width="95" height="52" rx="4" fill="#1a1a2a"/>
+<text x="672" y="287" text-anchor="middle" font-size="8.5" fill="#58a6ff">Thermal throttle</text>
+<text x="672" y="300" text-anchor="middle" font-size="8" fill="#eee">GPU_TEMP &gt; 80C</text>
+<text x="672" y="312" text-anchor="middle" font-size="8" fill="#aaa">Fix: cooling/power cap</text>
+
+<!-- Inference path -->
+<rect x="270" y="380" width="200" height="36" rx="5" fill="#1a3a3a"/>
+<text x="370" y="393" text-anchor="middle" font-size="9" fill="#7ec8a0">Inference: High TTFT</text>
+<text x="370" y="406" text-anchor="middle" font-size="9" fill="#aaa">Check: vllm:gpu_cache_usage_perc</text>
+
+<line x1="370" y1="126" x2="370" y2="380" stroke="#555" stroke-width="1" stroke-dasharray="4,4"/>
+<text x="390" y="260" font-size="8" fill="#888">see also:</text>
+
+<line x1="270" y1="398" x2="160" y2="450" stroke="#7ec8a0" stroke-width="1"/>
+<rect x="80" y="450" width="160" height="52" rx="4" fill="#0d2020"/>
+<text x="160" y="467" text-anchor="middle" font-size="8.5" fill="#7ec8a0">KV cache &gt;85%</text>
+<text x="160" y="480" text-anchor="middle" font-size="8" fill="#eee">Preemption risk</text>
+<text x="160" y="491" text-anchor="middle" font-size="8" fill="#aaa">Fix: scale or reduce context</text>
+
+<line x1="370" y1="416" x2="370" y2="450" stroke="#7ec8a0" stroke-width="1"/>
+<rect x="295" y="450" width="150" height="52" rx="4" fill="#0d2020"/>
+<text x="370" y="467" text-anchor="middle" font-size="8.5" fill="#7ec8a0">Queue depth &gt;50</text>
+<text x="370" y="480" text-anchor="middle" font-size="8" fill="#eee">Request batching saturated</text>
+<text x="370" y="491" text-anchor="middle" font-size="8" fill="#aaa">Fix: scale replicas</text>
+
+<line x1="470" y1="398" x2="570" y2="450" stroke="#7ec8a0" stroke-width="1"/>
+<rect x="500" y="450" width="160" height="52" rx="4" fill="#0d2020"/>
+<text x="580" y="467" text-anchor="middle" font-size="8.5" fill="#7ec8a0">KV cache OK</text>
+<text x="580" y="480" text-anchor="middle" font-size="8" fill="#eee">GPU compute-bound prefill</text>
+<text x="580" y="491" text-anchor="middle" font-size="8" fill="#aaa">Fix: disaggregate P/D</text>
+
+</svg>
+<figcaption>Figure 17.5 — Performance diagnostic decision tree. Start with SM utilization to branch into low-GPU-util (scheduling/communication) vs. high-GPU-util (kernel efficiency) problems. Inference path branches on KV cache occupancy.</figcaption>
+</div>
+
+<h3>17.10.1 Quick-Reference Diagnostic Commands</h3>
+
+<table>
+<tr><th>Symptom</th><th>First Command</th><th>Key Metric</th><th>Action if Positive</th></tr>
+<tr><td>Low MFU (&lt;50%)</td><td><code>nsys profile --trace=cuda,nvtx,nccl python train.py --steps 10</code></td><td>% time in NCCL vs GEMM</td><td>If NCCL &gt;25%: optimize overlap (Ch14)</td></tr>
+<tr><td>Kernel regression after update</td><td><code>ncu --kernel-name X --set full python eval.py</code></td><td>SM throughput % change</td><td>&gt;5% drop: compare ncu-ui --diff baseline current</td></tr>
+<tr><td>TTFT P99 spike</td><td><code>promql: vllm:gpu_cache_usage_perc avg</code></td><td>KV cache occupancy</td><td>&gt;85%: reduce max_context or scale up</td></tr>
+<tr><td>GPU thermal throttle</td><td><code>dcgmi health -g 0 --check all</code></td><td>DCGM_FI_DEV_GPU_TEMP</td><td>&gt;82°C: check cooling, power cap at 600W</td></tr>
+<tr><td>ECC error rate</td><td><code>dcgmi stats -e</code></td><td>SBE rate per hour</td><td>&gt;1/hr: schedule replacement in 48-72h</td></tr>
+<tr><td>NVLink bandwidth low</td><td><code>dcgmi stats --nvlink 0</code></td><td>NVLINK_TX/RX bytes/s</td><td>&lt;400 GB/s during AllReduce: check link state</td></tr>
+<tr><td>Training loss anomaly</td><td><code>wandb run page &gt; loss curve + grad norm</code></td><td>Gradient norm spike</td><td>Spike + NVLink XID 74: silent corruption, restart job</td></tr>
+</table>
+
+<!-- ===============================================================
+     WORKED EXAMPLE
+================================================================ -->
+<h2 id="worked" class="section-anchor">Worked Example: 10,000-GPU Observability Stack Design</h2>
+
+<div class="worked">
+<div class="worked-label">Principal-Level Worked Example — Complete Observability Architecture</div>
+
+<p><strong>Problem:</strong> Design the complete observability stack for a 10,000-GPU training and inference cluster running mixed workloads (Llama3-70B pretraining + production serving). Budget: metric retention 1 year. Alert response time: &lt;5 minutes. Scale: ~10K GPU × 25 metrics = 250,000 metric series.</p>
+
+<p><strong>Step 1 — Estimate metric cardinality and Prometheus requirements:</strong></p>
+<div class="formula">GPUs:                  10,000
+Metrics per GPU:       25 (DCGM) + 5 (node-exporter per-NIC) = 30
+Total active series:   10,000 x 30 = 300,000 series
+Scrape interval:       15 seconds
+Ingestion rate:        300,000 / 15 = 20,000 samples/second
+
+Single Prometheus TSDB limit:        ~10M series (fine for 300K)
+But 20K samples/s x 86400s x 365d = 630 billion samples/year
+At ~2 bytes/sample:                  1.26 TB raw per year
+
+Decision: Single Prometheus for hot data (30d), Thanos remote write to
+          S3 for cold storage (1yr at ~50GB/month compressed with Mimir).
+</div>
+
+<p><strong>Step 2 — Alert latency calculation:</strong></p>
+<div class="formula">Problem: MFU drops from 62% to 47% at T=0 (driver update).
+How quickly does our stack detect it?
+
+T=0:    Driver update deployed
+T=15s:  DCGM polls GPU; DCGM_FI_PROF_PIPE_TENSOR_ACTIVE updates
+T=30s:  Prometheus scrapes dcgm-exporter (next 15s interval)
+T=45s:  Alert rule evaluation (evaluation_interval: 15s)
+T+for:  Alert rule has "for: 3m" to avoid flapping on transient dips
+T=225s: Alert fires to Alertmanager (3 minutes 45 seconds from incident)
+
+Verdict: Under 5-minute SLA for Tensor Core utilization drop alert.
+But "for: 3m" means we accept up to 3.75 min detection lag to eliminate
+false positives from brief scheduling hiccups. Tunable per criticality.
+</div>
+
+<p><strong>Step 3 — On-demand profiling trigger design:</strong></p>
+<div class="formula">Always-on cost:  DCGM polling + Prometheus = 0.5% GPU util overhead
+Nsight Systems:  +2-5% CPU overhead, 0% GPU (safe for production spot-checks)
+Nsight Compute:  +300-1000% kernel overhead — NEVER always-on
+
+Automated trigger rule:
+  IF training_mfu drops > 10% for > 5 minutes:
+    → Automatically capture 60s Nsight Systems trace on rank 0
+    → Upload trace to centralized storage bucket
+    → File Jira ticket with trace link and MFU delta
+    → Page on-call (Severity: P2)
+
+This gives engineers a pre-recorded timeline trace from the moment
+the regression occurred — not hours later after they log in.
+</div>
+
+<p><strong>Step 4 — Cost comparison with and without observability:</strong></p>
+<div class="formula">Without observability stack (baseline):
+  Regression detection time:         3-7 days (user reports slow training)
+  Wasted compute (10K GPU x $3/hr):  3 days x 24h x 10,000 x $3 = $2.16M
+
+With proper observability stack:
+  Regression detection time:         4 minutes
+  Wasted compute (4 min):            10,000 x 0.067h x $3 = $2,000
+
+Observability infrastructure cost (Prometheus + Thanos + Grafana):
+  EC2 + storage ~$5K/month = $60K/year
+
+ROI: Prevents even a single week-long regression = $5M+ saved.
+Observability is not a cost center. It is profit protection.
+</div>
+</div>
+
+<!-- KEY TAKEAWAYS -->
+<div class="takeaways" id="takeaways">
+  <h3>Key Takeaways</h3>
+
+  <div class="takeaway-group">
+    <div class="tg-label">Core Concepts</div>
+    <ul>
+      <li>The AI observability stack has seven layers: silicon telemetry, kernel profiling, framework profiling, system metrics, service-level SLAs, fleet dashboards, and regression CI/CD — each at a different sampling rate and overhead tradeoff.</li>
+      <li>DCGM provides silicon-level GPU health counters at 1-second intervals with &lt;0.5% overhead. It is the only tool that can run always-on at fleet scale. <code>DCGM_FI_PROF_PIPE_TENSOR_ACTIVE</code> is the single most revealing metric for LLM training efficiency.</li>
+      <li>Nsight Systems (timeline) and Nsight Compute (kernel counters) serve fundamentally different purposes. Confusing them is the most common profiling mistake: nsys for "where is time going," ncu for "why is this kernel slow."</li>
+      <li>The AMD toolchain (AMDSMI, ROCprofiler-systems, omniperf) maps directly to the NVIDIA equivalent layer-by-layer. Framework and fleet layers are vendor-neutral.</li>
+    </ul>
+  </div>
+
+  <div class="takeaway-group">
+    <div class="tg-label">Cost &amp; Productivity Impact</div>
+    <ul>
+      <li>A single undetected week-long MFU regression on a 10,000-GPU cluster costs $5M+ at $3/GPU-hr. A $60K/year Prometheus + Grafana stack that reduces detection time from 7 days to 4 minutes delivers &gt;80× ROI in the first prevented incident.</li>
+      <li>Automated regression CI/CD that blocks driver/framework updates with &gt;5% kernel performance degradation eliminates the class of regressions that historically take 3–7 days to diagnose — translating directly to recovered cluster efficiency and reduced ML team debugging overhead.</li>
+      <li><code>vllm:gpu_cache_usage_perc</code> alerting at 85% gives operators 5–10 minutes to respond before KV swap begins adding 400–800ms to inference latency — preventing SLO violations for zero additional infrastructure cost.</li>
+    </ul>
+  </div>
+
+  <div class="takeaway-group">
+    <div class="tg-label">Principal-Level Insight</div>
+    <ul>
+      <li>The diagnostic question to ask first is never "which tool should I use?" but "what question am I answering?" — SM utilization tells you <em>if</em> compute is being used; Tensor Core utilization tells you <em>how efficiently</em>; Nsight Systems tells you <em>where time is going</em>; Nsight Compute tells you <em>why a kernel is slow</em>. These are four distinct questions requiring four distinct tools.</li>
+      <li>Metric cardinality management is the hidden scaling problem in observability. At 10K GPUs × 30 metrics = 300K series, Prometheus handles it fine. At 100K GPUs, naive scaling breaks: Thanos federated architecture, recording rules pre-aggregating 60% of queries, and aggressive label dropping (strip per-pid labels) are mandatory, not optional.</li>
+      <li>XID 74 (NVLink error) during tensor-parallel training can produce silent gradient corruption — training converges to a subtly wrong model. Any XID 74 on a TP job requires immediate restart and a 30-minute NVLink bandwidth validation test, regardless of whether loss appears normal.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- REVIEW QUESTIONS -->
+<div class="review-questions" id="review">
+  <h3>Review Questions</h3>
+
+  <div class="rq-tier foundational">
+    <div class="rq-tier-label">
+      <span class="rq-badge">Foundational</span>
+      Build the mental model — no math required
+    </div>
+    <ol>
+      <li>Explain the difference between Nsight Systems and Nsight Compute. A colleague says "I'll use Nsight Compute to find out why my training step is 30% slower than expected." Why is this likely the wrong choice, and which tool should they use first?</li>
+      <li>A GPU shows DCGM_FI_DEV_GPU_UTIL = 95% but training MFU is only 38%. Is the GPU "working"? What does this combination of metrics tell you about where the inefficiency lies?</li>
+      <li>What is an XID 48 error, and what immediate operational action does it require? How does it differ from XID 63, and why does the difference in severity matter for cluster operations?</li>
+    </ol>
+  </div>
+
+  <div class="rq-tier intermediate">
+    <div class="rq-tier-label">
+      <span class="rq-badge">Intermediate</span>
+      Apply and calculate — production context
+    </div>
+    <ol>
+      <li>You are running 1,000 GPUs with DCGM scraping 30 metrics per GPU every 15 seconds. A team member asks you to store 2 years of raw metric history locally in Prometheus. Calculate the storage requirement. What architecture change would you recommend, and why?</li>
+      <li>Your Prometheus alert for <code>TrainingMFURegression</code> has <code>for: 0m</code> (fires immediately). After deploying, you are paged 12 times in one day by transient 2-second MFU dips during AllReduce. Redesign the alert rule to eliminate false positives while keeping detection latency under 5 minutes for real regressions.</li>
+      <li>A vLLM inference server shows <code>vllm:gpu_cache_usage_perc = 0.97</code> and TTFT P99 has spiked from 280ms to 1,400ms. Walk through your diagnostic sequence: what two metrics do you check next, what do they tell you, and what are the two possible remediation actions?</li>
+    </ol>
+  </div>
+
+  <div class="rq-tier principal">
+    <div class="rq-tier-label">
+      <span class="rq-badge">Principal Level</span>
+      Design, decide, and defend — architecture reviews
+    </div>
+    <ol>
+      <li>Design a complete observability architecture for a 10,000-GPU mixed training + inference cluster. Your design must specify: which metrics are collected at which layers, the data flow from GPU hardware to on-call engineer, the retention strategy, and the alert escalation policy. Justify every decision with the metric cardinality and latency math. Budget constraint: maximum $100K/year for observability infrastructure.</li>
+      <li>Your team proposes always-on Nsight Compute profiling for all production training jobs to enable continuous kernel-level regression detection. Evaluate this proposal quantitatively. If you reject it, propose an alternative architecture that achieves the same regression detection goal without the overhead. What is the tradeoff your alternative accepts?</li>
+      <li>After a large-scale NCCL version upgrade, you notice training throughput dropped 8% across 500 jobs, but the change was not caught by your existing CI/CD pipeline. Design a comprehensive performance regression CI/CD system that would have caught this regression before production rollout. Include: what workloads to benchmark, what statistical test to use, what threshold to set, how to handle hardware variance across CI test machines, and how to gate the rollout process.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="ch-end">— End of Chapter 17 · Telemetry, Profiling &amp; Tools —<br>Next: Chapter 18 · Principal Performance Architect Career</div>
+
+</div><!-- end .page -->
+
+<script>
+// Sidebar active highlight on scroll
+var sections = document.querySelectorAll('.section-anchor');
+var sideLinks = document.querySelectorAll('#sidebar a');
+window.addEventListener('scroll', function() {
+  var scrollPos = window.scrollY + 80;
+  sections.forEach(function(sec) {
+    if (sec.offsetTop <= scrollPos) {
+      sideLinks.forEach(function(a) {
+        a.classList.remove('active');
+        if (a.getAttribute('href') === '#' + sec.id) a.classList.add('active');
+      });
+    }
+  });
+});
+</script>
+
+</body>
+</html>

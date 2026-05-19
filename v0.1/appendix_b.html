@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Appendix B — Profiling Tools Reference | AI/ML Infrastructure from Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
+.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
+.mem-tier-body{flex:1}
+.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
+.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+.fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+</style>
+</head>
+<body>
+<div id="nav"><b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="appendix_a.html">&#8592; App A</a>
+  <a href="appendix_c.html">App C &#8594;</a>
+  <a href="ch07.html">Ch 7</a>
+  <a href="ch12.html">Ch 12</a>
+  <a href="ch17.html">Ch 17</a>
+</div>
+<div id="sidebar">
+  <h4>Appendix B</h4>
+  <a href="#b1">B.1 Tool Selection by Diagnostic Question</a>
+  <a href="#b2">B.2 Nsight Systems (nsys) — System-Level T</a>
+  <a href="#b3">B.3 Nsight Compute (ncu) — Kernel-Level Ha</a>
+  <a href="#b4">B.4 DCGM — Fleet GPU Health and the Critic</a>
+  <a href="#b5">B.5 NCCL — Collective Communication Refere</a>
+  <a href="#b6">B.6 vLLM Inference Metrics Reference</a>
+  <a href="#b7">B.7 PromQL Patterns for AI Cluster Monitor</a>
+  <a href="#b8">B.8 AMD Tool Equivalents (MI300X / MI355X)</a>
+  <a href="#b9">B.9 Storage and I/O Diagnostic Commands</a>
+  <a href="#b10">B.10 Symptom-to-Command Quick Reference</a>
+</div>
+<div class="page">
+<!-- HEADER -->
+<div class="ch-label">Back Matter &middot; Appendix B</div>
+<h1 class="ch-title">Profiling and Performance Tool Quick Reference</h1>
+<div class="ch-subtitle">Command-by-symptom lookup · DCGM field IDs · NCCL env variables · vLLM metrics · AMD equivalents · Storage diagnostics</div>
+  <div class="app-meta">AI/ML Infrastructure from Silicon to Scale — Venkat Vinjam · 2026 Second Edition</div>
+
+<blockquote style="border-left:3px solid var(--gold);padding:10px 18px;margin:0 0 28px;font-style:italic;color:#555;background:#faf8f2">
+  "Know which tool answers which question before you touch a keyboard. The wrong tool wastes hours. The right tool answers in minutes."
+</blockquote>
+
+<p style="margin-bottom:20px">This appendix is a field guide, not a tutorial. Every section answers the question: <em>given a specific symptom, what do I run, what do I look at, and what does the number mean?</em> Detailed explanations of each tool live in <strong>Chapter 17 (Telemetry and Observability)</strong>; use this appendix as your production-desk quick reference.</p>
+
+<div class="callout">
+  <div class="callout-label">How to Use This Appendix</div>
+  Start at <strong>B.1 (Tool Selection Tree)</strong> — every diagnostic question maps to a specific tool. Jump directly to that tool's section for the exact command and metric interpretation. DCGM field IDs in <strong>B.4</strong> are validated against DCGM 3.x on H100; verify field availability on A100 or MI300X.
+</div>
+
+
+<!-- ═══════ B.1 TOOL SELECTION TREE ═══════ -->
+<h2 id="b1">B.1 Tool Selection by Diagnostic Question</h2>
+
+<p>The single most important skill in production debugging is tool selection. Using <code>ncu</code> to diagnose an AllReduce hang, or <code>nsys</code> to investigate a kernel micro-optimization, costs 30–60 minutes per mistake. Use this table as your first lookup.</p>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 860 520" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;border-radius:8px">
+  <rect width="860" height="520" fill="#0d1117" rx="8"/>
+  <!-- Title -->
+  <text x="430" y="28" font-family="sans-serif" font-size="13" font-weight="700" fill="#e3b341" text-anchor="middle">Diagnostic Question → Correct Tool Decision Tree</text>
+  <!-- Column headers -->
+  <rect x="20" y="40" width="400" height="22" fill="#1c2438" rx="3"/>
+  <text x="220" y="55" font-family="sans-serif" font-size="10" font-weight="700" fill="#e3b341" text-anchor="middle">QUESTION</text>
+  <rect x="430" y="40" width="140" height="22" fill="#1c2438" rx="3"/>
+  <text x="500" y="55" font-family="sans-serif" font-size="10" font-weight="700" fill="#e3b341" text-anchor="middle">PRIMARY TOOL</text>
+  <rect x="578" y="40" width="262" height="22" fill="#1c2438" rx="3"/>
+  <text x="709" y="55" font-family="sans-serif" font-size="10" font-weight="700" fill="#e3b341" text-anchor="middle">FIRST METRIC TO CHECK</text>
+  <!-- Row data -->
+  <!-- Rows: alternating #161b22 and #0d1117 -->
+  <!-- Row 1 -->
+  <rect x="20" y="63" width="820" height="32" fill="#161b22"/>
+  <text x="30" y="82" font-family="Courier New,monospace" font-size="10" fill="#b8ddf0">"Where does time go in my training step?"</text>
+  <text x="438" y="82" font-family="Courier New,monospace" font-size="10" fill="#79c0ff">nsys</text>
+  <text x="586" y="82" font-family="Courier New,monospace" font-size="9.5" fill="#a8d8a8">Timeline idle gaps, NCCL spans</text>
+  <!-- Row 2 -->
+  <rect x="20" y="95" width="820" height="32" fill="#0d1117"/>
+  <text x="30" y="114" font-family="Courier New,monospace" font-size="10" fill="#b8ddf0">"Why is this specific kernel slow?"</text>
+  <text x="438" y="114" font-family="Courier New,monospace" font-size="10" fill="#79c0ff">ncu</text>
+  <text x="586" y="114" font-family="Courier New,monospace" font-size="9.5" fill="#a8d8a8">SpeedOfLight roofline position</text>
+  <!-- Row 3 -->
+  <rect x="20" y="127" width="820" height="32" fill="#161b22"/>
+  <text x="30" y="146" font-family="Courier New,monospace" font-size="10" fill="#b8ddf0">"Is my GPU healthy across the fleet?"</text>
+  <text x="438" y="146" font-family="Courier New,monospace" font-size="10" fill="#79c0ff">dcgmi dmon</text>
+  <text x="586" y="146" font-family="Courier New,monospace" font-size="9.5" fill="#a8d8a8">Fields 203,1003,1004,1005,1009</text>
+  <!-- Row 4 -->
+  <rect x="20" y="159" width="820" height="32" fill="#0d1117"/>
+  <text x="30" y="178" font-family="Courier New,monospace" font-size="10" fill="#b8ddf0">"Is my AllReduce overlapped with backward?"</text>
+  <text x="438" y="178" font-family="Courier New,monospace" font-size="10" fill="#79c0ff">nsys+NCCL trace</text>
+  <text x="586" y="178" font-family="Courier New,monospace" font-size="9.5" fill="#a8d8a8">NCCL spans vs backward kernel spans</text>
+  <!-- Row 5 -->
+  <rect x="20" y="191" width="820" height="32" fill="#161b22"/>
+  <text x="30" y="210" font-family="Courier New,monospace" font-size="10" fill="#b8ddf0">"What is my cluster AllReduce bandwidth?"</text>
+  <text x="438" y="210" font-family="Courier New,monospace" font-size="10" fill="#79c0ff">nccl-tests</text>
+  <text x="586" y="210" font-family="Courier New,monospace" font-size="9.5" fill="#a8d8a8">busbw GB/s vs expected baseline</text>
+  <!-- Row 6 -->
+  <rect x="20" y="223" width="820" height="32" fill="#0d1117"/>
+  <text x="30" y="242" font-family="Courier New,monospace" font-size="10" fill="#b8ddf0">"Why is inference TTFT P99 spiking?"</text>
+  <text x="438" y="242" font-family="Courier New,monospace" font-size="10" fill="#79c0ff">vLLM metrics</text>
+  <text x="586" y="242" font-family="Courier New,monospace" font-size="9.5" fill="#a8d8a8">time_to_first_token_seconds P99</text>
+  <!-- Row 7 -->
+  <rect x="20" y="255" width="820" height="32" fill="#161b22"/>
+  <text x="30" y="274" font-family="Courier New,monospace" font-size="10" fill="#b8ddf0">"Is KV cache at risk of cascade eviction?"</text>
+  <text x="438" y="274" font-family="Courier New,monospace" font-size="10" fill="#f97583">vLLM alert</text>
+  <text x="586" y="274" font-family="Courier New,monospace" font-size="9.5" fill="#f97583">gpu_cache_usage_perc &gt; 0.82 CRITICAL</text>
+  <!-- Row 8 -->
+  <rect x="20" y="287" width="820" height="32" fill="#0d1117"/>
+  <text x="30" y="306" font-family="Courier New,monospace" font-size="10" fill="#b8ddf0">"Is my GPU in thermal throttle?"</text>
+  <text x="438" y="306" font-family="Courier New,monospace" font-size="10" fill="#79c0ff">DCGM field 100</text>
+  <text x="586" y="306" font-family="Courier New,monospace" font-size="9.5" fill="#a8d8a8">THERMAL_VIOLATION &gt; 0 + SM clock drop</text>
+  <!-- Row 9 -->
+  <rect x="20" y="319" width="820" height="32" fill="#161b22"/>
+  <text x="30" y="338" font-family="Courier New,monospace" font-size="10" fill="#b8ddf0">"Is my model compute- or bandwidth-bound?"</text>
+  <text x="438" y="338" font-family="Courier New,monospace" font-size="10" fill="#79c0ff">ncu Roofline</text>
+  <text x="586" y="338" font-family="Courier New,monospace" font-size="9.5" fill="#a8d8a8">SpeedOfLight_RooflineChart section</text>
+  <!-- Row 10 -->
+  <rect x="20" y="351" width="820" height="32" fill="#0d1117"/>
+  <text x="30" y="370" font-family="Courier New,monospace" font-size="10" fill="#b8ddf0">"Is my NVLink degraded?"</text>
+  <text x="438" y="370" font-family="Courier New,monospace" font-size="10" fill="#79c0ff">DCGM field 1011</text>
+  <text x="586" y="370" font-family="Courier New,monospace" font-size="9.5" fill="#a8d8a8">NVLINK_TX_BYTES drop from baseline</text>
+  <!-- Row 11 -->
+  <rect x="20" y="383" width="820" height="32" fill="#161b22"/>
+  <text x="30" y="402" font-family="Courier New,monospace" font-size="10" fill="#b8ddf0">"Is my Lustre filesystem healthy?"</text>
+  <text x="438" y="402" font-family="Courier New,monospace" font-size="10" fill="#79c0ff">lfs df + fio</text>
+  <text x="586" y="402" font-family="Courier New,monospace" font-size="9.5" fill="#a8d8a8">lfs df -h; fio sequential read MB/s</text>
+  <!-- Row 12 -->
+  <rect x="20" y="415" width="820" height="32" fill="#0d1117"/>
+  <text x="30" y="434" font-family="Courier New,monospace" font-size="10" fill="#b8ddf0">"Is my operator fused?"</text>
+  <text x="438" y="434" font-family="Courier New,monospace" font-size="10" fill="#79c0ff">nsys timeline</text>
+  <text x="586" y="434" font-family="Courier New,monospace" font-size="9.5" fill="#a8d8a8">One kernel or many? kernel count per op</text>
+  <!-- Row 13 -->
+  <rect x="20" y="447" width="820" height="32" fill="#161b22"/>
+  <text x="30" y="466" font-family="Courier New,monospace" font-size="10" fill="#b8ddf0">"Is data loading a bottleneck?"</text>
+  <text x="438" y="466" font-family="Courier New,monospace" font-size="10" fill="#79c0ff">nsys osrt trace</text>
+  <text x="586" y="466" font-family="Courier New,monospace" font-size="9.5" fill="#a8d8a8">CPU idle gaps between CUDA launches</text>
+  <!-- Row 14 -->
+  <rect x="20" y="479" width="820" height="32" fill="#0d1117"/>
+  <text x="30" y="498" font-family="Courier New,monospace" font-size="10" fill="#b8ddf0">"Is my IB link healthy?"</text>
+  <text x="438" y="498" font-family="Courier New,monospace" font-size="10" fill="#79c0ff">ibstatus</text>
+  <text x="586" y="498" font-family="Courier New,monospace" font-size="9.5" fill="#a8d8a8">State: ACTIVE; Physical: POLLING = error</text>
+</svg>
+<figcaption>Fig B-1. Tool selection decision matrix — map every diagnostic question to the single correct tool. Using the wrong tool is the most common source of wasted debugging time.</figcaption>
+</div>
+
+
+<!-- ═══════ B.2 NSIGHT SYSTEMS ═══════ -->
+<h2 id="b2">B.2 Nsight Systems (nsys) — System-Level Timeline</h2>
+
+<div class="callout">
+  <strong>Purpose:</strong> System-wide timeline showing where wall-clock time goes — kernel launches, memory copies, NCCL collectives, CPU activity. <strong>Answer: "Where is the time?"</strong><br>
+  <strong>Overhead:</strong> 1.5–3× slowdown. Capture 30–60 seconds in production-equivalent conditions.
+</div>
+
+<h3>Core Commands</h3>
+<pre>
+# ── STANDARD TRAINING PROFILE ─────────────────────────────────────────────────
+nsys profile \
+  --trace=cuda,nvtx,nccl,osrt \       # CUDA kernels + NVTX markers + NCCL + OS runtime
+  --sample=cpu \                       # CPU call-stack sampling
+  --output=/tmp/profile_%p \          # Separate file per rank (%p = PID)
+  --duration=30 \                      # 30-second capture window
+  python train.py
+
+# ── MINIMAL (lowest overhead) ──────────────────────────────────────────────────
+nsys profile --trace=cuda --output=/tmp/trace python script.py
+
+# ── WITH NVTX MARKERS (requires torch.cuda.nvtx.mark() in code) ────────────────
+nsys profile --trace=cuda,nvtx --output=/tmp/trace python train.py
+
+# ── ATTACH TO RUNNING PROCESS ─────────────────────────────────────────────────
+nsys profile -p $(pgrep python) --duration=30 --output=/tmp/attached
+
+# ── OPEN IN GUI ───────────────────────────────────────────────────────────────
+nsys-ui /tmp/profile_12345.nsys-rep
+
+# ── CLI STATISTICS SUMMARY ────────────────────────────────────────────────────
+nsys stats /tmp/profile_12345.nsys-rep --report gputrace
+# Output: top kernels by duration (% of total GPU time)
+</pre>
+
+<h3>What to Look for in the Timeline</h3>
+<table>
+<tr><th>Observation</th><th>Diagnosis</th><th>Action</th></tr>
+<tr><td>GPU row is <strong>dense</strong> — no visible gaps</td><td>✅ Compute-bound or bandwidth-bound — healthy</td><td>No action needed; verify with ncu roofline</td></tr>
+<tr><td>Gaps &gt; 1 ms between kernels</td><td>❌ CPU launch overhead or data pipeline stall</td><td>Use CUDA Graphs or <code>torch.compile</code> to eliminate gaps</td></tr>
+<tr><td>NCCL spans overlap backward kernels</td><td>✅ Gradient communication correctly hidden</td><td>Measure overlap fraction — target &gt; 80%</td></tr>
+<tr><td>NCCL spans are <strong>sequential</strong> after backward</td><td>❌ Allreduce not overlapped — 10–30% throughput loss</td><td>Enable <code>gradient_as_bucket_view=True</code> in DDP</td></tr>
+<tr><td>CPU idle gaps between GPU launches</td><td>❌ Data loading bottleneck or Python GIL</td><td>Prefetch with <code>pin_memory=True</code>, increase <code>num_workers</code></td></tr>
+<tr><td>Many tiny kernels (&lt; 50 µs each)</td><td>❌ Op-by-op execution — poor fusion</td><td>Enable <code>torch.compile</code> or manual kernel fusion</td></tr>
+</table>
+
+<h3>NVTX Instrumentation (Add to Training Loop)</h3>
+<pre>
+import torch
+
+# Mark iteration boundaries — nsys shows step time breakdown
+for step, batch in enumerate(dataloader):
+    torch.cuda.nvtx.range_push(f"step_{step}")
+
+    torch.cuda.nvtx.range_push("data_to_device")
+    inputs = batch.to("cuda")
+    torch.cuda.nvtx.range_pop()
+
+    torch.cuda.nvtx.range_push("forward")
+    loss = model(inputs)
+    torch.cuda.nvtx.range_pop()
+
+    torch.cuda.nvtx.range_push("backward")
+    loss.backward()
+    torch.cuda.nvtx.range_pop()
+
+    torch.cuda.nvtx.range_push("optimizer")
+    optimizer.step(); optimizer.zero_grad()
+    torch.cuda.nvtx.range_pop()
+
+    torch.cuda.nvtx.range_pop()   # step_N
+</pre>
+
+<!-- ═══════ B.3 NSIGHT COMPUTE ═══════ -->
+<h2 id="b3">B.3 Nsight Compute (ncu) — Kernel-Level Hardware Counters</h2>
+
+<div class="callout">
+  <strong>Purpose:</strong> Deep hardware counter analysis for a single kernel — Tensor Core utilization, DRAM bandwidth efficiency, SM occupancy, roofline position. <strong>Answer: "Why is THIS kernel slow?"</strong><br>
+  <strong>Overhead:</strong> 5–20× slowdown. Profile specific kernels, not entire training runs.
+</div>
+
+<h3>Core Commands</h3>
+<pre>
+# ── FULL KERNEL ANALYSIS ──────────────────────────────────────────────────────
+ncu \
+  --kernel-name "flash_attention_fwd" \  # Target kernel (regex match)
+  --launch-skip 5 \                       # Skip 5 warmup launches
+  --launch-count 3 \                      # Profile next 3 launches
+  --set full \                            # All hardware counters
+  --section SpeedOfLight_RooflineChart \  # Roofline analysis
+  --section MemoryWorkloadAnalysis \      # Memory hierarchy breakdown
+  -o /tmp/kernel_profile \               # Output file
+  python infer.py
+
+# ── QUICK ROOFLINE CHECK ──────────────────────────────────────────────────────
+ncu --kernel-name X --set roofline --launch-count 1 python script.py
+
+# ── TENSOR CORE UTILIZATION (key metric for GEMM health) ─────────────────────
+ncu --metrics sm__pipe_tensor_cycles_active.avg.pct_of_peak_sustained_elapsed \
+    --kernel-name matmul python script.py
+
+# ── OPEN RESULT IN GUI ────────────────────────────────────────────────────────
+ncu-ui /tmp/kernel_profile.ncu-rep
+
+# ── COMPARE TWO PROFILES (regression detection) ───────────────────────────────
+ncu-ui --diff baseline.ncu-rep current.ncu-rep
+# Red = regression, Green = improvement
+
+# ── CSV OUTPUT FOR CI PIPELINES ───────────────────────────────────────────────
+ncu --kernel-name X --csv --metrics dram__bytes_read.avg,sm__throughput.avg \
+    python script.py > /tmp/metrics.csv
+</pre>
+
+<h3>Key Metrics and Interpretation</h3>
+<table>
+<tr><th>Metric</th><th>DCGM / ncu Name</th><th>Healthy Value</th><th>Problem Threshold</th></tr>
+<tr><td>SM throughput</td><td><code>sm__throughput.avg.pct_of_peak_sustained_elapsed</code></td><td>&gt; 70%</td><td>&lt; 40% → likely memory-bound</td></tr>
+<tr><td>Tensor Core utilization</td><td><code>sm__pipe_tensor_cycles_active.avg.pct_of_peak_sustained_elapsed</code></td><td>&gt; 60% (BF16 GEMM)</td><td>&lt; 20% → wrong dtype or unaligned dims</td></tr>
+<tr><td>DRAM bandwidth</td><td><code>dram__bytes_read.avg</code></td><td>Near HBM peak (3.35 TB/s H100)</td><td>&lt; 50% peak → cache thrashing or small access patterns</td></tr>
+<tr><td>L1 cache hit rate</td><td><code>l1tex__t_sector_hit_rate.pct</code></td><td>&gt; 80%</td><td>&lt; 50% → poor locality, consider tiling</td></tr>
+<tr><td>SM occupancy</td><td><code>sm__warps_active.avg.pct_of_peak_sustained_active</code></td><td>&gt; 50%</td><td>&lt; 25% → occupancy limiter (register or smem pressure)</td></tr>
+<tr><td>Arithmetic intensity</td><td>SpeedOfLight section</td><td>Above ridge point (200 FLOP/byte H100)</td><td>Below ridge point → bandwidth-bound</td></tr>
+</table>
+
+<div class="note">
+  <strong>Roofline interpretation:</strong> A kernel plotting <em>below and left</em> of the roofline ceiling is bandwidth-bound — more data reuse or tiling can help. A kernel touching the <em>compute ceiling</em> is doing as well as the hardware allows. Tensor Core underutilization with high SM activity usually means FP32 fallback or non-aligned matrix dimensions (must be multiples of 8 for BF16 Tensor Cores, multiples of 16 for INT8).
+</div>
+
+
+<!-- ═══════ B.4 DCGM ═══════ -->
+<h2 id="b4">B.4 DCGM — Fleet GPU Health and the Critical Field IDs</h2>
+
+<div class="callout">
+  <strong>Purpose:</strong> Continuous hardware health monitoring across the entire GPU fleet. Exposes temperature, power, ECC errors, clock throttling, and compute activity at 1-second resolution.
+</div>
+
+<div class="warn">
+  <strong>⚠ Field 203 (GPU_UTIL) Is Misleading</strong> — DCGM field 203 reports the percentage of time <em>any kernel was active</em>, sampled at 1 ms windows. A tiny kernel running for 1 µs every 1 ms reports 100% GPU utilization. Always use <strong>field 1003 (SM_ACTIVE)</strong> for true compute occupancy.
+</div>
+
+<h3>Essential dcgmi dmon Commands</h3>
+<pre>
+# ── PRODUCTION HEALTH MONITOR (run continuously) ──────────────────────────────
+dcgmi dmon \
+  -e 203,1002,1003,1004,1005,1009,100,155,1001 \
+  -d 1000 \           # 1-second interval
+  -c 3600             # 1-hour capture (drop -c for continuous)
+
+# ── QUICK SPOT-CHECK (all GPUs on node) ───────────────────────────────────────
+nvidia-smi dmon -s pucvmet -d 1 -c 30
+
+# ── REMOTE FLEET MONITORING ──────────────────────────────────────────────────
+dcgmi group -c training_group
+dcgmi group -g 1 -a all
+dcgmi dmon -g 1 -e 1003,1004,1005,1009 -d 1000
+</pre>
+
+<h3>Complete DCGM Field ID Reference</h3>
+<table>
+<tr><th>Field ID</th><th>Name</th><th>Unit</th><th>Healthy Range</th><th>Alert Threshold</th></tr>
+<tr><td><code>100</code></td><td>DCGM_FI_DEV_GPU_TEMP</td><td>°C</td><td>&lt; 80°C</td><td>&gt; 83°C → throttle risk</td></tr>
+<tr><td><code>101</code></td><td>DCGM_FI_DEV_MEM_MAX_OP_TEMP</td><td>°C</td><td>&lt; 85°C</td><td>&gt; 90°C → HBM thermal limit</td></tr>
+<tr><td><code>150</code></td><td>DCGM_FI_DEV_POWER_USAGE</td><td>W</td><td>Varies by workload</td><td>Near TDP limit consistently</td></tr>
+<tr><td><code>155</code></td><td>DCGM_FI_DEV_TOTAL_ENERGY_CONSUMPTION</td><td>mJ (cumulative)</td><td>Counter</td><td>Use rate() in Prometheus</td></tr>
+<tr><td><code>160</code></td><td>DCGM_FI_DEV_XID_ERRORS</td><td>Count</td><td>0</td><td>&gt; 0 → investigate immediately</td></tr>
+<tr><td><code>190</code></td><td>DCGM_FI_DEV_NVLINK_CRC_FLIT_ERROR_COUNT_L0</td><td>Count</td><td>0</td><td>&gt; 0 → cable/connector issue</td></tr>
+<tr><td><code>203</code></td><td>DCGM_FI_DEV_GPU_UTIL ⚠</td><td>%</td><td>N/A (misleading)</td><td>Use field 1003 instead</td></tr>
+<tr><td><code>252</code></td><td>DCGM_FI_DEV_CLOCK_THROTTLE_REASONS</td><td>Bitmask</td><td>0</td><td>&gt; 0 → decode bitmask below</td></tr>
+<tr><td><code>1002</code></td><td>DCGM_FI_PROF_GR_ENGINE_ACTIVE</td><td>%</td><td>&gt; 85% (training)</td><td>&lt; 60% → overhead-bound</td></tr>
+<tr><td><code>1003</code></td><td>DCGM_FI_PROF_SM_ACTIVE</td><td>%</td><td>&gt; 85% (training)</td><td>&lt; 50% → severe underutilization</td></tr>
+<tr><td><code>1004</code></td><td>DCGM_FI_PROF_SM_OCCUPANCY</td><td>%</td><td>&gt; 50%</td><td>&lt; 25% → occupancy limiter</td></tr>
+<tr><td><code>1005</code></td><td>DCGM_FI_PROF_PIPE_TENSOR_ACTIVE</td><td>%</td><td>&gt; 60% (training BF16)</td><td>&lt; 20% → Tensor Core unused</td></tr>
+<tr><td><code>1006</code></td><td>DCGM_FI_PROF_PIPE_FP64_ACTIVE</td><td>%</td><td>~0 (AI workloads)</td><td>&gt; 5% → FP64 fallback bug</td></tr>
+<tr><td><code>1009</code></td><td>DCGM_FI_PROF_DRAM_ACTIVE</td><td>%</td><td>Workload-dependent</td><td>Constant 100% → BW bottleneck</td></tr>
+<tr><td><code>1011</code></td><td>DCGM_FI_PROF_NVLINK_TX_BYTES</td><td>B/s</td><td>Near 450 GB/s (H100×8)</td><td>&lt; 350 GB/s → degradation</td></tr>
+<tr><td><code>1012</code></td><td>DCGM_FI_PROF_NVLINK_RX_BYTES</td><td>B/s</td><td>Near 450 GB/s (H100×8)</td><td>&lt; 350 GB/s → degradation</td></tr>
+</table>
+
+<h3>Clock Throttle Reason Bitmask Decode</h3>
+<pre>
+# Field 252 bitmask — decode to find WHY clocks dropped:
+0x0000000000000001  HW_SLOWDOWN             GPU too hot — reduce workload or improve cooling
+0x0000000000000002  SW_POWER_CAP            Power cap set below workload demand (check nvidia-smi -q -d POWER)
+0x0000000000000004  HW_POWER_BRAKE_SLOWDOWN Power from upstream source (PSU/switch) limited
+0x0000000000000008  SYNC_BOOST              Clock sync across multiple GPUs (normal in some configs)
+0x0000000000000010  SW_THERMAL_SLOWDOWN     SW thermal limit reached (85°C default)
+0x0000000000000020  HW_THERMAL_SLOWDOWN     HW thermal emergency — immediately reduce workload
+0x0000000000000040  DISPLAY_CLOCKS_SETTING  Display active (remove from compute node)
+
+# Prometheus query: find all throttled GPUs
+DCGM_FI_DEV_CLOCK_THROTTLE_REASONS > 0
+</pre>
+
+<h3>XID Error Reference (Most Common)</h3>
+<table>
+<tr><th>XID</th><th>Name</th><th>Severity</th><th>Action</th></tr>
+<tr><td><code>48</code></td><td>DBE (Double-Bit ECC Error)</td><td>CRITICAL</td><td>Immediate workload evacuation; hardware replacement required</td></tr>
+<tr><td><code>63</code></td><td>ECC page retirement needed</td><td>HIGH</td><td>Schedule maintenance; retire affected pages</td></tr>
+<tr><td><code>74</code></td><td>NVLINK error</td><td>HIGH</td><td>Check cables and peer GPU; disable link if persistent</td></tr>
+<tr><td><code>79</code></td><td>GPU failure requiring reset</td><td>CRITICAL</td><td>GPU reset required; drain job from node</td></tr>
+<tr><td><code>80</code></td><td>Correctable SBE (Single-Bit ECC)</td><td>LOW</td><td>Monitor rate; alert if &gt; 1,000/hr</td></tr>
+<tr><td><code>94</code></td><td>Contained ECC error, not corrected</td><td>HIGH</td><td>Drain node after workload ends</td></tr>
+<tr><td><code>95</code></td><td>Uncontained ECC error (possible data loss)</td><td>CRITICAL</td><td>Immediate evacuation required</td></tr>
+</table>
+
+<pre>
+# Monitor XID errors in production:
+dmesg -T | grep -i "NVRM.*Xid"
+# or via DCGM:
+dcgmi dmon -e 160 -d 1000 -c 60    # XID counter (field 160)
+</pre>
+
+<h3>SM Activity Diagnostic Matrix</h3>
+<table>
+<tr><th>SM_ACTIVE (1003)</th><th>TENSOR_ACTIVE (1005)</th><th>DRAM_ACTIVE (1009)</th><th>Diagnosis</th></tr>
+<tr><td>High (&gt;85%)</td><td>High (&gt;60%)</td><td>Low</td><td>✅ HEALTHY — compute-bound training</td></tr>
+<tr><td>High</td><td>High</td><td>High</td><td>✅ HEALTHY — bandwidth-bound decode (correct)</td></tr>
+<tr><td>High</td><td>Low</td><td>Low</td><td>⚠️ Tensor Cores unused: wrong dtype or misaligned dims</td></tr>
+<tr><td>High</td><td>Low</td><td>High</td><td>⚠️ Memory-bound, no Tensor Core work: elementwise-dominated</td></tr>
+<tr><td>Low</td><td>Low</td><td>Low</td><td>❌ Launch overhead or data loading stall: nsys timeline</td></tr>
+<tr><td>Variable</td><td>Any</td><td>Any</td><td>❌ Straggler: one GPU shows variance while others are steady</td></tr>
+</table>
+
+<h3>Prometheus Alert Rules for DCGM</h3>
+<pre>
+# /etc/prometheus/rules/gpu_alerts.yml
+
+groups:
+  - name: gpu_health
+    rules:
+      - alert: GPUThermalThrottle
+        expr: DCGM_FI_DEV_CLOCK_THROTTLE_REASONS > 0
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "GPU {{ $labels.gpu }} throttling on {{ $labels.Hostname }}"
+
+      - alert: GPUXIDError
+        expr: DCGM_FI_DEV_XID_ERRORS > 0
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "XID error on {{ $labels.Hostname }} GPU {{ $labels.gpu }}"
+
+      - alert: GPUHighTemperature
+        expr: DCGM_FI_DEV_GPU_TEMP > 83
+        for: 5m
+        labels: { severity: warning }
+
+      - alert: GPUUncorrectableECC
+        expr: DCGM_FI_DEV_ECC_DBE_VOL_TOTAL > 0
+        for: 1m
+        labels: { severity: critical }
+
+      - alert: GPUSMUnderutilized
+        expr: DCGM_FI_PROF_SM_ACTIVE < 50
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "SM utilization < 50% for 10min on {{ $labels.Hostname }}"
+</pre>
+
+
+<!-- ═══════ B.5 NCCL ═══════ -->
+<h2 id="b5">B.5 NCCL — Collective Communication Reference</h2>
+
+<div class="callout">
+  <strong>Purpose:</strong> Diagnose AllReduce bandwidth, communication topology issues, collective hangs, and NIC/InfiniBand degradation in multi-GPU and multi-node training clusters.
+</div>
+
+<h3>Essential NCCL Environment Variables</h3>
+<table>
+<tr><th>Variable</th><th>Recommended Value</th><th>Effect</th></tr>
+<tr><td><code>NCCL_IB_HCA</code></td><td><code>mlx5_0:1,mlx5_1:1,...,mlx5_7:1</code></td><td>Pin NCCL to specific NICs for rail-aligned topology (critical for multi-rail IB)</td></tr>
+<tr><td><code>NCCL_IB_QPS_PER_CONNECTION</code></td><td><code>4</code></td><td>4 QPs per NIC connection — improves NIC utilization</td></tr>
+<tr><td><code>NCCL_NET_GDR_LEVEL</code></td><td><code>SYS</code></td><td>Enable GPUDirect RDMA — bypass CPU for GPU↔NIC transfers</td></tr>
+<tr><td><code>NCCL_NVLS_ENABLE</code></td><td><code>1</code></td><td>Enable NVLink SHARP (H100 + Quantum-2+) — up to 2× AllReduce speedup</td></tr>
+<tr><td><code>NCCL_SHARP_ENABLE</code></td><td><code>1</code></td><td>Enable IB SHARP for in-network compute on Quantum-2 switches</td></tr>
+<tr><td><code>NCCL_TIMEOUT</code></td><td><code>1800</code></td><td>30-min watchdog (default 300s too aggressive for large checkpoints)</td></tr>
+<tr><td><code>NCCL_BUFFSIZE</code></td><td><code>8388608</code></td><td>8 MB intermediate buffer (default 4 MB can limit throughput)</td></tr>
+<tr><td><code>NCCL_MIN_NCHANNELS</code></td><td><code>4</code></td><td>Minimum communication channels per connection</td></tr>
+<tr><td><code>NCCL_DEBUG</code></td><td><code>WARN</code> (prod) / <code>INFO</code> (debug)</td><td>Logging verbosity — INFO mode has significant overhead</td></tr>
+<tr><td><code>NCCL_TOPO_DUMP_FILE</code></td><td><code>/tmp/nccl_topo.xml</code></td><td>Dump topology XML for debugging GPU-NIC-Switch connectivity</td></tr>
+<tr><td><code>NCCL_ALGO</code></td><td>Leave unset (auto)</td><td>Force ring/tree/collnet — only override if topology known suboptimal</td></tr>
+<tr><td><code>NCCL_SOCKET_IFNAME</code></td><td><code>^lo,^docker</code></td><td>Exclude loopback and docker interfaces from NCCL</td></tr>
+</table>
+
+<h3>nccl-tests — Cluster Health Benchmark</h3>
+<pre>
+# ── BUILD (one time) ──────────────────────────────────────────────────────────
+git clone https://github.com/NVIDIA/nccl-tests
+cd nccl-tests
+make MPI=1 MPI_HOME=/usr/local/mpi CUDA_HOME=/usr/local/cuda
+
+# ── ALLREDUCE SWEEP (most important test) ─────────────────────────────────────
+mpirun -np 8 --bind-to none \
+  ./build/all_reduce_perf \
+  -b 1M -e 4G -f 2 \     # message sizes 1MB → 4GB, 2× steps
+  -g 1                    # 1 GPU per process
+
+# ── MULTI-NODE ALLREDUCE (8 nodes × 8 GPUs = 64 GPUs) ─────────────────────────
+mpirun -np 64 \
+  -H node001:8,node002:8,...,node008:8 \
+  --mca btl_openib_if_include mlx5_0:1 \
+  ./build/all_reduce_perf -b 256M -e 4G -f 2 -g 1
+
+# ── EXAMPLE HEALTHY OUTPUT ───────────────────────────────────────────────────
+#   #                                                              out-of-place
+#   #       size         count    type   redop    root    time   algbw   busbw
+#   #        (B)    (elements)                             (us)  (GB/s)  (GB/s)
+#    268435456      67108864   float     sum      -1    1423.7  188.5   188.5
+# 
+# H100 × 8, NVLink healthy baseline:
+#   256MB  busbw ≥ 160 GB/s
+#   1GB    busbw ≥ 180 GB/s
+#   ALERT: busbw &lt; 140 GB/s → NVLink degradation → check DCGM field 1011/1012
+#
+# H100 × 64, IB NDR 400G healthy baseline:
+#   256MB  busbw ≥ 40 GB/s
+#   1GB    busbw ≥ 45 GB/s
+#   ALERT: busbw &lt; 35 GB/s → IB degradation → check ibstatus
+
+# ── TOPOLOGY DEBUGGING ────────────────────────────────────────────────────────
+NCCL_TOPO_DUMP_FILE=/tmp/topo.xml python -c \
+  "import torch.distributed as dist; dist.init_process_group('nccl')"
+cat /tmp/topo.xml
+# Verify each GPU-i connects to same leaf switch (rail-optimized topology)
+
+# ── ISOLATE HANG ──────────────────────────────────────────────────────────────
+# If training hangs, dump thread stacks to find stuck ranks:
+py-spy dump --pid $(pgrep -f "train.py")
+# Look for threads stuck in ncclAllReduce → rank is hanging
+</pre>
+
+<h3>busbw vs algbw — Which Number Matters?</h3>
+<div class="callout">
+  <strong>Use busbw (bus bandwidth) for cluster health assessment.</strong> The <code>algbw</code> (algorithm bandwidth) measures bytes sent per second from the application's perspective. The <code>busbw</code> normalizes for the AllReduce algorithm's communication volume — for a ring AllReduce, busbw = algbw × 2(N-1)/N. For a healthy 8-GPU NVLink ring, you expect busbw ≈ algbw × 1.75. If busbw/algbw ratio is wrong, NCCL is using an unexpected algorithm.
+</div>
+
+<!-- ═══════ B.6 VLLM METRICS ═══════ -->
+<h2 id="b6">B.6 vLLM Inference Metrics Reference</h2>
+
+<div class="callout">
+  <strong>Purpose:</strong> Monitor inference serving latency, throughput, KV cache pressure, and request queue depth. These metrics are the primary SLO health indicators for production LLM serving.
+</div>
+
+<h3>Start vLLM with Metrics Endpoint</h3>
+<pre>
+python -m vllm.entrypoints.openai.api_server \
+  --model meta-llama/Llama-3-70b-instruct \
+  --tensor-parallel-size 2 \
+  --quantization fp8 \
+  --gpu-memory-utilization 0.90 \
+  --enable-prefix-caching \
+  --port 8000
+
+# Pull metrics:
+curl http://localhost:8000/metrics | grep vllm:
+</pre>
+
+<h3>vLLM Metric Reference with Alert Thresholds</h3>
+<table>
+<tr><th>Metric</th><th>Type</th><th>Description</th><th>Alert Threshold</th></tr>
+<tr><td><code>vllm:gpu_cache_usage_perc</code></td><td>Gauge</td><td>KV cache blocks used / total blocks</td><td class="critical"><strong>&gt; 0.82 → CASCADE RISK</strong></td></tr>
+<tr><td><code>vllm:cpu_cache_usage_perc</code></td><td>Gauge</td><td>CPU offload cache utilization</td><td>&gt; 0.90 → swap pressure</td></tr>
+<tr><td><code>vllm:num_requests_running</code></td><td>Gauge</td><td>Requests currently in flight (prefill+decode)</td><td>Near max_num_seqs</td></tr>
+<tr><td><code>vllm:num_requests_waiting</code></td><td>Gauge</td><td>Requests queued, not yet scheduled</td><td>&gt; 50 → throughput limited</td></tr>
+<tr><td><code>vllm:time_to_first_token_seconds</code></td><td>Histogram</td><td>Prefill phase latency per request</td><td>P99 &gt; SLO threshold</td></tr>
+<tr><td><code>vllm:time_per_output_token_seconds</code></td><td>Histogram</td><td>Per-token decode latency</td><td>P99 &gt; 100ms typical</td></tr>
+<tr><td><code>vllm:e2e_request_latency_seconds</code></td><td>Histogram</td><td>Full request latency (TTFT + decode)</td><td>P99 per SLO</td></tr>
+<tr><td><code>vllm:generation_tokens_total</code></td><td>Counter</td><td>Total output tokens generated</td><td>Use <code>rate()[1m]</code> for throughput</td></tr>
+<tr><td><code>vllm:prompt_tokens_total</code></td><td>Counter</td><td>Total input tokens processed</td><td>Rate tracks prefill load</td></tr>
+<tr><td><code>vllm:request_success_total</code></td><td>Counter</td><td>Successful completions</td><td>Compare to request_count for error rate</td></tr>
+<tr><td><code>vllm:cache_config_info</code></td><td>Gauge</td><td>KV cache configuration metadata</td><td>Informational</td></tr>
+<tr><td><code>vllm:spec_decode_draft_acceptance_rate</code></td><td>Gauge</td><td>Speculative decoding acceptance rate α</td><td>&lt; 0.65 → wrong draft model for this workload</td></tr>
+</table>
+
+<div class="critical">
+  <strong>🚨 KV Cache Cascade:</strong> When <code>vllm:gpu_cache_usage_perc</code> exceeds ~0.85, vLLM begins preempting (evicting) in-flight requests to reclaim KV blocks. Preemption causes requests to re-prefill from scratch — TTFT spikes 5–20× for affected requests. Alert at <strong>0.82</strong> to give headroom to react. Fix: reduce <code>max_num_seqs</code>, enable chunked prefill, or reduce <code>max_model_len</code>. See <strong>Chapter 11, §11.3</strong>.
+</div>
+
+
+<!-- ═══════ B.7 PROMQL ═══════ -->
+<h2 id="b7">B.7 PromQL Patterns for AI Cluster Monitoring</h2>
+
+<div class="callout">
+  <strong>Purpose:</strong> Production-ready PromQL queries for Grafana dashboards and Prometheus alert rules. Each query maps to a specific operational question.
+</div>
+
+<h3>GPU Compute Queries</h3>
+<pre>
+# ── CLUSTER-WIDE SM UTILIZATION AVERAGE ───────────────────────────────────────
+avg(DCGM_FI_PROF_SM_ACTIVE) by (Hostname)
+
+# ── FIND UNDERUTILIZED GPUs (potential stragglers) ────────────────────────────
+DCGM_FI_PROF_SM_ACTIVE &lt; 50
+
+# ── TENSOR CORE UTILIZATION PER GPU ─────────────────────────────────────────
+DCGM_FI_PROF_PIPE_TENSOR_ACTIVE
+
+# ── GPU POWER DRAW ACROSS FLEET ───────────────────────────────────────────────
+DCGM_FI_DEV_POWER_USAGE
+
+# ── MEMORY BANDWIDTH PRESSURE ────────────────────────────────────────────────
+DCGM_FI_PROF_DRAM_ACTIVE &gt; 0.95   # consistently near 100% = BW bottleneck
+</pre>
+
+<h3>Thermal and Health Queries</h3>
+<pre>
+# ── HOT GPUs ACROSS FLEET ─────────────────────────────────────────────────────
+DCGM_FI_DEV_GPU_TEMP &gt; 80
+
+# ── CLOCK THROTTLE ACTIVE ─────────────────────────────────────────────────────
+DCGM_FI_DEV_CLOCK_THROTTLE_REASONS &gt; 0
+
+# ── ECC CORRECTABLE ERROR RATE (rolling 1hr window) ──────────────────────────
+rate(DCGM_FI_DEV_ECC_SBE_VOL_TOTAL[1h])
+
+# ── ANY UNCORRECTABLE ECC (critical) ─────────────────────────────────────────
+DCGM_FI_DEV_ECC_DBE_VOL_TOTAL &gt; 0
+
+# ── ECC ERRORS PER NODE IN LAST 24H ──────────────────────────────────────────
+sum by (Hostname) (increase(DCGM_FI_DEV_ECC_SBE_VOL_TOTAL[24h]))
+
+# ── FREE GPU MEMORY (low = risk of OOM) ──────────────────────────────────────
+DCGM_FI_DEV_FB_FREE &lt; 5000    # in MiB
+</pre>
+
+<h3>Inference Service Queries</h3>
+<pre>
+# ── TTFT P99 LATENCY (5-minute window) ───────────────────────────────────────
+histogram_quantile(0.99,
+  rate(vllm:time_to_first_token_seconds_bucket[5m])
+)
+
+# ── TPOT P50 LATENCY ─────────────────────────────────────────────────────────
+histogram_quantile(0.50,
+  rate(vllm:time_per_output_token_seconds_bucket[5m])
+)
+
+# ── CURRENT TOKENS/SECOND THROUGHPUT ─────────────────────────────────────────
+rate(vllm:generation_tokens_total[1m])
+
+# ── KV CACHE UTILIZATION (alert if > 82%) ────────────────────────────────────
+vllm:gpu_cache_usage_perc * 100 &gt; 82
+
+# ── REQUEST QUEUE DEPTH ──────────────────────────────────────────────────────
+vllm:num_requests_waiting
+
+# ── INFERENCE ERROR RATE ─────────────────────────────────────────────────────
+rate(vllm:request_success_total[5m]) / rate(vllm:request_count_total[5m])
+</pre>
+
+<h3>Training Queries</h3>
+<pre>
+# ── MFU PER TRAINING JOB ─────────────────────────────────────────────────────
+training_mfu
+
+# ── MFU DROP DETECTION (alert if drops > 5 pp in 10 min) ────────────────────
+training_mfu - training_mfu offset 10m &gt; 0.05
+
+# ── STEP TIME P99 (straggler detection) ───────────────────────────────────────
+histogram_quantile(0.99, rate(training_step_seconds_bucket[5m]))
+
+# ── ALLREDUCE LATENCY TREND ───────────────────────────────────────────────────
+avg_over_time(allreduce_time_ms[5m])
+
+# ── GRADIENT NORM SPIKE DETECTION ────────────────────────────────────────────
+train_grad_norm &gt; 10     # potential training instability
+</pre>
+
+<h3>PromQL Pattern Reference</h3>
+<table>
+<tr><th>Pattern</th><th>PromQL Syntax</th><th>Use Case</th></tr>
+<tr><td>Rate of counter</td><td><code>rate(metric[5m])</code></td><td>Errors/sec, tokens/sec from counters</td></tr>
+<tr><td>Increase over window</td><td><code>increase(metric[1h])</code></td><td>ECC errors in last hour</td></tr>
+<tr><td>Aggregate by label</td><td><code>avg by (Hostname) (metric)</code></td><td>Per-node averages across fleet</td></tr>
+<tr><td>Percentile</td><td><code>histogram_quantile(0.99, rate(hist_bucket[5m]))</code></td><td>P99 TTFT from vLLM histogram</td></tr>
+<tr><td>Threshold filter</td><td><code>metric &gt; threshold</code></td><td>Find GPUs above temperature</td></tr>
+<tr><td>Change detection</td><td><code>metric - metric offset 10m</code></td><td>Detect sudden MFU drops</td></tr>
+<tr><td>Multi-label sum</td><td><code>sum by (job, Hostname) (metric)</code></td><td>Power per training job per node</td></tr>
+<tr><td>Absent metric alert</td><td><code>absent(metric)</code></td><td>Alert if exporter stops scraping</td></tr>
+</table>
+
+<!-- ═══════ B.8 AMD EQUIVALENTS ═══════ -->
+<h2 id="b8">B.8 AMD Tool Equivalents (MI300X / MI355X)</h2>
+
+<div class="callout">
+  <strong>Context:</strong> AMD MI300X clusters use a parallel toolchain. The conceptual workflow is identical — system timeline → kernel analysis → fleet health — but the commands differ. See <strong>Chapter 17, §17.8</strong> for AMD profiling details.
+</div>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 820 300" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;border-radius:8px">
+  <rect width="820" height="300" fill="#1c2438" rx="8"/>
+  <text x="410" y="26" font-family="sans-serif" font-size="13" font-weight="700" fill="#e3b341" text-anchor="middle">NVIDIA → AMD Tool Equivalence Map</text>
+  <!-- Header row -->
+  <rect x="20" y="36" width="380" height="22" fill="#0d2040" rx="3"/>
+  <text x="210" y="51" font-family="sans-serif" font-size="10" font-weight="700" fill="#79c0ff" text-anchor="middle">NVIDIA Tool</text>
+  <rect x="420" y="36" width="380" height="22" fill="#1a1a2e" rx="3"/>
+  <text x="610" y="51" font-family="sans-serif" font-size="10" font-weight="700" fill="#a8d8a8" text-anchor="middle">AMD Equivalent</text>
+  <!-- Arrow -->
+  <text x="405" y="51" font-family="sans-serif" font-size="14" fill="#e3b341" text-anchor="middle">→</text>
+  <!-- Rows -->
+  <text x="30" y="80" font-family="Courier New,monospace" font-size="10.5" fill="#b8ddf0">nsys profile (system timeline)</text>
+  <text x="430" y="80" font-family="Courier New,monospace" font-size="10.5" fill="#a8d8a8">rocprof --sys-trace / roctracer</text>
+  <line x1="20" y1="87" x2="800" y2="87" stroke="#2d3748" stroke-width="1"/>
+  <text x="30" y="106" font-family="Courier New,monospace" font-size="10.5" fill="#b8ddf0">ncu (kernel hardware counters)</text>
+  <text x="430" y="106" font-family="Courier New,monospace" font-size="10.5" fill="#a8d8a8">omniperf (roofline + counters)</text>
+  <line x1="20" y1="113" x2="800" y2="113" stroke="#2d3748" stroke-width="1"/>
+  <text x="30" y="132" font-family="Courier New,monospace" font-size="10.5" fill="#b8ddf0">dcgmi dmon (fleet telemetry)</text>
+  <text x="430" y="132" font-family="Courier New,monospace" font-size="10.5" fill="#a8d8a8">rocm-smi + amd-smi (or rocm_smi_exporter)</text>
+  <line x1="20" y1="139" x2="800" y2="139" stroke="#2d3748" stroke-width="1"/>
+  <text x="30" y="158" font-family="Courier New,monospace" font-size="10.5" fill="#b8ddf0">nvidia-smi dmon (quick status)</text>
+  <text x="430" y="158" font-family="Courier New,monospace" font-size="10.5" fill="#a8d8a8">rocm-smi --showallinfo</text>
+  <line x1="20" y1="165" x2="800" y2="165" stroke="#2d3748" stroke-width="1"/>
+  <text x="30" y="184" font-family="Courier New,monospace" font-size="10.5" fill="#b8ddf0">torch.cuda.nvtx.range_push()</text>
+  <text x="430" y="184" font-family="Courier New,monospace" font-size="10.5" fill="#a8d8a8">torch.cuda.nvtx (same API on ROCm)</text>
+  <line x1="20" y1="191" x2="800" y2="191" stroke="#2d3748" stroke-width="1"/>
+  <text x="30" y="210" font-family="Courier New,monospace" font-size="10.5" fill="#b8ddf0">Nsight Systems GUI (nsys-ui)</text>
+  <text x="430" y="210" font-family="Courier New,monospace" font-size="10.5" fill="#a8d8a8">Radeon GPU Profiler (RGP)</text>
+  <line x1="20" y1="217" x2="800" y2="217" stroke="#2d3748" stroke-width="1"/>
+  <text x="30" y="236" font-family="Courier New,monospace" font-size="10.5" fill="#b8ddf0">NCCL (communications library)</text>
+  <text x="430" y="236" font-family="Courier New,monospace" font-size="10.5" fill="#a8d8a8">RCCL (drop-in replacement)</text>
+  <line x1="20" y1="243" x2="800" y2="243" stroke="#2d3748" stroke-width="1"/>
+  <text x="30" y="262" font-family="Courier New,monospace" font-size="10.5" fill="#b8ddf0">CUDA Graphs (launch overhead)</text>
+  <text x="430" y="262" font-family="Courier New,monospace" font-size="10.5" fill="#a8d8a8">HIP Graph (same concept, HIP API)</text>
+  <line x1="20" y1="269" x2="800" y2="269" stroke="#2d3748" stroke-width="1"/>
+  <text x="30" y="288" font-family="Courier New,monospace" font-size="10.5" fill="#b8ddf0">cuBLAS / cuDNN kernels</text>
+  <text x="430" y="288" font-family="Courier New,monospace" font-size="10.5" fill="#a8d8a8">rocBLAS / MIOpen / hipBLAS</text>
+</svg>
+<figcaption>Fig B-2. NVIDIA to AMD tool equivalence. The profiling workflow — system timeline, kernel analysis, fleet health — is identical; only the command names change.</figcaption>
+</div>
+
+<h3>AMD rocprof Quick Reference</h3>
+<pre>
+# ── SYSTEM TIMELINE (equivalent to nsys) ──────────────────────────────────────
+rocprof --sys-trace --output-dir /tmp/rocprof_out python train.py
+
+# ── KERNEL STATISTICS ─────────────────────────────────────────────────────────
+rocprof --stats python train.py
+# Output: top kernels by wall time — equivalent to nsys stats gputrace
+
+# ── HARDWARE COUNTERS ─────────────────────────────────────────────────────────
+cat > /tmp/counters.txt << EOF
+SQ_WAVES
+GRBM_COUNT
+TCC_HIT_sum
+TCC_MISS_sum
+EOF
+rocprof --counters /tmp/counters.txt python train.py
+
+# ── OMNIPERF ROOFLINE ANALYSIS ────────────────────────────────────────────────
+omniperf profile -n my_run -- python train.py
+omniperf analyze -p workloads/my_run/MI300_A1 --roof-only
+
+# ── AMD-SMI FLEET HEALTH ──────────────────────────────────────────────────────
+amd-smi monitor -p -t -u -m    # power, temp, utilization, mem
+rocm-smi --showallinfo          # comprehensive single-GPU status
+</pre>
+
+
+<!-- ═══════ B.9 STORAGE & I/O ═══════ -->
+<h2 id="b9">B.9 Storage and I/O Diagnostic Commands</h2>
+
+<div class="callout">
+  <strong>Purpose:</strong> Diagnose checkpoint I/O bottlenecks, dataset loading stalls, and parallel filesystem (Lustre/GPFS) health. Storage is the silent killer of MFU — a healthy training job loses 2–8% MFU to checkpoint overhead; a sick storage system can stall an entire cluster.
+</div>
+
+<h3>Checkpoint I/O Diagnostics</h3>
+<pre>
+# ── MEASURE ACTUAL CHECKPOINT WRITE SPEED ─────────────────────────────────────
+# Time a checkpoint save directly:
+time python -c "
+import torch
+model = ... # your model
+torch.save(model.state_dict(), '/path/to/checkpoint/ckpt.pt')
+"
+# A 70B BF16 model checkpoint = ~140 GB
+# Expected: NFS 10GbE = ~60 sec; Lustre 200 GB/s = ~0.7 sec
+
+# ── FIO SEQUENTIAL BENCHMARK (measure storage peak throughput) ───────────────
+# Sequential write (checkpoint scenario):
+fio --name=seqwrite --ioengine=libaio --direct=1 \
+    --rw=write --bs=4M --numjobs=16 \
+    --size=10G --runtime=60 --group_reporting \
+    --filename=/mnt/scratch/testfile
+# Target for Lustre with 10+ OSS nodes: > 50 GB/s aggregate write
+
+# Sequential read (dataset prefetch scenario):
+fio --name=seqread --ioengine=libaio --direct=1 \
+    --rw=read --bs=1M --numjobs=32 \
+    --size=10G --runtime=60 --group_reporting \
+    --filename=/mnt/scratch/testfile
+
+# ── LUSTRE FILESYSTEM HEALTH ──────────────────────────────────────────────────
+lfs df -h /mnt/scratch           # Capacity per OST
+lfs df -i /mnt/scratch           # Inode usage per MDT
+lfs check servers                 # OSS/MDS connectivity
+lfs getstripe /path/to/file      # File stripe layout
+lfs setstripe -c 64 /path/to/dir # Set 64-OST stripe for large files
+
+# Lustre stats:
+cat /proc/fs/lustre/llite/*/stats  # Client I/O statistics
+
+# ── GPFS (IBM Spectrum Scale) HEALTH ─────────────────────────────────────────
+mmlsfs gpfs0 -T         # Filesystem configuration
+mmfsck gpfs0 -n         # Check without repair
+mmpmon fs_io_s          # I/O statistics
+
+# ── IDENTIFY DATA LOADING BOTTLENECKS IN PYTHON ───────────────────────────────
+# Add instrumentation to DataLoader:
+import time
+
+class TimedDataLoader:
+    def __init__(self, loader):
+        self.loader = loader
+        self.wait_times = []
+
+    def __iter__(self):
+        t0 = time.perf_counter()
+        for batch in self.loader:
+            wait = time.perf_counter() - t0
+            self.wait_times.append(wait)
+            yield batch
+            t0 = time.perf_counter()
+
+# If avg_wait_ms > 10ms → data loading is bottlenecking GPU
+
+# ── NETWORK STORAGE (NFS) TUNING ──────────────────────────────────────────────
+# Mount options for checkpoint performance:
+# nfs4 rsize=1048576,wsize=1048576,hard,intr,rw,async
+# Check current NFS stats:
+nfsstat -c              # Client statistics
+mountstats /mnt/nfs     # Detailed per-mount stats
+</pre>
+
+<h3>Storage Health Checklist</h3>
+<table>
+<tr><th>Symptom</th><th>Diagnostic Command</th><th>Expected vs Alert</th></tr>
+<tr><td>Checkpoint saves taking > 5 minutes</td><td><code>fio --rw=write --bs=4M --numjobs=16</code></td><td>&gt; 10 GB/s healthy; &lt; 2 GB/s → storage degraded</td></tr>
+<tr><td>Dataset loading stalls between steps</td><td><code>nsys --trace=osrt</code> + CPU idle gaps</td><td>Gaps &lt; 5ms fine; &gt; 50ms → increase DataLoader workers</td></tr>
+<tr><td>Lustre OST space imbalance</td><td><code>lfs df -h</code></td><td>All OSTs should be within 20% of each other</td></tr>
+<tr><td>Inode exhaustion (small file datasets)</td><td><code>lfs df -i</code></td><td>&gt; 80% inode usage → pack small files into webdataset / TAR</td></tr>
+<tr><td>Random read latency for checkpointing</td><td><code>fio --rw=randread --bs=4k</code></td><td>HDD: &lt; 500 IOPS critical; SSD: &gt; 100K IOPS expected</td></tr>
+</table>
+
+<!-- ═══════ B.10 QUICK SYMPTOM TABLE ═══════ -->
+<h2 id="b10">B.10 Symptom-to-Command Quick Reference</h2>
+
+<p>This is the highest-frequency lookup table in this appendix — use it when you have a symptom but haven't yet identified the tool.</p>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 860 460" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;border-radius:8px">
+  <rect width="860" height="460" fill="#0d1117" rx="8"/>
+  <text x="430" y="26" font-family="sans-serif" font-size="13" font-weight="700" fill="#e3b341" text-anchor="middle">Symptom → Command → First Metric Quick Reference</text>
+  <rect x="10" y="34" width="240" height="18" fill="#1c2438"/>
+  <text x="130" y="46" font-family="sans-serif" font-size="9" font-weight="700" fill="#e3b341" text-anchor="middle">SYMPTOM</text>
+  <rect x="255" y="34" width="300" height="18" fill="#1c2438"/>
+  <text x="405" y="46" font-family="sans-serif" font-size="9" font-weight="700" fill="#e3b341" text-anchor="middle">COMMAND</text>
+  <rect x="560" y="34" width="290" height="18" fill="#1c2438"/>
+  <text x="705" y="46" font-family="sans-serif" font-size="9" font-weight="700" fill="#e3b341" text-anchor="middle">FIRST METRIC</text>
+
+  <!-- Row macro: y_start, bg, symptom, command, metric -->
+  <rect x="10" y="52" width="840" height="26" fill="#161b22"/>
+  <text x="18" y="68" font-family="sans-serif" font-size="10" fill="#b8ddf0">Low MFU in training (&lt; 40%)</text>
+  <text x="263" y="68" font-family="Courier New,monospace" font-size="9.5" fill="#79c0ff">nsys --trace=cuda,nvtx,nccl</text>
+  <text x="568" y="68" font-family="sans-serif" font-size="9.5" fill="#a8d8a8">Timeline: idle gaps between kernels</text>
+
+  <rect x="10" y="78" width="840" height="26" fill="#0d1117"/>
+  <text x="18" y="94" font-family="sans-serif" font-size="10" fill="#b8ddf0">High TTFT P99 in inference</text>
+  <text x="263" y="94" font-family="Courier New,monospace" font-size="9.5" fill="#79c0ff">vLLM metrics: time_to_first_token P99</text>
+  <text x="568" y="94" font-family="sans-serif" font-size="9.5" fill="#a8d8a8">Prefill kernel duration vs. decode</text>
+
+  <rect x="10" y="104" width="840" height="26" fill="#161b22"/>
+  <text x="18" y="120" font-family="sans-serif" font-size="10" fill="#b8ddf0">AllReduce bottleneck suspected</text>
+  <text x="263" y="120" font-family="Courier New,monospace" font-size="9.5" fill="#79c0ff">NCCL_DEBUG=INFO + nccl-tests</text>
+  <text x="568" y="120" font-family="sans-serif" font-size="9.5" fill="#a8d8a8">busbw vs. healthy baseline</text>
+
+  <rect x="10" y="130" width="840" height="26" fill="#0d1117"/>
+  <text x="18" y="146" font-family="sans-serif" font-size="10" fill="#b8ddf0">Specific kernel is slow</text>
+  <text x="263" y="146" font-family="Courier New,monospace" font-size="9.5" fill="#79c0ff">ncu --set full --kernel-name X</text>
+  <text x="568" y="146" font-family="sans-serif" font-size="9.5" fill="#a8d8a8">Roofline position + Tensor Core %</text>
+
+  <rect x="10" y="156" width="840" height="26" fill="#161b22"/>
+  <text x="18" y="172" font-family="sans-serif" font-size="10" fill="#b8ddf0">GPU utilization looks low</text>
+  <text x="263" y="172" font-family="Courier New,monospace" font-size="9.5" fill="#79c0ff">dcgmi dmon -e 1003,1004,1005,1009</text>
+  <text x="568" y="172" font-family="sans-serif" font-size="9.5" fill="#a8d8a8">SM_ACTIVE (field 1003), not GPU_UTIL</text>
+
+  <rect x="10" y="182" width="840" height="26" fill="#0d1117"/>
+  <text x="18" y="198" font-family="sans-serif" font-size="10" fill="#b8ddf0">GEMM underperforming</text>
+  <text x="263" y="198" font-family="Courier New,monospace" font-size="9.5" fill="#79c0ff">ncu --metrics pipe_tensor matmul</text>
+  <text x="568" y="198" font-family="sans-serif" font-size="9.5" fill="#a8d8a8">Tensor Core utilization % (target &gt; 60%)</text>
+
+  <rect x="10" y="208" width="840" height="26" fill="#161b22"/>
+  <text x="18" y="224" font-family="sans-serif" font-size="10" fill="#b8ddf0">Straggler node suspected</text>
+  <text x="263" y="224" font-family="Courier New,monospace" font-size="9.5" fill="#79c0ff">dcgmi dmon -e 1003 across nodes</text>
+  <text x="568" y="224" font-family="sans-serif" font-size="9.5" fill="#a8d8a8">Outlier SM_ACTIVE vs. rest of fleet</text>
+
+  <rect x="10" y="234" width="840" height="26" fill="#0d1117"/>
+  <text x="18" y="250" font-family="sans-serif" font-size="10" fill="#b8ddf0">Data loading bottleneck</text>
+  <text x="263" y="250" font-family="Courier New,monospace" font-size="9.5" fill="#79c0ff">nsys --trace=cuda,osrt</text>
+  <text x="568" y="250" font-family="sans-serif" font-size="9.5" fill="#a8d8a8">CPU idle gaps between CUDA launches</text>
+
+  <rect x="10" y="260" width="840" height="26" fill="#161b22"/>
+  <text x="18" y="276" font-family="sans-serif" font-size="10" fill="#b8ddf0">NVLink underperformance</text>
+  <text x="263" y="276" font-family="Courier New,monospace" font-size="9.5" fill="#79c0ff">dcgmi dmon -e 1011,1012</text>
+  <text x="568" y="276" font-family="sans-serif" font-size="9.5" fill="#a8d8a8">NVLink TX/RX bytes/s vs. 450 GB/s</text>
+
+  <rect x="10" y="286" width="840" height="26" fill="#0d1117"/>
+  <text x="18" y="302" font-family="sans-serif" font-size="10" fill="#b8ddf0">IB link degradation</text>
+  <text x="263" y="302" font-family="Courier New,monospace" font-size="9.5" fill="#79c0ff">ibstatus + nccl-tests busbw</text>
+  <text x="568" y="302" font-family="sans-serif" font-size="9.5" fill="#a8d8a8">busbw vs. 45 GB/s (64-GPU NDR baseline)</text>
+
+  <rect x="10" y="312" width="840" height="26" fill="#161b22"/>
+  <text x="18" y="328" font-family="sans-serif" font-size="10" fill="#b8ddf0">ECC error escalation</text>
+  <text x="263" y="328" font-family="Courier New,monospace" font-size="9.5" fill="#79c0ff">nvidia-smi --query-gpu=ecc.errors</text>
+  <text x="568" y="328" font-family="sans-serif" font-size="9.5" fill="#a8d8a8">Corrected ECC count trend / hour</text>
+
+  <rect x="10" y="338" width="840" height="26" fill="#0d1117"/>
+  <text x="18" y="354" font-family="sans-serif" font-size="10" fill="#f97583">Thermal throttling [CRITICAL]</text>
+  <text x="263" y="354" font-family="Courier New,monospace" font-size="9.5" fill="#79c0ff">dcgmi dmon -e 100,252</text>
+  <text x="568" y="354" font-family="sans-serif" font-size="9.5" fill="#f97583">Temp &gt; 83°C + field 252 &gt; 0</text>
+
+  <rect x="10" y="364" width="840" height="26" fill="#161b22"/>
+  <text x="18" y="380" font-family="sans-serif" font-size="10" fill="#b8ddf0">KV cache cascade risk</text>
+  <text x="263" y="380" font-family="Courier New,monospace" font-size="9.5" fill="#79c0ff">curl localhost:8000/metrics | grep cache</text>
+  <text x="568" y="380" font-family="sans-serif" font-size="9.5" fill="#f97583">gpu_cache_usage_perc &gt; 0.82 CRITICAL</text>
+
+  <rect x="10" y="390" width="840" height="26" fill="#0d1117"/>
+  <text x="18" y="406" font-family="sans-serif" font-size="10" fill="#b8ddf0">Checkpoint I/O too slow</text>
+  <text x="263" y="406" font-family="Courier New,monospace" font-size="9.5" fill="#79c0ff">fio --rw=write --bs=4M --numjobs=16</text>
+  <text x="568" y="406" font-family="sans-serif" font-size="9.5" fill="#a8d8a8">Sequential write MB/s vs. Lustre baseline</text>
+
+  <rect x="10" y="416" width="840" height="26" fill="#161b22"/>
+  <text x="18" y="432" font-family="sans-serif" font-size="10" fill="#b8ddf0">Training hang / NCCL deadlock</text>
+  <text x="263" y="432" font-family="Courier New,monospace" font-size="9.5" fill="#79c0ff">py-spy dump --pid $(pgrep python)</text>
+  <text x="568" y="432" font-family="sans-serif" font-size="9.5" fill="#a8d8a8">Thread stack: stuck in ncclAllReduce?</text>
+</svg>
+<figcaption>Fig B-3. Symptom → command → first metric lookup table. Print and post at your workstation. Every row is an entry point into a deeper diagnostic workflow.</figcaption>
+</div>
+
+
+<!-- ═══════ TOOL LANDSCAPE OVERVIEW SVG ═══════ -->
+<h2>Tool Landscape Overview</h2>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 860 340" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;border-radius:8px">
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#e3b341"/>
+    </marker>
+  </defs>
+  <rect width="860" height="340" fill="#f5f3ed" rx="8"/>
+  <text x="430" y="26" font-family="sans-serif" font-size="13" font-weight="700" fill="#1c2438" text-anchor="middle">AI/ML Profiling Tool Landscape — Scope and Resolution</text>
+
+  <!-- Y axis label -->
+  <text x="14" y="200" font-family="sans-serif" font-size="9" fill="#888" transform="rotate(-90,14,200)" text-anchor="middle">← Single Kernel    Scope    Cluster-wide →</text>
+
+  <!-- Vertical axis -->
+  <line x1="40" y1="45" x2="40" y2="310" stroke="#ccc" stroke-width="1.5"/>
+  <!-- Horizontal axis -->
+  <line x1="40" y1="310" x2="840" y2="310" stroke="#ccc" stroke-width="1.5"/>
+  <!-- X axis labels -->
+  <text x="120" y="328" font-family="sans-serif" font-size="9" fill="#888" text-anchor="middle">μs resolution</text>
+  <text x="430" y="328" font-family="sans-serif" font-size="9" fill="#888" text-anchor="middle">ms resolution</text>
+  <text x="720" y="328" font-family="sans-serif" font-size="9" fill="#888" text-anchor="middle">second resolution</text>
+
+  <!-- Tool boxes -->
+  <!-- ncu: single kernel, μs -->
+  <rect x="60" y="55" width="140" height="70" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" rx="7"/>
+  <text x="130" y="76" font-family="sans-serif" font-size="11" font-weight="700" fill="#1e3a8a" text-anchor="middle">Nsight Compute</text>
+  <text x="130" y="92" font-family="sans-serif" font-size="9" fill="#1e3a8a" text-anchor="middle">ncu</text>
+  <text x="130" y="107" font-family="sans-serif" font-size="8.5" fill="#555" text-anchor="middle">Single kernel</text>
+  <text x="130" y="118" font-family="sans-serif" font-size="8.5" fill="#555" text-anchor="middle">HW counters · roofline</text>
+
+  <!-- nsys: system timeline, ms -->
+  <rect x="250" y="100" width="150" height="70" fill="#d1fae5" stroke="#10b981" stroke-width="2" rx="7"/>
+  <text x="325" y="122" font-family="sans-serif" font-size="11" font-weight="700" fill="#065f46" text-anchor="middle">Nsight Systems</text>
+  <text x="325" y="138" font-family="sans-serif" font-size="9" fill="#065f46" text-anchor="middle">nsys</text>
+  <text x="325" y="153" font-family="sans-serif" font-size="8.5" fill="#555" text-anchor="middle">System timeline · ms</text>
+  <text x="325" y="164" font-family="sans-serif" font-size="8.5" fill="#555" text-anchor="middle">CUDA+NCCL+OS</text>
+
+  <!-- PyTorch Profiler: framework, ms -->
+  <rect x="250" y="195" width="150" height="70" fill="#fef3c7" stroke="#f59e0b" stroke-width="2" rx="7"/>
+  <text x="325" y="217" font-family="sans-serif" font-size="11" font-weight="700" fill="#78350f" text-anchor="middle">PyTorch Profiler</text>
+  <text x="325" y="233" font-family="sans-serif" font-size="9" fill="#78350f" text-anchor="middle">torch.profiler</text>
+  <text x="325" y="248" font-family="sans-serif" font-size="8.5" fill="#555" text-anchor="middle">Op-level · low overhead</text>
+  <text x="325" y="259" font-family="sans-serif" font-size="8.5" fill="#555" text-anchor="middle">TensorBoard integration</text>
+
+  <!-- DCGM: node → cluster, 1s -->
+  <rect x="470" y="55" width="150" height="70" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" rx="7"/>
+  <text x="545" y="76" font-family="sans-serif" font-size="11" font-weight="700" fill="#4c1d95" text-anchor="middle">DCGM</text>
+  <text x="545" y="92" font-family="sans-serif" font-size="9" fill="#4c1d95" text-anchor="middle">dcgmi dmon</text>
+  <text x="545" y="107" font-family="sans-serif" font-size="8.5" fill="#555" text-anchor="middle">Node → fleet · 1s</text>
+  <text x="545" y="118" font-family="sans-serif" font-size="8.5" fill="#555" text-anchor="middle">ECC, temp, clocks, SM%</text>
+
+  <!-- Prometheus/Grafana: cluster, 5-15s -->
+  <rect x="650" y="100" width="170" height="70" fill="#fee2e2" stroke="#ef4444" stroke-width="2" rx="7"/>
+  <text x="735" y="122" font-family="sans-serif" font-size="11" font-weight="700" fill="#7f1d1d" text-anchor="middle">Prometheus + Grafana</text>
+  <text x="735" y="138" font-family="sans-serif" font-size="9" fill="#7f1d1d" text-anchor="middle">Fleet dashboards</text>
+  <text x="735" y="153" font-family="sans-serif" font-size="8.5" fill="#555" text-anchor="middle">Cluster-wide · 5-15s scrape</text>
+  <text x="735" y="164" font-family="sans-serif" font-size="8.5" fill="#555" text-anchor="middle">Alerting · long-term trends</text>
+
+  <!-- vLLM metrics: serving, 1s -->
+  <rect x="650" y="200" width="170" height="70" fill="#fce7f3" stroke="#db2777" stroke-width="2" rx="7"/>
+  <text x="735" y="222" font-family="sans-serif" font-size="11" font-weight="700" fill="#831843" text-anchor="middle">vLLM Metrics</text>
+  <text x="735" y="238" font-family="sans-serif" font-size="9" fill="#831843" text-anchor="middle">/metrics endpoint</text>
+  <text x="735" y="253" font-family="sans-serif" font-size="8.5" fill="#555" text-anchor="middle">Serving SLOs · 1s</text>
+  <text x="735" y="264" font-family="sans-serif" font-size="8.5" fill="#555" text-anchor="middle">TTFT, KV cache, queue</text>
+
+  <!-- Arrows showing typical workflow -->
+  <path d="M200,90 Q220,90 250,115" stroke="#e3b341" stroke-width="1.5" fill="none" marker-end="url(#arr)" stroke-dasharray="4,2"/>
+  <path d="M400,135 Q435,120 470,90" stroke="#e3b341" stroke-width="1.5" fill="none" marker-end="url(#arr)" stroke-dasharray="4,2"/>
+  <path d="M620,90 Q635,100 650,120" stroke="#e3b341" stroke-width="1.5" fill="none" marker-end="url(#arr)" stroke-dasharray="4,2"/>
+
+  <!-- Legend: investigate deeper -->
+  <text x="305" y="295" font-family="sans-serif" font-size="9" fill="#e3b341">- - → investigate deeper into this tool for root cause</text>
+</svg>
+<figcaption>Fig B-4. Profiling tool landscape by diagnostic scope and time resolution. The typical workflow: Prometheus detects an anomaly → nsys identifies where time is lost → ncu diagnoses the specific kernel.</figcaption>
+</div>
+
+<hr class="sec-rule">
+
+<!-- ═══════ CROSS-REFERENCES ═══════ -->
+<h2>Cross-Chapter References</h2>
+
+<table>
+<tr><th>Topic</th><th>This Appendix Section</th><th>Deep Coverage</th></tr>
+<tr><td>Nsight Systems workflow and NVTX markers</td><td>B.2</td><td>Chapter 17, §17.2</td></tr>
+<tr><td>Nsight Compute and roofline interpretation</td><td>B.3</td><td>Chapter 17, §17.3 · Chapter 1, §1.4</td></tr>
+<tr><td>DCGM architecture and Prometheus integration</td><td>B.4</td><td>Chapter 17, §17.2 and §17.4</td></tr>
+<tr><td>NCCL ring AllReduce and topology</td><td>B.5</td><td>Chapter 14, §14.3–14.5</td></tr>
+<tr><td>vLLM KV cache and cascade eviction</td><td>B.6</td><td>Chapter 11, §11.3</td></tr>
+<tr><td>PromQL and Grafana dashboard design</td><td>B.7</td><td>Chapter 17, §17.4 and §17.5</td></tr>
+<tr><td>AMD profiling toolchain (omniperf, rocprof)</td><td>B.8</td><td>Chapter 17, §17.8</td></tr>
+<tr><td>Checkpoint I/O and storage architecture</td><td>B.9</td><td>Chapter 15, §15.3</td></tr>
+<tr><td>MFU calculation and interpretation</td><td>B.10</td><td>Chapter 1, §1.5 · Chapter 12</td></tr>
+</table>
+
+<div class="app-end">— Appendix B: Profiling Tool Quick Reference — AI/ML Infrastructure from Silicon to Scale —</div>
+
+</div><!-- .page -->
+</body>
+</html>
+</div>
+</body>
+</html>

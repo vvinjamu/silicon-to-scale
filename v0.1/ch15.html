@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 15 — Storage &amp; I/O | AI/ML Infrastructure from Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
+.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
+.mem-tier-body{flex:1}
+.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
+.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+.fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+
+.pullquote{border-left:4px solid #e3b341;padding:10px 20px;margin:20px 0 24px;background:#fffbf0;font-style:italic;color:#333;border-radius:0 6px 6px 0}
+.pullquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.obj-card{background:#f0f6ff;border:1px solid #c5cfe0;border-radius:7px;padding:12px 16px}
+.obj-card h4{color:#2a4a8a;font-style:normal;font-size:12px;margin:0 0 6px}
+.obj-card ul{margin-left:14px}.obj-card li{font-size:11.5px;margin-bottom:3px}
+</style>
+</head>
+<body>
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="ch14.html">&#8592; Ch 14</a>
+  <a href="ch16.html">Ch 16 &#8594;</a>
+  <a href="ch06.html">Ch 6</a>
+  <a href="ch10.html">Ch 10</a>
+  <a href="ch17.html">Ch 17</a>
+</div>
+<div id="sidebar">
+  <h4>Chapter 15</h4>
+  <a href="#s15-1">15.1 The AI Storage Hierarchy</a>
+  <a href="#s15-2">15.2 Distributed Filesystems for AI Training</a>
+  <a href="#s15-3">15.3 The Data Loading Pipeline — Keeping GPUs</a>
+  <a href="#s15-4">15.4 Checkpoint Engineering — The Critical I/</a>
+  <a href="#s15-5">15.5 Model Serving Storage — Fast Weight Load</a>
+  <a href="#s15-6">15.6 Storage Performance Diagnostics Cookbook</a>
+  <a href="#s15-7">15.7 Key Numbers and Rules of Thumb</a>
+  <a href="#worked">15.8 Worked Example: Sizing Storage for a 1,0</a>
+</div>
+<div class="page">
+<!-- CHAPTER HEADER -->
+<div class="ch-label">Chapter 15 &nbsp;·&nbsp; Part V — Infrastructure at Scale</div>
+  <h1 class="ch-title">Storage &amp; I/O: Feeding 10,000 GPUs Without Starving Them</h1>
+  <div class="ch-subtitle"><em>The Unsung Bottleneck — When the Network Is Fast but the Disk Is Slow</em></div>
+  <div class="ch-meta">
+    <span><strong>Part V:</strong> Infrastructure at Scale</span>
+    <span><strong>Depth:</strong> Principal Level</span>
+    <span><strong>Cross-refs:</strong> Ch 10 (Training), Ch 11 (KV Cache), Ch 14 (Networking), Ch 16 (Cluster)</span>
+  </div>
+
+  <blockquote>
+    "A 10,000-GPU cluster consuming 100 GB/s of training data needs a storage system that delivers 100 GB/s reliably,
+    every second, for weeks. A single slow checkpoint can stall $2M worth of GPU time."
+    <cite>— AI Infrastructure Operations Principle</cite>
+  </blockquote>
+
+  <p>Storage is consistently the most underestimated component in AI infrastructure design. Engineers spec GPUs and networking carefully — and then discover that a poorly configured NFS mount causes GPUs to idle 15% of the time waiting for data, wasting millions of dollars of compute. The problem is invisible: GPU utilization dashboards report 98%, but that number reflects when the GPU is <em>scheduled</em>, not when it is computing. Storage stalls look like compute, until you measure the right thing.</p>
+
+  <p>This chapter covers the complete AI storage stack: training data ingestion, distributed filesystems, the PyTorch data pipeline, checkpoint engineering, model serving storage, and production diagnostics. Every section is grounded in production numbers derived from hardware specifications — not marketing claims. You will leave this chapter able to size storage systems, diagnose pipeline bottlenecks, and make principled tradeoffs between cost, latency, and throughput at every scale from 32 GPUs to 100,000 GPUs.</p>
+
+  <div id="objectives" class="objectives">
+    <strong>Learning Objectives</strong>
+    <strong style="color:#1c2438;font-size:11px;text-transform:none;letter-spacing:0">Level 1 — Foundational:</strong>
+    Understand the five-tier AI storage hierarchy, why GPU idle time from storage is invisible, and the difference between data reading and checkpoint writing requirements.
+    <br><br>
+    <strong style="color:#1c2438;font-size:11px;text-transform:none;letter-spacing:0">Level 2 — Intermediate:</strong>
+    Size and configure distributed storage for any AI training workload. Design a data pipeline that keeps 1,024 GPUs fully fed. Calculate checkpoint sizes and timing overhead. Implement async checkpointing.
+    <br><br>
+    <strong style="color:#1c2438;font-size:11px;text-transform:none;letter-spacing:0">Level 3 — Principal:</strong>
+    Diagnose and fix storage-related GPU idle time in production. Choose the right filesystem technology and configuration for any scale. Design a complete three-tier checkpoint strategy with retention policies. Quantify the ROI of storage optimizations in dollar terms.
+  </div>
+
+
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 15.1 — STORAGE HIERARCHY                   -->
+<!-- ═══════════════════════════════════════════════════ -->
+<h2 id="s15-1">15.1 The AI Storage Hierarchy</h2>
+
+<p>Modern AI clusters operate across five distinct storage tiers, each optimized for a different combination of capacity, bandwidth, and latency. Understanding which tier handles which data — and why — is the foundation for every design decision in this chapter.</p>
+
+<p>The key insight: <em>training data reading is not the hard problem</em>. A 70B model training run on 1,024 GPUs consumes only 0.32 GB/s of training data — trivially satisfied by any modern filesystem. The hard problems are <strong>checkpoint writing</strong> (burst writes of 1+ TB in seconds) and <strong>model weight loading</strong> (sequential reads of 70–400 GB at serving startup). Every storage system decision flows from these two constraints.</p>
+
+<div class="diagram-wrap">
+  <svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;font-family:Georgia,serif">
+    <!-- Background -->
+    <rect width="760" height="420" fill="#fdfcf7" rx="8"/>
+    <!-- Title -->
+    <text x="380" y="28" text-anchor="middle" font-size="13" font-weight="700" fill="#1c2438">AI Cluster Storage Hierarchy — Five Tiers</text>
+
+    <!-- Tier 0: HBM -->
+    <rect x="20" y="48" width="720" height="58" rx="6" fill="#1c2438" opacity=".92"/>
+    <text x="36" y="70" font-size="10" font-weight="700" fill="#e3b341">TIER 0 — GPU HBM (Hot, In-Flight)</text>
+    <text x="36" y="86" font-size="9.5" fill="#ccd">Capacity: 80–288 GB/GPU</text>
+    <text x="200" y="86" font-size="9.5" fill="#ccd">Bandwidth: 3.35–12 TB/s</text>
+    <text x="400" y="86" font-size="9.5" fill="#e3b341">Contents: Active weights, KV cache, activations</text>
+    <text x="400" y="99" font-size="9.5" fill="#ccd">Access: GPU kernel direct</text>
+
+    <!-- Tier 1: CPU DRAM -->
+    <rect x="20" y="115" width="720" height="58" rx="6" fill="#1a3060" opacity=".85"/>
+    <text x="36" y="137" font-size="10" font-weight="700" fill="#e3b341">TIER 1 — CPU DRAM (Warm, Staging)</text>
+    <text x="36" y="153" font-size="9.5" fill="#ccd">Capacity: 1–2 TB/node</text>
+    <text x="200" y="153" font-size="9.5" fill="#ccd">BW: ~400 GB/s (local), 128 GB/s (PCIe→GPU)</text>
+    <text x="500" y="153" font-size="9.5" fill="#ccd">Contents: Pinned batches, ckpt buffers</text>
+
+    <!-- Tier 2: NVMe -->
+    <rect x="20" y="182" width="720" height="58" rx="6" fill="#2a4a8a" opacity=".75"/>
+    <text x="36" y="204" font-size="10" font-weight="700" fill="#e3b341">TIER 2 — Local NVMe (Fast Local Scratch)</text>
+    <text x="36" y="220" font-size="9.5" fill="#ccd">Capacity: 10–30 TB/node (8× SSDs)</text>
+    <text x="260" y="220" font-size="9.5" fill="#ccd">BW: 50–120 GB/s agg.</text>
+    <text x="440" y="220" font-size="9.5" fill="#ccd">Latency: ~100 µs</text>
+    <text x="560" y="220" font-size="9.5" fill="#e3b341">Dataset cache, ckpt</text>
+
+    <!-- Tier 3: Parallel FS -->
+    <rect x="20" y="249" width="720" height="58" rx="6" fill="#4a7a3a" opacity=".75"/>
+    <text x="36" y="271" font-size="10" font-weight="700" fill="#fff">TIER 3 — Distributed Parallel FS (Shared)</text>
+    <text x="36" y="287" font-size="9.5" fill="#ccd">Capacity: Petabytes (cluster-wide)</text>
+    <text x="240" y="287" font-size="9.5" fill="#ccd">BW: 1–100 TB/s agg. (Lustre, Weka, Tectonic)</text>
+    <text x="560" y="287" font-size="9.5" fill="#ccd">Latency: 1–10 ms</text>
+
+    <!-- Tier 4: Object Store -->
+    <rect x="20" y="316" width="720" height="58" rx="6" fill="#7a5a2a" opacity=".75"/>
+    <text x="36" y="338" font-size="10" font-weight="700" fill="#fff">TIER 4 — Object Storage (Archival, Cold)</text>
+    <text x="36" y="354" font-size="9.5" fill="#ccd">Capacity: Exabytes</text>
+    <text x="200" y="354" font-size="9.5" fill="#ccd">BW: 10–500 GB/s (cloud-scale)</text>
+    <text x="450" y="354" font-size="9.5" fill="#ccd">Latency: 10–100 ms · S3-compatible API</text>
+
+    <!-- Flow arrow label -->
+    <text x="380" y="392" text-anchor="middle" font-size="10" fill="#666" font-style="italic">
+      Training flow: Object Store → NVMe (once) → CPU DRAM (prefetch) → GPU HBM (just-in-time)
+    </text>
+    <!-- Arrow -->
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0,0 L10,5 L0,10 Z" fill="#e3b341"/>
+      </marker>
+    </defs>
+  </svg>
+  <figcaption>Figure 15.1 — Five-tier AI storage hierarchy. Bandwidth and capacity increase with tier depth; latency rises from nanoseconds (HBM) to milliseconds (object store).</figcaption>
+</div>
+
+<div class="formula">TRAINING DATA CONSUMPTION RATE — Why Reading Is Not the Hard Problem:
+
+Step config: 70B model, 1,024 GPUs, batch = 4M tokens
+  GPU step time:       ~25 seconds
+  Data per step:       4M tokens × 2 bytes/token (BF16 IDs) = 8 MB
+  Required read BW:    8 MB / 25 sec = 0.32 GB/s  ← TRIVIALLY LOW
+
+For comparison:
+  Single NVMe SSD:        14 GB/s sequential read
+  NFS single server:       5 GB/s (generous estimate)
+  Lustre 8-OST cluster:   ~80 GB/s
+  
+  Verdict: ANY filesystem technology exceeds training data read requirements.
+  The bottleneck is NEVER training data reads — it is CHECKPOINT WRITES.</div>
+
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 15.2 — DISTRIBUTED FILESYSTEMS             -->
+<!-- ═══════════════════════════════════════════════════ -->
+<h2 id="s15-2">15.2 Distributed Filesystems for AI Training</h2>
+
+<p>Choosing the wrong filesystem for an AI cluster is one of the most expensive mistakes an infrastructure architect can make. An NFS mount on a 1,024-GPU cluster will cause 15–20% GPU idle time from I/O stalls — wasting $4,000–$5,000 per hour at market rates. The right choice depends on cluster scale, checkpoint frequency, and operational maturity.</p>
+
+<h3>15.2.1 Filesystem Technology Comparison</h3>
+
+<div class="diagram-wrap">
+  <svg viewBox="0 0 760 310" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;font-family:Georgia,serif">
+    <rect width="760" height="310" fill="#fdfcf7" rx="8"/>
+    <text x="380" y="25" text-anchor="middle" font-size="13" font-weight="700" fill="#1c2438">Filesystem Technology Comparison for AI Training</text>
+
+    <!-- Headers -->
+    <rect x="10" y="36" width="740" height="22" fill="#1c2438" rx="4"/>
+    <text x="70" y="51" font-size="9" font-weight="700" fill="#e3b341">FILESYSTEM</text>
+    <text x="180" y="51" font-size="9" font-weight="700" fill="#e3b341">PEAK BANDWIDTH</text>
+    <text x="310" y="51" font-size="9" font-weight="700" fill="#e3b341">LATENCY</text>
+    <text x="400" y="51" font-size="9" font-weight="700" fill="#e3b341">GPU SCALE</text>
+    <text x="510" y="51" font-size="9" font-weight="700" fill="#e3b341">KEY TRADEOFF</text>
+
+    <!-- NFS Row -->
+    <rect x="10" y="58" width="740" height="40" fill="#fff5f5" rx="3"/>
+    <text x="70" y="73" font-size="10" font-weight="700" fill="#c0392b">NFS</text>
+    <text x="70" y="86" font-size="8.5" fill="#555">Simple, ubiquitous</text>
+    <text x="180" y="78" font-size="10" fill="#c0392b">5–20 GB/s</text>
+    <text x="310" y="78" font-size="10" fill="#555">1–5 ms</text>
+    <text x="400" y="78" font-size="10" fill="#c0392b">&lt;32 GPUs only</text>
+    <text x="510" y="73" font-size="9" fill="#555">Single-server IOPS</text>
+    <text x="510" y="86" font-size="9" fill="#555">bottleneck; do not use</text>
+
+    <!-- Lustre Row -->
+    <rect x="10" y="98" width="740" height="40" fill="#f0fff5" rx="3"/>
+    <text x="70" y="113" font-size="10" font-weight="700" fill="#1a7a3a">Lustre</text>
+    <text x="70" y="126" font-size="8.5" fill="#555">HPC standard</text>
+    <text x="180" y="118" font-size="10" fill="#1a7a3a">Multi-TB/s (>1,000 OSTs)</text>
+    <text x="310" y="118" font-size="10" fill="#555">1–5 ms</text>
+    <text x="400" y="118" font-size="10" fill="#1a7a3a">Unlimited scale</text>
+    <text x="510" y="113" font-size="9" fill="#555">Complex operations;</text>
+    <text x="510" y="126" font-size="9" fill="#555">requires Lustre expertise</text>
+
+    <!-- Weka Row -->
+    <rect x="10" y="138" width="740" height="40" fill="#f0f6ff" rx="3"/>
+    <text x="70" y="153" font-size="10" font-weight="700" fill="#2a6099">Weka</text>
+    <text x="70" y="166" font-size="8.5" fill="#555">Modern NVMe-based</text>
+    <text x="180" y="158" font-size="10" fill="#2a6099">10+ GB/s per node</text>
+    <text x="310" y="158" font-size="10" fill="#2a6099">&lt;0.5 ms</text>
+    <text x="400" y="158" font-size="10" fill="#2a6099">32–10,000+ GPUs</text>
+    <text x="510" y="153" font-size="9" fill="#555">Azure, AWS; higher cost</text>
+    <text x="510" y="166" font-size="9" fill="#555">than Lustre HW</text>
+
+    <!-- GPFS Row -->
+    <rect x="10" y="178" width="740" height="40" fill="#fffbf0" rx="3"/>
+    <text x="70" y="193" font-size="10" font-weight="700" fill="#a55000">GPFS/Spectrum Scale</text>
+    <text x="180" y="198" font-size="10" fill="#a55000">High throughput</text>
+    <text x="310" y="198" font-size="10" fill="#555">1–5 ms</text>
+    <text x="400" y="198" font-size="10" fill="#555">Enterprise scale</text>
+    <text x="510" y="193" font-size="9" fill="#555">Expensive licensing;</text>
+    <text x="510" y="206" font-size="9" fill="#555">IBM ecosystem</text>
+
+    <!-- Tectonic Row -->
+    <rect x="10" y="218" width="740" height="40" fill="#fdf5ff" rx="3"/>
+    <text x="70" y="233" font-size="10" font-weight="700" fill="#7b2d8b">Tectonic (Meta)</text>
+    <text x="70" y="246" font-size="8.5" fill="#555">Custom hyperscale</text>
+    <text x="180" y="238" font-size="10" fill="#7b2d8b">10+ TB/s aggregate</text>
+    <text x="310" y="238" font-size="10" fill="#555">~1 ms</text>
+    <text x="400" y="238" font-size="10" fill="#7b2d8b">100K+ GPU clusters</text>
+    <text x="510" y="233" font-size="9" fill="#555">Meta-internal only;</text>
+    <text x="510" y="246" font-size="9" fill="#555">not available externally</text>
+
+    <!-- Decision line -->
+    <text x="380" y="282" text-anchor="middle" font-size="10" fill="#1c2438" font-weight="700">
+      Decision Rule: NFS (&lt;32 GPU) → Weka/Lustre (32–256) → Custom/Lustre+100 OSTs (&gt;256)
+    </text>
+    <rect x="70" y="268" width="620" height="20" fill="none" stroke="#e3b341" stroke-width="1.5" rx="4"/>
+    <text x="380" y="300" text-anchor="middle" font-size="9" fill="#888" font-style="italic">
+      [SHIPPED] all bandwidth figures; Tectonic figures from Meta engineering blog, 2024
+    </text>
+  </svg>
+  <figcaption>Figure 15.2 — Filesystem technology comparison. Scale determines the right choice; NFS is never correct above 32 GPUs for production training.</figcaption>
+</div>
+
+<h3>15.2.2 The Critical Lustre Stripe Configuration</h3>
+
+<p>A Lustre cluster with 100 Object Storage Targets (OSTs) at 2 GB/s each delivers 200 GB/s aggregate — but <em>only if files are striped across all OSTs</em>. The default Lustre stripe count is 1, meaning all data for a single file goes to one OST regardless of how many you have. This is the most common and most expensive production misconfiguration in AI storage.</p>
+
+<div class="formula">LUSTRE STRIPE CONFIGURATION — Critical Setup Commands:
+
+# Before writing ANY training data:
+# Set stripe count to -1 (all OSTs) on the dataset directory
+lfs setstripe -c -1 /lustre/training_data/
+
+# Verify stripe configuration:
+lfs getstripe /lustre/training_data/my_dataset.jsonl
+# Output: stripe_count: 96  stripe_size: 1048576  pool: OST_pool_0
+
+# CANNOT be changed retroactively (data must be rewritten)
+# -c -1 = use all available OSTs
+# -S 4M = 4 MB stripe size (optimal for large sequential writes)
+
+# For checkpoint directories (large sequential writes):
+lfs setstripe -c -1 -S 4m /lustre/checkpoints/
+
+# Bandwidth gain from correct striping:
+#   Default (c=1):  2 GB/s (one OST)
+#   Full stripe:    96 × 2 GB/s = 192 GB/s
+#   Improvement:   96× bandwidth — a single config line worth millions/year
+
+# Check cluster OST count:
+lfs df /lustre | grep OST | wc -l</div>
+
+<div class="callout purple">
+<strong>Principal Insight: The Stripe Count Tax</strong>
+Every AI cluster using Lustre with default stripe settings is paying a "stripe tax." At 1,024 GPUs writing checkpoints simultaneously at 8.76 GB/GPU, with c=1 you serialize through one OST: 1,024 × 8.76 GB / 2 GB/s = 4,484 seconds per checkpoint. With c=96: 4,484 / 96 ≈ 47 seconds. The difference is entirely a configuration choice — no hardware changes required. This is the highest-ROI storage optimization in production AI infrastructure.
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 15.3 — DATA LOADING PIPELINE               -->
+<!-- ═══════════════════════════════════════════════════ -->
+<h2 id="s15-3">15.3 The Data Loading Pipeline — Keeping GPUs Fed</h2>
+
+<p>The PyTorch training loop has a subtle performance trap: the DataLoader runs in the Python main process by default, meaning data loading blocks GPU computation. Fixing this — and the cascade of optimizations that follow — is often worth 10–20% effective throughput recovery with zero hardware changes.</p>
+
+<h3>15.3.1 DataLoader Configuration for Production</h3>
+
+<p>The GPU step time for a 70B model is 15–30 seconds. The DataLoader must deliver each batch within that window or the GPU stalls waiting. The problem is that PyTorch's default settings deliver data in ~2 seconds on a well-configured NVMe system — but on a network filesystem with default settings, that rises to 8–15 seconds, causing per-step stalls.</p>
+
+<div class="formula"># production_dataloader.py — Optimized DataLoader for large-scale training
+
+from torch.utils.data import DataLoader, Dataset
+import torch
+import numpy as np
+import os
+
+class TokenizedDataset(Dataset):
+    """
+    Memory-mapped dataset for pre-tokenized training data.
+    Uses numpy mmap for zero-copy reads from NVMe.
+    
+    Why mmap? The OS page cache handles prefetching automatically.
+    Large sequential reads trigger read-ahead, so data arrives in CPU DRAM
+    before the DataLoader worker requests it. No explicit prefetch needed.
+    """
+    def __init__(self, data_path: str, seq_len: int = 4096):
+        # mmap mode: reads are demand-paged from filesystem
+        # 'r' mode: read-only, allows sharing across workers
+        self.data = np.memmap(data_path, dtype=np.uint16, mode='r')
+        self.seq_len = seq_len
+        self.n_sequences = len(self.data) // (seq_len + 1)
+
+    def __len__(self):
+        return self.n_sequences
+
+    def __getitem__(self, idx):
+        start = idx * (self.seq_len + 1)
+        chunk = self.data[start : start + self.seq_len + 1]
+        x = torch.from_numpy(chunk[:-1].astype(np.int64))  # input
+        y = torch.from_numpy(chunk[1:].astype(np.int64))   # target
+        return x, y
+
+
+def build_production_dataloader(data_path, seq_len=4096, batch_size=32,
+                                rank=0, world_size=1):
+    dataset = TokenizedDataset(data_path, seq_len)
+    
+    # Distributed sampler: each rank gets non-overlapping data
+    sampler = torch.utils.data.distributed.DistributedSampler(
+        dataset, num_replicas=world_size, rank=rank, shuffle=True
+    )
+    
+    return DataLoader(
+        dataset,
+        batch_size=batch_size,
+        sampler=sampler,
+        # ── CRITICAL PERFORMANCE PARAMETERS ──────────────────────────
+        num_workers=8,           # 8 workers per GPU (match NVMe queue depth)
+        pin_memory=True,         # Pinned CPU DRAM → faster PCIe DMA to GPU
+        pin_memory_device='cuda',# Explicitly pin for current GPU
+        prefetch_factor=4,       # Each worker pre-fetches 4 batches ahead
+        persistent_workers=True, # Keep workers alive across epochs
+        # ─────────────────────────────────────────────────────────────
+        drop_last=True,          # Required for consistent batch size in DDP
+    )</div>
+
+<div class="callout green">
+<strong>The num_workers Rule of Thumb</strong>
+Set <code>num_workers = min(CPU_cores_per_GPU, 8)</code>. On a DGX H100 (2× 52-core CPUs, 8 GPUs): 104 / 8 = 13 → cap at 8 workers. More than 8 workers per GPU causes CPU memory pressure from prefetched batches without proportional throughput gain. With <code>pin_memory=True</code> and <code>prefetch_factor=4</code>, each worker pre-allocates 4 pinned batches in CPU DRAM — at batch_size=32, seq_len=4096: 8 workers × 4 batches × 32 × 4096 × 2 bytes = 8.4 GB of pinned CPU memory per GPU. Budget accordingly.
+</div>
+
+<h3>15.3.2 WebDataset for Object Store Streaming</h3>
+
+<p>When training data lives in object storage (S3, GCS), copying to local NVMe first is strongly preferred. But for datasets too large to cache (multi-petabyte), WebDataset enables streaming directly from object store with minimal overhead:</p>
+
+<div class="formula"># WebDataset streaming from S3 for massive datasets
+import webdataset as wds
+
+dataset = (
+    wds.WebDataset("s3://my-bucket/data/shard-{00000..04999}.tar",
+                   shardshuffle=True)          # Shuffle shard order each epoch
+    .shuffle(1000)                              # Buffer 1000 samples in memory
+    .decode("torch")                           # Auto-decode tensors
+    .to_tuple("input.pth", "target.pth")       # Extract named keys
+    .batched(batch_size, partial=False)         # Consistent batch sizes
+)
+
+# Key: shardshuffle=True is critical — without shard-level shuffle,
+# all ranks read shards in the same order → correlated training batches
+# WebDataset transfers ~2-5 GB/s per node from S3 — adequate for training
+# but much slower than local NVMe (50-120 GB/s)</div>
+
+<h3>15.3.3 NVIDIA DALI for Vision Workloads</h3>
+
+<p>For multimodal LLMs with image inputs, the PyTorch DataLoader's CPU-based JPEG decoding is the bottleneck. Decoding 224×224 images on CPU takes ~2 ms each; at batch_size=256, that is 512 ms of CPU decoding per step — longer than the GPU forward pass. NVIDIA DALI moves decoding and augmentation to the GPU, achieving 3–5× speedup:</p>
+
+<div class="formula">import nvidia.dali as dali
+import nvidia.dali.fn as fn
+from nvidia.dali.pipeline import pipeline_def
+
+@pipeline_def(batch_size=256, num_threads=4, device_id=0)
+def image_pipeline(image_dir):
+    jpegs, labels = fn.readers.file(
+        file_root=image_dir, random_shuffle=True, name="Reader"
+    )
+    # GPU decode: NVMe → GPU decode → augment (no CPU round-trip)
+    images = fn.decoders.image(jpegs, device="mixed")
+    images = fn.random_resized_crop(images, size=224, device="gpu")
+    images = fn.normalize(images, device="gpu",
+                          mean=[0.485, 0.456, 0.406],
+                          std=[0.229, 0.224, 0.225])
+    return images, labels
+
+# DALI advantage: CPU-side decode is 2ms/image → GPU decode is 0.3ms/image
+# At batch=256: CPU = 512ms/step → GPU = 77ms/step → 6.6× speedup
+# For text-only NLP: DALI adds no value (no image decode)</div>
+
+<div class="diagram-wrap">
+  <svg viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;font-family:Georgia,serif">
+    <rect width="760" height="270" fill="#fdfcf7" rx="8"/>
+    <text x="380" y="25" text-anchor="middle" font-size="13" font-weight="700" fill="#1c2438">Data Loading Bottleneck Diagnosis Flowchart</text>
+
+    <!-- Start -->
+    <ellipse cx="380" cy="55" rx="90" ry="18" fill="#1c2438"/>
+    <text x="380" y="59" text-anchor="middle" font-size="10" fill="#fff">GPU idle time &gt;3% of step?</text>
+
+    <!-- No branch -->
+    <line x1="290" y1="55" x2="140" y2="110" stroke="#27ae60" stroke-width="2" marker-end="url(#arr2)"/>
+    <text x="195" y="88" font-size="9" fill="#27ae60">No</text>
+    <rect x="60" y="100" width="160" height="30" rx="6" fill="#e8fff0" stroke="#27ae60" stroke-width="1.5"/>
+    <text x="140" y="120" text-anchor="middle" font-size="10" fill="#1a7a3a">Pipeline healthy ✓</text>
+
+    <!-- Yes branch -->
+    <line x1="380" y1="73" x2="380" y2="108" stroke="#e3b341" stroke-width="2" marker-end="url(#arr2)"/>
+    <text x="393" y="95" font-size="9" fill="#e3b341">Yes</text>
+    <rect x="280" y="108" width="200" height="30" rx="6" fill="#fffbf0" stroke="#e3b341" stroke-width="1.5"/>
+    <text x="380" y="128" text-anchor="middle" font-size="10" fill="#1c2438">Check: iostat -dx 1 10</text>
+
+    <!-- Disk saturated? -->
+    <line x1="380" y1="138" x2="380" y2="168" stroke="#555" stroke-width="1.5" marker-end="url(#arr2)"/>
+    <ellipse cx="380" cy="180" rx="100" ry="16" fill="#e8e8f0" stroke="#555" stroke-width="1.5"/>
+    <text x="380" y="184" text-anchor="middle" font-size="9.5" fill="#333">NVMe/FS saturated?</text>
+
+    <!-- Yes → add OSTs / cache -->
+    <line x1="480" y1="180" x2="600" y2="180" stroke="#c0392b" stroke-width="2" marker-end="url(#arr2)"/>
+    <text x="536" y="174" font-size="9" fill="#c0392b">Yes</text>
+    <rect x="600" y="167" width="145" height="28" rx="5" fill="#fff5f5" stroke="#c0392b" stroke-width="1.5"/>
+    <text x="672" y="185" text-anchor="middle" font-size="9" fill="#c0392b">Add OSTs or cache dataset on NVMe</text>
+
+    <!-- No → DataLoader issue -->
+    <line x1="380" y1="196" x2="380" y2="225" stroke="#2a6099" stroke-width="1.5" marker-end="url(#arr2)"/>
+    <text x="393" y="215" font-size="9" fill="#2a6099">No</text>
+    <rect x="255" y="225" width="250" height="28" rx="5" fill="#f0f6ff" stroke="#2a6099" stroke-width="1.5"/>
+    <text x="380" y="239" text-anchor="middle" font-size="9.5" fill="#2a6099">DataLoader: ↑num_workers, prefetch_factor, pin_memory</text>
+
+    <defs>
+      <marker id="arr2" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M0,0 L10,5 L0,10 Z" fill="#555"/>
+      </marker>
+    </defs>
+  </svg>
+  <figcaption>Figure 15.3 — Data loading bottleneck diagnosis flowchart. The root cause is almost always either filesystem saturation or DataLoader configuration — iostat distinguishes them in under 30 seconds.</figcaption>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 15.4 — CHECKPOINT ENGINEERING              -->
+<!-- ═══════════════════════════════════════════════════ -->
+<h2 id="s15-4">15.4 Checkpoint Engineering — The Critical I/O Problem</h2>
+
+<p>Checkpointing is not a storage problem. It is a <em>training efficiency problem</em>. Every second the GPU spends waiting for a checkpoint to complete is a second of wasted compute. At 10,000 GPUs at $3/GPU-hour, one second of stall costs $8.33. A naïve checkpoint that blocks for 90 seconds every 1,000 steps (25 seconds each) wastes $750 in GPU time per checkpoint — before considering the risk of losing that GPU-time to a hardware failure.</p>
+
+<h3>15.4.1 Checkpoint Size Analysis</h3>
+
+<div class="formula">CHECKPOINT SIZE BREAKDOWN — 70B Model, AdamW, ZeRO-3, 128 GPUs:
+
+Component               Size/GPU    Total (128 GPUs)   Notes
+──────────────────────────────────────────────────────────────────────
+Model weights (BF16)    1.09 GB       140 GB           2 bytes × 70B params / 128
+Optimizer: FP32 wts     2.19 GB       280 GB           4 bytes × 70B / 128
+Optimizer: m (FP32)     2.19 GB       280 GB           1st moment
+Optimizer: v (FP32)     2.19 GB       280 GB           2nd moment  
+Gradients (BF16)        1.09 GB       140 GB           for gradient accumulation
+Misc (RNG, step, LR)    0.01 GB         1 GB           metadata
+──────────────────────────────────────────────────────────────────────
+TOTAL per GPU:          8.76 GB
+TOTAL cluster:                      1,121 GB (~1.1 TB)
+
+CHECKPOINT WRITE TIME by storage speed:
+  Naive single-file write (all 128 GPUs → rank 0 → one file):
+    128 × 8.76 GB sequential = 1,121 GB through one bottleneck
+    At 10 GB/s NFS: 112 seconds  ← CATASTROPHIC (4.5% of 2,500s/step training)
+
+  Per-rank sharding (each rank writes its own file in parallel):
+    Each GPU writes 8.76 GB simultaneously
+    At 100 GB/s Lustre (96 OSTs): 8.76 / 100 × 128 = 11.2 seconds (distributed!)
+    Overhead: 11.2 / 25 = 0.45% per checkpoint — acceptable
+
+  With async checkpoint (GPU→CPU snapshot + background write):
+    GPU sees: ~4 seconds (non_blocking CPU copy)
+    Background thread does: 11.2 second disk write
+    GPU overhead: 4/25 = 0.16% — excellent</div>
+
+<h3>15.4.2 Production Async Checkpointing</h3>
+
+<div class="formula"># async_checkpoint.py — Zero-stall async checkpoint
+
+import torch
+import torch.distributed as dist
+from concurrent.futures import ThreadPoolExecutor
+import threading, os, time
+
+class AsyncCheckpointer:
+    """
+    Zero-stall async checkpoint: saves in background thread while
+    training continues. GPU sees only the CPU copy (fast); disk
+    write happens in parallel with the next training steps.
+    """
+    def __init__(self, checkpoint_dir: str):
+        self.checkpoint_dir = checkpoint_dir
+        self.executor = ThreadPoolExecutor(max_workers=1)
+        self.pending_future = None
+
+    def save_async(self, model, optimizer, step: int):
+        # Wait for any previous checkpoint to finish first
+        if self.pending_future is not None:
+            self.pending_future.result()
+
+        # GPU → CPU copy (fast: ~4 seconds even for 70B)
+        # non_blocking=True: CPU copy runs concurrently with GPU compute
+        state_cpu = {}
+        for name, param in model.named_parameters():
+            state_cpu[name] = param.data.cpu().clone()   # non_blocking not needed here
+
+        optim_state = {k: v.cpu() if torch.is_tensor(v) else v
+                       for k, v in optimizer.state_dict().items()}
+
+        # Launch background write — training resumes immediately
+        path = os.path.join(self.checkpoint_dir, f"step_{step:07d}")
+        self.pending_future = self.executor.submit(
+            self._write_to_disk, state_cpu, optim_state, path, step
+        )
+
+    def _write_to_disk(self, model_state, optim_state, path, step):
+        """Background thread: write to distributed storage (Lustre/Weka)."""
+        os.makedirs(path, exist_ok=True)
+        rank = dist.get_rank()
+        torch.save({'model': model_state, 'optimizer': optim_state, 'step': step},
+                   os.path.join(path, f"rank_{rank:04d}.pt"))
+        if rank == 0:
+            torch.save({'step': step, 'ts': time.time()},
+                       os.path.join(path, "metadata.pt"))
+
+# PyTorch Distributed Checkpoint (DCP) — preferred for FSDP/ZeRO models
+from torch.distributed.checkpoint import save, FileSystemWriter
+from torch.distributed.checkpoint.state_dict import get_state_dict
+
+def save_dcp_checkpoint(model, optimizer, step, path):
+    """Sharded DCP save — each rank writes its own portion automatically."""
+    model_state, optimizer_state = get_state_dict(model, optimizer)
+    save({"model": model_state, "optimizer": optimizer_state, "step": torch.tensor(step)},
+         storage_writer=FileSystemWriter(f"{path}/step_{step:07d}"))</div>
+
+<h3>15.4.3 Three-Tier Checkpoint Strategy</h3>
+
+<div class="diagram-wrap">
+  <svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;font-family:Georgia,serif">
+    <rect width="760" height="230" fill="#fdfcf7" rx="8"/>
+    <text x="380" y="26" text-anchor="middle" font-size="13" font-weight="700" fill="#1c2438">Three-Tier Checkpoint Retention Strategy</text>
+
+    <!-- Tier 1 -->
+    <rect x="20" y="42" width="225" height="145" rx="8" fill="#e8fff0" stroke="#27ae60" stroke-width="2"/>
+    <text x="132" y="62" text-anchor="middle" font-size="11" font-weight="700" fill="#1a7a3a">Tier 1: Local NVMe</text>
+    <text x="132" y="80" text-anchor="middle" font-size="9.5" fill="#333">Retention: Last 2–3 checkpoints</text>
+    <text x="132" y="96" text-anchor="middle" font-size="9.5" fill="#333">Protects against: Node crash</text>
+    <text x="132" y="112" text-anchor="middle" font-size="9.5" fill="#333">Write time: ~2 seconds</text>
+    <text x="132" y="128" text-anchor="middle" font-size="9.5" fill="#333">Recovery time: ~3 seconds</text>
+    <text x="132" y="148" text-anchor="middle" font-size="9" fill="#1a7a3a" font-style="italic">Fastest recovery path</text>
+    <text x="132" y="162" text-anchor="middle" font-size="9" fill="#1a7a3a" font-style="italic">~50–200 GB per checkpoint</text>
+    <text x="132" y="178" text-anchor="middle" font-size="9" fill="#c0392b">Risk: lost on drive failure</text>
+
+    <!-- Arrow 1→2 -->
+    <line x1="245" y1="114" x2="265" y2="114" stroke="#e3b341" stroke-width="2" marker-end="url(#arr3)"/>
+    <text x="255" y="108" text-anchor="middle" font-size="8" fill="#a55000">background</text>
+
+    <!-- Tier 2 -->
+    <rect x="265" y="42" width="230" height="145" rx="8" fill="#fffbf0" stroke="#e3b341" stroke-width="2"/>
+    <text x="380" y="62" text-anchor="middle" font-size="11" font-weight="700" fill="#a55000">Tier 2: Distributed FS</text>
+    <text x="380" y="80" text-anchor="middle" font-size="9.5" fill="#333">Retention: Last 48 hours of ckpts</text>
+    <text x="380" y="96" text-anchor="middle" font-size="9.5" fill="#333">Protects: Local NVMe failure</text>
+    <text x="380" y="112" text-anchor="middle" font-size="9.5" fill="#333">Write time: 11–30 seconds</text>
+    <text x="380" y="128" text-anchor="middle" font-size="9.5" fill="#333">Recovery: 15–60 seconds</text>
+    <text x="380" y="148" text-anchor="middle" font-size="9" fill="#a55000" font-style="italic">Primary production recovery</text>
+    <text x="380" y="162" text-anchor="middle" font-size="9" fill="#a55000" font-style="italic">~1–6 TB per checkpoint</text>
+    <text x="380" y="178" text-anchor="middle" font-size="9" fill="#c0392b">Risk: FS corruption</text>
+
+    <!-- Arrow 2→3 -->
+    <line x1="495" y1="114" x2="515" y2="114" stroke="#e3b341" stroke-width="2" marker-end="url(#arr3)"/>
+    <text x="505" y="108" text-anchor="middle" font-size="8" fill="#7b2d8b">async</text>
+
+    <!-- Tier 3 -->
+    <rect x="515" y="42" width="225" height="145" rx="8" fill="#fdf5ff" stroke="#7b2d8b" stroke-width="2"/>
+    <text x="627" y="62" text-anchor="middle" font-size="11" font-weight="700" fill="#7b2d8b">Tier 3: Object Storage</text>
+    <text x="627" y="80" text-anchor="middle" font-size="9.5" fill="#333">Retention: Permanent (all ckpts)</text>
+    <text x="627" y="96" text-anchor="middle" font-size="9.5" fill="#333">Protects: Datacenter loss</text>
+    <text x="627" y="112" text-anchor="middle" font-size="9.5" fill="#333">Write time: Minutes (async)</text>
+    <text x="627" y="128" text-anchor="middle" font-size="9.5" fill="#333">Recovery: 5–30 min (from S3)</text>
+    <text x="627" y="148" text-anchor="middle" font-size="9" fill="#7b2d8b" font-style="italic">Disaster recovery + audit</text>
+    <text x="627" y="162" text-anchor="middle" font-size="9" fill="#7b2d8b" font-style="italic">Immutable — never delete</text>
+    <text x="627" y="178" text-anchor="middle" font-size="9" fill="#555">Cost: ~$0.02/GB/month (S3)</text>
+
+    <text x="380" y="210" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+      Rule: Always maintain at least 3 valid checkpoints across tiers simultaneously.
+    </text>
+
+    <defs>
+      <marker id="arr3" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M0,0 L10,5 L0,10 Z" fill="#e3b341"/>
+      </marker>
+    </defs>
+  </svg>
+  <figcaption>Figure 15.4 — Three-tier checkpoint retention strategy. Each tier protects against different failure modes; all three are required for a fault-tolerant training cluster.</figcaption>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 15.5 — MODEL SERVING STORAGE               -->
+<!-- ═══════════════════════════════════════════════════ -->
+<h2 id="s15-5">15.5 Model Serving Storage — Fast Weight Loading</h2>
+
+<p>Inference serving has a storage challenge entirely different from training: instead of writing 1.1 TB every few hours, it must <em>read</em> 35–400 GB at startup, and must do so quickly enough to support rapid scaling and daily model updates. The difference between a 15-second and a 0.65-second weight load time determines whether auto-scaling events cause user-visible latency spikes.</p>
+
+<h3>15.5.1 Weight Loading Analysis</h3>
+
+<div class="formula">WEIGHT LOADING COMPARISON — 70B FP8 Model (70 GB):
+
+Storage Path           Effective BW    Load Time    Notes
+────────────────────────────────────────────────────────────────────────
+NFS server             5–10 GB/s       7–14 sec     Single server IOPS limit
+Local NVMe (warm)      50–112 GB/s     0.6–1.4 sec  After first-load caching
+Local NVMe (first)     15–30 GB/s      2.3–4.7 sec  From NFS → NVMe (network)
+GPUDirect Storage      ~112 GB/s       ~0.65 sec    NVMe → GPU direct (no CPU)
+GPU P2P (NVLink)       ~600 GB/s       ~0.12 sec    From warm neighbor GPU
+
+WITHOUT GDS (legacy path):
+  NVMe → PCIe → CPU DRAM (bounce buffer) → PCIe → GPU HBM
+  CPU bottleneck: 2–3 cores handling DMA
+  Effective BW: min(CPU DRAM BW, PCIe) = 128 GB/s → 0.55 sec
+  But CPU bounce buffer contention: practical ~0.8 sec
+
+WITH GPUDirect Storage (GDS):
+  NVMe → PCIe → GPU HBM (direct, no bounce buffer)
+  Bottleneck: NVMe aggregate = 8 × 14 = 112 GB/s → 0.63 sec
+  CPU usage: near zero (no DMA coordination)
+  
+  Enabling GDS:
+    gdscheck -p                    # Verify GDS support
+    # PyTorch/Megatron auto-detect; vLLM uses when download_dir is GDS NVMe</div>
+
+<h3>15.5.2 Production Weight Caching Strategy</h3>
+
+<div class="formula">from vllm import LLM
+
+llm = LLM(
+    model="meta-llama/Llama-3-70b",
+    download_dir="/nvme/model_cache",  # Local NVMe cache (fast subsequent loads)
+    load_format="auto",                # Selects safetensors (fastest format)
+    dtype="float8",                    # FP8: 70 GB vs 140 GB BF16
+    max_model_len=32768,
+)
+# First load: NFS → NVMe (~10 sec) + NVMe → GPU (~0.65 sec) = ~11 sec
+# Subsequent (restart, scale-out): NVMe → GPU only = ~0.65 sec</div>
+
+<h3>15.5.3 KV Cache Storage Tiering for Inference</h3>
+
+<p>At high concurrency, the HBM KV cache fills and requests must be evicted. Eviction to CPU DRAM costs 16 ms round-trip (PCIe latency at small block sizes); eviction to NVMe costs 200 µs for sequential blocks with NVMe-optimized access. This 80× advantage makes NVMe a viable KV overflow tier — but only under specific concurrency conditions. (See §11.4 for KV cache fundamentals.)</p>
+
+<div class="formula">KV CACHE TIER SELECTION — LLaMA-3 70B, H100 SXM5, FP8 KV, TP=2:
+
+HBM KV budget (per GPU pair after weights):
+  Total HBM: 2 × 80 GB = 160 GB
+  FP8 weights (70B): 70 GB
+  Activations + overhead: ~15 GB
+  KV budget: 160 - 70 - 15 = 75 GB
+
+At 8K context, FP8, LLaMA-3 70B (80 layers, 8 KV heads, dim=128):
+  KV per token = 2 × 80 × 8 × 128 × 1 byte = 163,840 bytes ≈ 0.156 MB/token
+  KV per user at 8K: 8,192 × 0.156 MB = 1.28 GB
+
+Max concurrent users in HBM: 75 GB / 1.28 GB = 58 users
+
+NVMe overflow tier (8× drives, ~110 GB/s):
+  Additional KV capacity: e.g., 10 TB NVMe = 10,000 GB / 1.28 GB/user = 7,812 users
+  BUT: NVMe access latency = 200 µs per token fetch
+  At 15 ms/token decode and 10% NVMe fetches: penalty = 0.1 × 200µs = 20µs = 0.13% overhead
+  → NVMe KV tiering is viable if &lt;20% of tokens require NVMe fetch
+
+Decision rule:
+  Decode latency SLA 30ms+: NVMe KV viable
+  Decode latency SLA &lt;10ms: NVMe KV too slow (use CPU DRAM instead)</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 15.6 — DIAGNOSTICS COOKBOOK                -->
+<!-- ═══════════════════════════════════════════════════ -->
+<h2 id="s15-6">15.6 Storage Performance Diagnostics Cookbook</h2>
+
+<p>Storage problems masquerade as compute problems. GPU utilization shows 95%, but actual MFU is 42%. The gap is DataLoader idle time — time when the GPU is "active" (not in CUDA idle mode) but blocked waiting for the next batch in Python. The following diagnostic workflow resolves storage root causes in under 10 minutes.</p>
+
+<h3>15.6.1 Four-Step Diagnosis Protocol</h3>
+
+<div class="formula">## STEP 1: Quantify DataLoader wait time per step
+## Add this to your training loop:
+
+import time
+data_wait_times = []
+for step, batch in enumerate(dataloader):
+    t0 = time.perf_counter()
+    input_ids, labels = batch   # This is where DataLoader blocking happens
+    data_wait = time.perf_counter() - t0
+    data_wait_times.append(data_wait)
+
+    # Forward/backward pass
+    ...
+
+print(f"Mean DataLoader wait: {np.mean(data_wait_times)*1000:.1f} ms")
+print(f"P99 DataLoader wait:  {np.percentile(data_wait_times, 99)*1000:.1f} ms")
+# Target: mean &lt;200ms (for 25-second GPU steps), P99 &lt;500ms
+# If P99/mean ratio &gt;3×: storage variance problem (Lustre OST contention, NFS locks)
+
+## STEP 2: Check disk I/O saturation on compute nodes
+iostat -dx 1 10   # Device extended stats, 1s interval, 10 samples
+# Watch: %util column — if any device &gt;80%, it's saturated
+# Watch: rkB/s — read throughput per device
+# Watch: r_await — average read latency (target &lt;1ms for NVMe)
+
+## STEP 3: Check network filesystem bandwidth (Lustre)
+lfs df -i /lustre                          # Inode usage (metadata pressure)
+lctl get_param llite.*.read_bytes          # Lustre client read bytes
+lctl get_param osc.*.stats | grep cache    # OST cache hit rate
+
+## STEP 4: Verify Lustre stripe configuration
+lfs getstripe -R /lustre/training_data/ | grep stripe_count | sort | uniq -c
+# Expected: all files should show stripe_count = N (where N = OST count)
+# If stripe_count=1 is common: critical performance bug — must rewrite data</div>
+
+<h3>15.6.2 Common Storage Failure Modes</h3>
+
+<table>
+<tr>
+  <th>Symptom</th>
+  <th>Root Cause</th>
+  <th>Diagnostic Command</th>
+  <th>Fix</th>
+</tr>
+<tr>
+  <td>GPU idle &gt;5%, data steps slow</td>
+  <td>DataLoader bottleneck</td>
+  <td>Profile DataLoader wait time (see above)</td>
+  <td>Increase <code>num_workers</code>, <code>prefetch_factor</code></td>
+</tr>
+<tr>
+  <td>Step time variance 3–5×</td>
+  <td>Lustre OST contention / NFS lock</td>
+  <td><code>lctl get_param osc.*.stats</code></td>
+  <td>Increase stripe count; dedicated storage network</td>
+</tr>
+<tr>
+  <td>Checkpoint write 10× slower than expected</td>
+  <td>Single-rank save (not sharded)</td>
+  <td><code>iostat -dx</code> during checkpoint — only 1 device active</td>
+  <td>Switch to PyTorch DCP (per-rank sharding)</td>
+</tr>
+<tr>
+  <td>GPU stall during checkpoint</td>
+  <td>Synchronous checkpoint blocking training loop</td>
+  <td>Nsight timeline shows GPU idle during save</td>
+  <td>Implement <code>AsyncCheckpointer</code> (§15.4.2)</td>
+</tr>
+<tr>
+  <td>Job fails at checkpoint save</td>
+  <td>Storage full</td>
+  <td><code>df -h /lustre</code></td>
+  <td>Alert at 80% capacity; auto-purge old checkpoints</td>
+</tr>
+<tr>
+  <td>Model load time &gt;10 seconds</td>
+  <td>Loading from NFS on serving restart</td>
+  <td><code>time python -c "torch.load('model.pt')"</code></td>
+  <td>Cache to local NVMe; enable GDS</td>
+</tr>
+<tr>
+  <td>NVMe not saturating during reads</td>
+  <td>I/O queue depth too low</td>
+  <td><code>fio --iodepth=1 vs --iodepth=32</code> comparison</td>
+  <td>Use <code>io_uring</code>; increase <code>read_ahead_kb</code></td>
+</tr>
+</table>
+
+<h3>15.6.3 Sequence Packing — The Most Underutilized Optimization</h3>
+
+<p>Web-scale training data is highly variable in length. A typical Common Crawl shard has a mean document length of ~400 tokens with a maximum of 4,096. Without sequence packing, padding fills the gaps — and padding is wasted compute. At a padding ratio of 85%, you are spending 85% of every GEMM operation on zeros.</p>
+
+<div class="formula">SEQUENCE PACKING COMPUTE RECOVERY:
+
+Input: web-crawl dataset, mean doc length 400 tokens, max_seq=4096, batch=32
+
+Without packing:
+  Tokens per sequence: 4,096 (padded to max)
+  Real tokens: ~400 average
+  Padding fraction: (4096 - 400) / 4096 = 90.2% wasted compute!
+
+With packing (First-Fit Decreasing algorithm):
+  Pack multiple docs into each 4,096-token window
+  e.g., Seq = [doc_A=2048][doc_B=1024][doc_C=1024] = 4,096 real tokens
+  Packing efficiency: typically 95–98% (nearly zero padding)
+
+Attention masking for packed sequences:
+  Standard mask: lower-triangular (all tokens attend to prior)
+  Packed mask: block-diagonal (doc boundaries prevent cross-attention)
+  position_ids = [0..2047, 0..1023, 0..1023]  ← resets mark doc boundaries
+  FlashAttention varlen: flash_attn_varlen_qkvpacked_func handles this natively
+
+Throughput impact (70B on 512 H100s):
+  Before packing: 42% MFU (baseline)
+  After packing:  ~50% MFU (+8 MFU points)
+  = 512 × 8 MFU-points × $3/hr = $11,500/day of recovered compute
+  One-time cost: pre-process dataset with packing (~2-4 hours engineer time)</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 15.7 — QUICK REFERENCE                     -->
+<!-- ═══════════════════════════════════════════════════ -->
+<h2 id="s15-7">15.7 Key Numbers and Rules of Thumb</h2>
+
+<div class="formula">STORAGE QUICK REFERENCE — Principal-Level Numbers:
+
+BANDWIDTH TARGETS:
+  Training data read:        >10 GB/s aggregate (per 1,024 GPUs — trivially met)
+  Checkpoint write burst:    >200 GB/s (1,024 GPUs × 8.76 GB / 45-second window)
+  Model weight load (NVMe):  ~112 GB/s (8× NVMe per node, GDS)
+  Model weight load (NFS):   5–20 GB/s (avoid for inference)
+
+CHECKPOINT SIZES (full checkpoint = model + optimizer + gradients × 16 bytes):
+  7B model, AdamW:    7B × 16 bytes = 112 GB
+  70B model, AdamW:   70B × 16 bytes = 1.12 TB
+  405B model, AdamW:  405B × 16 bytes = 6.48 TB
+  ZeRO-3 per rank:    total / num_ranks (128 GPUs: 1.12 TB / 128 = 8.75 GB/rank)
+
+CHECKPOINT TIMING RULES:
+  Async CPU copy (GPU→CPU):  &lt;5 seconds (even for 70B, via non_blocking)
+  Async disk write (to FS):  checkpoint_size / storage_BW (parallel across ranks)
+  Checkpoint interval:       every 500–2,000 steps (~2–8 hours of training)
+  Recovery time target:       &lt;10 minutes (write time + job restart)
+
+FILESYSTEM SELECTION BY SCALE:
+  &lt;32 GPUs, dev/research:   NFS (simple, fine for this scale)
+  32–256 GPUs, production:  Weka (low latency) or Lustre (high expertise)
+  &gt;256 GPUs, hyperscale:   Custom (Tectonic, GPFS) or Lustre 100+ OSTs
+  All scales: Lustre stripe = -1 BEFORE writing any data
+
+GPU IDLE TARGETS (storage-caused):
+  Data loading contribution:  &lt;3% of step time
+  Checkpoint contribution:    &lt;1% of step time (with async)
+  Combined storage overhead:  &lt;5% of total training time</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- WORKED EXAMPLE                                      -->
+<!-- ═══════════════════════════════════════════════════ -->
+<h2 id="worked">15.8 Worked Example: Sizing Storage for a 1,024-GPU Cluster</h2>
+
+<div class="worked">
+  <div class="worked-label">Worked Example — Principal Level</div>
+  <h4>Problem: Size the storage system for a 1,024-GPU H100 cluster training LLaMA-3 70B models</h4>
+
+  <p><strong>Given:</strong> 1,024 H100 SXM5 GPUs, ZeRO-3, batch=4M tokens, seq_len=4,096, step_time≈25 sec, checkpoint every 1,000 steps, async window of 30 seconds, target checkpoint overhead &lt;1%.</p>
+
+  <p><strong>Step 1: Training data read bandwidth required</strong></p>
+  <div class="formula">  Data per step: 4M tokens × 2 bytes = 8 MB
+  Step time:     25 seconds
+  Required BW:   8 MB / 25 sec = 0.32 GB/s  ← minimal
+  
+  Conclusion: ANY filesystem meets this. Not the bottleneck.</div>
+
+  <p><strong>Step 2: Checkpoint write bandwidth required</strong></p>
+  <div class="formula">  Checkpoint size: 70B × 16 bytes = 1.12 TB (full 70B AdamW checkpoint)
+  With ZeRO-3 (1,024 ranks): 1.12 TB / 1,024 = 1.09 GB per rank
+  Async window: 30 seconds (GPU resumes after CPU copy, disk write in background)
+  
+  Required aggregate BW: 1,024 × 1.09 GB / 30 sec = 37.3 GB/s
+  
+  With safety margin (2×): target 75 GB/s aggregate write bandwidth</div>
+
+  <p><strong>Step 3: Lustre configuration specification</strong></p>
+  <div class="formula">  Target: 75 GB/s aggregate write
+  Per-OST bandwidth (commodity NVMe OSTs): ~2 GB/s sustained write
+  
+  OSTs needed: 75 GB/s / 2 GB/s = 38 OSTs minimum → round to 48 OSTs
+  
+  Lustre setup:
+    MDTs: 2 (for metadata redundancy)
+    OSTs: 48 (for checkpoint write bandwidth)
+    Stripe: lfs setstripe -c -1 -S 4m /lustre/checkpoints/
+    Network: 200 GbE or InfiniBand HDR per OSS node
+    Estimated annual cost: 48 OSTs × $25K/node = $1.2M storage hardware</div>
+
+  <p><strong>Step 4: Model weight load time for inference</strong></p>
+  <div class="formula">  70B FP8 model: 70 GB
+  With NVMe cache (GDS enabled): 70 GB / 112 GB/s = 0.63 seconds
+  Without NVMe cache (from NFS):  70 GB / 7.5 GB/s = 9.3 seconds
+  
+  Decision: local NVMe model cache is required for serving SLA compliance
+  Auto-scaling from 0→serving in &lt;2 seconds requires NVMe + GDS</div>
+
+  <p><strong>Verdict:</strong> Specify 48 OST Lustre for checkpoint writes, local NVMe per node for dataset caching and model serving, S3-compatible object store for long-term checkpoint archival. Total cost dominated by Lustre OST hardware ($1.2M) — justified by preventing &gt;1% checkpoint overhead ($100K+/month in GPU waste at $3/GPU-hr).</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- STORAGE HIERARCHY SVG — GPUDirect                  -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="diagram-wrap">
+  <svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;font-family:Georgia,serif">
+    <rect width="760" height="200" fill="#fdfcf7" rx="8"/>
+    <text x="380" y="24" text-anchor="middle" font-size="13" font-weight="700" fill="#1c2438">GPUDirect Storage: Eliminating the CPU Bounce Buffer</text>
+
+    <!-- WITHOUT GDS -->
+    <text x="185" y="48" text-anchor="middle" font-size="10.5" font-weight="700" fill="#c0392b">Without GDS (Legacy)</text>
+    <!-- NVMe -->
+    <rect x="20" y="58" width="80" height="36" rx="5" fill="#e8e8e8" stroke="#888" stroke-width="1.5"/>
+    <text x="60" y="80" text-anchor="middle" font-size="9.5" fill="#333">NVMe SSDs</text>
+    <!-- PCIe -->
+    <line x1="100" y1="76" x2="135" y2="76" stroke="#888" stroke-width="2" marker-end="url(#arr4)"/>
+    <text x="118" y="70" text-anchor="middle" font-size="8" fill="#888">PCIe</text>
+    <!-- CPU DRAM -->
+    <rect x="135" y="58" width="90" height="36" rx="5" fill="#fff5f5" stroke="#c0392b" stroke-width="2"/>
+    <text x="180" y="76" text-anchor="middle" font-size="9.5" fill="#c0392b">CPU DRAM</text>
+    <text x="180" y="88" text-anchor="middle" font-size="8" fill="#c0392b">BOUNCE BUFFER</text>
+    <!-- PCIe again -->
+    <line x1="225" y1="76" x2="260" y2="76" stroke="#888" stroke-width="2" marker-end="url(#arr4)"/>
+    <text x="243" y="70" text-anchor="middle" font-size="8" fill="#888">PCIe</text>
+    <!-- GPU HBM -->
+    <rect x="260" y="58" width="80" height="36" rx="5" fill="#e8fff0" stroke="#1a7a3a" stroke-width="1.5"/>
+    <text x="300" y="80" text-anchor="middle" font-size="9.5" fill="#1a7a3a">GPU HBM</text>
+
+    <text x="185" y="115" text-anchor="middle" font-size="9" fill="#c0392b">BW: 128 GB/s (PCIe-limited) · CPU: 2–3 cores occupied</text>
+
+    <!-- WITH GDS -->
+    <text x="565" y="48" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1a7a3a">With GDS (Direct)</text>
+    <!-- NVMe -->
+    <rect x="400" y="58" width="80" height="36" rx="5" fill="#e8e8e8" stroke="#888" stroke-width="1.5"/>
+    <text x="440" y="80" text-anchor="middle" font-size="9.5" fill="#333">NVMe SSDs</text>
+    <!-- Direct PCIe -->
+    <line x1="480" y1="76" x2="630" y2="76" stroke="#1a7a3a" stroke-width="3" marker-end="url(#arr4g)"/>
+    <text x="555" y="66" text-anchor="middle" font-size="9" fill="#1a7a3a">PCIe DMA (direct)</text>
+    <!-- GPU HBM -->
+    <rect x="630" y="58" width="110" height="36" rx="5" fill="#e8fff0" stroke="#1a7a3a" stroke-width="2"/>
+    <text x="685" y="76" text-anchor="middle" font-size="9.5" fill="#1a7a3a">GPU HBM</text>
+    <text x="685" y="89" text-anchor="middle" font-size="8" fill="#1a7a3a">no bounce buffer</text>
+
+    <text x="565" y="115" text-anchor="middle" font-size="9" fill="#1a7a3a">BW: 112 GB/s (NVMe-limited) · CPU: ~0 cores · 0.65 sec for 70B</text>
+
+    <!-- Divider -->
+    <line x1="380" y1="50" x2="380" y2="130" stroke="#ddd" stroke-width="1" stroke-dasharray="4,4"/>
+
+    <text x="380" y="160" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+      Enable GDS: gdscheck -p · vLLM auto-detects when download_dir is on GDS-capable NVMe
+    </text>
+    <text x="380" y="178" text-anchor="middle" font-size="9" fill="#888">
+      [SHIPPED] GDS available on H100, A100 SXM with CUDA 11.4+ and compatible NVMe driver
+    </text>
+
+    <defs>
+      <marker id="arr4" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M0,0 L10,5 L0,10 Z" fill="#888"/>
+      </marker>
+      <marker id="arr4g" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M0,0 L10,5 L0,10 Z" fill="#1a7a3a"/>
+      </marker>
+    </defs>
+  </svg>
+  <figcaption>Figure 15.5 — GPUDirect Storage eliminates the CPU DRAM bounce buffer, reducing 70B model load time from ~0.8 seconds to ~0.65 seconds while freeing 2–3 CPU cores from DMA coordination.</figcaption>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- KEY TAKEAWAYS                                       -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="takeaways" id="takeaways">
+  <h3>Key Takeaways</h3>
+
+  <div class="takeaway-group">
+    <div class="tg-label">Core Concepts</div>
+    <ul>
+      <li><strong>Training data reading is never the bottleneck</strong> — a 70B model on 1,024 GPUs needs only 0.32 GB/s of data bandwidth, met by any filesystem. Checkpoint writing (1.1 TB burst in &lt;30 seconds) and model weight loading (70 GB at serving startup) are the actual hard problems.</li>
+      <li><strong>Async checkpointing with per-rank sharding reduces overhead from 5–16% to &lt;0.5%.</strong> The GPU sees only the CPU snapshot time (~4 seconds); the disk write continues in a background thread while training resumes. Single-rank saving without sharding serializes all checkpoint data through one bottleneck.</li>
+      <li><strong>Lustre stripe count is the single highest-ROI storage tuning parameter.</strong> Default stripe_count=1 routes all data through one OST regardless of cluster size. Setting <code>lfs setstripe -c -1</code> multiplies available bandwidth by the OST count — a 96× improvement from one configuration line.</li>
+      <li><strong>Sequence packing eliminates padding waste</strong> and typically delivers 15–25% throughput improvement on variable-length corpora. On web-scale data with mean length 400 tokens and max 4,096, the padding fraction without packing exceeds 90%.</li>
+    </ul>
+  </div>
+
+  <div class="takeaway-group">
+    <div class="tg-label">Cost &amp; Productivity Impact</div>
+    <ul>
+      <li><strong>Fixing DataLoader configuration (num_workers, prefetch_factor, pin_memory)</strong> can recover 10–20% MFU with zero hardware changes. At 1,024 H100s at $3/GPU-hr, 15% MFU recovery = $13,800/day of effectively free compute.</li>
+      <li><strong>Sequence packing on a 512-GPU cluster</strong> recovering 8 MFU points is worth $11,500/day. One-time dataset preprocessing cost: 2–4 engineer-hours. Payback: under 1 hour of training.</li>
+      <li><strong>NVMe local model cache for inference</strong> reduces weight load time from 9.3 seconds (NFS) to 0.65 seconds (GDS). On a serving cluster with 100 restarts/day across 50 nodes, this saves 100 × 50 × 8.65 seconds = 12 GPU-hours/day = $36/day per server fleet.</li>
+    </ul>
+  </div>
+
+  <div class="takeaway-group">
+    <div class="tg-label">Principal-Level Insight</div>
+    <ul>
+      <li><strong>Checkpoint strategy requires three tiers for correctness</strong>, not just one backup. Local NVMe protects against node crash (fastest recovery), distributed FS protects against local failure (primary recovery path), object storage is permanent and immutable (disaster recovery + reproducibility). A corrupted checkpoint with no fallback means restarting training from zero — the worst possible outcome on a multi-month training run.</li>
+      <li><strong>GPU utilization dashboards are misleading for storage diagnosis.</strong> DataLoader stalls appear as "active" Python time, not GPU idle time. The correct signal is step-time variance: a P99/P50 ratio &gt;3× on step time almost always indicates filesystem contention (Lustre OST hotspot, NFS lock contention), not compute or network issues.</li>
+      <li><strong>NVMe local storage serves three distinct and non-competing functions</strong>: dataset shard caching (avoid repeated Lustre reads), checkpoint staging (50–120 GB/s write, faster than network), and KV cache overflow for inference (200 µs vs 16 ms for CPU DRAM swap). Provision all three use cases when specifying per-node NVMe capacity — typically 10–30 TB per node in AI clusters.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- REVIEW QUESTIONS (3-TIER)                          -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="review-questions" id="review">
+  <h3>Review Questions</h3>
+
+  <div class="rq-tier foundational">
+    <div class="rq-tier-label">
+      <span class="rq-badge">Foundational</span>
+      Build the mental model — no math required
+    </div>
+    <ol>
+      <li>A colleague argues that their AI cluster's storage bottleneck is training data reading and wants to buy a faster filesystem to increase read throughput. Using the five-tier storage hierarchy from §15.1, explain why this is almost certainly the wrong diagnosis. What are the two storage operations that actually determine storage requirements at scale, and why does training data reading rarely limit throughput?</li>
+      <li>Explain the difference between synchronous and asynchronous checkpointing. If a training run on 1,024 GPUs uses synchronous checkpointing and checkpoints every 1,000 steps (each step takes 25 seconds), what happens to GPU utilization during the checkpoint write? Why is the "GPU utilization" metric misleading in this scenario?</li>
+      <li>What is sequence packing, and why does it matter for training data with variable document lengths? Describe in plain terms what happens to compute efficiency without packing on a web-scale corpus where most documents are 200–500 tokens but the maximum context is 4,096 tokens.</li>
+    </ol>
+  </div>
+
+  <div class="rq-tier intermediate">
+    <div class="rq-tier-label">
+      <span class="rq-badge">Intermediate</span>
+      Apply and calculate — production context
+    </div>
+    <ol>
+      <li>A 70B model training run on 1,024 GPUs (ZeRO-3, DP=128) experiences 12% GPU idle time attributed to data loading. The dataset is pre-tokenized and stored on a Lustre filesystem with default stripe settings. (a) What is the most likely root cause given the "default stripe settings" detail? (b) Write the two commands needed to diagnose and then fix this. (c) What is the expected improvement in GPU effective throughput after the fix?</li>
+      <li>Calculate the checkpoint write bandwidth required for a 405B model training run on 2,048 GPUs (ZeRO-3) that checkpoints every 500 steps with a 45-second async window. The model uses AdamW. (a) What is the total checkpoint size? (b) What is the per-rank write size? (c) What aggregate write bandwidth is required? (d) What Lustre configuration (OST count) would satisfy this at 2 GB/s per OST?</li>
+      <li>A serving cluster restarts inference servers nightly for model updates. Each server loads a 70B FP8 model (70 GB). Currently loading from NFS takes 9.3 seconds. What two architectural changes would reduce this to under 1 second? For each: state the mechanism and quantify the expected improvement using the bandwidth numbers from §15.5.</li>
+    </ol>
+  </div>
+
+  <div class="rq-tier principal">
+    <div class="rq-tier-label">
+      <span class="rq-badge">Principal Level</span>
+      Design, decide, and defend — architecture reviews
+    </div>
+    <ol>
+      <li><strong>Storage Architecture Design for a 2,048-GPU Cluster.</strong> You are specifying storage for a new H100 cluster (2,048 GPUs) that will train 70–405B models. Requirements: checkpoint write latency &lt;60 seconds (sync equivalent), dataset read throughput sufficient to keep all GPUs fed at batch=4M tokens and step_time=20 seconds, model weight load time &lt;2 seconds at serving startup, and support for daily checkpoint archival. (a) Specify the complete storage architecture: filesystem type, OST count, per-node NVMe config, object store. (b) Justify each decision with bandwidth math. (c) Estimate the 3-year TCO of your storage design assuming $25K per OST node and $0.02/GB/month for object storage at 6 TB checkpoint/day. (d) At what cluster size would you switch from Lustre to a custom distributed filesystem, and what would trigger that decision?</li>
+      <li><strong>Diagnosing a Production Storage Regression.</strong> Your 512-GPU training cluster's checkpoint write time suddenly increased from 12 seconds to 95 seconds over a weekend, blocking training for 83 seconds per checkpoint (3.3% overhead on 25-second steps). GPU utilization monitors show no change. (a) List the three most likely root causes in order of probability. (b) Write the exact sequence of diagnostic commands to isolate the root cause within 10 minutes. (c) For each root cause you listed, write the specific fix and estimated recovery time. (d) What monitoring alert would have caught this regression before the training team noticed it?</li>
+      <li><strong>KV Cache Tiering System Design.</strong> You are designing a KV cache tiering system for a production LLaMA-3 70B serving cluster (H100 SXM5, FP8 KV, TP=2). The cluster serves 1,000 concurrent users at average 8K context. HBM KV budget is 75 GB per GPU pair. You want to extend capacity using local NVMe (8× drives, ~110 GB/s). (a) Calculate the maximum HBM-resident concurrent users. (b) Calculate how many additional users the NVMe tier enables. (c) At what serving throughput (tokens/second) does the NVMe access latency (200 µs) exceed 5% of decode latency (assume 15 ms/token at batch=32)? Is NVMe KV tiering viable for a &lt;50ms P99 TTOT SLA? (d) Sketch the architecture of the KV tier router: what is the eviction policy, how does the router decide which KV blocks to evict to NVMe vs. CPU DRAM, and how does it handle the case where a request is resumed and its KV is on NVMe?</li>
+    </ol>
+  </div>
+</div>
+
+<!-- CHAPTER END -->
+<div class="ch-end">
+  Chapter 15 &nbsp;·&nbsp; Storage &amp; I/O for AI Workloads &nbsp;·&nbsp; Venkat Vinjam &nbsp;·&nbsp;
+  <em>AI/ML Infrastructure from Silicon to Scale</em> &nbsp;·&nbsp; 2026
+  <br><br>
+  <span style="font-size:9px;color:#ccc">
+    Cross-references: §10.5 (ZeRO checkpointing) · §11.4 (KV cache paging) · §14.1 (network bandwidth) · §16.5 (SLURM checkpoint integration)
+  </span>
+</div>
+</div>
+</body>
+</html>

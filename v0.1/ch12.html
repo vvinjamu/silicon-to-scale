@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 12 — Benchmarking & Performance Methodology | Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.82;color:#1c2438;background:#fdfcf7;padding-top:48px}
+#nav{position:fixed;top:0;left:0;right:0;height:48px;background:#1c2438;display:flex;align-items:center;gap:5px;padding:0 16px;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,.35);overflow-x:auto}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:12px;white-space:nowrap;margin-right:10px;flex-shrink:0}
+#nav a{color:#c8d0e0;font-family:sans-serif;font-size:10.5px;text-decoration:none;padding:4px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.15);white-space:nowrap;flex-shrink:0}
+#nav a:hover{background:#e3b341;color:#1c2438;border-color:#e3b341;font-weight:700}
+#nav a.home{border-color:#e3b341;color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:210px;height:calc(100vh - 48px);background:#f5f3ec;border-right:1px solid #ddd;overflow-y:auto;padding:14px 0;z-index:900}
+#sidebar h4{font-family:sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#e3b341;padding:0 14px;margin-bottom:8px;margin-top:4px}
+#sidebar a{display:block;font-family:sans-serif;font-size:11px;color:#444;text-decoration:none;padding:4px 14px;line-height:1.4}
+#sidebar a:hover{background:#e8e4da;color:#1c2438}
+#sidebar .sub{padding-left:24px;font-size:10.5px;color:#666}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px 60px}
+.ch-label{font-family:sans-serif;font-size:9.5px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:6px}
+h1.ch-title{font-size:32px;font-weight:900;color:#1c2438;line-height:1.2;margin-bottom:8px}
+.ch-subtitle{font-size:14px;color:#556;font-style:italic;margin-bottom:12px}
+.ch-meta{font-family:sans-serif;font-size:11px;color:#666;margin-bottom:16px}
+.ch-meta strong{color:#1c2438}
+.xref{color:#2a6099;font-style:italic}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438);border-radius:2px;margin:18px 0 24px}
+.ch-hero-banner{background:linear-gradient(135deg,#1c2438 0%,#1a3a6b 100%);color:#fff;border-radius:10px;padding:28px 34px;margin-bottom:32px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.ch-hero-banner blockquote{border:none;background:none;padding:0;margin:0;font-style:italic;font-size:14px;line-height:1.7;color:rgba(255,255,255,.88)}
+.ch-hero-banner cite{display:block;margin-top:10px;font-size:11.5px;color:#e3b341;font-style:normal;font-family:sans-serif}
+h2{font-size:20px;color:#1c2438;margin:38px 0 12px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:16px;color:#1a3a6b;margin:26px 0 9px}
+h4{font-size:13.5px;color:#1a3a6b;margin:18px 0 6px;font-style:italic}
+p{margin-bottom:13px}
+ul,ol{margin:0 0 13px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.objectives{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:24px 0}
+.obj-card{border-radius:7px;padding:14px 16px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.obj-card.foundational{background:#e8fff0;border:1px solid #b0dfc0}
+.obj-card.intermediate{background:#fffbf0;border:1px solid #e3c87a}
+.obj-card.principal{background:#f0f0ff;border:1px solid #a090d0}
+.obj-label{font-family:sans-serif;font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:7px}
+.obj-card.foundational .obj-label{color:#27ae60}
+.obj-card.intermediate .obj-label{color:#a07800}
+.obj-card.principal .obj-label{color:#7b2d8b}
+.obj-card ul{margin-left:14px}
+.obj-card li{font-size:11.5px;margin-bottom:4px;color:#333}
+.diagram-wrap{background:#fff;border:1px solid #dde2ec;border-radius:8px;padding:18px 20px;margin:24px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.diagram-wrap figcaption{font-family:sans-serif;font-size:10.5px;color:#666;margin-top:10px;font-style:italic;text-align:center;border-top:1px solid #eee;padding-top:8px}
+.formula{background:#0d1117;color:#b8ddf0;padding:14px 18px;border-radius:6px;font-family:"Courier New",monospace;font-size:11px;line-height:1.72;margin:16px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:12px 16px;margin:18px 0;border-radius:0 6px 6px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout.key{border-color:#7b2d8b;background:#fdf5ff}
+.callout.warn{border-color:#c0392b;background:#fff5f5}
+.callout strong{display:block;margin-bottom:4px;color:#1c2438}
+.worked{background:#fff8ec;border:2px solid #e3b341;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.worked-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#a07800;margin-bottom:10px}
+.cookbook{background:#0d1117;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cookbook-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#e3b341;margin-bottom:12px;border-bottom:1px solid #2a3050;padding-bottom:8px}
+.cookbook pre{color:#b8ddf0;font-family:"Courier New",monospace;font-size:11px;line-height:1.72;white-space:pre;overflow-x:auto}
+.cookbook .cmt{color:#6a7a8a}.cookbook .cmd{color:#79d99a}.cookbook .out{color:#f0c060}
+.qref{background:#1c2438;color:#c8d8f0;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.qref h4{color:#e3b341;font-family:sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;font-style:normal;border-bottom:1px solid rgba(255,255,255,.15);padding-bottom:8px}
+.qref table{color:#c8d8f0;font-size:11.5px}
+.qref th{background:rgba(255,255,255,.08);color:#e3b341;font-size:10px}
+.qref td{border-color:rgba(255,255,255,.1)}
+.qref tr:nth-child(even) td{background:rgba(255,255,255,.04)}
+.takeaways{background:#f3f5f8;border:2px solid #1c2438;border-radius:9px;padding:18px 22px;margin:32px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.takeaways h3{color:#1c2438;margin:0 0 14px;font-size:15px;border:none;padding:0}
+.takeaway-group{margin-bottom:14px}.takeaway-group:last-child{margin-bottom:0}
+.tg-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#e3b341;margin-bottom:6px}
+.takeaway-group ul{margin-left:16px}
+.takeaway-group li{font-size:12.5px;margin-bottom:4px;color:#222}
+.review-questions{margin-top:36px}
+.review-questions h3{font-size:16px;color:#1c2438;margin-bottom:16px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+.rq-tier{border-radius:8px;padding:14px 18px;margin-bottom:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rq-tier.foundational{background:#e8fff0;border-left:5px solid #27ae60}
+.rq-tier.intermediate{background:#fffbf0;border-left:5px solid #e3b341}
+.rq-tier.principal{background:#f0f0ff;border-left:5px solid #7b2d8b}
+.rq-tier-label{font-family:sans-serif;font-size:10px;color:#555;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.rq-badge{font-weight:700;font-size:9px;padding:2px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.foundational .rq-badge{background:#27ae60;color:#fff}
+.intermediate .rq-badge{background:#e3b341;color:#1c2438}
+.principal .rq-badge{background:#7b2d8b;color:#fff}
+.rq-tier ol{margin-left:18px}
+.rq-tier li{margin-bottom:10px;font-size:12.5px;line-height:1.7;color:#222}
+.rq-tier li::marker{font-weight:700}
+.ch-end{text-align:center;margin-top:48px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#999;letter-spacing:2px;text-transform:uppercase}
+.ch-end a{color:#2a6099;text-decoration:none;font-weight:700}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:"Courier New",monospace;font-size:11px;color:#2a4a8a}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e8e8;vertical-align:top}
+tr:nth-child(even) td{background:#f8f9fb;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout,.worked,.cookbook{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+</style>
+</head>
+<body>
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="ch11.html">&#8592; Ch 11</a><a href="ch13.html">Ch 13 &#8594;</a>
+  <a href="ch07.html">Ch 7</a><a href="ch10.html">Ch 10</a><a href="ch17.html">Ch 17</a>
+</div>
+<div id="sidebar">
+  <h4>Chapter 12</h4>
+  <a href="#overview">Overview</a>
+  <a href="#objectives">Objectives</a>
+  <a href="#s121">12.1 Why Benchmarking Is Hard</a>
+  <a class="sub" href="#s1211">&nbsp;&nbsp;&#8627; Measurement Validity</a>
+  <a class="sub" href="#s1212">&nbsp;&nbsp;&#8627; Five Mistakes</a>
+  <a class="sub" href="#s1213">&nbsp;&nbsp;&#8627; Percentiles</a>
+  <a class="sub" href="#s1214">&nbsp;&nbsp;&#8627; Noise Sources</a>
+  <a href="#s122">12.2 Roofline Model</a>
+  <a href="#s123">12.3 MLPerf</a>
+  <a href="#s124">12.4 GPU Microbenchmarks</a>
+  <a href="#s125">12.5 LLM Benchmarks</a>
+  <a class="sub" href="#s1253">&nbsp;&nbsp;&#8627; Throughput-Latency Curve</a>
+  <a href="#s126">12.6 Training / MFU</a>
+  <a href="#s127">12.7 Profiling Decision Tree</a>
+  <a href="#s128">12.8 Nsight Compute</a>
+  <a href="#s129">12.9 Regression CI Pipeline</a>
+  <a href="#qref">Quick Reference</a>
+  <a href="#takeaways">Key Takeaways</a>
+  <a href="#review">Review Questions</a>
+</div>
+<div class="page">
+<div class="ch-label">Part IV &middot; Chapter 12</div>
+<h1 class="ch-title">Benchmarking &amp; Performance Methodology</h1>
+<div class="ch-subtitle">Measuring Correctly Before Optimizing Anything &#8212; From Microbenchmarks to Cluster-Scale Profiling</div>
+<div class="ch-meta">
+  <strong>Book:</strong> AI/ML Infrastructure from Silicon to Scale &nbsp;|&nbsp;
+  <strong>Author:</strong> Venkat Vinjam &nbsp;|&nbsp;
+  <strong>Cross-ref:</strong> <span class="xref">GPU kernels (Ch 7) &middot; KV cache (Ch 11) &middot; Speculative decoding (Ch 13) &middot; Networking (Ch 14) &middot; Telemetry (Ch 17)</span>
+</div>
+<div class="ch-divider"></div>
+<div class="ch-hero-banner">
+  <blockquote>"The most dangerous number in AI infrastructure is an unverified benchmark. It misleads architecture decisions, justifies wrong hardware purchases, and hides real problems behind confident-sounding percentages. Measure correctly first. Then optimize."</blockquote>
+  <cite>&#8212; AI Performance Engineering Principle</cite>
+</div>
+<div id="overview">
+<p>Every optimization decision in this book &#8212; kernel fusion, quantization, tensor parallelism, speculative decoding &#8212; produces a number. Whether that number is trustworthy depends entirely on how it was measured. A 40% TFLOPS improvement on a single kernel means nothing if the system is memory-bandwidth bound. A 1.8&#215; throughput gain in a microbenchmark means nothing if it does not survive the production serving stack.</p>
+<p>This chapter provides the complete benchmarking and measurement methodology for a Principal Performance Architect: measurement validity rules, the Roofline model as diagnostic framework, MLPerf interpretation, GPU microbenchmark suite, LLM-specific benchmarks, MFU measurement, a five-step profiling decision tree, Nsight Compute at the principal workflow level, and regression CI pipeline design.</p>
+</div>
+<div id="objectives">
+<div class="objectives">
+  <div class="obj-card foundational"><div class="obj-label">Foundational</div><ul>
+    <li>Name the three physical conditions for a valid GPU measurement</li>
+    <li>Explain why wall-clock time is wrong for GPU benchmarking</li>
+    <li>Understand the Roofline ridge point and optimization direction</li>
+    <li>Know the three MLPerf inference scenarios and their metrics</li>
+  </ul></div>
+  <div class="obj-card intermediate"><div class="obj-label">Intermediate</div><ul>
+    <li>Write a CUDA-event-timed benchmark with warmup and percentile reporting</li>
+    <li>Classify any LLM operation as compute- or memory-bound using AI formula</li>
+    <li>Run the GPU microbenchmark suite and interpret all five results</li>
+    <li>Build the throughput-latency curve and identify the knee</li>
+  </ul></div>
+  <div class="obj-card principal"><div class="obj-label">Principal Level</div><ul>
+    <li>Apply the 5-step tree to diagnose any underperforming system</li>
+    <li>Design a three-tier regression CI pipeline with statistical thresholds</li>
+    <li>Critique MLPerf results for hardware procurement decisions</li>
+    <li>Specify vendor acceptance criteria for a new 4,096-GPU cluster</li>
+  </ul></div>
+</div>
+</div>
+<h2 id="s121">12.1 &#8212; Why Benchmarking Is Hard</h2>
+<h3 id="s1211">12.1.1 The Three Physical Realities</h3>
+<p><strong>Warmup.</strong> GPU hardware does not operate at peak from cold state: the power management unit ramps clocks over 100&#8211;500ms, the CUDA JIT compiles kernels on first execution, and driver page tables must be populated. Any benchmark timing from iteration 1 captures initialization, not steady-state performance.</p>
+<div class="formula">WARMUP BUDGET BY OPERATION TYPE:
+  Single kernel microbenchmark:     5&#8211;10 iterations minimum
+  GEMM throughput benchmark:        10&#8211;20 iterations (JIT + clock ramp)
+  LLM prefill benchmark:            3&#8211;5 full forward passes
+  LLM decode benchmark:             20&#8211;50 decode steps
+  Training step benchmark:          5&#8211;10 steps (optimizer state warmup)
+  Multi-GPU training:               10&#8211;20 steps (NVLink/IB calibration)
+Rule: allocate max(10 kernel runs, 30 seconds wall clock)</div>
+
+<p><strong>Synchronization.</strong> CUDA launches are asynchronous: <code>kernel_launch()</code> returns immediately after enqueueing. Wall-clock timing around a kernel call measures host-side overhead, not GPU execution time.</p>
+<div class="formula">CUDA SYNCHRONIZATION &#8212; CORRECT vs WRONG:
+
+# WRONG: measures host-side enqueue time only (~10&#8211;50 &#956;s)
+t0 = time.perf_counter()
+output = model(input)
+t1 = time.perf_counter()    # MEANINGLESS for GPU work
+
+# CORRECT: CUDA events give &#956;s-precision GPU timing
+start = torch.cuda.Event(enable_timing=True)
+end   = torch.cuda.Event(enable_timing=True)
+for _ in range(10): _ = model(input)   # warmup
+torch.cuda.synchronize()
+start.record()
+output = model(input)
+end.record()
+torch.cuda.synchronize()
+latency_ms = start.elapsed_time(end)   # &#956;s-precision</div>
+
+<p><strong>Steady Thermal State.</strong> Under sustained load, die temperature rises until the power management controller throttles clocks. A 10-second benchmark may capture the pre-throttle peak; a 60-second run may show 8&#8211;15% lower throughput. Only the sustained number is relevant for production planning.</p>
+<div class="formula">THERMAL PROTOCOL:
+  Pre-benchmark: gpu-burn for 5 min &#8594; verify &#177;5W power draw, &#177;2&#176;C temp stability
+  During: monitor DCGM_FI_DEV_CLOCKS_THROTTLE_REASONS
+  Post: if first-10s vs last-10s differ &gt;5%: report the sustained number</div>
+
+<h3 id="s1212">12.1.2 The Five Common Measurement Mistakes</h3>
+<table>
+<tr><th>#</th><th>Mistake</th><th>Typical Error</th><th>Fix</th></tr>
+<tr><td>1</td><td>No warmup &#8212; timing first forward pass</td><td>1.5&#8211;3&#215; slower than steady state</td><td>Minimum 10 iterations before timing</td></tr>
+<tr><td>2</td><td>Wrong batch size vs production</td><td>Memory-bound &#8594; compute-bound regime shift; vendor claims 3&#215; higher tok/s at B=512 irrelevant for B=4 production</td><td>Benchmark at production batch distribution</td></tr>
+<tr><td>3</td><td>Wrong precision (FP8 bench for BF16 prod)</td><td>2&#215; throughput difference on H100 TC</td><td>Use minimum precision meeting quality target</td></tr>
+<tr><td>4</td><td>Wall clock instead of GPU time</td><td>For &lt;100&#956;s kernels: error exceeds kernel time</td><td>CUDA events for kernel-level; <code>nsys</code> for system</td></tr>
+<tr><td>5</td><td>Single run or mean only &#8212; ignoring variance</td><td>P99 can be 2&#8211;6&#215; above P50; mean hides the tail cliff</td><td>&#8805;100 measurements; report P50/P95/P99</td></tr>
+</table>
+
+<h3 id="s1213">12.1.3 Statistical Rigor: Why Percentiles Matter</h3>
+<div class="formula">EXAMPLE DECODE LATENCY DISTRIBUTION (70B, H100, batch=32):
+  P50: 18.2ms | P90: 21.3ms | P95: 24.7ms | P99: 41.8ms | P99.9: 112.4ms | Mean: 19.9ms
+
+  Mean (19.9ms) HIDES the P99 cliff at 41.8ms.
+  At 100 RPS: ~1 request/second experiences &gt;41.8ms; ~1/10s experiences &gt;112.4ms.
+  SLA contract is with the TAIL, not the average.</div>
+
+<h3 id="s1214">12.1.4 Noise Sources</h3>
+<table>
+<tr><th>Source</th><th>Magnitude</th><th>Detection</th><th>Mitigation</th></tr>
+<tr><td>Thermal throttling</td><td>5&#8211;15%</td><td><code>nvidia-smi --query-gpu=clocks_throttle_reasons</code></td><td>Steady-state warmup; report sustained clock</td></tr>
+<tr><td>NUMA effects</td><td>1.5&#8211;2&#215; PCIe latency</td><td><code>numactl --hardware</code></td><td><code>numactl --cpunodebind=0 --membind=0</code></td></tr>
+<tr><td>CPU frequency scaling</td><td>2&#8211;5&#215; dispatch overhead</td><td><code>cpupower frequency-info</code></td><td><code>cpupower frequency-set --governor performance</code></td></tr>
+<tr><td>Memory allocation spikes</td><td>100&#956;s&#8211;10ms</td><td>Spike pattern in per-iteration timing</td><td>Pre-allocate; <code>torch.cuda.empty_cache()</code></td></tr>
+<tr><td>OS scheduler interrupts</td><td>50&#8211;500&#956;s jitter</td><td>Irregular CPU activity in nsys</td><td><code>isolcpus</code> kernel param; <code>taskset</code></td></tr>
+</table>
+
+<h2 id="s122">12.2 &#8212; The Roofline Model as Diagnostic Framework</h2>
+<div class="formula">ROOFLINE FUNDAMENTALS:
+
+  Arithmetic Intensity (AI) = FLOPs / Memory Traffic   [FLOP/byte]
+  Ceiling: T &#8804; min(Peak_FLOPS,  AI &#215; Peak_BW)
+  Ridge point: AI_ridge = Peak_FLOPS / Peak_BW
+
+H100 SXM5:  989 TFLOPS BF16  /  3.35 TB/s  = 295 FLOP/byte ridge point
+
+DECISION RULE:
+  AI &lt; 295 &#8594; MEMORY-BW BOUND: fuse ops, quantize data, increase batch
+  AI &gt; 295 &#8594; COMPUTE BOUND:   FP8 (2&#215; compute roof), Tensor Core alignment
+
+Most common error: applying FP8 compute to a memory-bound workload.</div>
+
+<div class="diagram-wrap" id="diag-roofline"><figure>
+<svg viewBox="0 0 760 310" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <defs><marker id="aRF" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#888"/></marker></defs>
+  <text x="380" y="18" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">ROOFLINE MODEL &#8212; H100 SXM5 | Ridge Point = 295 FLOP/byte (BF16)</text>
+  <line x1="70" y1="265" x2="680" y2="265" stroke="#1c2438" stroke-width="2"/>
+  <line x1="70" y1="30" x2="70" y2="265" stroke="#1c2438" stroke-width="2"/>
+  <!-- Y axis -->
+  <text x="63" y="268" text-anchor="end" fill="#555" font-size="9.5">1T</text>
+  <text x="63" y="228" text-anchor="end" fill="#555" font-size="9.5">10T</text>
+  <text x="63" y="148" text-anchor="end" fill="#555" font-size="9.5">100T</text>
+  <text x="63" y="48" text-anchor="end" fill="#555" font-size="9.5">989T</text>
+  <text x="22" y="155" text-anchor="middle" fill="#1c2438" font-size="10" font-weight="bold" transform="rotate(-90,22,155)">Throughput (TFLOPS)</text>
+  <!-- X axis: log scale positions: AI=1->70, 5->160, 10->208, 50->306, 100->364, 200->452, 295->508, 600->600 -->
+  <text x="70"  y="280" text-anchor="middle" fill="#555" font-size="9.5">1</text>
+  <text x="160" y="280" text-anchor="middle" fill="#555" font-size="9.5">5</text>
+  <text x="208" y="280" text-anchor="middle" fill="#555" font-size="9.5">10</text>
+  <text x="306" y="280" text-anchor="middle" fill="#555" font-size="9.5">50</text>
+  <text x="364" y="280" text-anchor="middle" fill="#555" font-size="9.5">100</text>
+  <text x="452" y="280" text-anchor="middle" fill="#555" font-size="9.5">200</text>
+  <text x="508" y="280" text-anchor="middle" fill="#555" font-size="9.5">295</text>
+  <text x="380" y="298" text-anchor="middle" fill="#1c2438" font-size="10" font-weight="bold" font-family="sans-serif">Arithmetic Intensity (FLOP/byte)</text>
+  <!-- BW slope line from (AI=1,T=3.35) to ridge (295,989) -->
+  <line x1="70" y1="264" x2="508" y2="48" stroke="#2a6099" stroke-width="2.5"/>
+  <!-- Compute ceiling -->
+  <line x1="508" y1="48" x2="680" y2="48" stroke="#c0392b" stroke-width="2.5"/>
+  <!-- Ridge point -->
+  <line x1="508" y1="48" x2="508" y2="265" stroke="#888" stroke-width="1.2" stroke-dasharray="5"/>
+  <circle cx="508" cy="48" r="7" fill="#e3b341" stroke="#1c2438" stroke-width="1.5"/>
+  <text x="514" y="42" fill="#a07800" font-size="9.5" font-weight="bold" font-family="sans-serif">Ridge: 295 FLOP/byte</text>
+  <!-- Region labels -->
+  <text x="230" y="240" fill="#2a6099" font-size="10" font-weight="bold" font-family="sans-serif" opacity=".7">MEMORY-BANDWIDTH BOUND</text>
+  <text x="565" y="140" fill="#c0392b" font-size="10" font-weight="bold" font-family="sans-serif">COMPUTE</text>
+  <text x="565" y="153" fill="#c0392b" font-size="10" font-weight="bold" font-family="sans-serif">BOUND</text>
+  <text x="415" y="38" fill="#c0392b" font-size="9.5" font-family="sans-serif">Peak BF16 (989T)</text>
+  <text x="195" y="122" fill="#2a6099" font-size="9.5" font-family="sans-serif" transform="rotate(-53,195,122)">BW slope (3.35 TB/s)</text>
+  <!-- Operations -->
+  <circle cx="70" cy="264" r="7" fill="#c0392b"/>
+  <text x="78" y="255" fill="#1c2438" font-size="9" font-family="sans-serif">&#9312; Decode B=1 (AI&#8776;1) 0.3% compute</text>
+  <circle cx="160" cy="254" r="7" fill="#7b2d8b"/>
+  <text x="168" y="248" fill="#1c2438" font-size="9" font-family="sans-serif">&#9313; LayerNorm (AI&#8776;5) fuse!</text>
+  <circle cx="306" cy="224" r="7" fill="#e3b341"/>
+  <text x="314" y="218" fill="#1c2438" font-size="9" font-family="sans-serif">&#9314; GEMM B=1 (AI&#8776;30)</text>
+  <circle cx="364" cy="195" r="7" fill="#1a3a6b"/>
+  <text x="372" y="189" fill="#1c2438" font-size="9" font-family="sans-serif">&#9315; Decode B=32 (AI&#8776;100)</text>
+  <circle cx="452" cy="90" r="7" fill="#1a7a3a"/>
+  <text x="456" y="84" fill="#1c2438" font-size="9" font-family="sans-serif">&#9316; FlashAttn (AI&#8776;200) near ridge</text>
+  <circle cx="555" cy="48" r="7" fill="#27ae60"/>
+  <text x="563" y="70" fill="#1c2438" font-size="9" font-family="sans-serif">&#9317; GEMM B=128+ (AI&#8776;400) &#9989;</text>
+  <!-- Key box -->
+  <rect x="72" y="105" width="210" height="96" rx="5" fill="#fff8ec" stroke="#e3b341" stroke-width="1"/>
+  <text x="177" y="120" text-anchor="middle" fill="#a07800" font-size="9.5" font-weight="bold" font-family="sans-serif">Operation Arithmetic Intensities</text>
+  <text x="82" y="134" fill="#555" font-size="9" font-family="sans-serif">&#9312; Decode B=1:     AI&#8776;1   (295&#215; below ridge)</text>
+  <text x="82" y="147" fill="#555" font-size="9" font-family="sans-serif">&#9313; LayerNorm:      AI&#8776;5   (fuse to reduce BW)</text>
+  <text x="82" y="160" fill="#555" font-size="9" font-family="sans-serif">&#9314; GEMM B=1:       AI&#8776;30  (increase batch)</text>
+  <text x="82" y="173" fill="#555" font-size="9" font-family="sans-serif">&#9315; Decode B=32:    AI&#8776;100 (still BW-bound)</text>
+  <text x="82" y="186" fill="#555" font-size="9" font-family="sans-serif">&#9316;&#9317; Flash/GEMM:   AI&#8805;200 (near/above ridge)</text>
+</svg>
+<figcaption><strong>Figure 12.1</strong> &#8212; H100 SXM5 Roofline (log-log). Ridge point = 295 FLOP/byte. Operations left of the ridge are memory-bandwidth bound: the correct fix is fusion, quantization of data movement, or larger batch. Operations right of the ridge are compute-bound: the correct fix is FP8 (doubles compute roof) or Tensor Core alignment. Decode at B=1 sits at AI&#8776;1, a full 295&#215; below the ridge &#8212; it is HBM-bandwidth bound by an overwhelming margin.</figcaption>
+</figure></div>
+<h2 id="s123">12.3 &#8212; MLPerf: The Industry Standard</h2>
+<div class="diagram-wrap" id="diag-mlperf"><figure>
+<svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="380" y="18" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">MLPERF BENCHMARK TAXONOMY &#8212; Training vs Inference Scenarios</text>
+  <!-- Training half -->
+  <rect x="10" y="28" width="365" height="302" rx="8" fill="#e8f0ff" stroke="#1a3a6b" stroke-width="2"/>
+  <text x="192" y="46" text-anchor="middle" fill="#1a3a6b" font-size="11" font-weight="bold" font-family="sans-serif">MLPerf TRAINING</text>
+  <text x="192" y="58" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">Metric: Time-to-Accuracy (minutes). Lower = Better.</text>
+  <rect x="20" y="66" width="347" height="22" rx="4" fill="#1a3a6b"/>
+  <text x="194" y="81" text-anchor="middle" fill="#e3b341" font-size="9.5" font-weight="bold" font-family="sans-serif">LLaMA 3.1 405B Pretraining &#8212; loss target, large scale</text>
+  <rect x="20" y="91" width="347" height="18" rx="4" fill="#2a5090"/>
+  <text x="194" y="104" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">LLaMA 2 70B LoRA &#8212; perplexity target</text>
+  <rect x="20" y="112" width="347" height="18" rx="4" fill="#2a5090"/>
+  <text x="194" y="125" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">BERT Large, ResNet-50, 3D U-Net, DLRM &#8212; legacy baselines</text>
+  <!-- Controlled -->
+  <rect x="20" y="140" width="168" height="82" rx="5" fill="#fff" stroke="#1a3a6b" stroke-width="1"/>
+  <text x="104" y="156" text-anchor="middle" fill="#1a3a6b" font-size="9.5" font-weight="bold" font-family="sans-serif">Controlled (Fixed):</text>
+  <text x="28" y="170" fill="#444" font-size="9" font-family="sans-serif">&#10003; Identical dataset</text>
+  <text x="28" y="182" fill="#444" font-size="9" font-family="sans-serif">&#10003; Fixed accuracy target</text>
+  <text x="28" y="194" fill="#444" font-size="9" font-family="sans-serif">&#10003; &#8805;5 runs, report median</text>
+  <text x="28" y="206" fill="#444" font-size="9" font-family="sans-serif">&#10003; Evaluation protocol</text>
+  <!-- Submitter -->
+  <rect x="198" y="140" width="169" height="82" rx="5" fill="#fff" stroke="#c0392b" stroke-width="1"/>
+  <text x="282" y="156" text-anchor="middle" fill="#c0392b" font-size="9.5" font-weight="bold" font-family="sans-serif">Submitter Chooses:</text>
+  <text x="206" y="170" fill="#444" font-size="9" font-family="sans-serif">&#8226; Hardware platform + count</text>
+  <text x="206" y="182" fill="#444" font-size="9" font-family="sans-serif">&#8226; Precision (BF16/FP8/FP16)</text>
+  <text x="206" y="194" fill="#444" font-size="9" font-family="sans-serif">&#8226; Full software stack</text>
+  <text x="206" y="206" fill="#444" font-size="9" font-family="sans-serif">&#8226; Parallelism strategy</text>
+  <!-- Blind spots -->
+  <rect x="20" y="232" width="347" height="88" rx="5" fill="#fff5f5" stroke="#c0392b" stroke-width="1"/>
+  <text x="194" y="248" text-anchor="middle" fill="#c0392b" font-size="9.5" font-weight="bold" font-family="sans-serif">&#9888; Training Blind Spots:</text>
+  <text x="28" y="262" fill="#c0392b" font-size="9" font-family="sans-serif">&#10008; Hardware cost NOT reported</text>
+  <text x="28" y="275" fill="#c0392b" font-size="9" font-family="sans-serif">&#10008; Power consumption NOT reported (get tok/s/watt separately)</text>
+  <text x="28" y="288" fill="#c0392b" font-size="9" font-family="sans-serif">&#10008; Storage I/O and networking time excluded</text>
+  <text x="28" y="301" fill="#c0392b" font-size="9" font-family="sans-serif">&#10008; Software stacks lag production deployments by 6&#8211;18 months</text>
+  <text x="28" y="314" fill="#c0392b" font-size="9" font-family="sans-serif">&#10008; Top submitters use 10+ engineers tuning kernels per round</text>
+  <!-- Inference half -->
+  <rect x="387" y="28" width="365" height="302" rx="8" fill="#e8fff0" stroke="#1a7a3a" stroke-width="2"/>
+  <text x="569" y="46" text-anchor="middle" fill="#1a7a3a" font-size="11" font-weight="bold" font-family="sans-serif">MLPerf INFERENCE</text>
+  <text x="569" y="58" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">Three scenarios representing different production requirements</text>
+  <!-- OFFLINE -->
+  <rect x="397" y="66" width="347" height="62" rx="5" fill="#1a7a3a"/>
+  <text x="569" y="82" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">OFFLINE &#8212; Maximum Throughput</text>
+  <text x="569" y="96" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">Metric: samples/sec or tokens/sec | No latency constraint</text>
+  <text x="569" y="109" text-anchor="middle" fill="#c8f0d8" font-size="9" font-family="sans-serif">Use case: batch analytics, overnight jobs, bulk embedding</text>
+  <text x="569" y="122" text-anchor="middle" fill="#c8f0d8" font-size="9" font-family="sans-serif">Submitter may accumulate any batch size &#8212; max throughput</text>
+  <!-- SERVER -->
+  <rect x="397" y="136" width="347" height="62" rx="5" fill="#2a6099"/>
+  <text x="569" y="152" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">SERVER &#8212; Latency-Constrained Throughput</text>
+  <text x="569" y="166" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">Metric: max QPS satisfying P99 latency SLA</text>
+  <text x="569" y="179" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">LLM targets: TTFT &#8804;2,000ms, TPOT &#8804;200ms</text>
+  <text x="569" y="192" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">Use case: production chatbots, API services, co-pilot</text>
+  <!-- INTERACTIVE -->
+  <rect x="397" y="206" width="347" height="50" rx="5" fill="#7b2d8b"/>
+  <text x="569" y="222" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">INTERACTIVE &#8212; Strict TTFT</text>
+  <text x="569" y="236" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">Metric: max QPS satisfying P99 TTFT &#8804;500ms</text>
+  <text x="569" y="249" text-anchor="middle" fill="#e8c8f0" font-size="9" font-family="sans-serif">Use case: real-time chat, voice interfaces, live co-pilot</text>
+  <!-- Checklist -->
+  <rect x="397" y="264" width="347" height="58" rx="5" fill="#fff" stroke="#1a7a3a" stroke-width="1"/>
+  <text x="569" y="280" text-anchor="middle" fill="#1a7a3a" font-size="9.5" font-weight="bold" font-family="sans-serif">Reading Checklist (before procurement):</text>
+  <text x="405" y="294" fill="#444" font-size="9" font-family="sans-serif">&#10003; Hardware scale parity (H100&#215;8 vs MI300X&#215;8 &#8212; not &#215;16)</text>
+  <text x="405" y="307" fill="#444" font-size="9" font-family="sans-serif">&#10003; Closed vs Open Division (never cross-compare)</text>
+  <text x="405" y="320" fill="#444" font-size="9" font-family="sans-serif">&#10003; Request power data and multi-run variance separately</text>
+</svg>
+<figcaption><strong>Figure 12.2</strong> &#8212; MLPerf taxonomy. Training measures time-to-accuracy (minutes, lower better). Inference defines three scenarios: Offline (unconstrained throughput), Server (max QPS within P99 latency SLA), Interactive (strict TTFT &#8804;500ms). Key blind spots: no power reporting, no real serving overhead, submitter-chosen software stacks 6&#8211;18 months ahead of production.</figcaption>
+</figure></div>
+
+<h2 id="s124">12.4 &#8212; GPU Microbenchmark Suite</h2>
+<table>
+<tr><th>Benchmark</th><th>Tool</th><th>H100 SXM5 Target</th><th>Red Flag</th></tr>
+<tr><td>GEMM throughput (BF16)</td><td><code>cutlass_profiler</code></td><td>800&#8211;900 TFLOPS (&gt;80% of 989T)</td><td>&lt;700T &#8594; Tensor Core issue</td></tr>
+<tr><td>HBM bandwidth</td><td><code>bandwidthTest</code> / STREAM</td><td>2,850&#8211;3,100 GB/s (&gt;85% of 3,350)</td><td>&lt;2,500 &#8594; ECC overhead or HBM error</td></tr>
+<tr><td>NVLink BW (p2p)</td><td><code>p2pBandwidthLatencyTest</code></td><td>&gt;400 GB/s per GPU pair</td><td>&lt;200 &#8594; link failure; <code>nvlink --status</code></td></tr>
+<tr><td>Kernel launch overhead</td><td>Null-kernel loop (10K launches)</td><td>&lt;5 &#956;s (PyTorch); 1&#8211;3 &#956;s (CUDA Graphs)</td><td>&gt;10 &#956;s &#8594; CPU governor issue</td></tr>
+<tr><td>AllReduce BW</td><td><code>nccl-tests all_reduce_perf</code></td><td>&gt;150 GB/s bus BW (8-GPU NVLink); &gt;40 GB/s (64-GPU IB)</td><td>&lt;80 GB/s (NVSwitch) &#8594; topology fault</td></tr>
+</table>
+
+<h2 id="s125">12.5 &#8212; LLM-Specific Benchmarks</h2>
+<div class="formula">PREFILL (TTFT vs Sequence Length) &#8212; reveals operating regime:
+
+Phase 1 &#8212; Overhead-bound (short seq, batch=1):
+  TTFT flat floor = kernel launch + scheduling + tokenization
+  Fix: CUDA Graphs, torch.compile()
+
+Phase 2 &#8212; Compute-bound (medium&#8211;long seq, batch&gt;1):
+  TTFT scales linearly with seq_len. Desired: Tensor Cores utilized.
+
+Phase 3 &#8212; BW-bound (very long seq, batch=1):
+  Quadratic attention; Fix: FlashAttention or prefix caching
+
+DECODE (TPOT vs Batch Size) &#8212; reveals HBM BW floor:
+  batch=1 70B BF16: TPOT &#8776; 42ms minimum (140 GB / 3,350 GB/s)
+  INT4/FP8: halves model size &#8594; 1.8&#8211;2.2&#215; TPOT improvement</div>
+
+<h3 id="s1253">12.5.3 Throughput-Latency Knee Curve</h3>
+<div class="diagram-wrap" id="diag-knee"><figure>
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <defs><marker id="aKN" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#888"/></marker></defs>
+  <text x="380" y="18" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">THROUGHPUT-LATENCY KNEE CURVE &#8212; LLaMA-2 70B, H100&#215;8, BF16</text>
+  <!-- Axes -->
+  <line x1="70" y1="225" x2="660" y2="225" stroke="#1c2438" stroke-width="2"/>
+  <line x1="70" y1="30" x2="70" y2="225" stroke="#1a7a3a" stroke-width="2"/>
+  <line x1="660" y1="30" x2="660" y2="225" stroke="#c0392b" stroke-width="2"/>
+  <!-- X labels: req/s -->
+  <text x="70"  y="240" text-anchor="middle" fill="#555" font-size="9.5">0</text>
+  <text x="118" y="240" text-anchor="middle" fill="#555" font-size="9.5">2</text>
+  <text x="193" y="240" text-anchor="middle" fill="#555" font-size="9.5">5</text>
+  <text x="235" y="240" text-anchor="middle" fill="#555" font-size="9.5">7</text>
+  <text x="275" y="240" text-anchor="middle" fill="#555" font-size="9.5">9</text>
+  <text x="320" y="240" text-anchor="middle" fill="#555" font-size="9.5">11</text>
+  <text x="395" y="240" text-anchor="middle" fill="#555" font-size="9.5">14</text>
+  <text x="475" y="240" text-anchor="middle" fill="#555" font-size="9.5">18</text>
+  <text x="580" y="240" text-anchor="middle" fill="#555" font-size="9.5">22</text>
+  <text x="660" y="240" text-anchor="middle" fill="#555" font-size="9.5">&#8734;</text>
+  <text x="365" y="260" text-anchor="middle" fill="#1c2438" font-size="10" font-weight="bold" font-family="sans-serif">Request Rate (req/s)</text>
+  <!-- Left Y: throughput 0-11K -->
+  <text x="63" y="228" text-anchor="end" fill="#1a7a3a" font-size="9.5">0</text>
+  <text x="63" y="185" text-anchor="end" fill="#1a7a3a" font-size="9.5">2K</text>
+  <text x="63" y="138" text-anchor="end" fill="#1a7a3a" font-size="9.5">5K</text>
+  <text x="63" y="91"  text-anchor="end" fill="#1a7a3a" font-size="9.5">8K</text>
+  <text x="63" y="48"  text-anchor="end" fill="#1a7a3a" font-size="9.5">11K</text>
+  <text x="24" y="130" text-anchor="middle" fill="#1a7a3a" font-size="9.5" font-weight="bold" transform="rotate(-90,24,130)">Throughput (tok/s)</text>
+  <!-- Right Y: P99 TTFT 0-4200ms -->
+  <text x="668" y="228" fill="#c0392b" font-size="9.5">0ms</text>
+  <text x="668" y="186" fill="#c0392b" font-size="9.5">800ms</text>
+  <text x="668" y="145" fill="#c0392b" font-size="9.5">2s</text>
+  <text x="668" y="75"  fill="#c0392b" font-size="9.5">4s</text>
+  <text x="700" y="130" text-anchor="middle" fill="#c0392b" font-size="9.5" font-weight="bold" transform="rotate(90,700,130)">P99 TTFT</text>
+  <!-- Grid -->
+  <line x1="70" y1="186" x2="660" y2="186" stroke="#eee" stroke-width="1"/>
+  <line x1="70" y1="145" x2="660" y2="145" stroke="#eee" stroke-width="1"/>
+  <!-- SLA lines -->
+  <line x1="70" y1="186" x2="660" y2="186" stroke="#e3b341" stroke-width="1.5" stroke-dasharray="6"/>
+  <text x="428" y="182" fill="#a07800" font-size="9" font-weight="bold" font-family="sans-serif">Interactive SLA: TTFT &#8804;500ms</text>
+  <line x1="70" y1="145" x2="660" y2="145" stroke="#e3b341" stroke-width="1.2" stroke-dasharray="4"/>
+  <text x="428" y="141" fill="#a07800" font-size="9" font-family="sans-serif">Server SLA: TTFT &#8804;2,000ms</text>
+  <!-- Throughput curve (green) -->
+  <polyline points="70,225 118,202 193,171 235,148 275,82 320,52 395,46 475,44 580,43 660,43" stroke="#1a7a3a" stroke-width="3" fill="none"/>
+  <circle cx="118" cy="202" r="5" fill="#1a7a3a"/>
+  <circle cx="193" cy="171" r="5" fill="#1a7a3a"/>
+  <circle cx="235" cy="148" r="5" fill="#1a7a3a"/>
+  <circle cx="275" cy="82"  r="5" fill="#1a7a3a"/>
+  <circle cx="320" cy="52"  r="5" fill="#1a7a3a"/>
+  <!-- TTFT curve (red) -->
+  <polyline points="70,222 118,222 193,219 235,216 275,192 320,158 395,75 475,48 580,38" stroke="#c0392b" stroke-width="2.5" fill="none"/>
+  <circle cx="118" cy="222" r="5" fill="#c0392b"/>
+  <circle cx="275" cy="192" r="5" fill="#c0392b"/>
+  <circle cx="320" cy="158" r="5" fill="#c0392b"/>
+  <circle cx="395" cy="75"  r="5" fill="#c0392b"/>
+  <!-- Knee annotation -->
+  <line x1="275" y1="30" x2="275" y2="225" stroke="#1c2438" stroke-width="1.5" stroke-dasharray="5"/>
+  <text x="280" y="42" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">KNEE &#8776;9 req/s</text>
+  <text x="280" y="54" fill="#555" font-size="9" font-family="sans-serif">9,200 tok/s + TTFT &#8776;820ms</text>
+  <text x="280" y="65" fill="#555" font-size="9" font-family="sans-serif">Beyond knee: queue</text>
+  <text x="280" y="76" fill="#555" font-size="9" font-family="sans-serif">builds, no more gain</text>
+  <!-- Legend -->
+  <line x1="78" y1="32" x2="98" y2="32" stroke="#1a7a3a" stroke-width="2.5"/>
+  <circle cx="88" cy="32" r="4" fill="#1a7a3a"/>
+  <text x="103" y="36" fill="#1a7a3a" font-size="9.5" font-family="sans-serif">Throughput (tok/s)</text>
+  <line x1="188" y1="32" x2="208" y2="32" stroke="#c0392b" stroke-width="2.5"/>
+  <circle cx="198" cy="32" r="4" fill="#c0392b"/>
+  <text x="213" y="36" fill="#c0392b" font-size="9.5" font-family="sans-serif">P99 TTFT</text>
+</svg>
+<figcaption><strong>Figure 12.3</strong> &#8212; Throughput-latency knee curve (LLaMA-2 70B, H100&#215;8). Throughput rises steeply to ~9 req/s then plateaus at ~11,000 tok/s. P99 TTFT stays stable until the same knee, then explodes as queues build. Sustainable operating points: 5&#8211;6 req/s (TTFT&#8804;500ms interactive SLA), 10&#8211;11 req/s (TTFT&#8804;2,000ms server SLA). Beyond the knee, adding requests increases queue depth but not throughput.</figcaption>
+</figure></div>
+
+<h2 id="s126">12.6 &#8212; Training Benchmarks and MFU</h2>
+<div class="diagram-wrap" id="diag-mfu"><figure>
+<svg viewBox="0 0 760 290" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="380" y="18" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">MFU MEASUREMENT METHODOLOGY &#8212; Five Steps to Cluster Health KPI</text>
+  <!-- Step 1 -->
+  <rect x="10" y="30" width="155" height="72" rx="6" fill="#1c2438"/>
+  <text x="87" y="47" text-anchor="middle" fill="#e3b341" font-size="9.5" font-weight="bold" font-family="sans-serif">STEP 1: Instrument</text>
+  <text x="87" y="60" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">Log step_time and</text>
+  <text x="87" y="72" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">global_batch_tokens</text>
+  <text x="87" y="84" text-anchor="middle" fill="#79d99a" font-size="9" font-family="sans-serif">tok/s = batch/step_time</text>
+  <text x="87" y="96" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">Average &#8805;50 steps</text>
+  <line x1="165" y1="66" x2="178" y2="66" stroke="#888" stroke-width="1.5" marker-end="url(#aKN)"/>
+  <!-- Step 2 -->
+  <rect x="180" y="30" width="155" height="72" rx="6" fill="#1a3a6b"/>
+  <text x="257" y="47" text-anchor="middle" fill="#e3b341" font-size="9.5" font-weight="bold" font-family="sans-serif">STEP 2: FLOPs/token</text>
+  <text x="257" y="61" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">Dominant term:</text>
+  <text x="257" y="74" text-anchor="middle" fill="#79d99a" font-size="10" font-weight="bold" font-family="sans-serif">6 &#215; N_params</text>
+  <text x="257" y="86" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">(2 fwd + 4 bwd)</text>
+  <text x="257" y="98" text-anchor="middle" fill="#c8d8f0" font-size="8.5" font-family="sans-serif">+attn if seq&gt;4K</text>
+  <line x1="335" y1="66" x2="348" y2="66" stroke="#888" stroke-width="1.5" marker-end="url(#aKN)"/>
+  <!-- Step 3 -->
+  <rect x="350" y="30" width="395" height="72" rx="6" fill="#2a5090"/>
+  <text x="547" y="47" text-anchor="middle" fill="#e3b341" font-size="9.5" font-weight="bold" font-family="sans-serif">STEP 3: Compute MFU</text>
+  <text x="547" y="62" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold" font-family="sans-serif">MFU = (tok/s &#215; 6 &#215; P) / (N &#215; F_peak)</text>
+  <text x="547" y="77" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">P=params, N=GPUs, F_peak=989e12 (H100 BF16)</text>
+  <text x="547" y="92" text-anchor="middle" fill="#79d99a" font-size="9" font-family="sans-serif">500K tok/s, 70B, 512 GPUs &#8594; MFU = 41.5% (INVESTIGATE!)</text>
+  <!-- Step 4: health gauge -->
+  <rect x="10" y="115" width="740" height="38" rx="5" fill="#f3f5f8" stroke="#1c2438" stroke-width="1"/>
+  <text x="380" y="131" text-anchor="middle" fill="#1c2438" font-size="10" font-weight="bold" font-family="sans-serif">STEP 4: MFU Health Thresholds</text>
+  <rect x="18" y="138" width="80" height="10" rx="3" fill="#c0392b"/><text x="58" y="147" text-anchor="middle" fill="#fff" font-size="7.5">&lt;30% CRITICAL</text>
+  <rect x="104" y="138" width="90" height="10" rx="3" fill="#e3b341"/><text x="149" y="147" text-anchor="middle" fill="#1c2438" font-size="7.5">30&#8211;44% INVESTIGATE</text>
+  <rect x="200" y="138" width="100" height="10" rx="3" fill="#2a6099"/><text x="250" y="147" text-anchor="middle" fill="#fff" font-size="7.5">45&#8211;54% SUBOPTIMAL</text>
+  <rect x="306" y="138" width="110" height="10" rx="3" fill="#1a7a3a"/><text x="361" y="147" text-anchor="middle" fill="#fff" font-size="7.5">55&#8211;65% GOOD</text>
+  <rect x="422" y="138" width="110" height="10" rx="3" fill="#1a7a3a" opacity=".8"/><text x="477" y="147" text-anchor="middle" fill="#fff" font-size="7.5">65&#8211;72% EXCELLENT</text>
+  <rect x="538" y="138" width="110" height="10" rx="3" fill="#7b2d8b"/><text x="593" y="147" text-anchor="middle" fill="#fff" font-size="7.5">&gt;72% BEST-IN-CLASS</text>
+  <!-- Step 5: step time decomposition -->
+  <rect x="10" y="165" width="740" height="114" rx="6" fill="#fff8ec" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="380" y="182" text-anchor="middle" fill="#a07800" font-size="10" font-weight="bold" font-family="sans-serif">STEP 5: Step-Time Waterfall &#8212; Isolate Each MFU Loss Source</text>
+  <!-- Horizontal waterfall bars -->
+  <rect x="18" y="190" width="148" height="16" rx="3" fill="#1a7a3a"/><text x="92" y="202" text-anchor="middle" fill="#fff" font-size="8.5">Forward ~35%</text>
+  <rect x="170" y="190" width="218" height="16" rx="3" fill="#2a6099"/><text x="279" y="202" text-anchor="middle" fill="#fff" font-size="8.5">Backward ~50%</text>
+  <rect x="392" y="190" width="68" height="16" rx="3" fill="#c0392b" opacity=".8"/><text x="426" y="202" text-anchor="middle" fill="#fff" font-size="8.5">NCCL ~8%</text>
+  <rect x="464" y="190" width="48" height="16" rx="3" fill="#7b2d8b" opacity=".8"/><text x="488" y="202" text-anchor="middle" fill="#fff" font-size="8.5">Opt~4%</text>
+  <rect x="516" y="190" width="38" height="16" rx="3" fill="#888"/><text x="535" y="202" text-anchor="middle" fill="#fff" font-size="8.5">OH~3%</text>
+  <text x="18" y="222" fill="#555" font-size="9.5" font-family="sans-serif"><tspan font-weight="bold">Instrument:</tspan> NVTX markers + torch.profiler to split forward / backward / NCCL / optimizer / overhead</text>
+  <text x="18" y="237" fill="#555" font-size="9.5" font-family="sans-serif"><tspan font-weight="bold">Typical ranges:</tspan> 1-GPU: 65&#8211;78% MFU | 8-GPU NVLink: 60&#8211;72% | 64-GPU TP+PP: 52&#8211;65% | 512-GPU: 45&#8211;60%</text>
+  <text x="18" y="252" fill="#c0392b" font-size="9.5" font-weight="bold" font-family="sans-serif">Red flag: &lt;40% MFU at any scale &#8594; immediately apply 5-step diagnostic tree (&#167;12.7)</text>
+  <text x="18" y="267" fill="#555" font-size="9" font-family="sans-serif">AllReduce time &gt;15% of step AND NCCL BW low &#8594; IB topology; &gt;15% AND BW normal &#8594; overlap not enabled</text>
+</svg>
+<figcaption><strong>Figure 12.4</strong> &#8212; MFU measurement in five steps. Instrument (log tok/s), compute FLOPs/token (6&#215;P), calculate MFU = (tok/s &#215; 6P)/(N &#215; F_peak), compare to health thresholds (&lt;30% critical, 55&#8211;65% good, &gt;72% best-in-class), and decompose the step-time waterfall using NVTX markers to isolate each loss source.</figcaption>
+</figure></div>
+<h2 id="s127">12.7 &#8212; Five-Step Profiling Decision Tree</h2>
+<p>This tree converts an ambiguous performance symptom into a targeted action in 10&#8211;20 minutes using three DCGM counters and one system-level timer. Run nsys first, ncu only after all five steps.</p>
+<div class="diagram-wrap" id="diag-dtree"><figure>
+<svg viewBox="0 0 760 490" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <defs>
+    <marker id="aDT" markerWidth="7" markerHeight="7" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#888"/></marker>
+    <marker id="aDTR" markerWidth="7" markerHeight="7" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#c0392b"/></marker>
+    <marker id="aDTG" markerWidth="7" markerHeight="7" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#1a7a3a"/></marker>
+  </defs>
+  <text x="380" y="18" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">5-STEP PROFILING DECISION TREE &#8212; Symptom to Root Cause</text>
+
+  <!-- STEP 1 -->
+  <rect x="200" y="28" width="360" height="34" rx="6" fill="#1c2438"/>
+  <text x="380" y="44" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">STEP 1: Is MFU / throughput below expected?</text>
+  <text x="380" y="56" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">MFU = (tok/s &#215; 6P)/(N &#215; F_peak) | Target &#8805;55% training</text>
+  <line x1="380" y1="62" x2="380" y2="78" stroke="#888" stroke-width="1.5" marker-end="url(#aDT)"/>
+
+  <!-- STEP 2 -->
+  <rect x="200" y="78" width="360" height="28" rx="6" fill="#2a5090"/>
+  <text x="380" y="92" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">STEP 2: Is SM utilization &lt; 60%?</text>
+  <text x="380" y="104" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">Tool: DCGM_FI_PROF_SM_ACTIVE | nvidia-smi dmon</text>
+
+  <!-- Step 2 YES: overhead/comm bound -->
+  <line x1="200" y1="92" x2="65" y2="92" stroke="#c0392b" stroke-width="1.5"/>
+  <line x1="65" y1="92" x2="65" y2="136" stroke="#c0392b" stroke-width="1.5" marker-end="url(#aDTR)"/>
+  <text x="104" y="88" fill="#c0392b" font-size="9" font-family="sans-serif">YES: SM &lt;60%</text>
+  <rect x="8" y="136" width="188" height="108" rx="5" fill="#fff0f0" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="102" y="152" text-anchor="middle" fill="#c0392b" font-size="9.5" font-weight="bold" font-family="sans-serif">&#9888; OVERHEAD/COMM BOUND</text>
+  <text x="16" y="167" fill="#444" font-size="8.5" font-family="sans-serif">A) Kernel launch gaps in nsys</text>
+  <text x="24" y="179" fill="#555" font-size="8" font-family="sans-serif">&#8594; CUDA Graphs / torch.compile()</text>
+  <text x="16" y="193" fill="#444" font-size="8.5" font-family="sans-serif">B) NCCL between compute blocks</text>
+  <text x="24" y="205" fill="#555" font-size="8" font-family="sans-serif">&#8594; DDP gradient buckets + overlap</text>
+  <text x="16" y="219" fill="#444" font-size="8.5" font-family="sans-serif">C) Pipeline bubbles (PP training)</text>
+  <text x="24" y="231" fill="#555" font-size="8" font-family="sans-serif">&#8594; Increase M, interleaved 1F1B</text>
+
+  <!-- Step 2 NO: continue -->
+  <line x1="380" y1="106" x2="380" y2="122" stroke="#888" stroke-width="1.5" marker-end="url(#aDT)"/>
+
+  <!-- STEP 3 -->
+  <rect x="200" y="122" width="360" height="28" rx="6" fill="#2a5090"/>
+  <text x="380" y="136" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">STEP 3: Is HBM bandwidth utilization &lt; 40%?</text>
+  <text x="380" y="148" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">Metric: DCGM_FI_PROF_DRAM_ACTIVE (0.0&#8211;1.0 fraction)</text>
+
+  <!-- Step 3 YES: compute-bound -->
+  <line x1="560" y1="136" x2="695" y2="136" stroke="#1a7a3a" stroke-width="1.5"/>
+  <line x1="695" y1="136" x2="695" y2="178" stroke="#1a7a3a" stroke-width="1.5" marker-end="url(#aDTG)"/>
+  <text x="608" y="130" fill="#1a7a3a" font-size="9" font-family="sans-serif">YES: HBM &lt;40%</text>
+  <rect x="566" y="178" width="186" height="90" rx="5" fill="#e8fff0" stroke="#1a7a3a" stroke-width="1.5"/>
+  <text x="659" y="194" text-anchor="middle" fill="#1a7a3a" font-size="9.5" font-weight="bold" font-family="sans-serif">&#9989; COMPUTE-BOUND</text>
+  <text x="574" y="209" fill="#444" font-size="8.5" font-family="sans-serif">Good for GEMM/prefill training</text>
+  <text x="574" y="223" fill="#444" font-size="8.5" font-family="sans-serif">If still slow vs expected:</text>
+  <text x="574" y="237" fill="#555" font-size="8" font-family="sans-serif">&#8594; FP8 (2&#215; compute roof)</text>
+  <text x="574" y="249" fill="#555" font-size="8" font-family="sans-serif">&#8594; Verify TC util &gt;70%</text>
+  <text x="574" y="261" fill="#555" font-size="8" font-family="sans-serif">&#8594; Align dims to 16/32/64 multiples</text>
+
+  <!-- Step 3 NO: continue -->
+  <line x1="380" y1="150" x2="380" y2="166" stroke="#888" stroke-width="1.5" marker-end="url(#aDT)"/>
+
+  <!-- STEP 4 -->
+  <rect x="200" y="166" width="360" height="28" rx="6" fill="#2a5090"/>
+  <text x="380" y="180" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">STEP 4: Is HBM bandwidth utilization &gt; 90%?</text>
+  <text x="380" y="192" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">Same counter: DCGM_FI_PROF_DRAM_ACTIVE</text>
+
+  <!-- Step 4 YES: memory-bound -->
+  <line x1="560" y1="180" x2="695" y2="180" stroke="#2a6099" stroke-width="1.5"/>
+  <line x1="695" y1="180" x2="695" y2="278" stroke="#2a6099" stroke-width="1.5" marker-end="url(#aDT)"/>
+  <text x="608" y="175" fill="#2a6099" font-size="9" font-family="sans-serif">YES: HBM &gt;90%</text>
+  <rect x="566" y="278" width="186" height="100" rx="5" fill="#e8f0ff" stroke="#2a6099" stroke-width="1.5"/>
+  <text x="659" y="294" text-anchor="middle" fill="#2a6099" font-size="9.5" font-weight="bold" font-family="sans-serif">&#9989; MEMORY-BW BOUND</text>
+  <text x="574" y="310" fill="#444" font-size="8.5" font-family="sans-serif">Expected for decode &#8212; normal!</text>
+  <text x="574" y="324" fill="#444" font-size="8.5" font-family="sans-serif">If slower than BW floor:</text>
+  <text x="574" y="338" fill="#555" font-size="8" font-family="sans-serif">&#8594; INT4/FP8 (halves bytes/step)</text>
+  <text x="574" y="350" fill="#555" font-size="8" font-family="sans-serif">&#8594; Increase batch to amortize</text>
+  <text x="574" y="362" fill="#555" font-size="8" font-family="sans-serif">&#8594; Speculative decoding</text>
+  <text x="574" y="374" fill="#555" font-size="8" font-family="sans-serif">&#8594; Verify HBM health (&gt;85% peak)</text>
+
+  <!-- Step 4 NO: continue -->
+  <line x1="380" y1="194" x2="380" y2="210" stroke="#888" stroke-width="1.5" marker-end="url(#aDT)"/>
+
+  <!-- STEP 5 -->
+  <rect x="200" y="210" width="360" height="28" rx="6" fill="#2a5090"/>
+  <text x="380" y="224" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">STEP 5: Is AllReduce time &gt; 15% of step?</text>
+  <text x="380" y="236" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">Tool: nsys NCCL timeline | custom NVTX markers</text>
+
+  <!-- Step 5 YES: comm bottleneck -->
+  <line x1="560" y1="224" x2="695" y2="224" stroke="#c0392b" stroke-width="1.5"/>
+  <line x1="695" y1="224" x2="695" y2="278" stroke="#c0392b" stroke-width="1.5" marker-end="url(#aDTR)"/>
+  <text x="608" y="219" fill="#c0392b" font-size="9" font-family="sans-serif">YES: comm &gt;15%</text>
+  <rect x="200" y="254" width="360" height="106" rx="5" fill="#fff0f0" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="380" y="270" text-anchor="middle" fill="#c0392b" font-size="9.5" font-weight="bold" font-family="sans-serif">&#9888; COMMUNICATION BOTTLENECK</text>
+  <text x="210" y="286" fill="#444" font-size="8.5" font-family="sans-serif">A) AllReduce &gt;15%, NCCL BW normal:</text>
+  <text x="220" y="298" fill="#555" font-size="8" font-family="sans-serif">&#8594; Not overlapped &#8594; enable backward_prefetch + bucket_cap_mb</text>
+  <text x="210" y="312" fill="#444" font-size="8.5" font-family="sans-serif">B) AllReduce &gt;15%, NCCL BW low:</text>
+  <text x="220" y="324" fill="#555" font-size="8" font-family="sans-serif">&#8594; IB topology problem &#8594; run nccl-tests, check rail isolation</text>
+  <text x="210" y="338" fill="#444" font-size="8.5" font-family="sans-serif">C) TP AllReduce &gt;15%:</text>
+  <text x="220" y="350" fill="#555" font-size="8" font-family="sans-serif">&#8594; TP crossing NVLink boundary &#8594; constrain TP&#8804;8 per node</text>
+
+  <!-- Step 5 NO: escalate to ncu -->
+  <line x1="200" y1="224" x2="65" y2="224" stroke="#888" stroke-width="1.5"/>
+  <line x1="65" y1="224" x2="65" y2="272" stroke="#888" stroke-width="1.5" marker-end="url(#aDT)"/>
+  <text x="104" y="219" fill="#555" font-size="9" font-family="sans-serif">NO &#8594; escalate</text>
+  <rect x="8" y="272" width="188" height="52" rx="5" fill="#f5f3ec" stroke="#1c2438" stroke-width="1.5"/>
+  <text x="102" y="289" text-anchor="middle" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">ESCALATE TO NCU</text>
+  <text x="102" y="302" text-anchor="middle" fill="#555" font-size="8.5" font-family="sans-serif">Kernel-level counters (&#167;12.8)</text>
+  <text x="102" y="315" text-anchor="middle" fill="#555" font-size="8.5" font-family="sans-serif">5 metrics: SM, TC, HBM, L2, Roofline</text>
+
+  <!-- Summary table -->
+  <rect x="8" y="374" width="744" height="110" rx="6" fill="#f3f5f8" stroke="#1c2438" stroke-width="1.5"/>
+  <text x="380" y="391" text-anchor="middle" fill="#1c2438" font-size="10.5" font-weight="bold" font-family="sans-serif">5-STEP QUICK REFERENCE</text>
+  <line x1="14" y1="397" x2="746" y2="397" stroke="#1c2438" stroke-width="1"/>
+  <text x="16" y="410" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">Step</text>
+  <text x="60" y="410" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">Question</text>
+  <text x="340" y="410" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">Low Threshold &#8594; Diagnosis</text>
+  <text x="545" y="410" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">High Threshold &#8594; State</text>
+  <text x="16" y="424" fill="#555" font-size="9" font-family="sans-serif">1</text><text x="40" y="424" fill="#555" font-size="9" font-family="sans-serif">MFU vs expected?</text><text x="340" y="424" fill="#c0392b" font-size="9" font-family="sans-serif">&lt;40% &#8594; INVESTIGATE</text><text x="545" y="424" fill="#1a7a3a" font-size="9" font-family="sans-serif">&#8805;55% &#8594; HEALTHY</text>
+  <text x="16" y="438" fill="#555" font-size="9" font-family="sans-serif">2</text><text x="40" y="438" fill="#555" font-size="9" font-family="sans-serif">SM utilization?</text><text x="340" y="438" fill="#c0392b" font-size="9" font-family="sans-serif">&lt;60% &#8594; OVERHEAD or COMM BOUND</text>
+  <text x="16" y="452" fill="#555" font-size="9" font-family="sans-serif">3</text><text x="40" y="452" fill="#555" font-size="9" font-family="sans-serif">HBM BW utilization (low end)?</text><text x="340" y="452" fill="#1a7a3a" font-size="9" font-family="sans-serif">&lt;40% &#8594; COMPUTE-BOUND (good for GEMM)</text>
+  <text x="16" y="466" fill="#555" font-size="9" font-family="sans-serif">4</text><text x="40" y="466" fill="#555" font-size="9" font-family="sans-serif">HBM BW utilization (high end)?</text><text x="340" y="466" fill="#2a6099" font-size="9" font-family="sans-serif">&gt;90% &#8594; MEMORY-BW BOUND (normal decode)</text>
+  <text x="16" y="480" fill="#555" font-size="9" font-family="sans-serif">5</text><text x="40" y="480" fill="#555" font-size="9" font-family="sans-serif">AllReduce % of step time?</text><text x="340" y="480" fill="#c0392b" font-size="9" font-family="sans-serif">&gt;15% &#8594; COMMUNICATION BOTTLENECK</text><text x="545" y="480" fill="#888" font-size="9" font-family="sans-serif">&#8804;15% &#8594; escalate to ncu</text>
+</svg>
+<figcaption><strong>Figure 12.5</strong> &#8212; Five-step profiling decision tree. Uses three DCGM counters (SM_ACTIVE, DRAM_ACTIVE) and one system-level timer (AllReduce fraction from nsys). Each branch provides a specific root cause and fix. Only escalate to Nsight Compute after all five steps are exhausted. The tree can be traversed in 10&#8211;20 minutes on any underperforming system.</figcaption>
+</figure></div>
+<h2 id="s128">12.8 &#8212; Nsight Compute: The Principal Architect Workflow</h2>
+<p>Nsight Compute (ncu) is the kernel-level profiler &#8212; it attributes performance to specific bottlenecks within one kernel execution. Use it only after Nsight Systems has confirmed the bottleneck is in a compute kernel, not in communication or scheduling overhead. Opening Nsight Compute without first running Nsight Systems is the single most common time-wasting mistake in GPU performance engineering.</p>
+
+<div class="formula">PROFILER SELECTION RULE:
+
+  QUESTION                             TOOL    SCOPE
+  &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
+  Where does time go in the step?      nsys    System timeline (ms-&#956;s granularity)
+  Which kernels take the most time?    nsys    Kernel execution timeline
+  Why is a specific kernel slow?       ncu     Within-kernel hardware counters
+  Is AllReduce overlapped w/ backward? nsys    Cross-stream NCCL timeline
+  What is the roofline position?       ncu     Per-kernel roofline chart
+  Are Tensor Cores utilized?           ncu     Pipe utilization counters
+  Is there a regression vs baseline?   both    ncu diff + nsys comparison
+
+  Rule: nsys first, always. ncu only on the confirmed bottleneck kernel.</div>
+
+<div class="formula">THE 5 METRICS THAT MATTER IN NSIGHT COMPUTE:
+
+ncu --metrics \
+  sm__active_cycles_avg.pct,                                        \
+  sm__pipe_tensor_cycles_active.avg.pct_of_peak_sustained_elapsed,  \
+  gpu__dram_throughput.avg.pct_of_peak_sustained_elapsed,           \
+  l2cache__hit_rate.pct,                                            \
+  gpu__compute_memory_throughput.avg.pct_of_peak_sustained_elapsed  \
+  --kernel-name "regex:gemm|attn|flash"                             \
+  python benchmark.py
+
+&#9312; SM Active %   &gt;80% target   | &lt;60%: occupancy problem
+                                    Fix: reduce register/SMEM per thread, smaller tiles
+
+&#9313; Tensor Core % &gt;70% target   | &lt;40%: alignment or data-feed bottleneck
+                                    Fix: M,N,K dims divisible by 64 (BF16) / 128 (INT8)
+
+&#9314; HBM BW %      Regime-dependent:
+                    BW-bound kernel:  &gt;85% = excellent utilization
+                    Compute-bound:    &lt;40% = expected and correct
+                    Red flag: 40&#8211;70% in a BW-bound kernel &#8594; access pattern inefficiency
+
+&#9315; L2 Hit Rate   &gt;40% for kernels with reuse (attention, tiled GEMM)
+                    &lt;20%: streaming access &#8212; normal for pure streaming kernels
+                    Low for attention: block size too small &#8594; increase tile, use FlashAttn
+
+&#9316; Roofline      Dot left of ridge &#8594; BW-bound; right &#8594; compute-bound
+                    Below BW slope:    access inefficiency (uncoalesced, strided)
+                    Below compute roof: register pressure, warp divergence</div>
+
+<div class="formula">KERNEL REGRESSION DETECTION WORKFLOW:
+
+# Step 1: Profile baseline (before change)
+ncu --metrics sm__active_cycles_avg.pct,                              \
+              sm__pipe_tensor_cycles_active.avg.pct_of_peak_sustained_elapsed, \
+              gpu__dram_throughput.avg.pct_of_peak_sustained_elapsed   \
+    --export baseline_profile                                          \
+    python benchmark.py --kernel flash_attention_v2
+
+# Step 2: Apply change (new kernel / driver / library version)
+
+# Step 3: Profile candidate
+ncu --metrics [same] --export candidate_profile python benchmark.py
+
+# Step 4: Generate diff report
+ncu --diff baseline_profile.ncu-rep candidate_profile.ncu-rep --page details
+
+# Regression signals in diff:
+#   SM Active % decreased &gt;5%       &#8594; new kernel has occupancy regression
+#   Tensor Core % decreased &gt;5%     &#8594; TC utilization regressed
+#   HBM BW increased (BW-bound kern) &#8594; more data movement than before
+#   Duration increased &gt;3%          &#8594; throughput regression confirmed</div>
+
+<h2 id="s129">12.9 &#8212; Building a Performance Regression CI Pipeline</h2>
+<p>Manual benchmarking before and after each change is insufficient at scale. A Principal Architect designs the performance regression CI pipeline as a first-class system component, not an afterthought. It is the infrastructure that protects months of optimization work from being silently erased by a driver update.</p>
+
+<div class="diagram-wrap" id="diag-ci"><figure>
+<svg viewBox="0 0 760 400" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <defs>
+    <marker id="aCI" markerWidth="7" markerHeight="7" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#888"/></marker>
+  </defs>
+  <text x="380" y="18" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">PERFORMANCE REGRESSION CI PIPELINE &#8212; Three-Tier Architecture</text>
+
+  <!-- TIER 1 -->
+  <rect x="8" y="28" width="228" height="162" rx="7" fill="#1c2438" stroke="#e3b341" stroke-width="2"/>
+  <text x="122" y="46" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">TIER 1: Every Commit</text>
+  <text x="122" y="58" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">Runtime &lt;5 min | Merge blocked on fail</text>
+  <rect x="16" y="64" width="212" height="18" rx="3" fill="#2a5090"/>
+  <text x="122" y="77" text-anchor="middle" fill="#fff" font-size="8.5" font-family="sans-serif">GEMM microbench (3 shapes): &lt;3% deviation</text>
+  <rect x="16" y="85" width="212" height="18" rx="3" fill="#2a5090"/>
+  <text x="122" y="98" text-anchor="middle" fill="#fff" font-size="8.5" font-family="sans-serif">HBM bandwidth (1 GB transfer): &gt;85% peak</text>
+  <rect x="16" y="106" width="212" height="18" rx="3" fill="#2a5090"/>
+  <text x="122" y="119" text-anchor="middle" fill="#fff" font-size="8.5" font-family="sans-serif">Kernel launch overhead: &lt;5&#956;s, &lt;3% deviation</text>
+  <rect x="16" y="127" width="212" height="18" rx="3" fill="#2a5090"/>
+  <text x="122" y="140" text-anchor="middle" fill="#fff" font-size="8.5" font-family="sans-serif">FlashAttn fwd (B=8, seq=2048): &lt;3%</text>
+  <text x="122" y="162" text-anchor="middle" fill="#c8d8f0" font-size="8.5" font-family="sans-serif">Statistical: z-score | Alert: |z| &gt; 2.0&#963;</text>
+  <text x="122" y="177" text-anchor="middle" fill="#c8d8f0" font-size="8.5" font-family="sans-serif">Absolute: &gt;3% drop triggers regardless of z</text>
+
+  <!-- TIER 2 -->
+  <rect x="248" y="28" width="228" height="200" rx="7" fill="#1a3a6b" stroke="#2a6099" stroke-width="2"/>
+  <text x="362" y="46" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">TIER 2: Kernel/Driver Commits</text>
+  <text x="362" y="58" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">Runtime &lt;20 min | All Tier 1 + model tests</text>
+  <rect x="256" y="64" width="212" height="18" rx="3" fill="#2a6099"/>
+  <text x="362" y="77" text-anchor="middle" fill="#fff" font-size="8.5" font-family="sans-serif">All Tier 1 benchmarks</text>
+  <rect x="256" y="85" width="212" height="18" rx="3" fill="#2a6099"/>
+  <text x="362" y="98" text-anchor="middle" fill="#fff" font-size="8.5" font-family="sans-serif">LLM prefill sweep (seq: 128, 512, 2K, 4K)</text>
+  <rect x="256" y="106" width="212" height="18" rx="3" fill="#2a6099"/>
+  <text x="362" y="119" text-anchor="middle" fill="#fff" font-size="8.5" font-family="sans-serif">Decode TPOT (batch: 1, 8, 32, 64)</text>
+  <rect x="256" y="127" width="212" height="18" rx="3" fill="#2a6099"/>
+  <text x="362" y="140" text-anchor="middle" fill="#fff" font-size="8.5" font-family="sans-serif">Single-step training MFU (8-GPU)</text>
+  <rect x="256" y="148" width="212" height="18" rx="3" fill="#2a6099"/>
+  <text x="362" y="161" text-anchor="middle" fill="#fff" font-size="8.5" font-family="sans-serif">ncu export &#8594; diff vs baseline .ncu-rep</text>
+  <text x="362" y="183" text-anchor="middle" fill="#c8d8f0" font-size="8.5" font-family="sans-serif">Threshold: &gt;3% E2E | &gt;5% kernel metric</text>
+  <text x="362" y="196" text-anchor="middle" fill="#c8d8f0" font-size="8.5" font-family="sans-serif">Statistical: Mann-Whitney U, 10+ samples</text>
+  <text x="362" y="210" text-anchor="middle" fill="#c8d8f0" font-size="8.5" font-family="sans-serif">ncu-rep artifact stored for diff review</text>
+
+  <!-- TIER 3 -->
+  <rect x="488" y="28" width="266" height="240" rx="7" fill="#1a7a3a" stroke="#27ae60" stroke-width="2"/>
+  <text x="621" y="46" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">TIER 3: Nightly Full Suite</text>
+  <text x="621" y="58" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">Runtime 1&#8211;2 hrs | Complete system characterization</text>
+  <rect x="496" y="64" width="250" height="18" rx="3" fill="#27ae60"/>
+  <text x="621" y="77" text-anchor="middle" fill="#fff" font-size="8.5" font-family="sans-serif">Multi-GPU scaling (1, 2, 4, 8 GPU efficiency)</text>
+  <rect x="496" y="85" width="250" height="18" rx="3" fill="#27ae60"/>
+  <text x="621" y="98" text-anchor="middle" fill="#fff" font-size="8.5" font-family="sans-serif">Full throughput-latency curve (10 req rates)</text>
+  <rect x="496" y="106" width="250" height="18" rx="3" fill="#27ae60"/>
+  <text x="621" y="119" text-anchor="middle" fill="#fff" font-size="8.5" font-family="sans-serif">AllReduce BW (nccl-tests, all message sizes)</text>
+  <rect x="496" y="127" width="250" height="18" rx="3" fill="#27ae60"/>
+  <text x="621" y="140" text-anchor="middle" fill="#fff" font-size="8.5" font-family="sans-serif">Thermal sustained load (60-min burn test)</text>
+  <rect x="496" y="148" width="250" height="18" rx="3" fill="#27ae60"/>
+  <text x="621" y="161" text-anchor="middle" fill="#fff" font-size="8.5" font-family="sans-serif">Full training MFU (32-GPU, 1K steps)</text>
+  <text x="621" y="183" text-anchor="middle" fill="#c8f0d8" font-size="8.5" font-family="sans-serif">Threshold: &gt;3% absolute | rolling 7-day baseline</text>
+  <text x="621" y="196" text-anchor="middle" fill="#c8f0d8" font-size="8.5" font-family="sans-serif">Artifacts: nsys trace, ncu report, P50/P95/P99</text>
+  <text x="621" y="209" text-anchor="middle" fill="#c8f0d8" font-size="8.5" font-family="sans-serif">Auto-bisect: half-open search on commit range</text>
+  <text x="621" y="222" text-anchor="middle" fill="#c8f0d8" font-size="8.5" font-family="sans-serif">Baseline: rolling 20-run median (not single run)</text>
+  <text x="621" y="252" text-anchor="middle" fill="#e3b341" font-size="9" font-weight="bold" font-family="sans-serif">NEVER re-anchor baseline to silence a regression</text>
+
+  <!-- Arrows -->
+  <line x1="236" y1="115" x2="248" y2="115" stroke="#e3b341" stroke-width="2" marker-end="url(#aCI)"/>
+  <line x1="476" y1="125" x2="488" y2="125" stroke="#e3b341" stroke-width="2" marker-end="url(#aCI)"/>
+
+  <!-- Alert and autoprofile -->
+  <rect x="8" y="278" width="746" height="114" rx="6" fill="#fff0f0" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="380" y="296" text-anchor="middle" fill="#c0392b" font-size="10.5" font-weight="bold" font-family="sans-serif">REGRESSION DETECTED &#8594; AUTOMATED PROFILING RESPONSE</text>
+  <!-- Left: alert triggers -->
+  <rect x="16" y="304" width="220" height="80" rx="5" fill="#fff" stroke="#c0392b" stroke-width="1"/>
+  <text x="126" y="319" text-anchor="middle" fill="#c0392b" font-size="9.5" font-weight="bold" font-family="sans-serif">Alert Triggers:</text>
+  <text x="24" y="333" fill="#444" font-size="9" font-family="sans-serif">&#8226; z-score: |z| &gt; 2.0 (20-run baseline)</text>
+  <text x="24" y="346" fill="#444" font-size="9" font-family="sans-serif">&#8226; Absolute: &gt;3% throughput drop</text>
+  <text x="24" y="359" fill="#444" font-size="9" font-family="sans-serif">&#8226; P99 latency increase &gt;5%</text>
+  <text x="24" y="372" fill="#444" font-size="9" font-family="sans-serif">&#8226; Kernel metric regression &gt;5% (ncu)</text>
+  <!-- Right: auto-profile steps -->
+  <rect x="246" y="304" width="500" height="80" rx="5" fill="#fff" stroke="#888" stroke-width="1"/>
+  <text x="496" y="319" text-anchor="middle" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">Automated Response (runs before engineer wakes up):</text>
+  <text x="254" y="333" fill="#444" font-size="9" font-family="sans-serif">1. Re-run benchmark 3&#215; to confirm systematic regression vs one-time spike</text>
+  <text x="254" y="346" fill="#444" font-size="9" font-family="sans-serif">2. Run ncu on top-5 most time-consuming kernels &#8594; export .ncu-rep artifacts</text>
+  <text x="254" y="359" fill="#444" font-size="9" font-family="sans-serif">3. Diff ncu-rep vs last-known-good &#8594; surface regressing metric + magnitude</text>
+  <text x="254" y="372" fill="#444" font-size="9" font-family="sans-serif">4. Post Slack/PagerDuty: commit range, regressing metric name, artifact link</text>
+</svg>
+<figcaption><strong>Figure 12.6</strong> &#8212; Three-tier performance regression CI pipeline. Tier 1 (every commit, &lt;5 min): four core microbenchmarks gating merges. Tier 2 (kernel/driver commits, &lt;20 min): model-level LLM benchmarks plus automated ncu diff vs stored baseline. Tier 3 (nightly, 1&#8211;2 hrs): full system characterization with auto-bisect. On any regression trigger: automated three-shot reconfirmation, ncu kernel profiling, diff report, and Slack alert with specific regressing metric &#8212; before the engineer is notified.</figcaption>
+</figure></div>
+
+<div class="formula">STATISTICAL ALERT THRESHOLDS:
+
+z-SCORE METHOD (primary):
+  z = (today_run - rolling_baseline_mean) / baseline_std_dev
+  Baseline: rolling 20-run median (not a single golden run)
+
+  |z| &gt; 2.0  &#8594; P0.95 confidence of regression &#8594; ALERT (Slack message)
+  |z| &gt; 3.0  &#8594; P0.997 confidence              &#8594; P1 PAGE (pagerduty)
+  |z| &lt; 1.5  &#8594; noise; do not alert
+
+ABSOLUTE THRESHOLD (belt-and-suspenders):
+  Also alert if throughput drops &gt;3% vs baseline mean, even when z &lt; 2.0
+  Also alert if P99 latency increases &gt;5% vs baseline median
+
+BASELINE GOVERNANCE:
+  Re-anchor baseline after: confirmed optimization PR, hardware change, monthly reset
+  NEVER re-anchor to fix an unexplained regression &#8212; that converts detection into documentation</div>
+<div class="qref" id="qref">
+<h4>Chapter 12 Quick Reference &#8212; H100 SXM5 Numbers to Know Cold</h4>
+<table>
+<tr><th>Metric</th><th>H100 SXM5 Value</th><th>Notes / Production Achieved</th></tr>
+<tr><td>BF16 GEMM peak</td><td>989 TFLOPS</td><td>Achieved: 800&#8211;900T (80&#8211;90%). With sparsity: 1,979T.</td></tr>
+<tr><td>FP8 GEMM peak</td><td>1,979 TFLOPS</td><td>2&#215; BF16 compute roof; with sparsity: 3,958T</td></tr>
+<tr><td>HBM3 bandwidth</td><td>3,350 GB/s (3.35 TB/s)</td><td>Achieved decode: 2,850&#8211;3,100 GB/s (85&#8211;92%)</td></tr>
+<tr><td>NVLink 4.0 BW</td><td>900 GB/s/GPU unidirectional</td><td>AllReduce bus BW (NCCL, 8-GPU): 150&#8211;200 GB/s</td></tr>
+<tr><td>Ridge point (BF16)</td><td>~295 FLOP/byte</td><td>989 / 3.35 = 295. Below: BW-bound. Above: compute-bound.</td></tr>
+<tr><td>Kernel launch overhead</td><td>3&#8211;8 &#956;s (PyTorch)</td><td>1&#8211;3 &#956;s with CUDA Graphs. &gt;10&#956;s: check CPU governor.</td></tr>
+<tr><td>Decode TPOT floor (70B BF16)</td><td>~42 ms (batch=1)</td><td>140 GB / 3,350 GB/s = 41.8ms. Physical HBM BW floor.</td></tr>
+<tr><td>Decode TPOT (INT4)</td><td>~20&#8211;23 ms</td><td>1.8&#8211;2.2&#215; improvement from halving bytes/weight-load</td></tr>
+<tr><td>Prefill TTFT (70B, seq=2048, B=1)</td><td>280&#8211;350 ms</td><td>H100&#215;8, BF16; compute-bound phase</td></tr>
+<tr><td>Peak offline throughput (70B)</td><td>~11,000 tok/s</td><td>H100&#215;8, BF16, Offline MLPerf scenario</td></tr>
+<tr><td>Max server QPS (TTFT&#8804;500ms)</td><td>~8&#8211;10 req/s</td><td>70B, H100&#215;8. Beyond knee: latency explodes, throughput flat.</td></tr>
+</table>
+<table>
+<tr><th>MFU Range</th><th>Assessment</th><th>Typical Context</th></tr>
+<tr><td>&lt;30%</td><td>Critical &#8212; stop and investigate immediately</td><td>Major configuration error or hardware fault</td></tr>
+<tr><td>30&#8211;44%</td><td>Apply 5-step decision tree now</td><td>Likely comm overhead, pipeline bubble, or dispatch overhead</td></tr>
+<tr><td>45&#8211;54%</td><td>Suboptimal &#8212; worth optimization effort</td><td>Large-scale multi-node with moderate tuning</td></tr>
+<tr><td>55&#8211;65%</td><td>Good &#8212; well-configured cluster</td><td>64&#8211;512 GPU TP+PP+DP production job</td></tr>
+<tr><td>65&#8211;72%</td><td>Excellent &#8212; top-tier configuration</td><td>8-GPU NVLink DDP with gradient overlap</td></tr>
+<tr><td>&gt;72%</td><td>Best-in-class &#8212; single GPU or optimal small config</td><td>Single H100 compute-dominant workload</td></tr>
+</table>
+<table>
+<tr><th>CI Threshold</th><th>Alert Type</th><th>Action</th></tr>
+<tr><td>z-score |z| &gt; 2.0</td><td>P2 Slack alert</td><td>Auto-rerun 3&#215;; ncu export; diff vs baseline</td></tr>
+<tr><td>z-score |z| &gt; 3.0</td><td>P1 PagerDuty page</td><td>Same + immediate on-call response</td></tr>
+<tr><td>Absolute &gt;3% throughput drop</td><td>Slack alert regardless of z</td><td>Belt-and-suspenders for stable but shifted distributions</td></tr>
+<tr><td>P99 latency increase &gt;5%</td><td>Slack alert</td><td>Tail regression check; re-profile with nsys</td></tr>
+<tr><td>ncu kernel metric drop &gt;5%</td><td>Tier 2 gate failure</td><td>Block merge; diff ncu-rep to identify regressing counter</td></tr>
+</table>
+</div>
+
+<div class="takeaways" id="takeaways">
+  <h3>Key Takeaways</h3>
+  <div class="takeaway-group">
+    <div class="tg-label">Measurement Discipline</div>
+    <ul>
+      <li>Three physical realities gate any valid GPU measurement: warmup (allow 10+ iterations for JIT and clock ramp), synchronization (CUDA events only &#8212; never Python wall clock), and steady thermal state (verify &#177;5W power stability before timing). Violating any one produces a number that may mislead every optimization decision downstream.</li>
+      <li>P99 latency is the SLA-relevant number; mean latency is what the average user experiences &#8212; and half your users exceed the mean. For a 100 RPS service with a P99 tail at 41.8 ms, one request per second exceeds that tail. Always report P50/P95/P99 as the minimum acceptable statistical output. The five common benchmark mistakes &#8212; no warmup, wrong batch size, wrong precision, wall-clock timing, ignoring variance &#8212; account for the majority of incorrect results published in engineering reports and vendor whitepapers.</li>
+      <li>MLPerf is the industry standard for hardware comparison but a poor proxy for production capacity planning. Its structural blind spots &#8212; no power reporting, no real serving stack overhead, no multi-tenant interference, software stacks 6&#8211;18 months ahead of production &#8212; make every result a best-case ceiling. Always request tokens/second/watt, verify Closed vs Open Division, and confirm hardware scale parity before using MLPerf to justify a procurement decision.</li>
+    </ul>
+  </div>
+  <div class="takeaway-group">
+    <div class="tg-label">Roofline and MFU</div>
+    <ul>
+      <li>The Roofline ridge point for H100 BF16 is 295 FLOP/byte. Every operation below it is memory-bandwidth bound: fuse kernels, quantize data movement, or increase batch size. Every operation above it is compute-bound: use FP8 (doubles the compute roof), align Tensor Core dimensions, or increase SM occupancy. Applying a compute-bound optimization to a memory-bound workload &#8212; the most common error in AI performance work &#8212; produces zero improvement. The roofline tells you which resource to optimize before touching any code.</li>
+      <li>MFU is the single cluster-health KPI for training: MFU = (tok/s &#215; 6P) / (N &#215; F_peak). Anything below 40% at any scale warrants immediate investigation with the 5-step decision tree. The step-time waterfall &#8212; forward / backward / NCCL / optimizer / overhead &#8212; decomposes where MFU is lost and directs remediation to the right layer. Typical production ranges: 65&#8211;78% for single GPU, 52&#8211;65% for 64-GPU TP+PP, 45&#8211;60% for 512-GPU 3D-parallel.</li>
+    </ul>
+  </div>
+  <div class="takeaway-group">
+    <div class="tg-label">Decision Trees and CI Infrastructure</div>
+    <ul>
+      <li>The five-step profiling decision tree converts any ambiguous performance symptom into a targeted action in 10&#8211;20 minutes using three DCGM counters and one system-level timer. The sequence &#8212; MFU &#8594; SM utilization &#8594; HBM BW low? &#8594; HBM BW high? &#8594; AllReduce fraction &#8212; eliminates 80% of root cause possibilities before requiring Nsight Compute. Only escalate to ncu after all five steps are completed. Opening ncu without first traversing the tree is the most common profiling time-wasting mistake.</li>
+      <li>A performance regression CI pipeline is not optional infrastructure &#8212; it is what prevents months of optimization from being silently erased by a driver update. The three-tier architecture gates merges at the right granularity: microbenchmarks on every commit (&lt;5 min), model-level tests on kernel commits (&lt;20 min), full system suite nightly (1&#8211;2 hrs). The baseline must be a rolling 20-run median with z-score alerting (|z|&gt;2.0 for Slack, |z|&gt;3.0 for page). Never re-anchor the baseline to silence an unexplained regression &#8212; that converts a detection system into a documentation system for undetected regressions.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="review-questions" id="review">
+  <h3>Review Questions</h3>
+  <div class="rq-tier foundational">
+    <div class="rq-tier-label"><span class="rq-badge">Foundational</span> Build the mental model</div>
+    <ol>
+      <li>A colleague measures LLM inference latency using Python's <code>time.perf_counter()</code> and reports "our kernel runs in 0.8 ms." Explain exactly what this number actually measures, why it is incorrect for GPU kernel timing, and write the corrected measurement code using CUDA events with proper warmup and synchronization.</li>
+      <li>The H100 ridge point is 295 FLOP/byte. A decode operation at batch=1 has arithmetic intensity &#8776;1 FLOP/byte. (a) Is this operation compute-bound or memory-bound? (b) A team proposes switching from BF16 to FP8 compute to speed up decode. Explain using the roofline model exactly why this will not help. (c) What single change would actually improve decode TPOT at batch=1, and what is the expected improvement magnitude for LLaMA-3 70B on H100?</li>
+      <li>An MLPerf Inference result shows System A achieves 1.3&#215; the throughput of System B on Llama-2 70B Offline. List three specific questions a principal architect must answer before this result justifies a hardware procurement decision. For each, explain what a concerning answer would look like.</li>
+    </ol>
+  </div>
+  <div class="rq-tier intermediate">
+    <div class="rq-tier-label"><span class="rq-badge">Intermediate</span> Apply and calculate</div>
+    <ol>
+      <li>A training job runs LLaMA-3 70B on 256 H100s. You measure 420,000 tokens/sec globally. (a) Calculate the MFU. Is this in the acceptable range? (b) The 5-step tree shows: SM util = 82%, HBM BW = 72% of peak, AllReduce = 9% of step time. Which step surfaces the bottleneck and what is it? (c) What is the specific fix? (d) After fixing, you measure 530,000 tok/s. What is the new MFU?</li>
+      <li>You are building the throughput-latency curve for a 70B serving deployment on H100&#215;8. At 6 req/s: 8,500 tok/s, P99 TTFT = 380 ms. At 10 req/s: 10,200 tok/s, P99 TTFT = 1,950 ms. At 14 req/s: 10,600 tok/s, P99 TTFT = 4,200 ms. (a) Identify the knee of the curve. (b) What is the maximum sustainable request rate for a P99 TTFT &#8804;500 ms SLA? (c) For a P99 TTFT &#8804;2,000 ms SLA? (d) A sales team proposes provisioning for 12 req/s to "maximize utilization." What specifically goes wrong at that operating point?</li>
+      <li>Your nightly CI runs decode throughput benchmarks. The 20-run baseline has mean 11,200 tok/s, std dev 180 tok/s. Tonight's run shows 10,650 tok/s. (a) Calculate the z-score and state whether this triggers an alert. (b) The absolute drop is 4.9%: does your 3% threshold trigger? (c) The automated ncu diff shows SM Active % dropped from 84% to 71% and Tensor Core % dropped from 76% to 61%. What does this pattern indicate, and which specific ncu metric would you examine next to distinguish register pressure from CUDA block size change?</li>
+    </ol>
+  </div>
+  <div class="rq-tier principal">
+    <div class="rq-tier-label"><span class="rq-badge">Principal Level</span> Design and defend</div>
+    <ol>
+      <li><strong>FP8 benchmark credibility assessment:</strong> An engineer reports that adding FP8 training improved throughput by 28% in a benchmark. Walk through the complete validation methodology: what three properties of the benchmark must you verify before trusting the number? What roofline analysis determines whether FP8 should yield any benefit for this specific workload? If the workload is compute-bound at AI = 400 FLOP/byte on H100, what is the theoretical maximum speedup from FP8, and why might 28% be plausible or implausible? What three questions would you ask the engineer?</li>
+      <li><strong>512-GPU cluster acceptance protocol:</strong> Design the complete benchmark qualification protocol for accepting a 512-GPU H100 cluster from a vendor. Specify: (a) the five microbenchmarks run on every node individually with exact acceptance thresholds; (b) the inter-node test that identifies outlier links in the InfiniBand fabric; (c) the scaling efficiency test across all 64 node groups; (d) the decision rule when 3 of 64 groups fail the scaling test at &gt;2&#963; below the mean. Justify each threshold against H100 SXM5 specifications.</li>
+      <li><strong>38% MFU root cause and remediation:</strong> A 512-GPU training job runs at 38% MFU. SM utilization is 72%. HBM bandwidth is 68% of peak. AllReduce time is 22% of step time. (a) Walk through all five decision tree steps and identify which step surfaces the bottleneck. (b) Sub-diagnose: list the three sub-causes and the additional measurement that distinguishes them. (c) Specify the exact DDP/FSDP/NCCL configuration parameters you would change for the most likely sub-cause. (d) Estimate the MFU improvement if the fix achieves 70% overlap efficiency &#8212; currently 0% &#8212; given T_backward = 900 ms and T_AllReduce = 780 ms. (e) What residual bottleneck do you investigate next after this fix?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="ch-end">
+  &#8212;&#8212;&#8212; End of Chapter 12 &#8212;&#8212;&#8212;<br>
+  <a href="ch13.html">Next: Chapter 13 &#8212; Speculative Decoding &amp; Mixture of Experts &#8594;</a>
+</div>
+</div>
+</body>
+</html>

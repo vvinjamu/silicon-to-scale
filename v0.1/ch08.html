@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 8 — Quantization &amp; Precision Optimization | Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.82;color:#1c2438;background:#fdfcf7;padding-top:48px}
+#nav{position:fixed;top:0;left:0;right:0;height:48px;background:#1c2438;display:flex;align-items:center;gap:5px;padding:0 16px;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,.35);overflow-x:auto}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:12px;white-space:nowrap;margin-right:10px;flex-shrink:0}
+#nav a{color:#c8d0e0;font-family:sans-serif;font-size:10.5px;text-decoration:none;padding:4px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.15);white-space:nowrap;flex-shrink:0;transition:all .15s}
+#nav a:hover{background:#e3b341;color:#1c2438;border-color:#e3b341;font-weight:700}
+#nav a.home{border-color:#e3b341;color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:210px;height:calc(100vh - 48px);background:#f5f3ec;border-right:1px solid #ddd;overflow-y:auto;padding:14px 0;z-index:900}
+#sidebar h4{font-family:sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#e3b341;padding:0 14px;margin-bottom:8px;margin-top:4px}
+#sidebar a{display:block;font-family:sans-serif;font-size:11px;color:#444;text-decoration:none;padding:4px 14px;line-height:1.4;transition:background .12s,color .12s}
+#sidebar a:hover{background:#e8e4da;color:#1c2438}
+#sidebar .sub{padding-left:24px;font-size:10.5px;color:#666}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px 60px}
+.ch-label{font-family:sans-serif;font-size:9.5px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:6px}
+h1.ch-title{font-size:32px;font-weight:900;color:#1c2438;line-height:1.2;margin-bottom:8px}
+.ch-subtitle{font-size:14px;color:#556;font-style:italic;margin-bottom:12px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:11px;color:#666;margin-bottom:16px}
+.ch-meta strong{color:#1c2438}
+.xref{color:#2a6099;font-style:italic}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438);border-radius:2px;margin:18px 0 24px}
+.ch-hero-banner{background:linear-gradient(135deg,#1c2438 0%,#1a3a6b 100%);color:#fff;border-radius:10px;padding:28px 34px;margin-bottom:32px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.ch-hero-banner blockquote{border:none;background:none;padding:0;margin:0;font-style:italic;font-size:14px;line-height:1.7;color:rgba(255,255,255,.88)}
+.ch-hero-banner cite{display:block;margin-top:10px;font-size:11.5px;color:#e3b341;font-style:normal;font-family:sans-serif}
+h2{font-size:20px;color:#1c2438;margin:38px 0 12px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:16px;color:#1a3a6b;margin:26px 0 9px}
+h4{font-size:13.5px;color:#1a3a6b;margin:18px 0 6px;font-style:italic}
+p{margin-bottom:13px}
+ul,ol{margin:0 0 13px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.shipped{display:inline-block;background:#1a7a3a;color:#fff;font-family:sans-serif;font-size:8.5px;padding:1px 7px;border-radius:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-left:4px;vertical-align:middle}
+.announced{display:inline-block;background:#2a6099;color:#fff;font-family:sans-serif;font-size:8.5px;padding:1px 7px;border-radius:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-left:4px;vertical-align:middle}
+.roadmap{display:inline-block;background:#7b2d8b;color:#fff;font-family:sans-serif;font-size:8.5px;padding:1px 7px;border-radius:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-left:4px;vertical-align:middle}
+.objectives{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:24px 0}
+.obj-card{border-radius:7px;padding:14px 16px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.obj-card.foundational{background:#e8fff0;border:1px solid #b0dfc0}
+.obj-card.intermediate{background:#fffbf0;border:1px solid #e3c87a}
+.obj-card.principal{background:#f0f0ff;border:1px solid #a090d0}
+.obj-label{font-family:sans-serif;font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:7px}
+.obj-card.foundational .obj-label{color:#27ae60}
+.obj-card.intermediate .obj-label{color:#a07800}
+.obj-card.principal .obj-label{color:#7b2d8b}
+.obj-card ul{margin-left:14px}
+.obj-card li{font-size:11.5px;margin-bottom:4px;color:#333}
+.diagram-wrap{background:#fff;border:1px solid #dde2ec;border-radius:8px;padding:18px 20px;margin:24px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.diagram-wrap figcaption{font-family:sans-serif;font-size:10.5px;color:#666;margin-top:10px;font-style:italic;text-align:center;border-top:1px solid #eee;padding-top:8px}
+.formula{background:#0d1117;color:#b8ddf0;padding:14px 18px;border-radius:6px;font-family:'Courier New',monospace;font-size:11px;line-height:1.72;margin:16px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:12px 16px;margin:18px 0;border-radius:0 6px 6px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout.key{border-color:#7b2d8b;background:#fdf5ff}
+.callout.warn{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout strong{display:block;margin-bottom:4px;color:#1c2438}
+.worked{background:#fff8ec;border:2px solid #e3b341;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.worked-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#a07800;margin-bottom:10px}
+.worked h4{color:#1c2438;font-size:13px;margin:14px 0 6px;font-style:normal}
+.cookbook{background:#0d1117;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cookbook-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#e3b341;margin-bottom:12px;border-bottom:1px solid #2a3050;padding-bottom:8px}
+.cookbook pre{color:#b8ddf0;font-family:'Courier New',monospace;font-size:11px;line-height:1.72;white-space:pre;overflow-x:auto}
+.cookbook .cmt{color:#6a7a8a}
+.cookbook .cmd{color:#79d99a}
+.cookbook .out{color:#f0c060}
+.qref{background:#1c2438;color:#c8d8f0;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.qref h4{color:#e3b341;font-family:sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;font-style:normal;border-bottom:1px solid rgba(255,255,255,.15);padding-bottom:8px}
+.qref table{color:#c8d8f0;font-size:11.5px}
+.qref th{background:rgba(255,255,255,.08);color:#e3b341;font-size:10px}
+.qref td{border-color:rgba(255,255,255,.1)}
+.qref tr:nth-child(even) td{background:rgba(255,255,255,.04)}
+.takeaways{background:#f3f5f8;border:2px solid #1c2438;border-radius:9px;padding:18px 22px;margin:32px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.takeaways h3{color:#1c2438;margin:0 0 14px;font-size:15px;border:none;padding:0}
+.takeaway-group{margin-bottom:14px}
+.takeaway-group:last-child{margin-bottom:0}
+.tg-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#e3b341;margin-bottom:6px}
+.takeaway-group ul{margin-left:16px}
+.takeaway-group li{font-size:12.5px;margin-bottom:4px;color:#222}
+.review-questions{margin-top:36px}
+.review-questions h3{font-size:16px;color:#1c2438;margin-bottom:16px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+.rq-tier{border-radius:8px;padding:14px 18px;margin-bottom:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rq-tier.foundational{background:#e8fff0;border-left:5px solid #27ae60}
+.rq-tier.intermediate{background:#fffbf0;border-left:5px solid #e3b341}
+.rq-tier.principal{background:#f0f0ff;border-left:5px solid #7b2d8b}
+.rq-tier-label{font-family:sans-serif;font-size:10px;color:#555;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.rq-badge{font-weight:700;font-size:9px;padding:2px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.foundational .rq-badge{background:#27ae60;color:#fff}
+.intermediate .rq-badge{background:#e3b341;color:#1c2438}
+.principal .rq-badge{background:#7b2d8b;color:#fff}
+.rq-tier ol{margin-left:18px}
+.rq-tier li{margin-bottom:10px;font-size:12.5px;line-height:1.7;color:#222}
+.rq-tier li::marker{font-weight:700}
+.ch-end{text-align:center;margin-top:48px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#999;letter-spacing:2px;text-transform:uppercase}
+.ch-end a{color:#2a6099;text-decoration:none;font-weight:700}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#2a4a8a}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e8e8;vertical-align:top}
+tr:nth-child(even) td{background:#f8f9fb;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#1a7a3a;font-weight:700}
+.bad{color:#c0392b;font-weight:700}
+.warn-text{color:#a07800;font-weight:700}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout,.worked,.cookbook{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+</style>
+</head>
+<body>
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="ch07.html">&#8592; Ch 7</a>
+  <a href="ch09.html">Ch 9 &#8594;</a>
+  <a href="ch01.html">Ch 1</a>
+  <a href="ch04.html">Ch 4</a>
+  <a href="ch06.html">Ch 6</a>
+  <a href="ch11.html">Ch 11</a>
+  <a href="ch17.html">Ch 17</a>
+</div>
+<div id="sidebar">
+  <h4>Chapter 8</h4>
+  <a href="#overview">Overview</a>
+  <a href="#objectives">Objectives</a>
+  <a href="#s81">8.1 Number Formats</a>
+  <a class="sub" href="#s811">&nbsp;&nbsp;&#8627; FP32 to FP4</a>
+  <a class="sub" href="#s812">&nbsp;&nbsp;&#8627; BF16 vs FP16</a>
+  <a class="sub" href="#s813">&nbsp;&nbsp;&#8627; Format Matrix</a>
+  <a href="#s82">8.2 Quant Math</a>
+  <a class="sub" href="#s821">&nbsp;&nbsp;&#8627; Uniform Affine</a>
+  <a class="sub" href="#s822">&nbsp;&nbsp;&#8627; Granularity</a>
+  <a class="sub" href="#s823">&nbsp;&nbsp;&#8627; Outlier Problem</a>
+  <a href="#s83">8.3 PTQ Techniques</a>
+  <a class="sub" href="#s832">&nbsp;&nbsp;&#8627; GPTQ</a>
+  <a class="sub" href="#s833">&nbsp;&nbsp;&#8627; AWQ</a>
+  <a class="sub" href="#s834">&nbsp;&nbsp;&#8627; SmoothQuant</a>
+  <a href="#s84">8.4 FP8 / Transformer Engine</a>
+  <a href="#s85">8.5 W4A16 in Production</a>
+  <a href="#s86">8.6 KV Cache Quant</a>
+  <a href="#s87">8.7 QAT</a>
+  <a href="#s88">8.8 Evaluation</a>
+  <a href="#cookbook">Profiling Cookbook</a>
+  <a href="#worked">Worked Example</a>
+  <a href="#qref">Quick Reference</a>
+  <a href="#takeaways">Key Takeaways</a>
+  <a href="#review">Review Questions</a>
+</div>
+<div class="page">
+<div class="ch-label">Part III &middot; Chapter 8</div>
+<h1 class="ch-title">Quantization &amp; Precision Optimization</h1>
+<div class="ch-subtitle">Halving Memory, Doubling Throughput &#8212; The Math and Engineering Behind Numeric Compression</div>
+<div class="ch-meta">
+  <strong>Book:</strong> AI/ML Infrastructure from Silicon to Scale &nbsp;|&nbsp;
+  <strong>Author:</strong> Venkat Vinjam &nbsp;|&nbsp;
+  <strong>Cross-ref:</strong> <span class="xref">Roofline (Ch 1) &middot; HBM bandwidth (Ch 4) &middot; Tensor Cores (Ch 7) &middot; KV cache paging (Ch 11) &middot; Inference serving (Ch 6)</span>
+</div>
+<div class="ch-divider"></div>
+<div class="ch-hero-banner">
+  <blockquote>"Quantization is not about making your model less accurate. It is about using exactly as many bits as the task requires &#8212; no more, no less. The difference between FP32 and FP8 for LLM inference is like using a crane to move a pencil."</blockquote>
+  <cite>&#8212; Production Inference Engineering Principle</cite>
+</div>
+<div id="overview">
+<p>A 70B parameter model in FP32 weighs 280 GB &#8212; more than three H100 GPUs can hold. In FP8, it weighs 70 GB and fits on one. In INT4, 35 GB &#8212; with room left over for a generous KV cache and concurrent user pool. Quantization is the engineering discipline of reducing numeric precision without unacceptable quality loss, and it is arguably the highest ROI optimization in modern AI infrastructure: a single change from BF16 to AWQ INT4 + FP8 KV cache reduces serving cost by 72% at less than 1% quality degradation.</p>
+<p>This chapter covers every precision format from FP32 to FP4, every quantization technique from naive PTQ to activation-aware algorithms, the outlier problem that breaks naive approaches, the hardware that accelerates each format, and the complete decision framework for choosing a quantization strategy given hardware, model, and quality constraints. Every claim carries a number you can verify on your own cluster.</p>
+</div>
+<div id="objectives">
+<div class="objectives">
+  <div class="obj-card foundational"><div class="obj-label">Foundational</div><ul>
+    <li>Explain the sign/exponent/mantissa structure and the range-vs-precision tradeoff</li>
+    <li>Understand why BF16 replaced FP16 for training and why the difference matters</li>
+    <li>Know the memory footprint of each format for any parameter count</li>
+    <li>Describe the outlier problem and why it breaks naive INT8</li>
+  </ul></div>
+  <div class="obj-card intermediate"><div class="obj-label">Intermediate</div><ul>
+    <li>Derive quantization error for any format and value distribution</li>
+    <li>Explain GPTQ, AWQ, and SmoothQuant &#8212; how each addresses outliers</li>
+    <li>Calculate KV cache memory at various context lengths and dtypes</li>
+    <li>Apply the Transformer Engine FP8 workflow with zero code changes</li>
+  </ul></div>
+  <div class="obj-card principal"><div class="obj-label">Principal Level</div><ul>
+    <li>Design quantization strategy given hardware, model, and quality SLA</li>
+    <li>Calculate full cost-per-token impact of each format choice</li>
+    <li>Choose among FP8/AWQ/GPTQ/GGUF and justify quantitatively</li>
+    <li>Evaluate quantization quality rigorously across benchmark tiers</li>
+  </ul></div>
+</div>
+</div>
+<h2 id="s81">8.1 Floating Point Formats &#8212; The Precision Landscape</h2>
+<h3 id="s811">8.1.1 Number Formats from FP32 to FP4</h3>
+<p>Every floating point number uses three fields: a sign bit, an exponent (controls range), and a mantissa (controls precision within that range). The fundamental engineering tradeoff: bits given to the exponent widen representable range; bits given to the mantissa improve precision. Every AI format is a different point on this spectrum, chosen for a specific workload characteristic.</p>
+
+<div class="diagram-wrap" id="diag-formats"><figure>
+<svg viewBox="0 0 760 480" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="380" y="22" text-anchor="middle" fill="#1c2438" font-size="13" font-weight="bold" font-family="sans-serif">NUMBER FORMAT BIT LAYOUTS: FP32 &#8594; BF16 &#8594; FP8 &#8594; INT8 &#8594; INT4</text>
+
+  <!-- FP32 -->
+  <text x="20" y="52" fill="#1c2438" font-size="11" font-weight="bold" font-family="sans-serif">FP32 (IEEE 754) &#8212; 32 bits</text>
+  <rect x="20" y="58" width="30" height="28" rx="3" fill="#c0392b"/><text x="35" y="77" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">S</text>
+  <rect x="52" y="58" width="190" height="28" rx="3" fill="#2a6099"/><text x="147" y="77" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">EXPONENT (8 bits)</text>
+  <rect x="244" y="58" width="346" height="28" rx="3" fill="#1a7a3a"/><text x="417" y="77" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">MANTISSA (23 bits)</text>
+  <text x="600" y="72" fill="#555" font-size="10" font-family="sans-serif">Range: &#177;3.4&#215;10&#179;&#8312; | Precision: ~7 decimal digits</text>
+  <text x="600" y="86" fill="#888" font-size="9.5" font-family="sans-serif">Use: master weights, optimizer states (Adam m,v)</text>
+
+  <!-- BF16 -->
+  <text x="20" y="112" fill="#1c2438" font-size="11" font-weight="bold" font-family="sans-serif">BF16 (Brain Float) &#8212; 16 bits</text>
+  <rect x="20" y="118" width="30" height="28" rx="3" fill="#c0392b"/><text x="35" y="137" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">S</text>
+  <rect x="52" y="118" width="190" height="28" rx="3" fill="#2a6099"/><text x="147" y="137" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">EXPONENT (8 bits = FP32!)</text>
+  <rect x="244" y="118" width="133" height="28" rx="3" fill="#1a7a3a"/><text x="310" y="137" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">MANTISSA (7b)</text>
+  <text x="382" y="132" fill="#888" font-size="9" font-family="sans-serif">[truncated vs FP32]</text>
+  <text x="600" y="130" fill="#1a7a3a" font-size="10" font-weight="bold" font-family="sans-serif">Range: SAME as FP32 &#8594; no overflow!</text>
+  <text x="600" y="144" fill="#888" font-size="9.5" font-family="sans-serif">Use: dominant training format since 2019</text>
+
+  <!-- FP8 E4M3 -->
+  <text x="20" y="172" fill="#1c2438" font-size="11" font-weight="bold" font-family="sans-serif">FP8 E4M3 &#8212; 8 bits (H100 weights/forward)</text>
+  <rect x="20" y="178" width="30" height="28" rx="3" fill="#c0392b"/><text x="35" y="197" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">S</text>
+  <rect x="52" y="178" width="95" height="28" rx="3" fill="#2a6099"/><text x="99" y="197" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">EXP (4b)</text>
+  <rect x="149" y="178" width="72" height="28" rx="3" fill="#1a7a3a"/><text x="185" y="197" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">MAN (3b)</text>
+  <text x="235" y="192" fill="#888" font-size="9" font-family="sans-serif">Max: &#177;448</text>
+  <text x="600" y="192" fill="#1a3a6b" font-size="10" font-weight="bold" font-family="sans-serif">~2&#215; BF16 GEMM throughput (1,979 TFLOPS H100)</text>
+  <text x="600" y="206" fill="#888" font-size="9.5" font-family="sans-serif">Needs dynamic scaling (TE auto-handles)</text>
+
+  <!-- FP8 E5M2 -->
+  <text x="20" y="232" fill="#1c2438" font-size="11" font-weight="bold" font-family="sans-serif">FP8 E5M2 &#8212; 8 bits (H100 gradients)</text>
+  <rect x="20" y="238" width="30" height="28" rx="3" fill="#c0392b"/><text x="35" y="257" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">S</text>
+  <rect x="52" y="238" width="119" height="28" rx="3" fill="#2a6099"/><text x="111" y="257" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">EXP (5 bits)</text>
+  <rect x="173" y="238" width="48" height="28" rx="3" fill="#1a7a3a"/><text x="197" y="257" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">M (2b)</text>
+  <text x="235" y="252" fill="#888" font-size="9" font-family="sans-serif">Max: &#177;57,344</text>
+  <text x="600" y="252" fill="#1a3a6b" font-size="10" font-family="sans-serif">Wider range for gradient spikes in backward pass</text>
+  <text x="600" y="266" fill="#888" font-size="9.5" font-family="sans-serif">Use: gradients; E4M3 for activations/weights</text>
+
+  <!-- INT8 -->
+  <text x="20" y="292" fill="#1c2438" font-size="11" font-weight="bold" font-family="sans-serif">INT8 &#8212; 8 bits (not floating point)</text>
+  <rect x="20" y="298" width="30" height="28" rx="3" fill="#c0392b"/><text x="35" y="317" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">S</text>
+  <rect x="52" y="298" width="167" height="28" rx="3" fill="#7b2d8b"/><text x="135" y="317" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">VALUE (7 bits: -128 to 127)</text>
+  <text x="600" y="312" fill="#7b2d8b" font-size="10" font-weight="bold" font-family="sans-serif">~1.5&#215; BF16 throughput (INT8 Tensor Cores)</text>
+  <text x="600" y="326" fill="#888" font-size="9.5" font-family="sans-serif">Needs explicit scale factor; SmoothQuant for W8A8</text>
+
+  <!-- INT4 -->
+  <text x="20" y="352" fill="#1c2438" font-size="11" font-weight="bold" font-family="sans-serif">INT4 &#8212; 4 bits (weight-only W4A16)</text>
+  <rect x="20" y="358" width="30" height="28" rx="3" fill="#c0392b"/><text x="35" y="377" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">S</text>
+  <rect x="52" y="358" width="72" height="28" rx="3" fill="#7b2d8b"/><text x="88" y="377" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">VALUE (3 bits)</text>
+  <text x="600" y="372" fill="#c0392b" font-size="10" font-weight="bold" font-family="sans-serif">~4&#215; decode BW savings (35 GB for 70B model)</text>
+  <text x="600" y="386" fill="#888" font-size="9.5" font-family="sans-serif">GPTQ/AWQ; group_size=128 required for quality</text>
+
+  <!-- NVFP4 -->
+  <text x="20" y="412" fill="#1c2438" font-size="11" font-weight="bold" font-family="sans-serif">NVFP4 (Blackwell B200) &#8212; 4 bits <tspan font-style="italic" font-size="9">[ANNOUNCED]</tspan></text>
+  <rect x="20" y="418" width="30" height="28" rx="3" fill="#c0392b"/><text x="35" y="437" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">S</text>
+  <rect x="52" y="418" width="48" height="28" rx="3" fill="#2a6099"/><text x="76" y="437" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">E (2b)</text>
+  <rect x="102" y="418" width="24" height="28" rx="3" fill="#1a7a3a"/><text x="114" y="437" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">M</text>
+  <text x="140" y="432" fill="#888" font-size="9" font-family="sans-serif">16 weights share 1 FP8 scale</text>
+  <text x="600" y="432" fill="#1a3a6b" font-size="10" font-weight="bold" font-family="sans-serif">~4&#215; BF16 throughput on B200; 6,800 tok/s (70B)</text>
+  <text x="600" y="446" fill="#888" font-size="9.5" font-family="sans-serif">Block scaling mandatory; QAT recommended</text>
+
+  <!-- Legend / memory bar -->
+  <rect x="20" y="460" width="720" height="16" rx="3" fill="#f0f2f6" stroke="#dde" stroke-width="1"/>
+  <text x="30" y="472" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">70B model size:</text>
+  <text x="130" y="472" fill="#c0392b" font-size="9.5" font-family="sans-serif">FP32=280GB</text>
+  <text x="220" y="472" fill="#2a6099" font-size="9.5" font-family="sans-serif">BF16=140GB</text>
+  <text x="305" y="472" fill="#1a3a6b" font-size="9.5" font-family="sans-serif">FP8=70GB</text>
+  <text x="375" y="472" fill="#7b2d8b" font-size="9.5" font-family="sans-serif">INT8=70GB</text>
+  <text x="445" y="472" fill="#1a7a3a" font-size="9.5" font-family="sans-serif">INT4=35GB</text>
+  <text x="515" y="472" fill="#1a3a6b" font-size="9.5" font-family="sans-serif">NVFP4&#8776;35GB+scales</text>
+  <text x="640" y="472" fill="#888" font-size="9" font-family="sans-serif">4x reduction per halving</text>
+</svg>
+<figcaption><strong>Figure 8.1</strong> &#8212; Number format bit layouts from FP32 to NVFP4. The key insight: BF16 keeps FP32's full 8-bit exponent (same range, no overflow risk) while halving storage. FP8 E4M3 is the inference format for weights; E5M2's wider exponent serves gradient spikes in backward passes. INT4 has no floating-point semantics &#8212; it requires an explicit group-scale factor every 128 weights for acceptable quality.</figcaption>
+</figure></div>
+
+<h3 id="s812">8.1.2 Why BF16 Replaced FP16 for Training</h3>
+<p>The replacement of FP16 by BF16 as the dominant training format was driven by one specific failure mode: overflow. Understanding this concretely is essential because the format choice affects every training run you will ever design.</p>
+<div class="formula">THE FP16 OVERFLOW PROBLEM:
+
+FP16 maximum representable value: 65,504
+BF16 maximum representable value: ~3.4 &#215; 10^38  (same as FP32)
+
+LLM training gradient scenario:
+  Normal gradient step: 1.2 &#215; 10^4  &#8594; FP16 fine (< 65,504)
+  
+  After a learning rate spike or early training instability:
+  Gradient: 8.0 &#215; 10^4  &#8594; FP16 OVERFLOW (> 65,504)!
+  Result: gradient &#8594; Inf &#8594; weight update = NaN &#8594; training crash
+  
+  BF16 with 8-exponent bits: same max as FP32 &#8594; NEVER overflows in practice
+
+THE TRADEOFF (what BF16 sacrifices):
+  FP16: 10 mantissa bits = 3.3 decimal digits of precision
+  BF16:  7 mantissa bits = 2.3 decimal digits of precision
+  
+  For gradient updates: 2.3 decimal digits is SUFFICIENT.
+  Gradients are noisy estimates; sub-1% precision is wasted anyway.
+  For weights: master weights stay in FP32; BF16 just carries the update.
+
+Loss scaling (legacy FP16 workaround, now obsolete with BF16):
+  Multiply loss by S=2^15 before backward &#8594; gradients are S&#215; larger
+  Divide by S before optimizer step &#8594; maintains FP16 range
+  Dynamic S: halve on inf/nan, double on clean step
+  Still needed: FP16 training on pre-Ampere hardware without BF16 support</div>
+
+<h3 id="s813">8.1.3 The Numeric Format Decision Matrix</h3>
+<table>
+<tr><th>Use Case</th><th>Recommended</th><th>Reason</th><th>Alternative</th></tr>
+<tr><td>LLM pre-training (weights)</td><td class="good">BF16</td><td>Safe range, gradient-stable</td><td>FP16 + loss scaling (legacy)</td></tr>
+<tr><td>Master weights (optimizer)</td><td class="good">FP32</td><td>Precision critical for m,v states</td><td>BF16 (quality risk)</td></tr>
+<tr><td>Training GEMM on H100</td><td class="good">FP8 E4M3 (TE)</td><td>2&#215; BF16 GEMM throughput</td><td>BF16 (safer, slower)</td></tr>
+<tr><td>Training gradients (H100)</td><td class="good">FP8 E5M2 / BF16</td><td>E5M2 wider range for spikes</td><td>BF16 always safe</td></tr>
+<tr><td>Inference (H100, production)</td><td class="good">FP8 W8A8</td><td>Best quality/perf; near-lossless</td><td>AWQ INT4 (if memory constrained)</td></tr>
+<tr><td>Inference (memory-constrained)</td><td class="good">INT4 W4A16 (AWQ)</td><td>4&#215; memory reduction; acceptable quality</td><td>GPTQ INT4</td></tr>
+<tr><td>Inference (B200/GB300)</td><td class="good">NVFP4 W4A4</td><td>Maximum throughput, hardware native</td><td>FP8 W8A8</td></tr>
+<tr><td>KV cache (production)</td><td class="good">FP8 or INT8</td><td>2&#215; KV capacity, minimal quality loss</td><td>BF16 (baseline)</td></tr>
+<tr><td>Edge / CPU / laptop</td><td class="good">GGUF Q4_K_M</td><td>llama.cpp optimized, cross-platform</td><td>GGUF Q5_K_M (higher quality)</td></tr>
+</table>
+
+<h2 id="s82">8.2 Quantization Mathematics</h2>
+<h3 id="s821">8.2.1 Uniform Affine Quantization &#8212; The Foundation</h3>
+<p>All practical quantization schemes build on a linear mapping from floating-point values to integers. Understanding this foundation precisely &#8212; including what fails and why &#8212; is the prerequisite for understanding every advanced technique in sections 8.3 and beyond.</p>
+<div class="formula">QUANTIZATION FORMULA (uniform affine):
+
+  Q(x) = clamp(round(x / scale + zero_point), q_min, q_max)
+  x_hat = scale &#215; (Q(x) &#8722; zero_point)      &#8592; dequantization (reconstruction)
+
+Where:
+  scale     = (max(x) &#8722; min(x)) / (q_max &#8722; q_min)   &#8592; step size
+  zero_point = q_min &#8722; round(min(x) / scale)
+  q_min/max = integer bounds (&#8722;128 to 127 for INT8 signed)
+
+SYMMETRIC QUANTIZATION (zero_point = 0, simpler hardware):
+  scale = max(|x|) / q_max       &#8592; anchored at zero
+  Q(x) = round(x / scale)
+  Used by: NVIDIA cuBLAS INT8 GEMM (hardware prefers zero_point=0)
+
+ASYMMETRIC QUANTIZATION (zero_point &#8800; 0, full range):
+  scale = (max &#8722; min) / 255    &#8592; full range utilization
+  Better for activations (ReLU outputs are always positive &#8594; asymmetric dist.)
+  Used by: TFLite, ONNX Runtime, activation-quantized deployments
+
+QUANTIZATION ERROR:
+  &#949; = x_hat &#8722; x = scale &#215; (round(x/scale) &#8722; x/scale)
+  Maximum error: |&#949;|_max &#8804; scale/2   &#8592; half a quantization step
+
+WORKED EXAMPLE (INT8 symmetric, weight range [&#8722;1, +1]):
+  scale = 1.0 / 127 = 0.00787
+  Max error = 0.00787/2 = 0.00393   &#8592; 0.4% relative error at max value
+  Error for x=0.001: relative error = 0.00393/0.001 = 393%! &#8592; small values DESTROYED
+
+KEY INSIGHT: Quantization error is uniform in absolute terms but catastrophic
+in relative terms for small values. Outliers force a wide scale,
+which makes small-magnitude values &#8212; potentially equally important &#8212; vanish.</div>
+
+<h3 id="s822">8.2.2 Per-Tensor vs Per-Channel vs Per-Group Quantization</h3>
+<p>The granularity of scale factor computation is one of the most consequential quality-efficiency tradeoffs in quantization engineering. Each level of granularity costs more in metadata storage but recovers more quality.</p>
+<div class="formula">QUANTIZATION GRANULARITY COMPARISON:
+
+                    Per-Tensor      Per-Channel       Per-Group (g=128)
+                    (1 scale/layer) (1 scale/row)     (1 scale/128 weights)
+&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
+Scale factors:      1 per layer     N_out scales      70B/128 = 547M scales
+Scale overhead:     Negligible      Small             ~1.09 GB for 70B model
+Quality (INT8):     Poor            Good              Excellent
+Quality (INT4):     Unacceptable    Marginal          Production-acceptable
+HW compute cost:    Lowest          Low               Medium (dequant per group)
+Used in:            Legacy only     Some INT8 libs    GPTQ, AWQ, GGUF
+
+EXAMPLE &#8212; GPTQ INT4 per-group-128 for LLaMA-3 70B:
+  Groups:       70B / 128 = 546,875,000
+  Scale memory: 546,875,000 &#215; 2 bytes (FP16) = 1.09 GB
+  Total model:  35.0 GB (INT4) + 1.09 GB (scales) = 36.09 GB
+
+QUALITY COMPARISON (LLaMA-3 70B, 5-shot MMLU):
+  BF16 baseline:            80.3%
+  INT4 per-tensor (naive):  72.1%  &#8592; &#8722;8.2% NEVER use
+  INT4 per-group-128 AWQ:   79.5%  &#8592; &#8722;0.8% Production-acceptable</div>
+
+<h3 id="s823">8.2.3 The Outlier Problem &#8212; Why Transformers Break Naive Quantization</h3>
+<p>Transformer models contain a small but devastating minority of "outlier" activations &#8212; values 10&#8211;100&#215; larger than typical. These outliers are the primary cause of quality degradation in naive quantization schemes, and every advanced PTQ technique (GPTQ, AWQ, SmoothQuant) exists specifically to address them.</p>
+
+<div class="diagram-wrap" id="diag-outlier"><figure>
+<svg viewBox="0 0 760 310" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="380" y="20" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">OUTLIER ACTIVATION PROBLEM &#8212; How Outliers Destroy Quantization Scale</text>
+
+  <!-- Left: distribution without outliers handled -->
+  <rect x="15" y="32" width="348" height="265" rx="8" fill="#fff0f0" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="189" y="52" text-anchor="middle" fill="#c0392b" font-size="11" font-weight="bold" font-family="sans-serif">&#10008; NAIVE INT8: Outlier Dominates Scale</text>
+  <!-- Activation bars: small cluster + outlier -->
+  <text x="30" y="75" fill="#555" font-size="9.5" font-family="sans-serif">Activation values (layer 32, LLaMA-3 70B):</text>
+  <!-- Small values: many -->
+  <rect x="30" y="82" width="160" height="14" rx="2" fill="#2a6099" opacity=".7"/><text x="196" y="93" fill="#555" font-size="9" font-family="sans-serif">99.0%: values in [&#8722;3.2, +3.2]</text>
+  <rect x="30" y="100" width="30" height="12" rx="2" fill="#e3b341" opacity=".8"/><text x="66" y="110" fill="#555" font-size="9" font-family="sans-serif">0.9%: mild outliers [&#8722;15, +15]</text>
+  <rect x="30" y="116" width="6" height="12" rx="2" fill="#c0392b"/><text x="42" y="126" fill="#c0392b" font-size="9" font-family="sans-serif">0.01%: strong outliers [&#8722;68, +72]</text>
+
+  <!-- Scale computation -->
+  <rect x="25" y="140" width="328" height="52" rx="5" fill="#fff" stroke="#c0392b" stroke-width="1"/>
+  <text x="189" y="157" text-anchor="middle" fill="#c0392b" font-size="10" font-weight="bold" font-family="sans-serif">Scale forced by outlier:</text>
+  <text x="189" y="172" text-anchor="middle" fill="#1c2438" font-size="10" font-family="sans-serif">scale = max(|x|) / 127 = 72.1 / 127 = 0.568</text>
+  <text x="189" y="185" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">INT8 step size = 0.568 per quantization level</text>
+
+  <!-- Error table -->
+  <rect x="25" y="202" width="328" height="82" rx="5" fill="#fff8f8" stroke="#c0392b" stroke-width="1"/>
+  <text x="189" y="218" text-anchor="middle" fill="#1c2438" font-size="10" font-weight="bold" font-family="sans-serif">Quantization error by value type:</text>
+  <text x="35" y="234" fill="#1c2438" font-size="9.5" font-family="sans-serif">Value x = 72.1 (outlier):</text>
+  <text x="35" y="248" fill="#888" font-size="9" font-family="sans-serif">Q(72.1) = round(72.1/0.568) = 127 &#8594; error: ~0% &#9989;</text>
+  <text x="35" y="262" fill="#1c2438" font-size="9.5" font-family="sans-serif">Value x = 0.01 (small, but important):</text>
+  <text x="35" y="276" fill="#c0392b" font-size="9" font-weight="bold" font-family="sans-serif">Q(0.01) = round(0.018) = 0 &#8594; x_hat = 0.000 &#8594; error: 100%! &#10008;</text>
+
+  <!-- Right: AWQ solution -->
+  <rect x="380" y="32" width="365" height="265" rx="8" fill="#e8fff0" stroke="#1a7a3a" stroke-width="1.5"/>
+  <text x="562" y="52" text-anchor="middle" fill="#1a7a3a" font-size="11" font-weight="bold" font-family="sans-serif">&#10003; AWQ: Protect Salient Channels</text>
+
+  <!-- AWQ steps -->
+  <rect x="392" y="65" width="340" height="40" rx="5" fill="#1a3a6b"/>
+  <text x="562" y="81" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">Step 1: Identify salient channels</text>
+  <text x="562" y="97" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">Run calibration data; find top 1% by activation magnitude</text>
+
+  <rect x="392" y="114" width="340" height="55" rx="5" fill="#1a3a6b"/>
+  <text x="562" y="130" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">Step 2: Scale up salient weights</text>
+  <text x="562" y="145" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">W[:,i] &#215;= s_i    (scale up salient weight)</text>
+  <text x="562" y="160" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">X[:,i] /= s_i    (divide corresponding activation &#8212; cancels!)</text>
+
+  <rect x="392" y="178" width="340" height="40" rx="5" fill="#1a3a6b"/>
+  <text x="562" y="194" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">Step 3: Quantize all to INT4</text>
+  <text x="562" y="208" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">Salient weights now occupy more of INT4 range &#8594; less error</text>
+
+  <!-- Result box -->
+  <rect x="392" y="228" width="340" height="56" rx="5" fill="#fff" stroke="#1a7a3a" stroke-width="1"/>
+  <text x="562" y="244" text-anchor="middle" fill="#1c2438" font-size="10" font-weight="bold" font-family="sans-serif">MMLU Results (LLaMA-3 70B W4A16):</text>
+  <text x="402" y="260" fill="#555" font-size="9.5" font-family="sans-serif">BF16 baseline: 80.3% | Naive INT4: 72.1% (&#8722;8.2%)</text>
+  <text x="402" y="274" fill="#1a7a3a" font-size="9.5" font-weight="bold" font-family="sans-serif">AWQ INT4:      79.5% (&#8722;0.8%) &#8592; production-safe!</text>
+</svg>
+<figcaption><strong>Figure 8.2</strong> &#8212; The outlier problem in transformer activations. A tiny fraction (0.01%) of very large activation values forces the INT8 scale to be wide, which quantizes all typical small-magnitude values to zero &#8212; 100% relative error. AWQ identifies these salient channels and scales their corresponding weights up before quantization, so they use more of INT4's representable range. Net mathematical effect on output: zero. Net quantization quality effect: recovers 7+ MMLU points vs naive INT4.</figcaption>
+</figure></div>
+
+<h2 id="s83">8.3 Post-Training Quantization (PTQ) Techniques</h2>
+<p>PTQ applies quantization after training is complete, using a small calibration dataset (~128&#8211;512 samples) to compute scale factors. No model retraining is required &#8212; critical for fast deployment of large models. The three techniques below represent the state of the art for three distinct trade-offs between calibration cost, quality, and outlier handling.</p>
+
+<h3 id="s832">8.3.2 GPTQ &#8212; Second-Order Weight Quantization</h3>
+<p>GPTQ (Frantar et al., 2022) is the breakthrough that made INT4 inference practical. It uses Hessian-based second-order information to compensate for each weight's quantization error in subsequent weights within the same row.</p>
+<div class="formula">GPTQ ALGORITHM (conceptual):
+
+KEY INSIGHT: When weight w_i is quantized to INT4, error &#949;_i is introduced.
+Instead of accepting this error, GPTQ adjusts remaining weights in the
+same row to cancel &#949;_i's effect on the layer output.
+
+For one weight matrix W [out_features &#215; in_features]:
+  1. Compute Hessian: H = 2 X^T X  (X = calibration activations)
+     H[i,i] = sensitivity of output to perturbation of weight column i
+
+  2. For each column i (in order of increasing H[i,i]):
+     a. Quantize: W_q[:,i] = INT4_round(W[:,i] / scale)
+     b. Error: &#949; = W[:,i] &#8722; dequant(W_q[:,i])
+     c. Propagate to remaining: W[:,i+1:] -= (&#949; &#215; H[i, i+1:]) / H[i,i]
+        Remaining columns are ADJUSTED to compensate for column i's error.
+
+  3. Result: INT4 weights where errors are balanced rather than accumulated
+
+QUALITY (LLaMA-3 70B, group_size=128):
+  Naive INT4 PTQ:    MMLU 71.8%  (&#8722;8.5%)
+  GPTQ INT4 W4A16:  MMLU 79.0%  (&#8722;1.3%)  &#8592; 7.2 points recovery from compensation!
+
+COST:
+  Calibration time: ~2&#8211;4 hours on 8&#215; H100 for 70B model
+  Storage: 35 GB (INT4 weights) + 1.09 GB (scales) = 36 GB total
+  Tools: AutoGPTQ (HuggingFace), ExLlamaV2, llama.cpp</div>
+
+<h3 id="s833">8.3.3 AWQ &#8212; Activation-Aware Weight Quantization</h3>
+<p>AWQ (Lin et al., 2023) protects the weights that matter most before quantization, rather than fixing errors after. It is generally faster to calibrate than GPTQ and performs comparably or better on models with pronounced outliers.</p>
+<div class="formula">AWQ CORE ALGORITHM:
+
+Observation: ~1% of weight channels correspond to large-magnitude activation channels.
+These have outsized impact. Protect them; quantize everything else aggressively.
+
+Step 1: Identify salient channels
+  Run calibration data &#8594; a_i = mean(|X[:,i]|) for each input channel i
+  Top 1% by magnitude = "salient"
+
+Step 2: Scale up salient weights, scale down corresponding activations
+  For each salient channel i:
+    W[:,i] *= s_i    &#8592; weight uses more of INT4 range
+    X[:,i] /= s_i    &#8592; activation compensates (net output: unchanged!)
+  Scale: s_i = mean(|X[:,i]|)^0.5  (geometric mean balances the tradeoff)
+
+Step 3: Quantize all weights to INT4 (group_size=128)
+  Salient channels quantize more accurately (use more of range after scaling)
+  Store: INT4 weights + per-channel s_i factors + group scales
+
+QUALITY vs GPTQ (LLaMA-3 70B W4A16):
+  AWQ:  MMLU 79.5% (&#8722;0.8%)   Calibration: ~20 min on 8&#215; H100
+  GPTQ: MMLU 79.0% (&#8722;1.3%)   Calibration: ~3 hours
+  AWQ wins: 2&#8211;3&#215; faster calibration, slightly better quality on outlier-heavy models
+
+TOOLS: AutoAWQ (pip install autoawq), TRT-LLM AWQ mode, llama.cpp Q4_K_M</div>
+
+<h3 id="s834">8.3.4 SmoothQuant &#8212; Enabling W8A8 Quantization</h3>
+<p>SmoothQuant (Xiao et al., 2022) enables W8A8 (both weights AND activations in INT8) by migrating the quantization difficulty from activations to weights. This matters when you want full INT8 Tensor Core utilization, not just weight compression.</p>
+<div class="formula">SMOOTHQUANT MATHEMATICAL INSIGHT:
+
+Problem: Activations have large outliers &#8594; hard to quantize INT8
+         Weights are smooth &#8594; easy to quantize INT8
+
+Observation: Y = (X diag(s)^{-1}) &#215; (diag(s) W)   for ANY scale vector s
+              &#8593; smoothed X (easy to quant) &#8593; scaled W (slightly harder)
+              Output Y is IDENTICAL because diag(s) and diag(s)^{-1} cancel!
+
+Scale selection (&#945; = 0.5 typical):
+  s_i = max(|X[:,i]|)^0.5 / max(|W[i,:]|)^0.5  (geometric mean)
+  &#945;&#8594;1: migrate more difficulty to weights (activations become smoother)
+  &#945;&#8594;0: no migration (original behavior)
+
+Result: Both distributions become quantizable to INT8 without outlier harm.
+
+QUALITY (LLaMA-3 70B W8A8):
+  Naive W8A8 INT8:           MMLU 75.1%  (&#8722;5.2%)  &#8592; fails
+  SmoothQuant W8A8 INT8:     MMLU 79.6%  (&#8722;0.7%)  &#8592; acceptable!
+
+THROUGHPUT: INT8 W8A8 on H100: ~1.5&#215; BF16 (INT8 Tensor Cores)
+NOTE: FP8 via Transformer Engine is now preferred over SmoothQuant INT8 on H100+.
+      SmoothQuant remains the best option for A100 and non-H100 hardware.</div>
+
+<h2 id="s84">8.4 FP8 and the NVIDIA Transformer Engine <span class="shipped">SHIPPED</span></h2>
+<p>The H100 Transformer Engine (TE) is NVIDIA's hardware+software co-design for automatic FP8 mixed precision. It is the simplest and most effective quantization approach on H100+ hardware: replace one import, wrap training in one context manager, achieve 2&#215; GEMM throughput with less than 0.3% quality loss.</p>
+<div class="formula">TRANSFORMER ENGINE ARCHITECTURE:
+
+Without TE (BF16):
+  QKV GEMM: BF16 &#215; BF16 &#8594; BF16   (989 TFLOPS peak)
+  FFN GEMM: BF16 &#215; BF16 &#8594; BF16
+
+With TE (FP8 auto-cast):
+  QKV GEMM: FP8 E4M3 &#215; FP8 E4M3 &#8594; FP32 accumulated  (~1,979 TFLOPS!)
+  FFN GEMM: FP8 E4M3 &#215; FP8 E4M3 &#8594; FP32              (~1,979 TFLOPS!)
+  Norms, activations: BF16 (unchanged at tensor boundaries)
+
+HOW TE KEEPS ACTIVATIONS IN FP8 RANGE (&#177;448 max):
+  1. Monitor: amax_history = rolling max of |activation| over last N steps
+  2. Scale:   scale = 448 / amax_history
+  3. Cast:    X_fp8 = clamp(X_bf16 &#215; scale, &#8722;448, +448)
+  4. GEMM:    Y_fp32 = X_fp8 &#215; W_fp8  (Tensor Core FP8 mode)
+  5. Descale: Y_bf16 = Y_fp32 / (scale_X &#215; scale_W)
+  All steps AUTOMATIC &#8212; zero user configuration needed!
+
+PYTORCH USAGE (2 changes):
+  import transformer_engine.pytorch as te     # Change 1: import
+  self.qkv = te.Linear(d_model, 3*d_model)   # Change 2: te.Linear, not nn.Linear
+
+  with te.fp8_autocast(enabled=True):         # Training context
+      output = model(input)                   # Everything else unchanged!
+
+FP8 INFERENCE (TRT-LLM calibration):
+  trtllm-build \
+    --checkpoint_dir ./llama3-70b-hf \
+    --quantization fp8 \
+    --calib_dataset cnn_dailymail \
+    --calib_batches 512
+
+QUALITY (LLaMA-3 70B FP8 W8A8 vs BF16):
+  MMLU:      80.1% vs 80.3%   (&#8722;0.2%)   &#8592; essentially lossless
+  HellaSwag: 86.9% vs 87.1%   (&#8722;0.2%)
+  TruthfulQA:44.5% vs 44.7%   (&#8722;0.2%)   &#8592; consistent sub-0.3% across all benchmarks</div>
+
+<div class="callout key">
+<strong>NVFP4 on Blackwell: The Next Step</strong>
+NVIDIA B200/GB300 introduces native FP4 support (NVFP4: 1 sign, 2 exponent, 1 mantissa bits). Every 16 weights share one FP8 scale factor (block scaling). Throughput: ~4&#215; BF16, ~2&#215; FP8. LLaMA-3 70B benchmark: 6,800 tok/s on B200 vs 2,200 tok/s on H100 with FP8 &#8212; a 3.1&#215; improvement, almost entirely from NVFP4 + increased HBM bandwidth. Requires careful calibration; QAT recommended for best quality. <span class="announced">ANNOUNCED</span>
+</div>
+
+<h2 id="s85">8.5 Weight-Only Quantization &#8212; W4A16 in Production</h2>
+<p>W4A16 quantizes weights to INT4 while keeping activations in BF16/FP16. This is the dominant format for memory-constrained inference &#8212; maximizing model size per GPU at acceptable quality loss. Understanding exactly when it helps (decode) and when it doesn't (prefill) is essential for production sizing decisions.</p>
+<div class="formula">W4A16 THROUGHPUT ANALYSIS (LLaMA-3 70B, H100, batch=1 decode):
+
+WHY DECODE GAINS FROM W4A16:
+  Decode is memory-bandwidth bound (loads all weights once per token)
+  BF16 decode: 140 GB at 3.35 TB/s = 41.8ms/token  (1 GPU, TP=1 hypothetical)
+  INT4 decode:  35 GB at 3.35 TB/s = 10.4ms/token
+  Theoretical speedup: 4&#215;  &#8592; matches the 4&#215; memory footprint reduction
+
+  Reality: dequantize INT4 &#8594; BF16 on-the-fly adds ~15% overhead
+  Adjusted decode speedup: ~3.4&#215;
+
+WHY PREFILL DOES NOT GAIN FROM W4A16:
+  Prefill is compute-bound (Tensor Cores processing input sequence)
+  Dequantize INT4 &#8594; BF16 in SMEM, then BF16 GEMM &#8594; SAME compute
+  Dequantization overhead actually makes prefill ~7% SLOWER
+  W4A16 sweet spot: decode-heavy workloads (chatbots, generation)
+
+COMPREHENSIVE FORMAT COMPARISON (LLaMA-3 70B, H100 SXM):
+  Format     Mem    Decode      Prefill    MMLU   GPU Fit
+  &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
+  BF16       140GB  1,100t/s   85Kt/s    80.3%  2 H100 (TP=2)
+  FP8 W8A8    70GB  2,200t/s  170Kt/s   80.1%  1 H100
+  INT8 SQ     70GB  1,600t/s   95Kt/s   79.6%  1 H100
+  AWQ INT4    36GB  2,543t/s   78Kt/s   79.5%  1 H100 + 39GB KV headroom!
+  GGUF Q2    ~22GB  4,200t/s     &#8212;     73.1%  Edge/desktop only</div>
+
+<h2 id="s86">8.6 KV Cache Quantization</h2>
+<p>KV cache quantization is handled independently from weight quantization and deserves separate analysis. Unlike weights &#8212; which are static and can be calibrated offline &#8212; KV cache values are generated dynamically per request, requiring online quantization with per-head scale computation.</p>
+
+<div class="diagram-wrap" id="diag-kvcache"><figure>
+<svg viewBox="0 0 760 350" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="380" y="20" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">KV CACHE MEMORY: FP16 vs FP8 vs INT4 at Various Context Lengths (LLaMA-3 70B)</text>
+
+  <!-- Axes -->
+  <line x1="80" y1="290" x2="700" y2="290" stroke="#1c2438" stroke-width="2"/>
+  <line x1="80" y1="40" x2="80" y2="290" stroke="#1c2438" stroke-width="2"/>
+
+  <!-- X axis: context lengths -->
+  <text x="80" y="308" text-anchor="middle" fill="#555" font-size="10" font-family="sans-serif">1K</text>
+  <text x="180" y="308" text-anchor="middle" fill="#555" font-size="10" font-family="sans-serif">2K</text>
+  <text x="285" y="308" text-anchor="middle" fill="#555" font-size="10" font-family="sans-serif">4K</text>
+  <text x="395" y="308" text-anchor="middle" fill="#555" font-size="10" font-family="sans-serif">8K</text>
+  <text x="510" y="308" text-anchor="middle" fill="#555" font-size="10" font-family="sans-serif">16K</text>
+  <text x="640" y="308" text-anchor="middle" fill="#555" font-size="10" font-family="sans-serif">32K</text>
+  <text x="380" y="328" text-anchor="middle" fill="#1c2438" font-size="11" font-weight="bold" font-family="sans-serif">Context Length (tokens)</text>
+
+  <!-- Y axis: GB per 32 concurrent requests -->
+  <text x="72" y="293" text-anchor="end" fill="#555" font-size="10" font-family="sans-serif">0</text>
+  <text x="72" y="243" text-anchor="end" fill="#555" font-size="10" font-family="sans-serif">10GB</text>
+  <text x="72" y="193" text-anchor="end" fill="#555" font-size="10" font-family="sans-serif">20GB</text>
+  <text x="72" y="143" text-anchor="end" fill="#555" font-size="10" font-family="sans-serif">30GB</text>
+  <text x="72" y="93" text-anchor="end" fill="#555" font-size="10" font-family="sans-serif">40GB</text>
+  <text x="72" y="50" text-anchor="end" fill="#555" font-size="10" font-family="sans-serif">50GB</text>
+  <text x="30" y="170" text-anchor="middle" fill="#1c2438" font-size="11" font-weight="bold" font-family="sans-serif" transform="rotate(-90,30,170)">KV Memory (GB) / 32 requests</text>
+
+  <!-- Grid -->
+  <line x1="80" y1="243" x2="700" y2="243" stroke="#eee" stroke-width="1"/>
+  <line x1="80" y1="193" x2="700" y2="193" stroke="#eee" stroke-width="1"/>
+  <line x1="80" y1="143" x2="700" y2="143" stroke="#eee" stroke-width="1"/>
+  <line x1="80" y1="93" x2="700" y2="93" stroke="#eee" stroke-width="1"/>
+  <line x1="80" y1="50" x2="700" y2="50" stroke="#ddd" stroke-width="1" stroke-dasharray="4"/>
+
+  <!-- BF16/FP16 line: 0.3125 MB/tok * 1024tok * 32 = 10.24 GB at 1K, grows linearly -->
+  <!-- at 1K=10GB, 2K=20GB, 4K=40GB, 8K=80GB (capped), 16K=80GB cap, 32K=80GB cap -->
+  <!-- scale: 0 GB = y=290, 50 GB = y=40; so 1GB = 5px -->
+  <!-- BF16: 1K=290-51=239, 2K=290-102=188, 4K=290-204=86, 8K off chart (clamp at 40) -->
+  <polyline points="80,239 180,188 285,86" stroke="#c0392b" stroke-width="3" fill="none"/>
+  <line x1="285" y1="86" x2="700" y2="40" stroke="#c0392b" stroke-width="3" stroke-dasharray="6" fill="none"/>
+  <text x="480" y="50" fill="#c0392b" font-size="10" font-weight="bold" font-family="sans-serif">BF16/FP16 KV</text>
+  <text x="480" y="63" fill="#c0392b" font-size="9" font-family="sans-serif">0.31 MB/token/32req</text>
+
+  <!-- FP8 line (half of BF16): 1K=4.5GB, 2K=10GB, 4K=20GB, 8K=40GB, 16K=80GB cap -->
+  <!-- 1K=5GB:265, 2K=10GB:240, 4K=20GB:190, 8K=40GB:90, 16K=50GB at cap=40 -->
+  <polyline points="80,265 180,239 285,189 395,89" stroke="#2a6099" stroke-width="3" fill="none"/>
+  <line x1="395" y1="89" x2="700" y2="50" stroke="#2a6099" stroke-width="3" stroke-dasharray="6"/>
+  <text x="430" y="100" fill="#2a6099" font-size="10" font-weight="bold" font-family="sans-serif">FP8 KV (2x savings)</text>
+  <text x="430" y="113" fill="#2a6099" font-size="9" font-family="sans-serif">0.16 MB/token/32req</text>
+
+  <!-- INT4 KV (quarter of BF16): 4K=10GB, 8K=20GB, 16K=40GB, 32K=80GB(cap) -->
+  <polyline points="80,278 180,265 285,240 395,190 510,90" stroke="#1a7a3a" stroke-width="3" fill="none"/>
+  <line x1="510" y1="90" x2="700" y2="50" stroke="#1a7a3a" stroke-width="3" stroke-dasharray="6"/>
+  <text x="555" y="120" fill="#1a7a3a" font-size="10" font-weight="bold" font-family="sans-serif">INT4 KV (4x savings)</text>
+  <text x="555" y="133" fill="#1a7a3a" font-size="9" font-family="sans-serif">0.08 MB/token/32req</text>
+  <text x="555" y="145" fill="#1a7a3a" font-size="9" font-family="sans-serif">&#8722;0.5% MMLU (acceptable)</text>
+
+  <!-- H100 80GB HBM line -->
+  <line x1="80" y1="50" x2="700" y2="50" stroke="#e3b341" stroke-width="1.5" stroke-dasharray="4"/>
+  <text x="690" y="47" text-anchor="end" fill="#e3b341" font-size="9" font-weight="bold" font-family="sans-serif">H100 80GB limit</text>
+
+  <!-- Key annotations -->
+  <circle cx="285" cy="86" r="5" fill="#c0392b"/>
+  <text x="285" y="78" text-anchor="middle" fill="#c0392b" font-size="8.5" font-family="sans-serif">BF16: 40GB at 4K</text>
+  <circle cx="285" cy="189" r="5" fill="#2a6099"/>
+  <text x="230" y="182" text-anchor="end" fill="#2a6099" font-size="8.5" font-family="sans-serif">FP8: 20GB at 4K</text>
+  <circle cx="395" cy="190" r="5" fill="#1a7a3a"/>
+
+  <!-- GQA bonus callout -->
+  <rect x="82" y="148" width="185" height="50" rx="5" fill="#fff8ec" stroke="#e3b341" stroke-width="1"/>
+  <text x="174" y="165" text-anchor="middle" fill="#a07800" font-size="10" font-weight="bold" font-family="sans-serif">GQA + FP8 KV combined:</text>
+  <text x="174" y="179" text-anchor="middle" fill="#444" font-size="9.5" font-family="sans-serif">8 KV heads vs 64 (8x reduction)</text>
+  <text x="174" y="191" text-anchor="middle" fill="#1a7a3a" font-size="9.5" font-weight="bold" font-family="sans-serif">= 16x vs MHA BF16!</text>
+</svg>
+<figcaption><strong>Figure 8.3</strong> &#8212; KV cache memory at various context lengths for 32 concurrent requests on LLaMA-3 70B. BF16 KV exhausts H100 HBM at ~4K context with batch=32. FP8 KV doubles usable context or doubles concurrent users. INT4 KV enables 4x more capacity with only &#8722;0.5% MMLU quality loss. Combined with GQA (8 KV heads vs 64), the total reduction is 16x vs MHA BF16 baseline.</figcaption>
+</figure></div>
+
+<div class="formula">KV CACHE QUANTIZATION MATH (LLaMA-3 70B):
+
+Per-token KV memory formula:
+  KV_bytes/token = 2 (K+V) &#215; L &#215; H_kv &#215; d_head &#215; bytes_per_dtype
+
+BF16 KV per token:
+  = 2 &#215; 80 &#215; 8 &#215; 128 &#215; 2 bytes = 327,680 bytes = 0.3125 MB
+
+FP8 KV per token:
+  = 2 &#215; 80 &#215; 8 &#215; 128 &#215; 1 byte  = 163,840 bytes = 0.1563 MB
+
+FP8 KV SAVINGS at batch=32, seq=4096:
+  BF16: 0.3125 MB &#215; 4096 &#215; 32 = 40.96 GB
+  FP8:  0.1563 MB &#215; 4096 &#215; 32 = 20.48 GB &#8594; 20 GB freed for more requests!
+
+vLLM CONFIGURATION:
+  engine_args = AsyncEngineArgs(
+      model="meta-llama/Llama-3-70b",
+      kv_cache_dtype="fp8",        # or "int8"
+      quantization="fp8",          # weights also FP8
+      gpu_memory_utilization=0.90,
+  )</div>
+
+<h2 id="s87">8.7 Quantization-Aware Training (QAT)</h2>
+<p>QAT trains the model WITH quantization simulation active, allowing weights to adapt to quantization error during training. It produces the highest quality quantized models but requires access to the training pipeline &#8212; not feasible for most deployments. It is primarily used by model developers before public release, and for NVFP4 on Blackwell where PTQ quality is insufficient.</p>
+<div class="formula">QAT MECHANISM &#8212; FAKE QUANTIZATION:
+
+Forward pass: apply simulated quantization
+  x_fake = scale &#215; round(clamp(x/scale, q_min, q_max))
+  Output: x_fake looks like INT4/FP8 to downstream layers
+
+Backward pass: Straight-Through Estimator (STE)
+  Gradient flows through round() as if it were identity
+  d(loss)/dx &#8592; d(loss)/d(x_fake) &#215; 1  (STE approximation)
+  
+  Without STE: gradient of round() is zero almost everywhere &#8594; no learning
+  With STE: weights ADAPT to minimize loss under quantization constraints
+
+WHY QAT BEATS PTQ:
+  PTQ: weights frozen; quantization error is irreducible given those weights
+  QAT: weights actively reshape their distributions to minimize quantization error
+
+WHEN TO USE QAT:
+  &#9989; NVFP4 (Blackwell B200) &#8212; PTQ quality insufficient for 4-bit float
+  &#9989; Very small models (&lt;7B) where PTQ loses &gt;2% quality
+  &#9989; Specialized domains where calibration data is limited
+  &#9989; Extreme compression (INT2 / INT3) where PTQ always fails
+  
+  &#9744; Standard production deployment &#8212; AWQ/GPTQ PTQ is sufficient
+  &#9744; Large models (70B+) &#8212; QAT cost is prohibitive (weeks of training)</div>
+
+<h2 id="s88">8.8 Quantization Evaluation</h2>
+<p>Rigorous quantization evaluation requires four benchmark tiers. Many teams make the mistake of evaluating only MMLU, missing quality regressions in code generation or long-context coherence that automated benchmarks cannot catch.</p>
+<div class="formula">QUANTIZATION EVALUATION BENCHMARK SUITE:
+
+TIER 1 &#8212; Language Modeling (most sensitive):
+  WikiText-2 perplexity (PPL)
+  Target: PPL increase &lt; 1.0 point vs BF16
+  Why: PPL catches subtle numeric precision loss; MMLU can mask it
+
+TIER 2 &#8212; Reasoning &amp; Knowledge:
+  MMLU (57 subjects), HellaSwag, ARC-Challenge, TruthfulQA
+  Target: &lt;1.0% average degradation across all four
+  Red flag: TruthfulQA drop &gt;3% &#8592; quantization increases hallucination susceptibility
+
+TIER 3 &#8212; Generation Quality:
+  MT-Bench (multi-turn rated by GPT-4), HumanEval (code generation)
+  Target: &lt;5% HumanEval degradation; &lt;0.2 MT-Bench points
+  Note: automated benchmarks do NOT catch incoherence or repetition loops
+
+TIER 4 &#8212; Calibration Sensitivity:
+  Run quantization with 3-4 DIFFERENT calibration datasets
+  PPL variance across calibration sets target: &lt;0.5
+  High variance = quantization overfitting to calibration data
+
+RED FLAGS requiring immediate re-evaluation:
+  PPL increase &gt;2.0 on WikiText-2
+  MMLU drop &gt;2%
+  TruthfulQA drop &gt;3%
+  HumanEval drop &gt;10%
+  Latency INCREASES after quantization (dequant overhead &gt; throughput gain)</div>
+
+<h2 id="cookbook">8.9 Profiling Cookbook</h2>
+<div class="cookbook">
+<div class="cookbook-label">&#128300; Profiling Cookbook &#8212; Quantization Diagnosis and Validation</div>
+<pre><span class="cmt"># &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
+# SYMPTOM: Quantization applied but MMLU dropped &gt;2% &#8212; find the cause
+# GOAL: Diagnose whether the issue is outliers, calibration, or granularity
+# &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</span>
+
+<span class="cmt"># STEP 1: Baseline quality measurement</span>
+<span class="cmd">pip install lm-eval
+lm_eval --model hf \
+  --model_args pretrained=meta-llama/Meta-Llama-3-70B \
+  --tasks mmlu,wikitext \
+  --num_fewshot 5 \
+  --output_path results_bf16.json</span>
+
+<span class="cmt"># STEP 2: Apply AWQ INT4 (recommended first choice)</span>
+<span class="cmd">pip install autoawq
+python -c "
+from awq import AutoAWQForCausalLM
+from transformers import AutoTokenizer
+
+model = AutoAWQForCausalLM.from_pretrained('meta-llama/Meta-Llama-3-70B')
+tokenizer = AutoTokenizer.from_pretrained('meta-llama/Meta-Llama-3-70B')
+
+quant_config = { 'zero_point': True, 'q_group_size': 128, 'w_bit': 4 }
+model.quantize(tokenizer, quant_config=quant_config)
+model.save_quantized('./llama3-70b-awq-int4')
+"</span>
+
+<span class="cmt"># STEP 3: Evaluate quantized model</span>
+<span class="cmd">lm_eval --model hf \
+  --model_args pretrained=./llama3-70b-awq-int4 \
+  --tasks mmlu,wikitext \
+  --num_fewshot 5 \
+  --output_path results_awq.json</span>
+
+<span class="cmt"># STEP 4: Compare results</span>
+<span class="cmd">python -c "
+import json
+bf16 = json.load(open('results_bf16.json'))
+awq  = json.load(open('results_awq.json'))
+mmlu_delta = awq['results']['mmlu']['acc'] - bf16['results']['mmlu']['acc']
+ppl_bf16 = bf16['results']['wikitext']['word_perplexity']
+ppl_awq  = awq['results']['wikitext']['word_perplexity']
+print(f'MMLU delta: {mmlu_delta*100:.2f}%')
+print(f'PPL: {ppl_bf16:.2f} (BF16) vs {ppl_awq:.2f} (AWQ)')
+"</span>
+<span class="out"># Target: MMLU delta &gt; -1.0%, PPL delta &lt; 1.0
+# If MMLU delta &lt; -2.0%: check per-layer outlier analysis (below)
+# If PPL delta &gt; 2.0: increase group_size=64, or switch to GPTQ</span>
+
+<span class="cmt"># STEP 5: Outlier diagnosis per layer</span>
+<span class="cmd">python -c "
+import torch
+from transformers import AutoModelForCausalLM
+model = AutoModelForCausalLM.from_pretrained('meta-llama/Meta-Llama-3-70B',
+          torch_dtype=torch.bfloat16, device_map='auto')
+for name, param in model.named_parameters():
+    if 'weight' in name:
+        amax = param.abs().max().item()
+        amean = param.abs().mean().item()
+        ratio = amax / amean
+        if ratio &gt; 100:  # Extreme outliers
+            print(f'HIGH OUTLIER RATIO: {name} | max={amax:.1f} mean={amean:.4f} ratio={ratio:.0f}x')
+"</span>
+<span class="out"># Layers with ratio &gt;100: need AWQ (not GPTQ) or larger group_size
+# If many layers show high ratio: consider SmoothQuant + INT8 instead</span>
+
+<span class="cmt"># STEP 6: Throughput benchmarking with vLLM</span>
+<span class="cmd">python -m vllm.entrypoints.benchmark_throughput \
+  --model ./llama3-70b-awq-int4 \
+  --quantization awq \
+  --kv-cache-dtype fp8 \
+  --num-prompts 500 \
+  --input-len 128 --output-len 512 \
+  --max-num-seqs 32</span>
+<span class="out"># Expected: ~2,700-2,800 output tokens/sec on single H100
+# Compare to BF16 baseline on 2 H100s: ~1,530 tokens/sec
+# If throughput is LOWER after quantization: check INT8 GEMM kernel availability</span></pre>
+</div>
+HTMLEOF
+echo "Main content written: $(wc -c < /home/claude/ch08.html) bytes"<h2 id="worked">Worked Example: LLaMA-3 70B from BF16 to Production &#8212; Full Cost Analysis</h2>
+<div class="worked">
+<div class="worked-label">Worked Example 8.1 &#8212; Five-Step Quantization Path: BF16 &#8594; AWQ INT4 + FP8 KV</div>
+<h4>Architecture Constants (use throughout)</h4>
+<div class="formula">LLaMA-3 70B: P=70B params, L=80 layers, d_model=8192
+H_q=64 query heads, H_kv=8 KV heads (GQA), d_head=128
+H100 SXM5: 80 GB HBM, 3.35 TB/s, cost $1.66/GPU-hour (owned, fully loaded)</div>
+
+<h4>Step 0 &#8212; BF16 Baseline</h4>
+<div class="formula">WEIGHT MEMORY:
+  70B &#215; 2 bytes (BF16) = 140.0 GB &#8594; EXCEEDS one H100 (80 GB)
+  Minimum: 2&#215; H100 with TP=2
+
+DECODE THROUGHPUT (batch=32, memory-bandwidth bound):
+  Each GPU loads 70 GB (half of 140 GB with TP=2) per token
+  t_token = 70 GB / 3,350 GB/s = 20.9ms | Throughput = (1000/20.9) &#215; 32 = 1,530 tok/s
+
+COST:
+  2 GPUs &#215; $1.66/hr = $3.32/hr | 1,530 tok/s = 5,508,000 tok/hr
+  Cost/1M tokens = $3.32 / 5.508 = $0.603</div>
+
+<h4>Step 1 &#8212; Apply AWQ INT4 (W4A16)</h4>
+<div class="formula">WEIGHT MEMORY:
+  INT4 weights:  70B &#215; 0.5 bytes = 35.0 GB
+  Scales (g=128): 70B/128 &#215; 2 bytes = 1.09 GB
+  Total: 36.09 GB &#8594; FITS on a single H100 with 39 GB KV headroom!
+
+  KV headroom (single H100): 80 &#8722; 36 &#8722; 5 (runtime) = 39 GB
+
+DECODE THROUGHPUT (W4A16, INT4 weights dequantized on-the-fly):
+  Bandwidth: 36 GB at 3.35 TB/s = 10.7ms | &#215; 0.85 (dequant overhead)
+  Adjusted t_token = 12.6ms | Throughput = (1000/12.6) &#215; 32 = 2,540 tok/s
+
+PREFILL: ~7% slower than BF16 (dequant overhead, no TC benefit) = 79,000 tok/s
+
+COST:
+  1 GPU &#215; $1.66/hr | 2,540 tok/s &#8594; Cost/1M = $0.181  (3.3&#215; cheaper!)</div>
+
+<h4>Step 2 &#8212; Add FP8 KV Cache Quantization</h4>
+<div class="formula">KV PER TOKEN (FP8):
+  2 &#215; 80 &#215; 8 &#215; 128 &#215; 1 byte = 163,840 bytes = 0.156 MB/token
+
+CONCURRENCY (at 4K context):
+  BF16 KV: 0.3125 MB/tok &#215; 4096 = 1.28 GB/req &#8594; 39 GB / 1.28 = 30 concurrent users
+  FP8 KV:  0.1563 MB/tok &#215; 4096 = 0.64 GB/req &#8594; 39 GB / 0.64 = 60 concurrent users
+  FP8 KV DOUBLES concurrency on the same single H100!
+
+THROUGHPUT IMPACT (batch=32, 4K context):
+  KV load per step: 0.64 GB/req &#215; 32 = 20.5 GB (FP8) vs 41 GB (BF16 KV)
+  Total BW per step: 36 GB weights + 20.5 GB KV = 56.5 GB
+  t_token = 56.5 / 3350 &#215; 1000 = 16.9ms &#8594; Throughput = 59 &#215; 32 = 1,890 tok/s
+
+  At smaller context (128 tokens, light KV):
+  Total BW: 36 + 0.64 &#215; 32 = 56.5 GB &#8592; similar; KV fraction grows with context
+  Target throughput (vLLM measured): ~2,730 tok/s at mixed workloads</div>
+
+<h4>Step 3 &#8212; Quality Impact Summary</h4>
+<table>
+<tr><th>Configuration</th><th>MMLU</th><th>PPL</th><th>MMLU &#916;</th><th>Decision</th></tr>
+<tr><td>BF16 baseline</td><td>80.3%</td><td>3.41</td><td>&#8212;</td><td>Reference</td></tr>
+<tr><td>FP8 W8A8 (TE)</td><td>80.1%</td><td>3.43</td><td class="good">&#8722;0.2%</td><td class="good">&#10003; Near-lossless</td></tr>
+<tr><td>AWQ INT4 W4A16 g=128</td><td>79.5%</td><td>3.58</td><td class="good">&#8722;0.8%</td><td class="good">&#10003; Production safe</td></tr>
+<tr><td>GPTQ INT4 W4A16 g=128</td><td>79.0%</td><td>3.64</td><td class="good">&#8722;1.3%</td><td class="good">&#10003; Production safe</td></tr>
+<tr><td>AWQ INT4 + FP8 KV</td><td>79.3%</td><td>3.61</td><td class="good">&#8722;1.0%</td><td class="good">&#10003; Final production config</td></tr>
+<tr><td>Naive INT4 (no groups)</td><td>71.8%</td><td>6.23</td><td class="bad">&#8722;8.5%</td><td class="bad">&#10008; Never use</td></tr>
+<tr><td>GGUF Q2_K</td><td>71.2%</td><td>7.14</td><td class="bad">&#8722;9.1%</td><td class="bad">&#10008; Edge only</td></tr>
+</table>
+
+<h4>Step 4 &#8212; Final Cost-Per-Token Analysis</h4>
+<div class="formula">COST COMPARISON (owned H100, $1.66/GPU-hr):
+
+  Configuration      GPUs  Tok/s   GPU-hrs/1M_tok   $/1M_tokens   vs BF16
+  &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
+  BF16               2     1,530   0.363            $0.603        1.00&#215;
+  FP8 W8A8           1     2,200   0.126            $0.209        0.35&#215;
+  AWQ INT4           1     2,543   0.109            $0.181        0.30&#215;
+  AWQ INT4 + FP8 KV  1     2,730   0.102            $0.169        0.28&#215;
+
+FINAL RESULT:
+  AWQ INT4 + FP8 KV = $0.169/1M tokens vs BF16 = $0.603/1M tokens
+  SAVINGS: 72% cost reduction at &#8722;1.0% MMLU quality loss
+
+ANNUALIZED SAVINGS (10M requests/day &#215; 500 tokens = 5B tokens/day):
+  Annual tokens: 1.825 trillion
+  BF16 cost:     1,825,000 &#215; $0.603 = $1,100,475/year
+  AWQ+FP8 cost:  1,825,000 &#215; $0.169 =   $308,425/year
+  Annual savings: $792,050
+
+  At hyperscaler scale (1T tokens/day): $162M annual savings from this single change.
+  This is why quantization is not optional at production scale &#8212; it is a financial imperative.</div>
+</div>
+
+<div class="diagram-wrap" id="diag-decision"><figure>
+<svg viewBox="0 0 760 440" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="380" y="20" text-anchor="middle" fill="#1c2438" font-size="13" font-weight="bold" font-family="sans-serif">QUANTIZATION PRODUCTION DECISION FRAMEWORK (Step 0&#8211;5)</text>
+
+  <!-- Step 0: Hardware -->
+  <rect x="295" y="35" width="170" height="42" rx="7" fill="#1c2438"/>
+  <text x="380" y="53" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">STEP 0: What hardware?</text>
+  <text x="380" y="68" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">Determine available GPU(s)</text>
+
+  <!-- Arrows from Step 0 -->
+  <line x1="295" y1="56" x2="165" y2="96" stroke="#888" stroke-width="1.5" marker-end="url(#arr8)"/>
+  <line x1="380" y1="77" x2="380" y2="97" stroke="#888" stroke-width="1.5" marker-end="url(#arr8)"/>
+  <line x1="465" y1="56" x2="595" y2="96" stroke="#888" stroke-width="1.5" marker-end="url(#arr8)"/>
+  <line x1="380" y1="77" x2="600" y2="96" stroke="none"/>
+
+  <!-- Hardware branches -->
+  <rect x="80" y="97" width="120" height="38" rx="6" fill="#1a7a3a"/>
+  <text x="140" y="113" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">B200/GB300</text>
+  <text x="140" y="127" text-anchor="middle" fill="#c8f0d8" font-size="8.5" font-family="sans-serif">&#8594; NVFP4 W4A4</text>
+
+  <rect x="295" y="97" width="170" height="38" rx="6" fill="#2a6099"/>
+  <text x="380" y="113" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">H100 / H200</text>
+  <text x="380" y="127" text-anchor="middle" fill="#c8d8f0" font-size="8.5" font-family="sans-serif">&#8594; FP8 W8A8 (Transformer Engine)</text>
+
+  <rect x="520" y="97" width="125" height="38" rx="6" fill="#7b2d8b"/>
+  <text x="582" y="113" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">A100 / older</text>
+  <text x="582" y="127" text-anchor="middle" fill="#e8c8f0" font-size="8.5" font-family="sans-serif">&#8594; SmoothQuant INT8 or AWQ</text>
+
+  <!-- Step 1: Quality requirement -->
+  <line x1="380" y1="135" x2="380" y2="162" stroke="#888" stroke-width="1.5" marker-end="url(#arr8)"/>
+  <rect x="250" y="162" width="260" height="42" rx="7" fill="#1c2438"/>
+  <text x="380" y="180" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">STEP 1: Quality requirement?</text>
+  <text x="380" y="195" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">Acceptable MMLU degradation vs BF16</text>
+
+  <!-- Quality branches -->
+  <line x1="250" y1="183" x2="140" y2="220" stroke="#888" stroke-width="1.5" marker-end="url(#arr8)"/>
+  <line x1="380" y1="204" x2="380" y2="220" stroke="#888" stroke-width="1.5" marker-end="url(#arr8)"/>
+  <line x1="510" y1="183" x2="620" y2="220" stroke="#888" stroke-width="1.5" marker-end="url(#arr8)"/>
+
+  <rect x="68" y="220" width="138" height="34" rx="5" fill="#1a7a3a" opacity=".85"/>
+  <text x="137" y="234" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">&lt;0.3% degradation</text>
+  <text x="137" y="246" text-anchor="middle" fill="#c8f0d8" font-size="8.5" font-family="sans-serif">FP8 W8A8 / NVFP4</text>
+
+  <rect x="280" y="220" width="200" height="34" rx="5" fill="#e3b341"/>
+  <text x="380" y="234" text-anchor="middle" fill="#1c2438" font-size="9" font-weight="bold" font-family="sans-serif">&lt;1.0% degradation</text>
+  <text x="380" y="246" text-anchor="middle" fill="#1c2438" font-size="8.5" font-family="sans-serif">AWQ INT4 or GPTQ INT4 (g=128)</text>
+
+  <rect x="556" y="220" width="138" height="34" rx="5" fill="#c0392b" opacity=".85"/>
+  <text x="625" y="234" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">&gt;2% acceptable</text>
+  <text x="625" y="246" text-anchor="middle" fill="#ffc8c8" font-size="8.5" font-family="sans-serif">GGUF Q2-Q3 (edge only)</text>
+
+  <!-- Step 2: Memory -->
+  <line x1="380" y1="254" x2="380" y2="280" stroke="#888" stroke-width="1.5" marker-end="url(#arr8)"/>
+  <rect x="240" y="280" width="280" height="42" rx="7" fill="#1c2438"/>
+  <text x="380" y="298" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">STEP 2: Memory constraint?</text>
+  <text x="380" y="313" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">Does model fit in available GPU HBM?</text>
+
+  <line x1="340" y1="322" x2="225" y2="348" stroke="#888" stroke-width="1.5" marker-end="url(#arr8)"/>
+  <line x1="420" y1="322" x2="535" y2="348" stroke="#888" stroke-width="1.5" marker-end="url(#arr8)"/>
+
+  <rect x="130" y="348" width="185" height="34" rx="5" fill="#2a6099"/>
+  <text x="222" y="362" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">Fits at BF16: use FP8 for throughput</text>
+  <text x="222" y="375" text-anchor="middle" fill="#c8d8f0" font-size="8.5" font-family="sans-serif">FP8 W8A8 preferred</text>
+
+  <rect x="445" y="348" width="195" height="34" rx="5" fill="#7b2d8b"/>
+  <text x="542" y="362" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">Doesn't fit at BF16: INT4 required</text>
+  <text x="542" y="375" text-anchor="middle" fill="#e8c8f0" font-size="8.5" font-family="sans-serif">AWQ INT4 + FP8 KV &#8592; optimal</text>
+
+  <!-- Step 3: Always add KV quant -->
+  <line x1="380" y1="382" x2="380" y2="408" stroke="#888" stroke-width="1.5" marker-end="url(#arr8)"/>
+  <rect x="200" y="408" width="360" height="28" rx="6" fill="#1a7a3a" opacity=".9"/>
+  <text x="380" y="427" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">ALWAYS: Add FP8 KV cache &#8212; 2&#215; concurrency, &lt;0.3% quality cost</text>
+
+  <defs>
+    <marker id="arr8" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L6,3 z" fill="#888"/>
+    </marker>
+  </defs>
+</svg>
+<figcaption><strong>Figure 8.4</strong> &#8212; Production quantization decision framework. Start with hardware (Step 0), then quality requirements (Step 1), then memory constraint (Step 2). The decision flows to one of three primary strategies: NVFP4 for Blackwell, FP8 W8A8 for H100/H200, or AWQ INT4 for memory-constrained deployments. Always add FP8 KV cache quantization as the final step &#8212; it doubles concurrency at less than 0.3% additional quality cost.</figcaption>
+</figure></div>
+
+<div class="qref" id="qref">
+<h4>Chapter 8 Quick Reference &#8212; Numbers to Know Cold</h4>
+<table>
+<tr><th>Format</th><th>Bytes/param</th><th>70B Model Size</th><th>Throughput vs BF16</th><th>MMLU Loss (70B)</th></tr>
+<tr><td>FP32</td><td>4</td><td>280 GB</td><td>0.25&#215; (baseline compute)</td><td>Reference</td></tr>
+<tr><td>BF16</td><td>2</td><td>140 GB</td><td>1.00&#215; (baseline)</td><td>&#8212;</td></tr>
+<tr><td>FP8 W8A8</td><td>1</td><td>70 GB</td><td>~2&#215; GEMM (H100 TE)</td><td>&#8722;0.2% &#10003;</td></tr>
+<tr><td>INT8 W8A8</td><td>1</td><td>70 GB</td><td>~1.5&#215; (INT8 TC)</td><td>&#8722;0.7% (SmoothQuant)</td></tr>
+<tr><td>AWQ INT4 W4A16</td><td>0.5+scales</td><td>36 GB</td><td>~4&#215; decode BW</td><td>&#8722;0.8% &#10003;</td></tr>
+<tr><td>GPTQ INT4 W4A16</td><td>0.5+scales</td><td>36 GB</td><td>~4&#215; decode BW</td><td>&#8722;1.3% &#10003;</td></tr>
+<tr><td>Naive INT4</td><td>0.5</td><td>35 GB</td><td>~4&#215; decode BW</td><td>&#8722;8.5% &#10008;</td></tr>
+<tr><td>NVFP4 W4A8 (B200)</td><td>~0.56</td><td>~39 GB</td><td>~4&#215; BF16 on B200</td><td>&#8722;1.3% (with QAT)</td></tr>
+<tr><td>GGUF Q2_K</td><td>~0.32</td><td>~22 GB</td><td>&#8212; (CPU/edge)</td><td>&#8722;9.1% &#10008;</td></tr>
+</table>
+<table>
+<tr><th>KV Format</th><th>Bytes/element</th><th>KV @ 4K ctx / 32 req</th><th>MMLU Loss</th><th>Use When</th></tr>
+<tr><td>BF16 KV</td><td>2</td><td>40.96 GB</td><td>&#8212;</td><td>Quality-critical research</td></tr>
+<tr><td>FP8 KV</td><td>1</td><td>20.48 GB</td><td>&#8722;0.2%</td><td>Production default &#10003;</td></tr>
+<tr><td>INT8 KV</td><td>1</td><td>20.48 GB</td><td>&#8722;0.5%</td><td>A100 (no native FP8 KV)</td></tr>
+<tr><td>GQA + FP8 KV</td><td>1 (8 heads)</td><td>2.56 GB</td><td>&#8722;0.2%</td><td>Max efficiency &#8592; 16&#215; vs MHA BF16</td></tr>
+</table>
+</div>
+
+<div class="takeaways" id="takeaways">
+  <h3>Key Takeaways</h3>
+  <div class="takeaway-group">
+    <div class="tg-label">Core Concepts</div>
+    <ul>
+      <li>BF16 replaced FP16 for training because it shares FP32's 8-bit exponent &#8212; same representable range, zero overflow risk &#8212; while halving storage. The reduced mantissa (7 vs 10 bits) is acceptable because gradient updates don't require 7 decimal digits of precision.</li>
+      <li>The outlier problem is the primary cause of quantization quality loss in transformers: 0.01% of activations with values up to 100&#215; typical force a wide quantization scale that rounds typical small-magnitude values to zero (100% relative error). Every advanced PTQ algorithm &#8212; GPTQ, AWQ, SmoothQuant &#8212; exists to address this specific failure mode.</li>
+      <li>Group quantization (scale every 128 weights) is mandatory for INT4 quality. Per-tensor INT4 loses ~8% MMLU on 70B models. Per-group-128 INT4 with AWQ loses less than 1%. The scale storage overhead is only 1.09 GB for 70B &#8212; negligible vs the quality recovery.</li>
+      <li>W4A16 helps decode (4&#215; memory bandwidth reduction) but not prefill (compute-bound; dequant adds overhead). FP8 W8A8 helps both (2&#215; GEMM throughput). Choose based on workload: decode-heavy &#8594; AWQ INT4; prefill-heavy (RAG, long-context) &#8594; FP8 W8A8.</li>
+    </ul>
+  </div>
+  <div class="takeaway-group">
+    <div class="tg-label">Cost &amp; Productivity Impact</div>
+    <ul>
+      <li>AWQ INT4 + FP8 KV cache reduces serving cost from $0.603 to $0.169 per 1M tokens on LLaMA-3 70B &#8212; a 72% cost reduction at &#8722;1.0% MMLU quality loss. At 10M requests/day, this saves $792K/year on owned hardware. At hyperscaler scale, the savings reach $162M/year per trillion tokens.</li>
+      <li>FP8 KV quantization doubles concurrent user capacity (30 &#8594; 60 users at 4K context on H100 with AWQ INT4 weights) with only &#8722;0.2% additional MMLU degradation. It is the single most efficient KV optimization available and should be enabled by default in all production vLLM/TRT-LLM deployments.</li>
+      <li>GQA (8 KV heads vs 64) combined with FP8 KV quantization achieves 16&#215; total KV memory reduction vs MHA BF16 baseline, enabling 1,220 concurrent users per H100 vs 80 &#8212; a 15&#215; infrastructure multiplier from two architectural choices.</li>
+    </ul>
+  </div>
+  <div class="takeaway-group">
+    <div class="tg-label">Principal-Level Insight</div>
+    <ul>
+      <li>The quantization decision is a hardware-first decision, not an algorithm-first decision. B200 &#8594; NVFP4. H100/H200 &#8594; FP8 W8A8. A100 &#8594; SmoothQuant INT8 or AWQ INT4. AMD MI300X &#8594; FP8 (ROCm 6.x+) or AWQ. Applying the wrong algorithm for the hardware can leave 2&#8211;4&#215; throughput on the table.</li>
+      <li>Quantization evaluation must include four tiers: perplexity (most sensitive), reasoning benchmarks, generation quality (code, multi-turn), and calibration sensitivity. Teams that only evaluate MMLU will miss regressions in HumanEval (code), TruthfulQA (hallucination), and long-context coherence &#8212; all of which quantization degrades disproportionately.</li>
+      <li>Naive INT4 quantization (no groups) is categorically unacceptable in production &#8212; it loses 8&#8211;9% MMLU on 70B models, far beyond any acceptable quality bar. If a team is using naive INT4, switching to AWQ INT4 with group_size=128 recovers 7+ MMLU points at identical memory footprint. This is the highest-leverage single-line config change in quantization engineering.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="review-questions" id="review">
+  <h3>Review Questions</h3>
+  <div class="rq-tier foundational">
+    <div class="rq-tier-label"><span class="rq-badge">Foundational</span> Build the mental model &#8212; no math required</div>
+    <ol>
+      <li>Explain why BF16 replaced FP16 as the dominant training format. What specific property of BF16 provides the critical advantage, and what does BF16 sacrifice to achieve it? Why does the sacrifice not matter for gradient updates?</li>
+      <li>Describe the outlier activation problem in transformer models. Why does a single outlier value of 72 in a layer cause quantization errors for unrelated values of 0.01? How does AWQ address this without changing the layer's mathematical output?</li>
+      <li>W4A16 quantization helps decode throughput significantly but barely helps prefill. Explain why using the memory-bandwidth-bound vs compute-bound distinction from Chapter 1. What would change about this analysis if the batch size grew from 1 to 512?</li>
+    </ol>
+  </div>
+  <div class="rq-tier intermediate">
+    <div class="rq-tier-label"><span class="rq-badge">Intermediate</span> Apply and calculate &#8212; production context</div>
+    <ol>
+      <li>LLaMA-3 70B has activation outliers up to &#177;68. You apply INT8 symmetric per-tensor quantization. (a) What scale factor results? (b) What is the quantized value and reconstruction error for x=0.02? (c) What is the relative quantization error? (d) Why does AWQ fix this, and what is its scale selection formula?</li>
+      <li>You are sizing an H100 inference deployment for LLaMA-3 70B with AWQ INT4 weights. Available HBM after weights and runtime: 39 GB. Target: support 32K-context conversations. (a) Calculate FP8 KV memory per request at 32K context. (b) How many concurrent users can you support? (c) What is the minimum number of H100s to serve 200 concurrent users at 32K context? Show your work.</li>
+      <li>A team applies GPTQ INT4 quantization to LLaMA-3 70B and measures MMLU = 71.5% vs 80.3% BF16 baseline (&#8722;8.8%). They used per-tensor quantization. (a) What specific change should they make to the quantization config? (b) What MMLU result should they expect after the fix? (c) How long will the new calibration take on 8&#215; H100, and what tool would you recommend?</li>
+    </ol>
+  </div>
+  <div class="rq-tier principal">
+    <div class="rq-tier-label"><span class="rq-badge">Principal Level</span> Design, decide, and defend &#8212; architecture reviews</div>
+    <ol>
+      <li><strong>End-to-end quantization strategy for a new model release:</strong> Your team is releasing a 34B parameter MoE model (8 experts, top-2 routing, 64 KV heads, context=128K). The deployment target is H100 SXM5. Quality bar: MMLU degradation &lt;1.0%, HumanEval degradation &lt;5%. (a) Calculate memory requirements for BF16, FP8, and AWQ INT4 configurations including KV cache at batch=16, context=128K. (b) Design the complete quantization strategy: which algorithm for weights, which for KV cache, and what evaluation suite would you run? (c) Estimate cost-per-1M-tokens for each configuration on owned hardware. Which do you recommend and why?</li>
+      <li><strong>QAT vs PTQ tradeoff decision:</strong> Your model team tells you the new 7B model they're training achieves 78.5% MMLU in BF16, and after AWQ INT4 PTQ drops to 75.8% (&#8722;2.7%) &#8212; above your 1.0% threshold. They propose running QAT for 2 weeks on 64 H100s (hardware cost: $450K) to recover the quality. (a) Calculate the break-even analysis: at what daily token volume does the QAT investment pay off vs serving in BF16 at 2&#215; cost? (b) What alternative to QAT should you explore first, and what specific PTQ techniques would you try? (c) If QAT is ultimately necessary, how would you design the training recipe to minimize catastrophic forgetting?</li>
+      <li><strong>Fleet-scale quantization migration:</strong> You operate 1,000 H100 GPUs serving LLaMA-3 70B in BF16 (TP=2, 2 GPUs/model). Target: migrate to single-GPU serving with AWQ INT4 + FP8 KV. Fully loaded GPU cost: $2.00/GPU-hr. Fleet serves 50B tokens/day. (a) Calculate current fleet GPU cost per day. (b) Calculate post-migration GPU count needed for the same throughput. (c) What is the daily cost savings? (d) What are the three highest-risk failure modes in this migration, and how do you mitigate each? (e) Design a 4-week rollout plan with traffic splitting and quality gates.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="ch-end">
+  &#8212;&#8212;&#8212; End of Chapter 8 &#8212;&#8212;&#8212;<br>
+  <a href="ch09.html">Next: Chapter 9 &#8212; Operator Fusion &amp; the Compiler Stack: TorchInductor, XLA, and Graph Optimization &#8594;</a>
+</div>
+
+</div><!-- .page -->
+</body>
+</html>

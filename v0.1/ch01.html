@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The AI/ML Performance Architecture Mindset | AI/ML Infrastructure from Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
+.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
+.mem-tier-body{flex:1}
+.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
+.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+.fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+
+.takeaways{background:#f3f5f8;border:2px solid #1c2438;border-radius:9px;padding:18px 22px;margin:32px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.takeaways h3{color:#1c2438;margin:0 0 14px;font-size:15px;border:none;padding:0}
+.takeaway-group{margin-bottom:14px}.takeaway-group:last-child{margin-bottom:0}
+.tg-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#e3b341;margin-bottom:6px}
+.takeaway-group ul{margin-left:16px}.takeaway-group li{font-size:12.5px;margin-bottom:4px;color:#222}
+.review-questions{margin-top:36px}
+.review-questions h3{font-size:16px;color:#1c2438;margin-bottom:16px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+.rq-tier{border-radius:8px;padding:14px 18px;margin-bottom:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rq-tier.foundational{background:#e8fff0;border-left:5px solid #27ae60}
+.rq-tier.intermediate{background:#fffbf0;border-left:5px solid #e3b341}
+.rq-tier.principal{background:#f0f0ff;border-left:5px solid #7b2d8b}
+.rq-tier-label{font-family:sans-serif;font-size:10px;color:#555;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.rq-badge{font-weight:700;font-size:9px;padding:2px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.foundational .rq-badge{background:#27ae60;color:#fff}
+.intermediate .rq-badge{background:#e3b341;color:#1c2438}
+.principal .rq-badge{background:#7b2d8b;color:#fff}
+.rq-tier ol{margin-left:18px}
+.rq-tier li{margin-bottom:10px;font-size:12.5px;line-height:1.7;color:#222}
+.objectives{background:#f0f6ff;border:1px solid #c5cfe0;border-radius:8px;padding:14px 18px;margin:18px 0}
+.objectives h4{color:#2a4a8a;margin:0 0 8px;font-style:normal;font-size:13px}
+.objectives ul{margin-left:16px}.objectives li{font-size:12px;margin-bottom:3px;color:#333}
+.worked{background:#fff8e0;border:1px solid #e3b341;border-radius:8px;padding:14px 18px;margin:16px 0}
+.worked h4{color:#856404;margin:0 0 8px;font-style:normal;font-size:13px}
+.diag-cookbook{background:#f8f6f0;border:1px solid #d8d4c8;border-radius:8px;padding:14px 18px;margin:16px 0}
+.diag-cookbook h4{color:#1a3060;margin:0 0 8px;font-style:normal;font-size:13px}
+.shipped{display:inline-block;background:#d4edda;color:#155724;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px}
+.announced{display:inline-block;background:#fff3cd;color:#856404;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px}
+.roadmap{display:inline-block;background:#e2d9f3;color:#4a0e8f;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px}
+</style>
+</head>
+<body>
+<div id="nav"><b>Silicon to Scale</b><a class="home" href="index.html">⌂ Index</a><a href="ch00.html">← FM</a><a href="ch02.html">Ch 2 →</a><a href="ch03.html">Ch 3</a><a href="ch04.html">Ch 4</a><a href="ch06.html">Ch 6</a><a href="ch10.html">Ch 10</a><a href="ch17.html">Ch 17</a></div>
+<div id="sidebar"><h4>Chapter 1</h4>
+  <a href="#s11">1.1 What Changed (and What Didn't)</a>
+  <a href="#s12">1.2 The Seven-Layer Stack</a>
+  <a href="#s13">1.3 Three Performance Regimes</a>
+  <a href="#s14">1.4 Roofline from First Principles</a>
+  <a href="#s15">1.5 BERT FLOP Breakdown</a>
+  <a href="#s16">1.6 MFU and HFU</a>
+  <a href="#s17">1.7 Optimization Leverage</a>
+  <a href="#s18">1.8 Scale Mental Models</a>
+  <a href="#diagrams">Diagrams (4)</a>
+  <a href="#takeaways">Key Takeaways</a>
+  <a href="#review">Review Questions</a>
+</div>
+<div class="page">
+<div class="ch-label">Part I · Chapter 1</div>
+<h1 class="ch-title">The AI/ML Performance Architecture Mindset</h1>
+<div class="ch-subtitle">Why systems thinking scales — and what changes when you move to AI infrastructure</div>
+<div class="ch-meta"><strong>Book:</strong> AI/ML Infrastructure from Silicon to Scale — V2 Edition &nbsp;|&nbsp; <strong>Author:</strong> Venkat Vinjam &nbsp;|&nbsp; <strong>Cross-ref:</strong> <span class="xref">Ch 4: Roofline deep dive</span> <span class="xref">Ch 12: MFU benchmarking</span> <span class="xref">Ch 17: Profiling tools</span></div>
+<div class="ch-divider"></div>
+
+<blockquote>"The engineer who can walk into an architecture review and say: 'this design is memory-bandwidth-bound at these shapes — here is the roofline, here is the gap, here are two approaches to close it with their TCO implications' — that is the principal. This chapter builds that engineer."
+<cite>— Book Mission Statement</cite></blockquote>
+
+<p>Chapter 1 is the analytical skeleton on which every other chapter hangs its flesh. Every optimization technique in this book — FlashAttention kernel tiling, KV cache paging, tensor parallelism topology, gradient bucketing, quantization bit-width selection — reduces, when analyzed rigorously, to one of three quantities or a tradeoff among them: <strong>arithmetic intensity, memory bandwidth, and communication volume</strong>. This chapter defines all three from first principles.</p>
+
+<div class="objectives">
+<h4>Learning Objectives — What You Will Be Able to Do After This Chapter</h4>
+<ul>
+<li><strong>Level 1 (Foundational):</strong> Explain the seven-layer performance stack and classify any GPU operation into one of the three performance regimes using plain-English reasoning</li>
+<li><strong>Level 2 (Intermediate):</strong> Compute arithmetic intensity for any transformer operation, locate it on the roofline, and predict whether adding compute or bandwidth would improve it</li>
+<li><strong>Level 3 (Principal):</strong> Walk into any system design review, immediately classify the dominant bottleneck regime, derive the theoretical bound, quantify the gap, and identify the highest-leverage optimization — all before touching a profiler</li>
+</ul>
+</div>
+
+<h2 id="s11">1.1 What Actually Changed — and What Did Not</h2>
+<p>The rise of large-scale AI infrastructure feels like a rupture — new hardware, new frameworks, new vocabulary. But the underlying engineering discipline has not changed: <strong>find the bottleneck, quantify the gap, close the gap at lowest cost</strong>. What changed is where the bottlenecks are and how far they cascade.</p>
+
+<table>
+  <tr><th>Traditional Systems Mindset</th><th>AI/ML Principal Architect Mindset</th></tr>
+  <tr><td>"Let me profile and see what's slow."</td><td>"Let me classify the regime first — compute, memory, or communication bound — then profile to confirm the hypothesis."</td></tr>
+  <tr><td>"This kernel is at 82% GPU utilization."</td><td>"82% SM utilization means nothing without arithmetic intensity. What's the FLOP/byte ratio of this operation at this batch size?"</td></tr>
+  <tr><td>"We need more bandwidth."</td><td>"How many bytes per FLOP does this operation require, and what bandwidth is needed to keep the ALUs fully fed?"</td></tr>
+  <tr><td>"The AllReduce is slow."</td><td>"What is the message size, the topology, the algorithm (ring vs. tree), and the effective bandwidth as a fraction of theoretical NVLink?"</td></tr>
+  <tr><td>"Add another node."</td><td>"What is the communication-to-computation ratio at this scale, and does adding a node help or hurt the efficiency?"</td></tr>
+</table>
+
+<p><strong>What did NOT change:</strong> Amdahl's law still governs — fix the 80%. Measurement before optimization — profiling is still the only honest answer. First-principles math — every system has theoretical limits; derive them. TCO awareness — the right answer is the one that achieves the performance target at the lowest $/token/day.</p>
+
+<p><strong>What DID change — the scale consequences:</strong> A single GPU kernel bottleneck that costs 0.5% throughput costs $2M/year at a 10,000-GPU cluster running at $3/GPU-hr. Communication became a first-class citizen. Memory is now the primary constraint, not compute. The system boundary expanded from a single server to a fleet of racks.</p>
+
+<h2 id="s12">1.2 The Seven-Layer Performance Stack</h2>
+<p>Every AI/ML system is a stack of seven layers. Performance optimization must target the correct layer — fixes applied to the wrong layer achieve nothing even when perfectly implemented.</p>
+
+<div class="formula">THE SEVEN-LAYER PERFORMANCE STACK:
+
+Layer 7: CLUSTER ORCHESTRATION        SLURM, Kubernetes, topology-aware placement
+          Signal: low GPU utilization across the fleet, gang-scheduling delays
+          
+Layer 6: NETWORK / COMMUNICATION      NVLink, InfiniBand, NCCL, AllReduce algorithms
+          Signal: comms:compute ratio >15%, NCCL bus BW <50% of theoretical
+          
+Layer 5: DISTRIBUTED PARALLELISM      TP, PP, DP, ZeRO, FSDP, sequence parallelism
+          Signal: bubble fraction >10%, communication not overlapped with compute
+
+Layer 4: FRAMEWORK + COMPILER         torch.compile, TensorRT, CUDA Graphs, XLA
+          Signal: graph breaks, kernel launch overhead dominating, no CUDA Graph
+
+Layer 3: MEMORY SYSTEM                HBM access patterns, KV cache, fragmentation
+          Signal: achieved BW &lt;60% of HBM peak, L2 hit rate low, OOM events
+
+Layer 2: GPU KERNEL                   GEMM tiling, Tensor Core efficiency, occupancy
+          Signal: SM occupancy &lt;50%, memory throughput below ridge point
+
+Layer 1: SILICON PHYSICS              Clock, voltage, thermal throttle, ECC errors
+          Signal: SM clock below TDP target, GPU temp >83°C, DCGM error counter
+
+RULE: Identify which layer is the ACTIVE bottleneck before touching any code.
+      The most expensive mistake: tuning Layer 2 kernels when the Layer 6
+      AllReduce is serializing with compute — GEMM gets 3% faster while
+      overall throughput doesn't move.</div>
+
+<div class="diagram-wrap" id="diagrams">
+<svg viewBox="0 0 740 320" xmlns="http://www.w3.org/2000/svg">
+  <rect width="740" height="320" fill="#fff"/>
+  <text x="370" y="22" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#1c2438">Seven-Layer Performance Stack</text>
+  <!-- Layers -->
+  <g transform="translate(60,38)">
+    <!-- Layer 7 -->
+    <rect x="0" y="0" width="620" height="36" rx="5" fill="#1c2438" opacity="0.9"/>
+    <text x="16" y="14" font-family="sans-serif" font-size="9" fill="#e3b341" font-weight="700">LAYER 7</text>
+    <text x="16" y="27" font-family="sans-serif" font-size="11" fill="#fff" font-weight="600">Cluster Orchestration</text>
+    <text x="260" y="23" font-family="sans-serif" font-size="9" fill="rgba(255,255,255,.7)">SLURM · Kubernetes · Topology Placement</text>
+    <!-- Layer 6 -->
+    <rect x="10" y="44" width="600" height="36" rx="5" fill="#2a4580" opacity="0.9"/>
+    <text x="26" y="58" font-family="sans-serif" font-size="9" fill="#e3b341" font-weight="700">LAYER 6</text>
+    <text x="26" y="71" font-family="sans-serif" font-size="11" fill="#fff" font-weight="600">Network &amp; Collective Communication</text>
+    <text x="300" y="67" font-family="sans-serif" font-size="9" fill="rgba(255,255,255,.7)">NVLink · InfiniBand · NCCL AllReduce</text>
+    <!-- Layer 5 -->
+    <rect x="20" y="88" width="580" height="36" rx="5" fill="#1a5c6a" opacity="0.9"/>
+    <text x="36" y="102" font-family="sans-serif" font-size="9" fill="#e3b341" font-weight="700">LAYER 5</text>
+    <text x="36" y="115" font-family="sans-serif" font-size="11" fill="#fff" font-weight="600">Distributed Parallelism</text>
+    <text x="240" y="111" font-family="sans-serif" font-size="9" fill="rgba(255,255,255,.7)">TP · PP · DP · ZeRO · FSDP · Sequence Parallelism</text>
+    <!-- Layer 4 -->
+    <rect x="30" y="132" width="560" height="36" rx="5" fill="#27695a" opacity="0.9"/>
+    <text x="46" y="146" font-family="sans-serif" font-size="9" fill="#e3b341" font-weight="700">LAYER 4</text>
+    <text x="46" y="159" font-family="sans-serif" font-size="11" fill="#fff" font-weight="600">Framework + Compiler</text>
+    <text x="230" y="155" font-family="sans-serif" font-size="9" fill="rgba(255,255,255,.7)">torch.compile · TensorRT · CUDA Graphs · XLA</text>
+    <!-- Layer 3 -->
+    <rect x="40" y="176" width="540" height="36" rx="5" fill="#856404" opacity="0.9"/>
+    <text x="56" y="190" font-family="sans-serif" font-size="9" fill="#fff3cd" font-weight="700">LAYER 3</text>
+    <text x="56" y="203" font-family="sans-serif" font-size="11" fill="#fff" font-weight="600">Memory System</text>
+    <text x="210" y="199" font-family="sans-serif" font-size="9" fill="rgba(255,255,255,.8)">HBM access patterns · KV cache · Fragmentation</text>
+    <!-- Layer 2 -->
+    <rect x="50" y="220" width="520" height="36" rx="5" fill="#7b3a00" opacity="0.9"/>
+    <text x="66" y="234" font-family="sans-serif" font-size="9" fill="#ffcc99" font-weight="700">LAYER 2</text>
+    <text x="66" y="247" font-family="sans-serif" font-size="11" fill="#fff" font-weight="600">GPU Kernel</text>
+    <text x="190" y="243" font-family="sans-serif" font-size="9" fill="rgba(255,255,255,.8)">GEMM tiling · Tensor Core efficiency · SMEM bank conflicts</text>
+    <!-- Layer 1 -->
+    <rect x="60" y="264" width="500" height="36" rx="5" fill="#721c24" opacity="0.9"/>
+    <text x="76" y="278" font-family="sans-serif" font-size="9" fill="#f5c6cb" font-weight="700">LAYER 1</text>
+    <text x="76" y="291" font-family="sans-serif" font-size="11" fill="#fff" font-weight="600">Silicon Physics</text>
+    <text x="200" y="287" font-family="sans-serif" font-size="9" fill="rgba(255,255,255,.8)">Clock · Voltage · Thermal throttle · ECC errors · TDP</text>
+    <!-- Arrow -->
+    <text x="640" y="160" font-family="sans-serif" font-size="9" fill="#e3b341" transform="rotate(-90,640,160)" text-anchor="middle">Fix lowest active bottleneck first</text>
+  </g>
+</svg>
+<figcaption>Figure 1.1 — The Seven-Layer Performance Stack. Fix the lowest active bottleneck first. Optimizing Layer 2 (GPU kernels) while a Layer 6 (AllReduce) bottleneck exists is the most common performance engineering mistake in AI/ML infrastructure.</figcaption>
+</div>
+
+<h2 id="s13">1.3 The Three Performance Regimes</h2>
+<p>Every GPU operation falls into exactly one of three regimes at any given (hardware, operation, batch size) tuple. Identifying the regime is the first step — before profiling, before code review, before any optimization decision. Misidentifying it leads to optimizations that are perfectly executed and completely useless.</p>
+
+<div class="formula">REGIME CLASSIFICATION:
+
+REGIME 1 — COMPUTE BOUND:
+  Definition: Arithmetic Intensity > Ridge Point of the GPU
+  H100 ridge point: 989 TFLOPS ÷ 3.35 TB/s = 295 FLOP/byte
+  Symptom: SM utilization >90%, HBM bandwidth well below peak
+  Examples: Large GEMM (prefill, large-batch training)
+  Fix lever: FP8, NVFP4, better Tensor Core tile sizing
+  Wrong fix: Adding HBM bandwidth (GPU upgrade for more BW won't help)
+  
+REGIME 2 — MEMORY BANDWIDTH BOUND:
+  Definition: Arithmetic Intensity < Ridge Point
+  Symptom: HBM bandwidth near peak, SM compute utilization below peak
+  Examples: GEMV batch=1 (decode), LayerNorm, elementwise ops, RMSNorm
+  Fix lever: Fusion, quantization (INT4 → 4× decode speedup), batching
+  Wrong fix: Adding compute (faster GPU won't help decode throughput)
+  
+REGIME 3 — COMMUNICATION BOUND:
+  Definition: AllReduce or P2P transfers dominate wall time
+  Symptom: GPU idle >20% during collective ops (visible in Nsight trace)
+  Examples: TP AllReduce at large cluster, PP bubble fill/drain
+  Fix lever: Overlap comm with compute, reduce volume, topology-aware placement
+  Wrong fix: Faster single-GPU kernel (the bottleneck is not on-GPU)</div>
+
+<div class="callout red"><strong>The Principal's First Question</strong> — When given any performance number, the first question is always: <em>which regime?</em> This determines which class of interventions can possibly help. A kernel running at 2% of peak compute on a memory-bound operation is not "96% inefficient" — it is running at the memory-bandwidth ceiling and is therefore correct. A kernel running at 20% of peak on a compute-bound operation has 80% headroom and is a real problem.</div>
+
+<h2 id="s14">1.4 Roofline Analysis from First Principles</h2>
+<p>The Roofline Model provides a visual and mathematical framework for locating any operation relative to the hardware limits. It requires two hardware numbers and one workload number.</p>
+
+<div class="formula">ROOFLINE FORMULAS:
+
+Arithmetic Intensity (AI) = FLOPs executed / Bytes read+written from HBM
+                           [units: FLOP/byte]
+
+Memory ceiling:   P_memory(AI)  = AI × HBM_bandwidth
+Compute ceiling:  P_compute     = Peak_TFLOPS
+Achievable perf:  P_max(AI)     = min(P_memory, P_compute)
+                               = min(AI × 3.35 TB/s, 989 TFLOPS) [H100]
+
+Ridge Point (regime boundary):
+  AI_ridge = Peak_TFLOPS / HBM_bandwidth
+  H100 SXM5 (BF16):   989 TFLOPS  / 3.35 TB/s = 295 FLOP/byte [SHIPPED]
+  H200 SXM5 (BF16):   989 TFLOPS  / 4.8 TB/s  = 206 FLOP/byte [SHIPPED]
+  B200 SXM  (FP8):  4,500 TFLOPS  / 8.0 TB/s  = 562 FLOP/byte [SHIPPED]
+  MI300X    (BF16): 1,307 TFLOPS  / 5.3 TB/s  = 247 FLOP/byte [SHIPPED]
+
+→ Operations that were compute-bound in 2018 (V100, ridge=124) may now be
+  memory-bound on H100 (ridge=295). The ridge point has more than doubled.
+  Re-evaluate your workload's regime with every GPU generation transition.</div>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="300" fill="#fff"/>
+  <text x="340" y="20" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#1c2438">Roofline Model — H100 SXM5 (BF16)</text>
+  <!-- Axes -->
+  <line x1="70" y1="250" x2="640" y2="250" stroke="#ccc" stroke-width="1.5"/>
+  <line x1="70" y1="250" x2="70" y2="40" stroke="#ccc" stroke-width="1.5"/>
+  <!-- Axis labels -->
+  <text x="355" y="278" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">Arithmetic Intensity (FLOP / byte)</text>
+  <text x="22" y="150" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555" transform="rotate(-90,22,150)">Achievable TFLOPS</text>
+  <!-- Grid lines -->
+  <line x1="70" y1="75" x2="640" y2="75" stroke="#f0f0f0" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="70" y1="125" x2="640" y2="125" stroke="#f0f0f0" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="70" y1="175" x2="640" y2="175" stroke="#f0f0f0" stroke-width="1" stroke-dasharray="4,3"/>
+  <!-- Memory roof (slope) up to ridge point at x~=380 -->
+  <line x1="70" y1="250" x2="385" y2="65" stroke="#2a6099" stroke-width="3"/>
+  <!-- Compute roof (horizontal) from ridge to right -->
+  <line x1="385" y1="65" x2="640" y2="65" stroke="#c0392b" stroke-width="3"/>
+  <!-- Ridge point marker -->
+  <circle cx="385" cy="65" r="6" fill="#e3b341" stroke="#1c2438" stroke-width="1.5"/>
+  <text x="395" y="60" font-family="sans-serif" font-size="9.5" fill="#1c2438" font-weight="700">Ridge: 295 FLOP/byte</text>
+  <!-- Compute ceiling label -->
+  <text x="520" y="58" font-family="sans-serif" font-size="9.5" fill="#c0392b" font-weight="700">989 TFLOPS (compute ceiling)</text>
+  <!-- Memory slope label -->
+  <text x="160" y="200" font-family="sans-serif" font-size="9" fill="#2a6099" transform="rotate(-33,160,200)">slope = 3.35 TB/s (HBM bandwidth)</text>
+  <!-- Operation dots -->
+  <!-- GEMV batch=1 AI~1 → low perf -->
+  <circle cx="90" cy="240" r="5" fill="#721c24"/>
+  <text x="95" y="236" font-family="sans-serif" font-size="8" fill="#721c24">GEMV b=1</text>
+  <text x="95" y="247" font-family="sans-serif" font-size="7.5" fill="#721c24">AI≈1 → ~3 TFLOPS</text>
+  <!-- GEMV batch=32 AI~32 -->
+  <circle cx="155" cy="222" r="5" fill="#856404"/>
+  <text x="160" y="218" font-family="sans-serif" font-size="8" fill="#856404">GEMV b=32</text>
+  <text x="160" y="229" font-family="sans-serif" font-size="7.5" fill="#856404">AI≈32 → 107 TFLOPS</text>
+  <!-- RMSNorm AI~1.25 -->
+  <circle cx="94" cy="245" r="4" fill="#888"/>
+  <!-- FlashAttn S=4K AI~250 near ridge -->
+  <circle cx="370" cy="70" r="5" fill="#27ae60"/>
+  <text x="310" y="85" font-family="sans-serif" font-size="8" fill="#27ae60">FAv3 S=4K</text>
+  <text x="310" y="96" font-family="sans-serif" font-size="7.5" fill="#27ae60">AI≈250 → 737 TFLOPS</text>
+  <!-- GEMM large AI~1365 compute bound -->
+  <circle cx="570" cy="72" r="5" fill="#1c2438"/>
+  <text x="530" y="88" font-family="sans-serif" font-size="8" fill="#1c2438">GEMM 4K×4K</text>
+  <text x="530" y="99" font-family="sans-serif" font-size="7.5" fill="#555">AI≈1365 → 800 TFLOPS</text>
+  <!-- X-axis ticks -->
+  <text x="70" y="263" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#888">1</text>
+  <text x="155" y="263" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#888">32</text>
+  <text x="280" y="263" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#888">100</text>
+  <text x="385" y="263" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#e3b341" font-weight="700">295</text>
+  <text x="570" y="263" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#888">1000+</text>
+</svg>
+<figcaption>Figure 1.2 — Roofline Model for H100 SXM5 (BF16). The memory slope = 3.35 TB/s; the compute ceiling = 989 TFLOPS; the ridge point = 295 FLOP/byte. GEMV batch=1 (decode) sits at AI≈1, achieving only ~3 TFLOPS — not because the GPU is broken, but because HBM is the binding constraint. FlashAttention v3 at S=4096 approaches the ridge at AI≈250, achieving 737 TFLOPS (74% MFU).</figcaption>
+</div>
+
+<h2 id="s15">1.5 BERT FLOP Breakdown and the Bandwidth Paradox</h2>
+<p>A worked example grounds the roofline framework in a specific, well-understood model.</p>
+
+<div class="worked">
+<h4>Worked Example — BERT-Large Forward Pass FLOP and Memory Budget</h4>
+<div class="formula">BERT-Large config: L=24 layers, H=1024 hidden dim, A=16 heads, S=512 seq_len, BF16
+
+Per-layer operations:
+  QKV projections:  3 × 2 × S × H² = 3 × 2 × 512 × 1024² = 3.22 GFLOP
+  Attention QK^T:   2 × S² × H    = 2 × 512² × 1024 = 0.54 GFLOP
+  Attention × V:    2 × S² × H    = 0.54 GFLOP
+  Output proj:      2 × S × H²    = 1.07 GFLOP
+  FFN (4H hidden):  2 × 2 × S × H × 4H = 4.29 GFLOP
+  Layer norms:      ~12 × S × H   = negligible
+  ─────────────────────────────────────────────────────
+  Per-layer total:  ~9.66 GFLOP
+  Total (24 layers): 24 × 9.66 = 231.8 GFLOP ≈ 232 GFLOP
+
+Memory analysis (model weights, BF16):
+  QKV weights: 3 × H × H × 2 = 6.3 MB per layer
+  Total weights: 24 × (QKV + FFN + output) ≈ 340 MB
+
+Arithmetic intensity (batch=1, S=512):
+  AI = 232 GFLOP / 340 MB ≈ 682 FLOP/byte → compute-bound on H100 ✓
+  
+But at batch=1 per decode step (S=1):
+  FLOPs: ~9.66 GFLOP / 512 = 18.9 MFLOP per step
+  Memory: same 340 MB weights loaded every step
+  AI: 18.9 MFLOP / 340 MB = 0.056 FLOP/byte → deeply memory-bound ✗
+
+THE BANDWIDTH PARADOX:
+  The same model is compute-bound at batch=512, memory-bound at batch=1.
+  This is not a bug — it is the fundamental nature of the memory wall.
+  The batch size is the primary lever for controlling which regime you're in.</div>
+</div>
+
+<h2 id="s16">1.6 Hardware Efficiency: MFU and HFU</h2>
+<div class="formula">MODEL FLOP UTILIZATION (MFU):
+
+  MFU = (FLOPs per sample × samples per second) / Peak TFLOPS
+      = (2 × N_params × sequence_length × throughput_samples_s) / Peak_TFLOPS
+
+  For LLaMA-3 70B (N=70B), H100 (989 TFLOPS), seq=4096, throughput=0.8 samples/s:
+    MFU = (2 × 70e9 × 4096 × 0.8) / 989e12
+        = 4.59e11 / 989e12 = 0.464 = 46.4%
+
+MFU INTERPRETATION TABLE:
+  MFU > 55%    Excellent — world-class cluster efficiency
+  MFU 40–55%   Good — some optimization headroom
+  MFU 25–40%   Mediocre — active investigation warranted
+  MFU 10–25%   Poor — likely systematic bottleneck (comms? scheduling?)
+  MFU < 10%    Critical — something is fundamentally wrong
+
+HFU (Hardware FLOP Utilization) — for training:
+  HFU = MFU × (1 + recompute_fraction)
+  If gradient checkpointing recomputes 33% of activations:
+  HFU = MFU × 1.33  (reports true hardware utilization vs FLOPs in model)
+
+PRODUCTION REFERENCE NUMBERS [REPRESENTATIVE]:
+  LLaMA-3 405B training (H100 cluster, Megatron-LM 4D parallel): 45–52% MFU
+  LLaMA-3 70B inference prefill (TRT-LLM, batch=32):             50–65% MFU
+  LLaMA-3 70B inference decode (batch=1):                         3–8% MFU
+  LLaMA-3 70B inference decode (batch=64):                       30–45% MFU</div>
+
+<h2 id="s17">1.7 The Optimization Leverage Hierarchy</h2>
+<p>Not all optimizations have equal impact. A principal engineer knows which level of the hierarchy to try first — and critically, which level to avoid wasting time on when a higher-leverage intervention is available.</p>
+
+<div class="formula">OPTIMIZATION LEVERAGE HIERARCHY (highest expected impact first):
+
+1. ALGORITHMIC CHANGE                     10–1000× potential
+   Example: FlashAttention vs standard attention (3–8× speedup, zero quality loss)
+   Example: Speculative decoding (2–4× decode throughput at high acceptance rate)
+   When: The algorithm itself has quadratic or linear memory overhead
+
+2. NUMERICAL FORMAT CHANGE                2–4× potential
+   Example: BF16 → FP8 (2× throughput on H100 Transformer Engine)
+   Example: BF16 → INT4 decode (4× TPOT improvement from BW reduction)
+   When: Quality budget allows; bandwidth-bound workloads
+
+3. OPERATOR FUSION                        1.5–3× potential
+   Example: Fuse RMSNorm + Linear + SiLU → single kernel (60% less HBM traffic)
+   Example: CUDA Graphs (20–40% overhead reduction for fixed inference pipelines)
+   When: Many short kernel launches; memory-bandwidth-bound pipeline
+
+4. TILING AND PARALLELISM TUNING          1.1–2× potential
+   Example: GEMM tile size for specific shape + GPU generation
+   Example: TP degree tuning for model size and NVLink topology
+   When: Kernel is compute-bound but below roofline
+
+5. HARDWARE CONFIGURATION                 1.05–1.3× potential
+   Example: NCCL env vars (NCCL_SOCKET_NTHREADS, NCCL_IB_GID_INDEX)
+   Example: GPU power limit tuning, SM clock locking for sustained throughput
+   When: Algorithmic, format, and fusion improvements already applied</div>
+
+<div class="callout green"><strong>Cost consequence — getting the hierarchy right:</strong> A team spends 3 engineer-months on kernel-level GEMM tile tuning and achieves +8% throughput. A one-week switch from standard attention to FlashAttention would have delivered +320% throughput. The opportunity cost: $720K in engineer time for 8% vs $30K for 320%. Know the hierarchy before opening a profiler.</div>
+
+<h2 id="s18">1.8 Mental Models for Scale</h2>
+<div class="formula">SCALE-INVARIANT QUESTIONS (ask at every level):
+  Single GPU:   "What fraction of peak TFLOPS am I achieving? Why not more?"
+  Single node:  "What fraction of NVLink bandwidth is consumed during comms?"
+  Cluster:      "What is mean GPU utilization over a 24-hour rolling window?"
+
+SCALE-DEPENDENT PHENOMENA (new bottlenecks that emerge at each threshold):
+  4 GPUs:    Tensor Parallelism AllReduce latency starts mattering (&gt;10% wall time)
+  8 GPUs:    NVSwitch topology determines TP group communication efficiency
+  64 GPUs:   Pipeline bubble fraction (1/PP_degree) becomes measurable overhead
+  256 GPUs:  NCCL ring AllReduce latency limits gradient sync frequency
+  1K GPUs:   Straggler detection becomes fleet health problem
+  10K GPUs:  Silent data corruption (SDC) probability requires active monitoring
+             (at 10K H100s: 1 SDC event per ~2 weeks of training)
+
+BANDWIDTH REFERENCE NUMBERS TO KNOW COLD:
+  NVLink 4.0 (H100):        900 GB/s per-GPU bidirectional [SHIPPED]
+  InfiniBand NDR (per link): 50 GB/s (400 Gbps)            [SHIPPED]
+  PCIe Gen5 x16:             64 GB/s one-way               [SHIPPED]
+  NVLink-C2C (GB200):        10 TB/s CPU-GPU               [SHIPPED]
+  Cross-node vs intra-node:  18× bandwidth difference — this determines TP scope</div>
+
+<div class="takeaways">
+<h3>Key Takeaways</h3>
+<div class="takeaway-group"><div class="tg-label">Core Concepts</div><ul><li>Every GPU operation is in exactly one of three regimes: compute-bound (AI > ridge), memory-bandwidth-bound (AI < ridge), or communication-bound. Identifying the regime is step zero — before profiling, before code review.</li><li>The roofline ridge point (Peak_TFLOPS / HBM_BW) on H100 is 295 FLOP/byte. It has risen 2.4× since V100 (124). This means operations that were compute-bound in 2018 may now be memory-bound on H100 — re-evaluate with every GPU generation transition.</li><li>MFU below 25% indicates a systematic bottleneck requiring immediate investigation. MFU above 55% is world-class. Track MFU as a fleet health signal, not just a benchmark number.</li><li>The seven-layer stack is a diagnostic map: fix the lowest active bottleneck first. Tuning Layer 2 (kernels) while a Layer 6 (AllReduce) bottleneck exists is the most common performance engineering mistake in AI infrastructure.</li></ul></div>
+<div class="takeaway-group"><div class="tg-label">Cost &amp; Productivity Impact</div><ul><li>Applying the optimization leverage hierarchy correctly — trying algorithmic changes before kernel tuning — typically delivers 10–100× better ROI per engineer-week. A team that switches to FlashAttention before tuning GEMM tiles achieves 320% gains with 3 weeks of work vs 8% gains with 3 months.</li><li>MFU tracking at fleet scale identifies cluster-wide efficiency losses worth $3M–$10M/year in GPU time at a 1,000-GPU cluster. A 5% MFU improvement at $3/GPU-hr on 1,000 GPUs running 24/7 = $1.3M/year recovered.</li><li>Correct regime classification before optimization prevents the most common waste pattern: engineers spending months tuning memory-bound decode kernels with compute-optimization techniques that cannot possibly help.</li></ul></div>
+<div class="takeaway-group"><div class="tg-label">Principal-Level Insight</div><ul><li>The principal's diagnostic sequence is: classify regime → derive theoretical bound → measure actual performance → compute gap → identify root cause → apply fix at the correct leverage level. Each step gates the next — skipping regime classification invalidates everything downstream.</li><li>The ridge point is not a property of the workload — it is a property of the (hardware, workload, batch size) triple. The same model is compute-bound at batch=512 and memory-bound at batch=1 on the same GPU. This is why batch size is the primary inference knob, not compute intensity.</li><li>At fleet scale (>1K GPUs), the dominant bottleneck is almost never a single kernel — it is the interaction between communication, scheduling, and checkpoint recovery patterns. Single-GPU profiling is necessary but never sufficient for cluster-level performance diagnosis.</li></ul></div>
+</div><div class="review-questions"><h3>Review Questions</h3>
+<div class="rq-tier foundational"><div class="rq-tier-label"><span class="rq-badge">Foundational</span>Build the mental model — no math required</div><ol><li>Explain in plain language: why does a GEMM operation with the same number of floating point operations run much faster at large batch sizes than at batch=1 on the same GPU? What changes, and what stays constant?</li><li>A colleague says 'our GPU is at 85% utilization, so we're doing well.' Why might this statement be misleading? What additional information would you need to make a real judgment about efficiency?</li><li>Describe the seven-layer performance stack. Give one example of a bottleneck at each of Layers 3, 5, and 7, and explain how you would detect each one.</li></ol></div>
+<div class="rq-tier intermediate"><div class="rq-tier-label"><span class="rq-badge">Intermediate</span>Apply and calculate — production context</div><ol><li>A LLaMA-3 70B [SHIPPED] model runs on H100 SXM5 at batch=1. The weight matrices total 140 GB in BF16. H100 HBM bandwidth is 3.35 TB/s. (a) What is the minimum possible TPOT (time per output token)? (b) If you switch to INT4 (AWQ) quantization — 35 GB total — what is the new minimum TPOT? (c) At what batch size does the arithmetic intensity cross the H100 ridge point of 295 FLOP/byte for a single transformer layer with H=8192?</li><li>A training job achieves 38% MFU on a 256-GPU H100 cluster. Walk through the seven-layer diagnostic process: (a) At Layer 6, what NCCL metric would you check, and what threshold indicates communication is the bottleneck? (b) At Layer 3, what HBM bandwidth utilization would indicate memory-bound kernels? (c) What Nsight timeline view would you use to distinguish Layer 2 (kernel) vs Layer 6 (comms) bottlenecks?</li><li>Compute the arithmetic intensity for the following operations on LLaMA-3 70B (L=80, H=8192, d_head=128, A=64 heads, GQA G=8) at batch=32, seq=512 in BF16: (a) QKV projection GEMM; (b) single decode step GEMV; (c) one RMSNorm operation. Which is compute-bound on H100?</li></ol></div>
+<div class="rq-tier principal"><div class="rq-tier-label"><span class="rq-badge">Principal Level</span>Design, decide, and defend — architecture reviews</div><ol><li>You are given a 1,024-GPU H100 training cluster achieving 35% MFU on LLaMA-3 70B with 4D parallelism (TP=8, PP=4, DP=32, SP=2). Theoretical maximum MFU for this configuration is 58%. Design a complete diagnostic plan: which metrics to collect, in what order, at which system layers, and how you would distinguish between communication overlap failure, pipeline bubble inflation, data pipeline stall, and kernel efficiency loss. Estimate the potential MFU recovery from each root cause.</li><li>Your inference team proposes switching from BF16 to FP8 on H100 for LLaMA-3 70B decode. Currently the system runs at TPOT=42ms/token at batch=1 (near the bandwidth floor). (a) Will FP8 help TPOT, hurt it, or have no effect? Justify from first principles using arithmetic intensity. (b) Under what batch size condition would FP8 begin to improve TPOT? Derive the crossover batch size. (c) What is the actual speedup you would expect at batch=1 vs batch=32 — and why are they different?</li></ol></div>
+</div>
+</div>
+</body>
+</html>

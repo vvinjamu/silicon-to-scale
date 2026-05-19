@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Appendix D — Performance Formulas Quick Reference | AI/ML Infrastructure from Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
+.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
+.mem-tier-body{flex:1}
+.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
+.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+.fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+</style>
+</head>
+<body>
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="appendix_c.html">&#8592; App C</a>
+  <a href="appendix_e.html">App E &#8594;</a>
+  <a href="ch01.html">Ch 1</a>
+  <a href="ch04.html">Ch 4</a>
+  <a href="ch06.html">Ch 6</a>
+</div>
+<div id="sidebar">
+  <h4>Appendix D — Formulas</h4>
+  <a href="#s1">D.1 Roofline &amp; AI ★</a>
+  <a href="#s2">D.2 GEMM Performance ★</a>
+  <a href="#s3">D.3 Memory Sizing ★</a>
+  <a href="#s4">D.4 Training Performance</a>
+  <a href="#s5">D.5 Inference Latency ★</a>
+  <a href="#s6">D.6 KV Cache &amp; Attention ★</a>
+  <a href="#s7">D.7 Collective Comms ★</a>
+  <a href="#s8">D.8 Cost &amp; TCO</a>
+</div>
+<div class="page">
+<div class="ch-label">Back Matter &middot; Appendix D</div>
+<h1 class="ch-title">Performance Formulas Quick Reference</h1>
+<div class="ch-subtitle">Every formula a Principal Performance Architect must derive from memory — organized by domain, with hardware constants, worked examples, and interview-ready interpretations</div>
+<div class="ch-meta"><strong>Book:</strong> AI/ML Infrastructure from Silicon to Scale &nbsp;|&nbsp; <strong>Author:</strong> Venkat Vinjam &nbsp;|&nbsp; <strong>Cross-ref:</strong> <span class="xref">Ch 1: Roofline</span> <span class="xref">Ch 2: Transformer FLOPs</span> <span class="xref">Ch 4: Memory hierarchy</span> <span class="xref">App A: Hardware specs</span></div>
+<div class="ch-divider"></div>
+
+<div class="callout green"><strong>How to use this appendix</strong>
+Formulas marked ★ are the highest-leverage — these appear in every architecture review and staff-level interview. Derive them from first principles, not from memory of the result. The worked example column uses LLaMA-3 70B on H100 as the running reference so you can verify against known values.</div>
+
+<h2 id="s1">D.1 Roofline Model &amp; Arithmetic Intensity ★</h2>
+<div class="formula">ROOFLINE FUNDAMENTALS:
+
+  Arithmetic Intensity (AI) = FLOPs executed / Bytes read+written from HBM  [FLOP/byte]
+
+  Memory Ceiling:     P_mem(AI) = AI × HBM_bandwidth
+  Compute Ceiling:    P_compute = Peak_TFLOPS
+  Achievable Perf:    P_max = min(P_mem, P_compute) = min(AI × BW, Peak)
+
+  Ridge Point ★:      AI_ridge = Peak_TFLOPS / HBM_bandwidth
+    H100 BF16:  989 TFLOPS  / 3.35 TB/s = 295 FLOP/byte
+    H200 BF16:  989 TFLOPS  / 4.8 TB/s  = 206 FLOP/byte
+    B200 BF16: 2250 TFLOPS  / 8.0 TB/s  = 281 FLOP/byte
+    MI300X:    1307 TFLOPS  / 5.3 TB/s  = 247 FLOP/byte
+
+REGIME CLASSIFICATION:
+  AI > AI_ridge  →  COMPUTE-BOUND  (add TFLOPS to improve)
+  AI < AI_ridge  →  MEMORY-BOUND   (reduce bytes or add bandwidth to improve)
+
+WORKED EXAMPLE — LLaMA-3 70B GEMV (batch=1, single decode step):
+  Operation:   [1 × 8192] × [8192 × 8192]  (one linear layer)
+  FLOPs:       2 × 1 × 8192 × 8192 = 134.2 M FLOPs
+  Bytes (BF16): (1×8192 + 8192×8192 + 1×8192) × 2 = 134.2 MB
+  AI:          134.2M / 134.2M = 1.0 FLOP/byte  →  deeply MEMORY-BOUND
+  Achieved perf: 1.0 × 3.35 TB/s = 3.35 TFLOPS  (vs 989 peak — only 0.34% MFU!)</div>
+
+<h2 id="s2">D.2 GEMM Performance Formulas ★</h2>
+<div class="formula">GEMM FLOP COUNT:
+  FLOPs = 2 × M × K × N   (multiply-accumulate = 2 FLOPs each)
+  With bias add: FLOPs += M × N
+
+GEMM ARITHMETIC INTENSITY:
+  Bytes read:   A[M×K] + W[K×N] + C[M×N] written
+  AI = 2MKN / ((MK + KN + MN) × bytes)
+  
+  Dominated by K and N when M is small (batch size):
+  At M=1 (batch=1): AI ≈ 2K / (K + N) × (1/bytes)  →  AI ≈ 2 / (1/K + 1/N) / bytes
+  At M=batch: AI ≈ 2 × batch / (2 + batch/K + batch/N) / bytes
+
+  Crossover batch size to compute-bound on H100 (BF16, K=N=8192):
+    AI_ridge × bytes ≈ batch → batch_crossover ≈ 295 × 2 = 590
+    (For H100: need batch ≥ ~295 to be compute-bound on typical GEMM)
+
+TENSOR CORE ALIGNMENT:
+  BF16/FP8 GEMMs require dimensions ≡ 0 (mod 16)
+  If d_head = 130 (not aligned): padded to 144 → 9.6% wasted throughput
+  At 1000 GPUs × $3/hr × 8760 hrs/yr × 9.6% = $252K/year from misalignment</div>
+
+<h2 id="s3">D.3 Memory Sizing Formulas ★</h2>
+<div class="formula">TRANSFORMER MODEL MEMORY:
+  model_bytes = N_params × bytes_per_param
+  Training full precision: N × (4 + 4 + 8) = 16 bytes/param  (weights + grads + Adam)
+  Training BF16 mixed:     N × (2 + 4 + 8) = 14 bytes/param
+  Inference BF16:          N × 2 bytes/param
+  Inference FP8:           N × 1 byte/param
+  Inference INT4:          N × 0.5 bytes/param
+
+  ZeRO-3 / FSDP:  model_bytes / N_GPUs  (fully sharded, each GPU holds 1/N)
+
+KV CACHE:
+  per_request = 2 × L × H_kv × d_head × S × dtype_bytes
+  per_token_per_layer = 2 × H_kv × d_head × dtype_bytes
+
+  LLaMA-3 70B (L=80, H_kv=8, d_head=128, BF16):
+    per_token_per_layer = 2 × 8 × 128 × 2 = 4,096 bytes = 4 KB
+    at S=4096 context: 80 × 4096 × 4096 = 5.37 GB per request ★
+    at S=128K context: 80 × 128000 × 4KB = 40.0 GB per request (single MI300X limit)
+
+ACTIVATION MEMORY (training, per layer):
+  activations ≈ batch × seq_len × d_model × bytes  (simplified)
+  With recomputation (gradient checkpointing): reduce by 1/(checkpt_freq)
+  Flash Attention: activations ∝ O(S) not O(S²) — critical for long context
+
+HBM CAPACITY PLANNING (inference):
+  usable_KV = HBM_total − model_bytes − framework_overhead
+  max_concurrent = usable_KV / KV_per_request
+  H100, 70B BF16, TP=2: (80 − 70 − 5) = 5 GB → 5 / 5.37 ≈ 0 (can't fit!)
+  H100, 70B INT4, TP=1: (80 − 35 − 5) = 40 GB → 40 / 2.68 = 14 requests</div>
+
+<h2 id="s4">D.4 Training Performance Formulas</h2>
+<div class="formula">TRAINING FLOPS:
+  Forward pass FLOPs ≈ 2 × N_params × S  (per sample)
+  Backward pass FLOPs ≈ 2 × Forward  (gradients + activations)
+  Total per step (without recomputation): ≈ 6 × N_params × S × batch_size
+  With gradient checkpointing: ≈ 8 × N_params × S × batch_size
+
+TRAINING THROUGHPUT:
+  tokens/sec = (batch_size × seq_len × steps_per_sec)
+  GPU_efficiency = tokens/sec / (N_GPUs × peak_tokens/sec_per_GPU)
+
+MFU (Model FLOP Utilization) ★:
+  MFU = (6 × N_params × S × batch/step × steps/sec) / (N_GPUs × Peak_TFLOPS)
+
+  LLaMA-3 70B training, H100, 1024 GPUs, 2.5M tokens/sec:
+    MFU = (6 × 70e9 × 4096 × 2.5e6/4096) / (1024 × 989e12)
+        = (6 × 70e9 × 2.5e6) / (1024 × 989e12)
+        = 1.05e18 / 1.013e18 = 104%?  ← must divide by batch
+    Correct: MFU = (6 × 70e9 × tokens_per_sec) / (N_GPU × 989e12)
+           = (6 × 70e9 × 2.5e6) / (1024 × 989e12) = 1.05e18 / 1013e15 ≈ 1.03
+    → Check: 45% MFU → 45% × 989e12 × 1024 / (6 × 70e9) = ~1.08M tokens/sec
+
+PIPELINE BUBBLE FRACTION:
+  bubble = (PP − 1) / (PP + M − 1)   [M = microbatches per pipeline fill]
+  PP=4, M=32:  bubble = 3/35 = 8.6%   (acceptable)
+  PP=8, M=8:   bubble = 7/15 = 46.7%  (catastrophic — increase microbatches)
+
+GRADIENT CHECKPOINT TRADEOFF:
+  Memory saved: (1 − 1/k) × activation_memory  [k = checkpointing frequency]
+  Compute added: ≈ 33% extra FLOPs (one extra forward pass per 3 layers)
+  Cost: ~1/3 throughput penalty to enable 3× larger batch or model</div>
+
+<h2 id="s5">D.5 Inference Latency &amp; Throughput ★</h2>
+<div class="formula">TTFT (Time To First Token):
+  TTFT = queue_wait + prefill_time
+  prefill_time ≈ FLOPs_prefill / (N_GPUs × Peak_TFLOPS × MFU_prefill)
+               ≈ (2 × N_params × S_input) / (N_GPUs × TFLOPS × 0.5)
+
+TPOT (Time Per Output Token):
+  TPOT_min = model_bytes / (N_GPUs × HBM_bandwidth)  ← physics floor ★
+  TPOT_actual ≥ TPOT_min  (always bandwidth-limited at small batch)
+  
+  At large batch (batch > ridge_point):
+  TPOT ≈ (2 × N_params × batch) / (N_GPUs × Peak_TFLOPS)
+
+END-TO-END LATENCY:
+  E2EL = TTFT + TPOT × (output_tokens − 1)
+  For chat (200 output tokens, TTFT=150ms, TPOT=25ms):
+    E2EL = 150 + 25 × 199 = 150 + 4975 = 5,125 ms ≈ 5.1s
+
+THROUGHPUT vs LATENCY TRADEOFF:
+  throughput (tok/s) = batch × (1000 / TPOT_ms)
+  latency ↑ as batch ↑  (queuing delay, larger TPOT at higher AI)
+  Operating point: max throughput subject to TPOT ≤ SLA_target
+
+SPECULATIVE DECODING SPEEDUP:
+  E[accepted_tokens] = (1 − α^(K+1)) / (1 − α)   [α = acceptance rate, K = draft tokens]
+  speedup ≈ E[accepted_tokens]   (relative to one target step per token)
+  At α=0.8, K=5: E = (1 − 0.8^6) / 0.2 = (1 − 0.262) / 0.2 = 3.69× speedup ★
+
+FLEET SIZING:
+  raw_GPUs = peak_tok_per_s / (1000/TPOT_target_ms × batch_at_SLA)
+  prod_GPUs = raw_GPUs / 0.75 × 1.20   [75% util, 20% burst headroom]</div>
+
+<h2 id="s6">D.6 KV Cache &amp; Attention Formulas ★</h2>
+<div class="formula">ATTENTION FLOPS (scaled dot-product, per head):
+  QK^T:    2 × S × d × S = 2S²d  FLOPs
+  AV:      2 × S × S × d = 2S²d  FLOPs
+  Total per head: 4S²d  FLOPs
+
+ATTENTION ARITHMETIC INTENSITY (standard attention):
+  AI ≈ d/3  [independent of S! — always memory-bound for reasonable d]
+  At d=128: AI ≈ 43 FLOP/byte (vs H100 ridge 295)  →  always memory-bound
+  FlashAttention eliminates S² HBM writes → AI increases, latency decreases
+
+PAGEDATTENTION MEMORY EFFICIENCY:
+  naive_waste = (max_seq − avg_seq) / max_seq
+  At max_seq=4096, avg_seq=512: waste = (4096−512)/4096 = 87.5%!
+  PagedAttention fragmentation: <5% (16-token blocks, on-demand allocation)
+  Capacity gain: ~5−10× more concurrent requests
+
+KV QUANTIZATION SAVINGS:
+  INT8 KV: 5.37 GB → 2.69 GB per request (2× more concurrent users)
+  FP8 KV:  5.37 GB → 2.69 GB per request
+  INT4 KV: 5.37 GB → 1.34 GB per request (4× more concurrent users)
+
+CROSSOVER — when attention FLOPs exceed FFN FLOPs:
+  4S²d_head × H_q > 3 × 2 × d_model × d_ffn   (per layer, per token)
+  LLaMA-3 70B: 4 × S² × 128 × 64 > 6 × 8192 × 28672
+  32768 S² > 1,409M  →  S > 6557 tokens (crossover at ~6.5K context)</div>
+
+<h2 id="s7">D.7 Collective Communication Formulas ★</h2>
+<div class="formula">ALLREDUCE (ring algorithm):
+  t = 2 × (N−1)/N × M / BW   [M = message bytes, N = GPUs, BW = link BW]
+  
+  TP=8, M=256 MB (one layer gradient), NVLink 900 GB/s:
+    t = 2 × (7/8) × 256e6 / 900e9 = 0.50 ms per AllReduce
+
+  TP=8 over IB NDR (50 GB/s): t = 2 × 7/8 × 256e6 / 50e9 = 8.96 ms
+  → 80 layers × 8.96ms = 717ms per decode step  ← unusable ★
+
+ALLGATHER / REDUCESCATTER (ZeRO-3 / FSDP):
+  t_allgather = (N−1)/N × M / BW   (half of AllReduce)
+  ZeRO-3 per step: 2× AllGather (fwd + bwd) + 1× ReduceScatter = 3 AllReduces
+
+BANDWIDTH UTILIZATION BUS BW (for benchmarking):
+  busBW = (size / t) × (2×(N−1)/N)   (what nccl-tests reports)
+  Note: busBW > point-to-point BW — this is intentional, not a bug
+
+ALL-TO-ALL (MoE expert routing):
+  t = M / BW × (N−1)/N × 2   (similar to AllReduce for balanced routing)
+  At batch=32, d_model=7168, N_expert=8, IB NDR (50 GB/s):
+    M = 32 × 7168 × 2 bytes × 7/8 = 401 KB → t ≈ 8µs  (negligible)</div>
+
+<h2 id="s8">D.8 Cost &amp; TCO Formulas</h2>
+<div class="formula">TOKENS PER DOLLAR:
+  cost_per_token = GPU_cost_per_hr / (throughput_tokens_per_hr)
+  At TPOT=25ms, batch=32, 1 GPU: 32 tokens/25ms = 1280 tok/s
+  At $3/GPU-hr: $3 / (1280 × 3600) = $6.5×10⁻⁷ per token = $0.65/million tokens
+
+TRAINING COST:
+  GPU_hours = (6 × N_params × N_tokens) / (N_GPUs × TFLOPS × MFU × 3600)
+  At 45% MFU, H100 989 TFLOPS, 1024 GPUs, 70B×1T tokens:
+    = (6 × 70e9 × 1e12) / (1024 × 989e12 × 0.45 × 3600) = 261,800 GPU-hours
+  At $3/hr: $785K per 1T token training run (70B BF16, 1024×H100, 45% MFU)
+
+TCO (3-year, per GPU):
+  capex_amort = GPU_cost / (3 × 8760 × utilization)   [per GPU-hour]
+  H100 at $25K, 80% util: $25K / (3 × 8760 × 0.80) = $1.19/GPU-hr capex
+  Total with $2/hr power+rack: ~$3.19/GPU-hr full TCO
+
+PUE IMPACT:
+  actual_power_cost = IT_power × PUE × $/kWh
+  At PUE=1.2, $0.05/kWh, 700W H100: 700W × 1.2 × $0.05 = $0.042/hr ≈ $0.04/GPU-hr
+  Air cooling (PUE=1.4) vs liquid (PUE=1.15): saves 18% power per token</div>
+
+<div class="callout navy" style="margin-top:32px">
+  <strong>Cross-References</strong><br><br>
+  <span class="xref">App A</span> Hardware specs behind all formulas — ridge points, BW, TFLOPS.<br>
+  <span class="xref">Ch 1</span> Roofline model derivation and three regimes — §D.1 is the concise version.<br>
+  <span class="xref">Ch 2</span> Transformer FLOP budget — §D.2 and §D.6 derive from Ch 2 first principles.<br>
+  <span class="xref">Ch 6</span> Inference architecture — §D.5 TTFT/TPOT formulas and fleet sizing in production.<br>
+  <span class="xref">Ch 10</span> Distributed training — §D.4 training formulas, pipeline bubbles, ZeRO memory.
+</div>
+<div class="ch-end">Appendix D Complete &nbsp;·&nbsp; AI/ML Infrastructure from Silicon to Scale &nbsp;·&nbsp; Venkat Vinjam &nbsp;·&nbsp; 2026</div>
+</div>
+</body>
+</html>

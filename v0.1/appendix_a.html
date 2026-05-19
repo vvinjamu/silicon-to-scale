@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Appendix A — Hardware Quick Reference | AI/ML Infrastructure from Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
+.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
+.mem-tier-body{flex:1}
+.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
+.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+.fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+</style>
+</head>
+<body>
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="ch21.html">&#8592; Ch 21</a>
+  <a href="appendix_b.html">App B &#8594;</a>
+  <a href="ch01.html">Ch 1</a>
+  <a href="ch04.html">Ch 4</a>
+  <a href="ch06.html">Ch 6</a>
+</div>
+<div id="sidebar">
+  <h4>Appendix A</h4>
+  <a href="#sa1">A.1 NVIDIA GPU Generations</a>
+  <a href="#sa2">A.2 AMD GPU Reference</a>
+  <a href="#sa3">A.3 HBM Generations</a>
+  <a href="#sa4">A.4 Network Interconnect</a>
+  <a href="#sa5">A.5 Key Formulas ★</a>
+  <a href="#sa6">A.6 Parallelism Reference</a>
+  <a href="#sa7">A.7 Numerical Precision</a>
+  <a href="#sa8">A.8 30 Numbers Cold ★</a>
+  <a href="#sa9">A.9 Ridge Points</a>
+  <a href="#sa10">A.10 MFU Reference</a>
+</div>
+<div class="page">
+<div class="ch-label">Back Matter &middot; Appendix A</div>
+<h1 class="ch-title">Hardware Quick Reference &amp; Cheat Sheet</h1>
+<div class="ch-subtitle">GPU specifications · HBM generations · Interconnect bandwidth · 30 numbers every principal knows cold · Key formulas · Roofline ridge points · Parallelism rules · Production thresholds</div>
+<div class="ch-meta"><strong>Book:</strong> AI/ML Infrastructure from Silicon to Scale &nbsp;|&nbsp; <strong>Author:</strong> Venkat Vinjam &nbsp;|&nbsp; <strong>Cross-ref:</strong> <span class="xref">Ch 1: Roofline</span> <span class="xref">Ch 3B: GPU roadmap</span> <span class="xref">Ch 4: HBM deep dive</span></div>
+<div class="ch-divider"></div>
+
+<div class="callout green"><strong>How to use this appendix</strong>
+Every number here appears in at least one architecture review or interview. Know the starred ★ values cold — derive them from first principles, not memory. Specifications marked <span class="shipped">[SHIPPED]</span> are from production hardware; <span class="announced">[ANNOUNCED]</span> are vendor-disclosed pre-GA; <span class="roadmap">[ROADMAP]</span> are directional estimates.</div>
+
+<h2 id="sa1">A.1 NVIDIA GPU Generation Comparison <span class="shipped">[SHIPPED]</span></h2>
+<table>
+<tr><th>GPU</th><th>Arch</th><th>Node</th><th>BF16 TFLOPS</th><th>FP8 TFLOPS</th><th>FP4 TFLOPS</th><th>HBM Type</th><th>HBM Cap.</th><th>HBM BW</th><th>NVLink BW</th><th>TDP</th></tr>
+<tr><td><strong>V100 SXM2</strong></td><td>Volta</td><td>12nm</td><td>112</td><td>N/A</td><td>N/A</td><td>HBM2</td><td>32 GB</td><td>900 GB/s</td><td>300 GB/s</td><td>300W</td></tr>
+<tr><td><strong>A100 SXM4</strong></td><td>Ampere</td><td>7nm</td><td>312</td><td>N/A</td><td>N/A</td><td>HBM2e</td><td>80 GB</td><td>2.0 TB/s</td><td>600 GB/s</td><td>400W</td></tr>
+<tr><td class="warn"><strong>H100 SXM5 ★</strong></td><td>Hopper</td><td>4N</td><td class="warn">989</td><td class="warn">1,979</td><td>N/A</td><td>HBM3</td><td>80 GB</td><td class="warn">3.35 TB/s</td><td>900 GB/s</td><td>700W</td></tr>
+<tr><td><strong>H200 SXM5</strong></td><td>Hopper</td><td>4N</td><td>989</td><td>1,979</td><td>N/A</td><td>HBM3e</td><td class="good">141 GB</td><td class="good">4.8 TB/s</td><td>900 GB/s</td><td>700W</td></tr>
+<tr><td><strong>B100 SXM</strong></td><td>Blackwell</td><td>4NP</td><td>1,800</td><td>3,500</td><td>7,000</td><td>HBM3e</td><td>192 GB</td><td>8.0 TB/s</td><td>1,800 GB/s</td><td>700W</td></tr>
+<tr><td><strong>B200 SXM</strong></td><td>Blackwell</td><td>4NP</td><td class="good">2,250</td><td class="good">4,500</td><td class="good">9,000</td><td>HBM3e</td><td>192 GB</td><td class="good">8.0 TB/s</td><td>1,800 GB/s</td><td>1,000W</td></tr>
+<tr><td><strong>GB200 NVL72</strong></td><td>Blackwell</td><td>4NP</td><td>2,250/GPU</td><td>4,500/GPU</td><td>9,000/GPU</td><td>HBM3e</td><td>192 GB/GPU</td><td>8.0 TB/s</td><td class="good">130 TB/s rack</td><td>1,000W/GPU</td></tr>
+<tr><td><strong>GB300 NVL72</strong> <span class="roadmap">[ROADMAP]</span></td><td>Blk Ultra</td><td>3nm est.</td><td>~2,800</td><td>~6,000</td><td>~12,000</td><td>HBM4</td><td>288 GB</td><td>12.0 TB/s</td><td>130+ TB/s</td><td>~1,400W</td></tr>
+</table>
+
+<h2 id="sa2">A.2 AMD GPU Comparison <span class="shipped">[SHIPPED]</span></h2>
+<table>
+<tr><th>GPU</th><th>Arch</th><th>BF16 TFLOPS</th><th>FP8 TFLOPS</th><th>HBM Type</th><th>HBM Cap.</th><th>HBM BW</th><th>Fabric BW</th><th>TDP</th><th>Unique Advantage</th></tr>
+<tr><td><strong>MI250X</strong></td><td>CDNA 2</td><td>383</td><td>N/A</td><td>HBM2e</td><td>128 GB</td><td>3.28 TB/s</td><td>800 GB/s</td><td>500W</td><td>Dual-die, large memory</td></tr>
+<tr><td class="warn"><strong>MI300X ★</strong></td><td>CDNA 3</td><td class="warn">1,307</td><td>~2,614</td><td>HBM3</td><td class="good">192 GB</td><td class="good">5.3 TB/s</td><td>896 GB/s</td><td>750W</td><td>Single-GPU 70B BF16 serving</td></tr>
+<tr><td><strong>MI325X</strong> <span class="announced">[ANNOUNCED]</span></td><td>CDNA 3+</td><td>1,307</td><td>~2,614</td><td>HBM3e</td><td class="good">256 GB</td><td class="good">6.0 TB/s</td><td>896 GB/s</td><td>~1,000W</td><td>256 GB — largest available</td></tr>
+<tr><td><strong>MI355X</strong> <span class="announced">[ANNOUNCED]</span></td><td>CDNA 4</td><td>~2,600</td><td>~5,200</td><td>HBM3e</td><td>288 GB</td><td>~8.0 TB/s</td><td>~1,500 GB/s</td><td>~1,400W</td><td>CDNA 4 compute jump</td></tr>
+</table>
+<div class="callout blue"><strong>MI300X memory moat:</strong> 192 GB HBM3 fits LLaMA-3 70B (140 GB BF16) on a single GPU — H100/H200 require TP=2. At 100 serving instances that's 100 GPUs saved: $2.5M capex + $2.6M/year OpEx at $3/GPU-hr.</div>
+
+<h2 id="sa3">A.3 HBM Generation Reference</h2>
+<table>
+<tr><th>Standard</th><th>BW / Stack</th><th>Cap / Stack</th><th>Pin Rate</th><th>Bus Width</th><th>GPU Examples</th></tr>
+<tr><td>HBM2</td><td>256 GB/s</td><td>8–16 GB</td><td>2 Gbps</td><td>1024-bit</td><td>V100, MI100</td></tr>
+<tr><td>HBM2e</td><td>307 GB/s</td><td>16 GB</td><td>3.2 Gbps</td><td>1024-bit</td><td>A100, MI250X</td></tr>
+<tr><td class="warn">HBM3 ★</td><td class="warn">819 GB/s</td><td>16 GB</td><td>6.4 Gbps</td><td>1024-bit</td><td>H100, MI300X</td></tr>
+<tr><td>HBM3e</td><td class="good">~1.2 TB/s</td><td>24 GB</td><td>9.6 Gbps</td><td>1024-bit</td><td>H200, B200, MI325X</td></tr>
+<tr><td>HBM4 <span class="roadmap">[ROADMAP]</span></td><td class="good">~2 TB/s</td><td>32+ GB</td><td>~16 Gbps</td><td>1024-bit+</td><td>GB300, MI400</td></tr>
+</table>
+
+<h2 id="sa4">A.4 Network Interconnect Reference <span class="shipped">[SHIPPED]</span></h2>
+<table>
+<tr><th>Interconnect</th><th>BW (bidirectional)</th><th>Latency</th><th>Scope</th><th>AI Use Case</th><th>Constraint</th></tr>
+<tr><td>NVLink 3.0 (A100)</td><td>600 GB/s</td><td>&lt;1 µs</td><td>8-GPU intra-node</td><td>Tensor Parallelism</td><td>NVSwitch domain</td></tr>
+<tr><td class="warn">NVLink 4.0 (H100) ★</td><td class="warn">900 GB/s</td><td>&lt;1 µs</td><td>8-GPU intra-node</td><td>TP, Sequence Parallelism</td><td>NVSwitch domain only</td></tr>
+<tr><td>NVLink 5.0 (B200)</td><td class="good">1,800 GB/s</td><td>&lt;1 µs</td><td>8-GPU intra-node</td><td>TP, EP, SP</td><td>NVSwitch domain only</td></tr>
+<tr><td>NVLink-C2C (GB200)</td><td class="good">10,000 GB/s</td><td>&lt;1 µs</td><td>CPU↔GPU same chip</td><td>KV transfer, unified memory</td><td>Same superchip only</td></tr>
+<tr><td>NVLink Switch (NVL72)</td><td>130 TB/s (rack total)</td><td>&lt;1 µs</td><td>72-GPU rack</td><td>Full mesh TP/EP</td><td>One rack = one "compute"</td></tr>
+<tr><td>InfiniBand HDR</td><td>50 GB/s/port</td><td>~1 µs</td><td>Inter-node</td><td>PP, DP, AllReduce</td><td>Not suitable for TP</td></tr>
+<tr><td class="warn">InfiniBand NDR ★</td><td class="warn">100 GB/s/port</td><td>~1 µs</td><td>Inter-node</td><td>PP, DP, KV transfer</td><td>Not suitable for TP</td></tr>
+<tr><td>InfiniBand XDR</td><td>200 GB/s/port</td><td>&lt;1 µs</td><td>Inter-node</td><td>Next-gen AllReduce</td><td>Emerging 2025+</td></tr>
+<tr><td>PCIe Gen5 x16</td><td>128 GB/s</td><td>~5 µs</td><td>CPU↔GPU</td><td>Model loading, checkpoints</td><td>26× slower than HBM</td></tr>
+</table>
+<div class="callout red"><strong>TP over InfiniBand is unusable for inference.</strong> TP=8 AllReduce, 70B model, 80 layers, 0.5 GB per AllReduce: NVLink (900 GB/s) = 44ms overhead; IB NDR (50 GB/s) = 800ms overhead. TP must stay within the NVSwitch domain — non-negotiable.</div>
+
+<h2 id="sa5">A.5 Key Capacity Planning Formulas ★</h2>
+<div class="formula">MODEL PARAMETER MEMORY:
+  model_bytes = N_params × bytes_per_param
+  LLaMA-3 70B  BF16:  70×10⁹ × 2    = 140 GB
+  LLaMA-3 70B  FP8:   70×10⁹ × 1    =  70 GB
+  LLaMA-3 70B  INT4:  70×10⁹ × 0.5  =  35 GB
+  LLaMA-3 405B BF16: 405×10⁹ × 2    = 810 GB  (requires TP=8 on H100, or 5× MI300X)
+
+KV CACHE MEMORY (per request):
+  KV_bytes = 2 × L × H_kv × d_head × S × bytes_per_elem
+  LLaMA-3 70B (L=80, H_kv=8, d_head=128, S=4096, BF16):
+    = 2 × 80 × 8 × 128 × 4096 × 2 = 5.37 GB per concurrent request
+  Per token per layer: 2 × H_kv × d_head × 2 = 2×8×128×2 = 4 KB
+
+TPOT MINIMUM (bandwidth-limited, batch=1):
+  TPOT_min = model_bytes / HBM_bandwidth
+  H100 BF16:   140 GB / 3.35 TB/s  = 41.8 ms ★
+  H200 BF16:   140 GB / 4.8 TB/s   = 29.2 ms
+  B200 BF16:   140 GB / 8.0 TB/s   = 17.5 ms
+  MI300X BF16: 140 GB / 5.3 TB/s   = 26.4 ms
+  H100 INT4:    35 GB / 3.35 TB/s  = 10.4 ms  (4× speedup from quantization)
+
+PREFILL FLOPS (rule of thumb):
+  FLOPs_prefill ≈ 2 × N_params × S (sequence length)
+  LLaMA-3 70B, S=2048: 2 × 70×10⁹ × 2048 = 286 TFLOP
+  On H100 (989 TFLOPS, 50% MFU): 286 / (989 × 0.5) = 578 ms
+
+MFU:
+  MFU = (FLOPs_per_step × steps/s) / Peak_TFLOPS
+  World-class: >55% | Good: 40–55% | Poor: <25% | Critical: <10%
+
+ALLREDUCE TIME (ring algorithm):
+  t = 2 × (N−1)/N × M / BW   [M = message bytes, N = GPUs, BW = link BW]
+  TP=8, M=256 MB, NVLink=900 GB/s:  t = 2×(7/8)×256e6/900e9 = 0.50 ms
+
+FLEET SIZING:
+  raw_GPUs = peak_tok/s / (1000/TPOT_ms × batch_at_SLA)
+  total_GPUs = raw_GPUs / 0.75 × 1.20   (75% util target, 20% burst headroom)</div>
+
+<h2 id="sa6">A.6 Parallelism Quick Reference</h2>
+<table>
+<tr><th>Strategy</th><th>What is Sharded</th><th>Comm Pattern</th><th>BW Required</th><th>Scale Limit</th><th>Best For</th></tr>
+<tr><td><strong>Data Parallelism (DP)</strong></td><td>Gradients only</td><td>AllReduce</td><td>IB acceptable</td><td>Model fits 1 GPU</td><td>High throughput training</td></tr>
+<tr><td><strong>ZeRO-1</strong></td><td>Optimizer states</td><td>AllGather before fwd</td><td>IB acceptable</td><td>Low comm overhead</td><td>Optimizer memory relief</td></tr>
+<tr><td><strong>ZeRO-3 / FSDP</strong></td><td>Weights + optimizer + grads</td><td>AllGather + ReduceScatter</td><td>IB acceptable (3× comm)</td><td>Heaviest comm</td><td>Largest models, memory tight</td></tr>
+<tr><td><strong>Tensor Parallelism (TP)</strong></td><td>Weight matrices</td><td>AllReduce per layer</td><td class="bad">NVLink mandatory</td><td>NVSwitch domain (≤8)</td><td>Inference latency, very large</td></tr>
+<tr><td><strong>Pipeline Parallelism (PP)</strong></td><td>Layers across stages</td><td>P2P activations</td><td>IB acceptable</td><td>Bubble = (PP−1)/(PP+M−1)</td><td>Cross-node training scale</td></tr>
+<tr><td><strong>Sequence Parallelism (SP)</strong></td><td>Sequence dim activations</td><td>AllGather + ReduceScatter</td><td>NVLink preferred</td><td>Requires TP</td><td>Long context training</td></tr>
+<tr><td><strong>Expert Parallelism (EP)</strong></td><td>MoE expert weights</td><td>All-to-All tokens</td><td>IB+ acceptable</td><td>Load balance critical</td><td>MoE at scale</td></tr>
+</table>
+
+<h2 id="sa7">A.7 Numerical Precision Reference</h2>
+<table>
+<tr><th>Format</th><th>Bits</th><th>Exp</th><th>Mantissa</th><th>Range</th><th>GPU Support</th><th>Typical Use</th></tr>
+<tr><td><strong>FP32</strong></td><td>32</td><td>8</td><td>23</td><td>±3.4×10³⁸</td><td>All</td><td>Optimizer states, loss scaling accumulator</td></tr>
+<tr><td><strong>BF16 ★</strong></td><td>16</td><td>8</td><td>7</td><td>±3.4×10³⁸</td><td>A100+</td><td>Training activations + weights (default)</td></tr>
+<tr><td><strong>FP16</strong></td><td>16</td><td>5</td><td>10</td><td>±65,504</td><td>V100+</td><td>Legacy training; loss scaling required</td></tr>
+<tr><td><strong>FP8 E4M3 ★</strong></td><td>8</td><td>4</td><td>3</td><td>±448</td><td>H100+</td><td>Forward pass weights + activations</td></tr>
+<tr><td><strong>FP8 E5M2</strong></td><td>8</td><td>5</td><td>2</td><td>±57,344</td><td>H100+</td><td>Backward pass gradients</td></tr>
+<tr><td><strong>INT8</strong></td><td>8</td><td>—</td><td>—</td><td>−128 to 127</td><td>All</td><td>LLM.int8(), SmoothQuant inference</td></tr>
+<tr><td><strong>INT4 / GPTQ</strong></td><td>4</td><td>—</td><td>—</td><td>−8 to 7</td><td>All</td><td>Memory-limited inference, AWQ</td></tr>
+<tr><td><strong>NVFP4</strong> <span class="shipped">[SHIPPED]</span></td><td>4</td><td>2</td><td>1</td><td>block-scaled</td><td>B200+</td><td>Blackwell-native training + inference</td></tr>
+</table>
+
+<h2 id="sa8">A.8 The 30 Numbers Every Principal Knows Cold ★</h2>
+<div class="formula">COMPUTE:
+  H100 BF16:     989 TFLOPS    H100 FP8:     1,979 TFLOPS
+  H200 BF16:     989 TFLOPS    B200 FP8:     4,500 TFLOPS   B200 FP4: 9,000 TFLOPS
+  MI300X BF16: 1,307 TFLOPS    GB300 FP4: ~12,000 TFLOPS [ROADMAP]
+
+HBM CAPACITY AND BANDWIDTH:
+  H100:    80 GB  | 3.35 TB/s ★    H200:   141 GB | 4.8 TB/s
+  B200:   192 GB  | 8.0 TB/s       MI300X: 192 GB | 5.3 TB/s ★
+  GB300:  288 GB  | 12.0 TB/s [ROADMAP]
+
+RIDGE POINTS (FLOP/byte, the regime boundary):
+  A100: 156    H100: 295 ★    H200: 206    B200: ~281    MI300X: 247
+
+INTERCONNECT:
+  NVLink 4.0 (H100):    900 GB/s ★    NVLink 5.0 (B200):  1,800 GB/s
+  NVLink-C2C (GB200): 10,000 GB/s     IB NDR (per port):     50 GB/s ★
+  PCIe Gen5 x16:          64 GB/s (one-way GPU↔CPU)
+
+MODEL MEMORY — LLAMA-3 70B:
+  BF16: 140 GB ★  FP8: 70 GB  INT4: 35 GB
+  Single-GPU fit (BF16): MI300X only ★ (192 GB vs 140 GB needed)
+  LLaMA-3 405B BF16: 810 GB → min TP=8 on H100 (640 GB total)
+
+TPOT MINIMUMS — LLAMA-3 70B, batch=1:
+  H100 BF16: 41.8 ms ★    H200 BF16: 29.2 ms
+  MI300X:    26.4 ms       B200:       17.5 ms
+  H100 INT4: 10.4 ms ★ (4× speedup from quantization alone)
+
+KV CACHE — LLAMA-3 70B, GQA, 4K context, BF16:
+  Per request: 5.37 GB ★    Per token per layer: 4 KB
+
+PRODUCTION THRESHOLDS:
+  Max GPU utilization:   80% ★    Max KV cache:      80% ★
+  MFU world-class:      >55%      MFU poor:          <25%
+  P99/P50 TTFT alarm:   >5× ★     Queue time alarm:  >200ms P99
+  SDC rate (10K H100): ~1/2 weeks  Continuous batch gain: 10–30×</div>
+
+<h2 id="sa9">A.9 Roofline Ridge Points by GPU and Precision</h2>
+<table>
+<tr><th>GPU</th><th>BF16 Ridge</th><th>FP8 Ridge</th><th>HBM BW</th><th>Key Implication</th></tr>
+<tr><td>V100</td><td>124 FLOP/byte</td><td>N/A</td><td>900 GB/s</td><td>Most transformers compute-bound (low ridge)</td></tr>
+<tr><td>A100</td><td>156 FLOP/byte</td><td>N/A</td><td>2.0 TB/s</td><td>Large GEMM still compute-bound</td></tr>
+<tr><td class="warn">H100 ★</td><td class="warn">295 FLOP/byte</td><td>590 FLOP/byte</td><td>3.35 TB/s</td><td>Many ops now memory-bound vs V100</td></tr>
+<tr><td>H200</td><td>206 FLOP/byte</td><td>412 FLOP/byte</td><td>4.8 TB/s</td><td>Lower ridge — BW-rich, compute same</td></tr>
+<tr><td>B200</td><td>~281 FLOP/byte</td><td>~562 FLOP/byte</td><td>8.0 TB/s</td><td>Higher compute + higher BW</td></tr>
+<tr><td class="warn">MI300X ★</td><td>247 FLOP/byte</td><td>~493 FLOP/byte</td><td>5.3 TB/s</td><td>Lower ridge than H100 — bandwidth-rich</td></tr>
+</table>
+<div class="callout"><strong>H200 insight:</strong> H200 has a LOWER ridge (206) than H100 (295) despite identical TFLOPS — because HBM bandwidth increased without adding compute. Ops that are just barely compute-bound on H100 may become memory-bound on H200. Re-classify every kernel's regime at each GPU generation transition.</div>
+
+<h2 id="sa10">A.10 MFU Reference Table</h2>
+<table>
+<tr><th>Workload</th><th>Model</th><th>GPU</th><th>MFU Range</th><th>Notes</th></tr>
+<tr><td>LLM Pretraining (well-tuned)</td><td>LLaMA-3 70B</td><td>H100</td><td class="good">45–52%</td><td>Megatron-LM, 4D parallel</td></tr>
+<tr><td>LLM Pretraining</td><td>GPT-4 class TP=8 PP=16</td><td>H100</td><td class="warn">40–48%</td><td>NVIDIA MLPerf Training</td></tr>
+<tr><td>Inference Prefill (TRT-LLM)</td><td>LLaMA-3 70B, FP8, batch=32</td><td>H100</td><td class="good">50–65%</td><td>Compute-bound at large batch</td></tr>
+<tr><td>Inference Decode (batch=1)</td><td>LLaMA-3 70B, BF16</td><td>H100</td><td class="bad">3–8%</td><td>Bandwidth floor — expected and correct</td></tr>
+<tr><td>Inference Decode (batch=64)</td><td>LLaMA-3 70B, BF16</td><td>H100</td><td class="warn">30–45%</td><td>Approaching ridge point</td></tr>
+<tr><td>RLHF / PPO</td><td>70B policy + 70B reward</td><td>H100</td><td class="bad">15–30%</td><td>Memory constraints limit batch</td></tr>
+<tr><td>Fine-tuning (LoRA r=64)</td><td>7B</td><td>A100</td><td class="warn">25–40%</td><td>Small batch, frequent I/O</td></tr>
+</table>
+
+<div class="callout navy" style="margin-top:32px">
+  <strong>Cross-References</strong><br><br>
+  <span class="xref">Ch 1</span> Roofline model and three performance regimes — the ridge point numbers in §A.9 derive from Ch 1 §1.4 formulas.<br><br>
+  <span class="xref">Ch 3 / Ch 3B</span> GPU silicon architecture and generation roadmap — specs in §A.1 match Ch 3B's detailed generation analysis.<br><br>
+  <span class="xref">Ch 4</span> HBM deep dive — §A.3 HBM generations connect to Ch 4's physical analysis of HBM3 TSV stacks and 1024-bit bus.<br><br>
+  <span class="xref">App D</span> All formulas in §A.5 are reproduced with full derivations in Appendix D Performance Formulas.
+</div>
+<div class="ch-end">Appendix A Complete &nbsp;·&nbsp; AI/ML Infrastructure from Silicon to Scale &nbsp;·&nbsp; Venkat Vinjam &nbsp;·&nbsp; 2026</div>
+</div>
+</body>
+</html>

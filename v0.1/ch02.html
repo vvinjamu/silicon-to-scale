@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Transformer Architecture: A Performance Engineer's Deep Dive | AI/ML Infrastructure from Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
+.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
+.mem-tier-body{flex:1}
+.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
+.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+.fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+
+.takeaways{background:#f3f5f8;border:2px solid #1c2438;border-radius:9px;padding:18px 22px;margin:32px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.takeaways h3{color:#1c2438;margin:0 0 14px;font-size:15px;border:none;padding:0}
+.takeaway-group{margin-bottom:14px}.takeaway-group:last-child{margin-bottom:0}
+.tg-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#e3b341;margin-bottom:6px}
+.takeaway-group ul{margin-left:16px}.takeaway-group li{font-size:12.5px;margin-bottom:4px;color:#222}
+.review-questions{margin-top:36px}
+.review-questions h3{font-size:16px;color:#1c2438;margin-bottom:16px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+.rq-tier{border-radius:8px;padding:14px 18px;margin-bottom:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rq-tier.foundational{background:#e8fff0;border-left:5px solid #27ae60}
+.rq-tier.intermediate{background:#fffbf0;border-left:5px solid #e3b341}
+.rq-tier.principal{background:#f0f0ff;border-left:5px solid #7b2d8b}
+.rq-tier-label{font-family:sans-serif;font-size:10px;color:#555;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.rq-badge{font-weight:700;font-size:9px;padding:2px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.foundational .rq-badge{background:#27ae60;color:#fff}
+.intermediate .rq-badge{background:#e3b341;color:#1c2438}
+.principal .rq-badge{background:#7b2d8b;color:#fff}
+.rq-tier ol{margin-left:18px}
+.rq-tier li{margin-bottom:10px;font-size:12.5px;line-height:1.7;color:#222}
+.objectives{background:#f0f6ff;border:1px solid #c5cfe0;border-radius:8px;padding:14px 18px;margin:18px 0}
+.objectives h4{color:#2a4a8a;margin:0 0 8px;font-style:normal;font-size:13px}
+.objectives ul{margin-left:16px}.objectives li{font-size:12px;margin-bottom:3px;color:#333}
+.worked{background:#fff8e0;border:1px solid #e3b341;border-radius:8px;padding:14px 18px;margin:16px 0}
+.worked h4{color:#856404;margin:0 0 8px;font-style:normal;font-size:13px}
+.diag-cookbook{background:#f8f6f0;border:1px solid #d8d4c8;border-radius:8px;padding:14px 18px;margin:16px 0}
+.diag-cookbook h4{color:#1a3060;margin:0 0 8px;font-style:normal;font-size:13px}
+.shipped{display:inline-block;background:#d4edda;color:#155724;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px}
+.announced{display:inline-block;background:#fff3cd;color:#856404;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px}
+.roadmap{display:inline-block;background:#e2d9f3;color:#4a0e8f;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px}
+</style>
+</head>
+<body>
+<div id="nav"><b>Silicon to Scale</b><a class="home" href="index.html">⌂ Index</a><a href="ch01.html">← Ch 1</a><a href="ch03.html">Ch 3 →</a><a href="ch04.html">Ch 4</a><a href="ch06.html">Ch 6</a><a href="ch11.html">Ch 11</a></div>
+<div id="sidebar"><h4>Chapter 2</h4>
+  <a href="#s21">2.1 Why Engineers Must Know Transformers</a>
+  <a href="#s22">2.2 Attention as Matrix Multiply</a>
+  <a href="#s23">2.3 Multi-Head Attention</a>
+  <a href="#s24">2.4 Attention Visualization</a>
+  <a href="#s25">2.5 RMSNorm vs LayerNorm</a>
+  <a href="#s26">2.6 RoPE and Positional Encoding</a>
+  <a href="#s27">2.7 FFN and Activation Bottleneck</a>
+  <a href="#s28">2.8 Complete FLOP Budget</a>
+  <a href="#s29">2.9 Decoder vs Encoder-Decoder</a>
+  <a href="#s210">2.10 GQA, MQA, MLA, MoE</a>
+  <a href="#diagrams">Diagrams</a>
+  <a href="#takeaways">Key Takeaways</a>
+  <a href="#review">Review Questions</a>
+</div>
+<div class="page">
+<div class="ch-label">Part I · Chapter 2</div>
+<h1 class="ch-title">Transformer Architecture: A Performance Engineer's Deep Dive</h1>
+<div class="ch-subtitle">Attention, normalization, positional encoding — seen as memory and compute problems</div>
+<div class="ch-meta"><strong>Book:</strong> AI/ML Infrastructure from Silicon to Scale &nbsp;|&nbsp; <strong>Author:</strong> Venkat Vinjam &nbsp;|&nbsp; <strong>Cross-ref:</strong> <span class="xref">Ch 4: FlashAttention</span> <span class="xref">Ch 6: KV cache serving</span> <span class="xref">Ch 11: KV paging</span></div>
+<div class="ch-divider"></div>
+
+<blockquote>"The transformer is not an algorithm. It is a data movement problem wearing an algorithm's clothes. Every optimization in LLM infrastructure is an optimization for how we move Q, K, V, and the weight matrices through the memory hierarchy."
+<cite>— Performance Engineering Perspective</cite></blockquote>
+
+<p>A performance engineer who cannot derive the FLOP and memory budget of a transformer forward pass from the model config cannot make informed decisions about hardware, batching strategy, parallelism, or quantization. This chapter gives you that derivation — every formula derived from first principles, verified with LLaMA-3 70B numbers that you can check against the published model card.</p>
+
+<div class="objectives"><h4>Learning Objectives</h4>
+<ul>
+<li><strong>Level 1:</strong> Explain what attention is doing computationally and why transformers replaced RNNs for language modeling</li>
+<li><strong>Level 2:</strong> Compute exact FLOPs and memory for any transformer configuration; classify each operation by arithmetic intensity and regime</li>
+<li><strong>Level 3:</strong> Reason about architecture choices (GQA vs MHA, MLA vs GQA, MoE sparsity) as infrastructure engineering decisions with quantified cost consequences</li>
+</ul></div>
+
+<h2 id="s21">2.1 Why Performance Engineers Must Understand Transformers</h2>
+<p>Every GPU workload in modern AI is a transformer workload. The model config — layers, hidden dim, heads, FFN multiplier, vocab size, sequence length, attention variant — directly and quantifiably determines hardware requirements. You cannot right-size a cluster, choose a quantization format, set a tensor parallelism degree, or engineer an SLA without being able to derive these numbers from first principles.</p>
+
+<div class="callout navy"><strong>What you must be able to derive from a model card:</strong> (1) total parameter count and memory in any precision, (2) FLOPs per token for prefill vs decode, (3) KV cache bytes per token per request, (4) arithmetic intensity of each operation class, (5) which operations are compute- vs memory-bound at each batch size — before running a single experiment.</div>
+
+<h2 id="s22">2.2 Attention as Matrix Multiplication: The FLOP and Memory Breakdown</h2>
+<p>Scaled dot-product attention computes: <strong>Attention(Q, K, V) = softmax(QK<sup>T</sup> / √d_k) × V</strong>. For a performance engineer, this is two matrix multiplies (QK<sup>T</sup> and Attn×V) separated by a softmax with specific memory access patterns.</p>
+
+<div class="formula">ATTENTION FLOP ANALYSIS — single head, single layer:
+  S = sequence length, d = head dimension = d_model / H_q
+
+  QK^T product:   2 × S × d × S  = 2S²d   FLOPs  (outer product)
+  Softmax:        ~5 × S²         FLOPs  (≈1% of total — negligible vs GEMM)
+  AV product:     2 × S × S × d  = 2S²d   FLOPs
+
+  Total per head: 4S²d FLOPs  (ignoring softmax)
+  
+  HBM memory traffic (standard attention, BF16):
+    Reads:   Q(S×d) + K(S×d) + P(S×S) + V(S×d) = 4Sd + S²  × 2 bytes
+    Writes:  S(S×S) + P(S×S) + O(S×d)           = 2S² + Sd  × 2 bytes
+    Total:   (4Sd + 3S²) × 2 bytes   ← the S² term is what kills standard attention
+
+  Arithmetic Intensity (per head, S=512, d=128):
+    AI = 4S²d / ((4Sd + 3S²) × 2) ≈ 4S²d / (6S² × 2) = d/3 = 43 FLOP/byte
+    → Memory-bound on H100 (ridge = 295)
+    
+  At S=4096:  AI ≈ d/3 = 43 FLOP/byte  (still memory-bound — S cancels!)
+  Key insight: standard attention is always memory-bound due to the N² matrix.
+  FlashAttention eliminates the N² HBM traffic entirely. (→ Ch 4 §4.8)</div>
+
+<h2 id="s23">2.3 Multi-Head Attention: Parallelism and KV Cache</h2>
+<div class="formula">MULTI-HEAD ATTENTION QKV PROJECTION FLOPs (LLaMA-3 70B):
+
+Config: d_model=8192, H_q=64 heads, H_kv=8 (GQA), d_head=128
+
+Q projection:  2 × d_model × H_q × d_head  = 2 × 8192 × 64 × 128 = 134.2M FLOPs
+K projection:  2 × d_model × H_kv × d_head = 2 × 8192 × 8 × 128  =  16.8M FLOPs
+V projection:  same as K                                            =  16.8M FLOPs
+Output proj:   2 × d_model × H_q × d_head  = 2 × 8192 × 8192      = 134.2M FLOPs
+Total QKV+O:   302.0M FLOPs per token per layer
+
+KV CACHE MEMORY (the serving cost that persists across tokens):
+  Per token per layer (BF16):
+    2 (K+V) × H_kv × d_head × 2 bytes = 2 × 8 × 128 × 2 = 4,096 bytes = 4 KB/token/layer
+  
+  Full model (L=80 layers, S=4096 ctx, BF16):
+    KV_bytes = 2 × L × H_kv × d_head × S × 2
+             = 2 × 80 × 8 × 128 × 4096 × 2 = 5.37 GB per request
+
+  On H100 (80 GB HBM), 10 GB for weights, 10 GB for activations:
+    Available for KV: 60 GB / 5.37 GB = ~11 concurrent 4K requests (BF16)
+    INT8 KV: 2.7 GB/request → 22 concurrent requests (2× more serving capacity)</div>
+
+<div class="diagram-wrap" id="diagrams">
+<svg viewBox="0 0 720 280" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="280" fill="#fff"/>
+  <text x="360" y="22" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#1c2438">Transformer Layer — Data Flow &amp; Memory</text>
+  <!-- Input -->
+  <rect x="30" y="40" width="100" height="40" rx="5" fill="#1c2438"/>
+  <text x="80" y="64" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#fff">Input x_l</text>
+  <text x="80" y="76" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#e3b341">[B,S,d_model]</text>
+  <!-- RMSNorm -->
+  <rect x="160" y="40" width="100" height="40" rx="5" fill="#2a6099"/>
+  <text x="210" y="57" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#fff">RMSNorm</text>
+  <text x="210" y="70" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#b8ddf0">AI≈1.25 (BW-bound)</text>
+  <line x1="130" y1="60" x2="160" y2="60" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <!-- QKV -->
+  <rect x="290" y="40" width="100" height="40" rx="5" fill="#27ae60"/>
+  <text x="340" y="57" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#fff">QKV Proj</text>
+  <text x="340" y="70" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#d4edda">167.8M FLOPs</text>
+  <line x1="260" y1="60" x2="290" y2="60" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <!-- FlashAttn -->
+  <rect x="420" y="40" width="110" height="40" rx="5" fill="#856404"/>
+  <text x="475" y="57" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#fff">FlashAttn v3</text>
+  <text x="475" y="70" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff3cd">No N² HBM write</text>
+  <line x1="390" y1="60" x2="420" y2="60" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <!-- Out Proj -->
+  <rect x="560" y="40" width="100" height="40" rx="5" fill="#1c2438"/>
+  <text x="610" y="57" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#fff">Out Proj</text>
+  <text x="610" y="70" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#e3b341">134.2M FLOPs</text>
+  <line x1="530" y1="60" x2="560" y2="60" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <!-- Residual -->
+  <line x1="30" y1="85" x2="30" y2="130" stroke="#e3b341" stroke-width="2" stroke-dasharray="4,2"/>
+  <line x1="30" y1="130" x2="610" y2="130" stroke="#e3b341" stroke-width="2" stroke-dasharray="4,2"/>
+  <text x="320" y="126" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#e3b341">Residual connection</text>
+  <!-- FFN block -->
+  <rect x="160" y="150" width="400" height="60" rx="5" fill="#f5f3ec" stroke="#d8d4c8"/>
+  <text x="360" y="172" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#1c2438">Feed-Forward Network (SwiGLU)</text>
+  <text x="360" y="188" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">gate = SiLU(x × W_gate) &nbsp;·&nbsp; up = x × W_up &nbsp;·&nbsp; out = (gate ⊗ up) × W_down</text>
+  <text x="360" y="202" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#856404">16 × S × d_model² FLOPs per layer (83% of total at decode batch=1)</text>
+  <!-- KV cache callout -->
+  <rect x="420" y="100" width="160" height="42" rx="4" fill="#fff8e0" stroke="#e3b341"/>
+  <text x="500" y="115" text-anchor="middle" font-family="sans-serif" font-size="8.5" font-weight="700" fill="#856404">KV Cache (LLaMA-3 70B)</text>
+  <text x="500" y="127" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">4 KB/token/layer · 5.37 GB/req</text>
+  <text x="500" y="138" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">at 4K context, BF16</text>
+  <line x1="475" y1="80" x2="480" y2="100" stroke="#e3b341" stroke-width="1.2" stroke-dasharray="3,2"/>
+  <!-- Arrow marker -->
+  <defs><marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#555"/></marker></defs>
+  <text x="360" y="240" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#888">Figure 2.1 — One transformer layer data flow. FFN dominates at 83% of decode FLOPs. KV cache shown as per-request HBM cost.</text>
+</svg>
+<figcaption>Figure 2.1 — Transformer layer anatomy. At decode batch=1, the FFN accounts for 83% of FLOPs and all operations are memory-bandwidth-bound. At large batch prefill, the large GEMM operations become compute-bound.</figcaption>
+</div>
+
+<h2 id="s25">2.5 RMSNorm vs. LayerNorm</h2>
+<div class="formula">LAYERNORM vs. RMSNORM:
+
+LayerNorm: y = ((x - μ) / σ) × γ + β
+  μ = mean(x), σ = std(x) — requires 2 passes over data
+  FLOPs/element: ~8 (mean, variance, subtract, divide, scale, shift)
+  Memory AI: ~1.5 FLOP/byte → memory-bound
+
+RMSNorm (LLaMA, Mistral, Qwen — modern standard):
+  y = x / RMS(x) × γ,   where RMS(x) = √(mean(x²))
+  FLOPs/element: ~5 (square, mean, sqrt, divide, scale) — no mean subtraction
+  Memory AI: ~1.25 FLOP/byte → memory-bound
+
+WHY RMSNorm won in production:
+  1. 40% fewer FLOPs — measurable at 80-layer models, 10K tokens/s serving
+  2. Simpler gradient: no mean subtraction → cleaner backward pass
+  3. Empirically: negligible quality difference on modern LLMs at scale
+  
+PRODUCTION IMPLICATION:
+  Both are deeply memory-bound (AI < 2). Standalone, they waste 99%+ of
+  compute. Solution: ALWAYS fuse with adjacent GEMM or elementwise op.
+  Unfused RMSNorm at 10B tokens/day costs ~12 GB/s of wasted HBM BW — trivial
+  individually but adds up across 80 layers × 10,000 requests/sec.</div>
+
+<h2 id="s26">2.6 Positional Encoding: RoPE and Context Length</h2>
+<table>
+  <tr><th>Method</th><th>Used By</th><th>Context Extrapolation</th><th>FLOPs</th><th>Production Status</th></tr>
+  <tr><td>Learned absolute</td><td>GPT-2, BERT</td><td>Hard limit at training length</td><td>Zero</td><td>Legacy — not used in new models</td></tr>
+  <tr><td>RoPE</td><td>LLaMA, Mistral, Gemma, Qwen</td><td>Good with YaRN/LongRoPE (2–4×)</td><td>~2% of attention FLOPs</td><td>Production standard [SHIPPED]</td></tr>
+  <tr><td>ALiBi</td><td>MPT, BLOOM</td><td>Excellent linear decay bias</td><td>Minimal</td><td>Declining — RoPE preferred</td></tr>
+</table>
+<p>RoPE (Rotary Position Embedding) encodes position by rotating Q and K vectors in pairs of dimensions. The rotation matrix R_m for position m is applied as Q_m = R_m × Q, K_n = R_n × K. The inner product QK<sup>T</sup> then depends only on relative position (m−n), giving the model positional information without absolute embeddings. YaRN and LongRoPE extend the effective context window by 2–4× beyond training length by modifying the interpolation of rotation frequencies.</p>
+
+<h2 id="s27">2.7 Feed-Forward Networks and the Activation Bottleneck</h2>
+<div class="formula">FFN FLOP COMPARISON (LLaMA-3 70B, d_model=8192, d_ffn=28,672):
+
+Standard FFN (GPT-style):     FFN(x) = max(0, xW₁ + b₁)W₂ + b₂
+  W₁: [d_model × d_ffn],  W₂: [d_ffn × d_model]
+  FLOPs: 2 × 2 × S × d_model × d_ffn = 2 × 2 × S × 8192 × 32768 ≈ not used in LLaMA
+
+SwiGLU FFN (LLaMA-3 standard): FFN(x) = (SiLU(xW_gate) ⊗ xW_up) × W_down
+  Three matrices: W_gate, W_up ∈ [d_model × d_ffn], W_down ∈ [d_ffn × d_model]
+  FLOPs: 3 × 2 × S × d_model × d_ffn = 3 × 2 × S × 8192 × 28,672
+
+Per token per layer:
+  FFN FLOPs = 3 × 2 × 1 × 8192 × 28,672 = 1,409 M FLOPs [SHIPPED derivation]
+  QKV+O FLOPs (from §2.3)             =   302 M FLOPs
+  Attention score FLOPs (at S=1):      =     0.13 M FLOPs (negligible)
+  
+  FFN fraction at decode S=1: 1409 / (1409 + 302) = 82.4%
+  FFN fraction at prefill S=4096: 1409 / (1409 + 302 + 67) = 79%
+
+→ The FFN is the dominant compute consumer at decode (83%) and prefill (79%).
+  Quantizing FFN weights delivers the highest bandwidth reduction per bit.
+  INT4 FFN: 4× less weight bytes → 4× faster decode (bandwidth-bound).</div>
+
+<h2 id="s28">2.8 Complete FLOP Budget — LLaMA-3 70B</h2>
+<div class="formula">FULL TRANSFORMER LAYER FLOP FORMULA:
+  Per-layer FLOPs = QKV_proj + Attn_score + Output_proj + FFN
+  
+  LLaMA-3 70B per token per layer:
+    Q proj:           134.2 M FLOPs (2 × 8192 × 8192)
+    K proj:            16.8 M FLOPs (2 × 8192 × 1024, GQA H_kv=8)
+    V proj:            16.8 M FLOPs
+    Attn score (S=1):   0.13M FLOPs (negligible at decode)
+    Output proj:       134.2 M FLOPs
+    FFN SwiGLU:      1,409.3 M FLOPs (3 × 2 × 8192 × 28672)
+    ──────────────────────────────────────────────────────────
+    Total/layer:     1,711.4 M FLOPs ≈ 1.71 GFLOP per token per layer
+    Total (L=80):    80 × 1.71 = 136.9 GFLOP per token (full forward pass)
+
+  TPOT lower bound (batch=1, H100 989 TFLOPS, 100% MFU):
+    136.9 GFLOP / 989,000 GFLOP/s = 0.138 ms minimum (compute floor)
+    BUT: model weights = 140 GB BF16, bandwidth = 3.35 TB/s
+    Loading time: 140 GB / 3.35 TB/s = 41.8 ms minimum (bandwidth floor!)
+    
+  The bandwidth floor (41.8ms) is 303× higher than the compute floor (0.138ms).
+  Decode is never compute-limited. It is always bandwidth-limited at any batch
+  size below the arithmetic intensity ridge point (batch ≈ 295 for H100).</div>
+
+<h2 id="s29">2.9 Decoder-Only vs. Encoder-Decoder</h2>
+<table>
+  <tr><th>Property</th><th>Encoder-Decoder (T5, BART)</th><th>Decoder-Only (GPT, LLaMA, Claude)</th></tr>
+  <tr><td>Use case</td><td>Fixed-length output tasks (translation, summarization)</td><td>Open-ended generation — the dominant paradigm</td></tr>
+  <tr><td>KV cache</td><td>Encoder KV computed once; decoder KV grows</td><td>Entire context KV grows with each token</td></tr>
+  <tr><td>Cross-attention</td><td>Yes — decoder attends to encoder output</td><td>No — self-attention only</td></tr>
+  <tr><td>Memory at inference</td><td>O(n_enc + n_dec) — smaller decoder KV</td><td>O(n_total) — all tokens share one KV</td></tr>
+  <tr><td>Industry trend</td><td>Declining for new model development</td><td>Dominant: GPT-4, Claude, Gemini, LLaMA all use</td></tr>
+</table>
+
+<h2 id="s210">2.10 Modern Variants: GQA, MQA, MLA, MoE</h2>
+<div class="formula">KV CACHE REDUCTION VARIANTS:
+
+MHA (Multi-Head Attention, baseline):
+  H_q query heads, H_kv = H_q key-value heads
+  KV bytes/token/layer = 2 × H_kv × d_head × 2 = 2 × 64 × 128 × 2 = 32,768 bytes
+
+GQA (Grouped-Query Attention, LLaMA-3 standard):
+  H_q = 64, H_kv = 8 (GQA ratio R = 8)
+  KV bytes/token/layer = 2 × 8 × 128 × 2 = 4,096 bytes  ← 8× reduction
+  Quality loss: ~0% (empirically verified at 70B+ scale)
+  Production use: LLaMA-3 70B, Mistral, Gemma, Qwen, Falcon
+
+MQA (Multi-Query Attention, extreme):
+  H_q = 64, H_kv = 1
+  KV bytes/token/layer = 2 × 1 × 128 × 2 = 512 bytes  ← 64× reduction
+  Quality loss: ~1–2% on complex reasoning tasks
+  
+MLA (Multi-head Latent Attention, DeepSeek):
+  Compress KV to low-rank latent c_KV ∈ [d_c] (d_c << H_q × d_head)
+  DeepSeek-V3: d_c=512, d_model=7168, H_q=128
+  KV bytes/token/layer ≈ d_c × 2 = 1,024 bytes  ← 32× reduction vs MHA
+  Reconstruction: K,V = c_KV × W_UK, W_UV (GEMM at decode — compute cost)
+  
+MoE (Mixture-of-Experts):
+  N expert FFNs, route each token to K of N (K << N)
+  Mixtral 8×7B: N=8, K=2, d_ffn=14336 per expert
+  Active FLOPs per token: K/N × N × FFN_flops = 2/8 × total = same as dense!
+  Total params: N × FFN + shared = 8 × 7B = 47B params (vs 7B active)
+  Key system cost: All-to-All collective for expert routing (Ch 13)</div>
+
+<div class="takeaways"><h3>Key Takeaways</h3>
+<div class="takeaway-group"><div class="tg-label">Core Concepts</div><ul><li>The FFN consumes 83% of FLOPs at decode (batch=1) and 79% at prefill. This is why FFN weight quantization (INT4/FP8) has the highest bandwidth ROI of any quantization decision.</li><li>KV cache size = 2 × L × H_kv × d_head × S × dtype_bytes. For LLaMA-3 70B at 4K context in BF16: 5.37 GB per concurrent request. GQA (H_kv=8 vs H_q=64) delivers an 8× reduction with negligible quality loss — directly 8× more concurrent users per GPU.</li><li>Decode batch=1 TPOT is always bandwidth-limited, never compute-limited. The H100 bandwidth floor (41.8ms for 70B BF16) is 303× higher than the compute floor (0.14ms). No kernel optimization can help — only quantization (reducing bytes) or batching (increasing arithmetic intensity).</li></ul></div>
+<div class="takeaway-group"><div class="tg-label">Cost &amp; Productivity Impact</div><ul><li>Switching from MHA to GQA (H_kv: 64 → 8) on a 70B model reduces KV cache from 42 GB to 5.4 GB at 4K context. On an 80 GB H100 with 10 GB overhead, this increases max concurrent requests from ~1 to ~11 per GPU — an 11× serving capacity gain.</li><li>INT4 quantization of the FFN weights (70B BF16 → 35 GB) reduces the per-token weight loading from 140 GB to 35 GB, directly delivering 4× TPOT improvement (41.8ms → 10.4ms) at batch=1. The bandwidth floor is the only floor that matters.</li><li>MLA (DeepSeek) reduces KV cache by 32× over MHA but introduces a GEMM at decode time (reconstructing K,V from the latent). This GEMM is compute-bound at batch=1 — adding a new compute cost in exchange for bandwidth savings. The tradeoff breaks even at batch>8 approximately.</li></ul></div>
+<div class="takeaway-group"><div class="tg-label">Principal-Level Insight</div><ul><li>Every architecture choice is an infrastructure engineering decision: MHA vs GQA vs MLA determines serving capacity per GPU. The model team's quality preference must be evaluated against the serving team's GPU cost. A 1% quality improvement that requires 4× more GPUs costs $100K/year in GPU time on a 100-GPU serving cluster.</li><li>MoE routing introduces an All-to-All collective at every FFN layer — absent in dense models. At 8 experts with top-2 routing, 75% of expert compute happens remotely (off the local GPU). The communication overhead of this All-to-All determines whether MoE saves cost or adds it — see Ch 13.</li><li>The quadratic crossover (attention FLOPs exceeding FFN FLOPs) for LLaMA-3 70B occurs at S ≈ 65,000 tokens. Below this, FFN dominates. Only long-context inference (RAG, document processing, code repositories) enters the attention-dominated regime — design your hardware and batching strategy accordingly.</li></ul></div>
+</div><div class="review-questions"><h3>Review Questions</h3>
+<div class="rq-tier foundational"><div class="rq-tier-label"><span class="rq-badge">Foundational</span>Build the mental model — no math required</div><ol><li>In plain language, explain why a transformer with GQA (H_kv=8) can serve more concurrent users than one with MHA (H_kv=64), even though both produce the same output quality at the same sequence length.</li><li>What is the attention 'KV cache', and why does it grow with sequence length during autoregressive decoding? Give a concrete example with numbers for a 70B model at 1000 tokens context.</li><li>Why did RMSNorm replace LayerNorm in modern LLMs? Name two reasons — one computational, one system-level — and explain why both matter for production inference.</li></ol></div>
+<div class="rq-tier intermediate"><div class="rq-tier-label"><span class="rq-badge">Intermediate</span>Apply and calculate — production context</div><ol><li>For LLaMA-3 70B (L=80, d=8192, H_q=64, H_kv=8, d_ffn=28672, BF16) serving 50 concurrent requests at S=2048: (a) Compute total KV cache memory required. (b) An H100 has 80 GB HBM; weights take 140 GB with TP=2, runtime overhead 10 GB. How many H100s are needed to hold weights + KV cache? (c) If you switch to FP8 KV, how many H100s do you need?</li><li>Compute the arithmetic intensity of the FFN down projection (W_down: [28672 × 8192]) at batch=1 vs batch=64, BF16. Which is memory-bound on H100 (ridge 295 FLOP/byte)? At what exact batch size does this operation cross the ridge point?</li><li>A MoE model has 8 experts, top-2 routing, each expert FFN has d_ffn=14336, d_model=7168. (a) Total parameters vs a dense 7B model with d_ffn=14336. (b) Active FLOPs per token vs the dense baseline. (c) What additional communication primitive is required at each FFN layer and what is its volume in bytes at batch=32?</li></ol></div>
+<div class="rq-tier principal"><div class="rq-tier-label"><span class="rq-badge">Principal Level</span>Design, decide, and defend — architecture reviews</div><ol><li>Your team is choosing between GQA (H_kv=8), MQA (H_kv=1), and MLA (d_c=512) for a new 13B model targeting 100K token context length serving. Quantify: (a) KV cache bytes per request at 100K tokens for each variant. (b) Available concurrent requests on a single H100 (80 GB, 26 GB weights). (c) Reconstruction compute cost for MLA at batch=32. Recommend one variant with a quantitative justification.</li><li>Design the serving infrastructure for a 70B MoE model (8 experts, top-2, same architecture as Mixtral) at 10K req/s with average 500-token output, P99 TPOT SLA of 30ms. How many GPUs, what tensor parallelism degree, and what expert placement strategy? Show all calculations and justify each assumption.</li></ol></div>
+</div>
+</div>
+</body>
+</html>

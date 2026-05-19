@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Apple GPU Interview — 5-Session Battle Plan | Venkat Vinjam</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;
+  --blue:#0071e3;--blue2:#1a84ff;--teal:#30bfbf;
+  --gold:#ffd60a;--green:#30d158;--red:#ff453a;--orange:#ff9f0a;
+  --fg:#f5f5f7;--fg2:#e0e0e2;--fg3:#aaa;--fg4:#666;
+  --border:#2a2a2a;--border2:#3a3a3a;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
+  background:var(--bg);color:var(--fg);font-size:13.5px;line-height:1.75;padding-top:52px}
+
+/* NAV */
+#nav{position:fixed;top:0;left:0;right:0;background:rgba(0,0,0,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);padding:0 16px;height:52px;
+  display:flex;align-items:center;gap:4px;z-index:999;overflow-x:auto}
+#nav .brand{color:var(--blue);font-size:11px;font-weight:700;letter-spacing:.5px;
+  white-space:nowrap;margin-right:12px;padding-right:12px;border-right:1px solid var(--border2)}
+.tab{background:transparent;border:1px solid transparent;color:var(--fg3);
+  padding:5px 13px;border-radius:20px;font-size:11.5px;cursor:pointer;
+  transition:all .15s;white-space:nowrap;font-family:inherit}
+.tab:hover{color:var(--fg);border-color:var(--border2)}
+.tab.on{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
+
+/* SECTIONS */
+.sec{display:none;max-width:960px;margin:0 auto;padding:36px 24px 64px}
+.sec.on{display:block}
+
+/* TYPOGRAPHY */
+h1{font-size:28px;font-weight:700;letter-spacing:-.3px;margin-bottom:6px}
+h2{font-size:17px;font-weight:700;color:var(--blue2);margin:32px 0 12px;
+  padding-bottom:7px;border-bottom:1px solid var(--border)}
+h3{font-size:14px;font-weight:700;color:#7ab8ff;margin:20px 0 8px}
+h4{font-size:12.5px;font-weight:700;color:var(--orange);margin:14px 0 5px;
+  text-transform:uppercase;letter-spacing:.5px}
+p{margin-bottom:10px;color:var(--fg2)}
+ul,ol{margin:0 0 12px 18px}
+li{margin-bottom:5px;color:var(--fg2)}
+strong{color:var(--fg)}
+a{color:var(--blue2);text-decoration:none}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+  padding:20px 22px;margin:14px 0}
+.card.blue{border-color:#0071e330;background:#001a3f15}
+.card.green{border-color:#30d15840;background:#00200e20}
+.card.orange{border-color:#ff9f0a40;background:#1a100020}
+.card.red{border-color:#ff453a30;background:#1a050020}
+.card.gold{border-color:#ffd60a40;background:#1a140020}
+.card-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  font-weight:700;margin-bottom:10px}
+.card.blue .card-title{color:var(--blue2)}
+.card.green .card-title{color:var(--green)}
+.card.orange .card-title{color:var(--orange)}
+.card.red .card-title{color:var(--red)}
+.card.gold .card-title{color:var(--gold)}
+
+/* SESSIONS GRID */
+.sessions-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:18px 0}
+.session-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  padding:14px;text-align:center;cursor:pointer;transition:all .2s}
+.session-card:hover{border-color:var(--blue);transform:translateY(-2px)}
+.session-card.current{border-color:var(--blue);background:#001a3f20}
+.session-num{font-size:22px;font-weight:700;color:var(--blue);line-height:1}
+.session-type{font-size:10px;color:var(--fg3);margin-top:5px;line-height:1.4}
+.session-who{font-size:11px;color:var(--orange);margin-top:4px;font-weight:600}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12.5px}
+th{background:#000;color:#7ab8ff;padding:9px 12px;text-align:left;
+  font-size:11px;letter-spacing:.5px;text-transform:uppercase}
+td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:hover td{background:#111}
+.str{color:var(--green);font-weight:700}
+.med{color:var(--orange);font-weight:700}
+.gap{color:var(--red);font-weight:700}
+
+/* STORY BLOCKS */
+.story{background:#0d0d10;border:1px solid var(--border2);border-radius:10px;
+  padding:18px 20px;margin:16px 0}
+.story-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--blue2);font-weight:700;margin-bottom:8px}
+.story-q{font-size:14px;font-weight:600;color:var(--fg);margin-bottom:12px;
+  border-left:3px solid var(--blue);padding-left:12px;line-height:1.5}
+
+/* CALLOUT */
+.callout{border-left:3px solid var(--blue);background:#050514;
+  padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0}
+.callout.warn{border-color:var(--orange);background:#100800}
+.callout.key{border-color:var(--green);background:#050f00}
+.callout.crit{border-color:var(--red);background:#0f0500}
+.callout strong{color:var(--blue2);display:block;margin-bottom:4px}
+.callout.warn strong{color:var(--orange)}
+.callout.key strong{color:var(--green)}
+.callout.crit strong{color:var(--red)}
+
+/* BADGES */
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;
+  border-radius:4px;margin:2px;letter-spacing:.3px}
+.badge-blue{background:#0071e320;color:var(--blue2);border:1px solid #0071e340}
+.badge-green{background:#30d15820;color:var(--green);border:1px solid #30d15840}
+.badge-orange{background:#ff9f0a20;color:var(--orange);border:1px solid #ff9f0a40}
+.badge-red{background:#ff453a20;color:var(--red);border:1px solid #ff453a40}
+.badge-gold{background:#ffd60a20;color:var(--gold);border:1px solid #ffd60a40}
+
+/* CODE */
+pre,code{font-family:'SF Mono',Menlo,'Courier New',monospace}
+pre{background:#000;border:1px solid #2a2a2a;border-radius:8px;padding:14px 16px;
+  font-size:12px;line-height:1.7;color:#e6edf3;overflow-x:auto;margin:12px 0}
+code{background:#1a1a1a;padding:1px 6px;border-radius:3px;font-size:12px;color:#86b9ff}
+
+/* TIMELINE */
+.timeline{margin:14px 0}
+.tl-item{display:flex;gap:14px;margin-bottom:20px}
+.tl-dot{width:34px;height:34px;border-radius:50%;background:var(--blue);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;flex-shrink:0;margin-top:2px}
+.tl-content{flex:1}
+.tl-title{font-weight:700;color:var(--fg);font-size:14px;margin-bottom:4px}
+.tl-sub{font-size:12px;color:var(--fg3);margin-bottom:8px}
+
+/* GRID 2 COL */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:14px 0}
+
+/* FORMULA */
+.formula{background:#000;border:1px solid #30d15830;border-radius:8px;
+  padding:14px 18px;margin:12px 0;font-family:'SF Mono',monospace;
+  font-size:13px;color:var(--green);line-height:2}
+
+/* ALERT BANNER */
+.banner{background:linear-gradient(135deg,#001a3f,#0a0a20);
+  border:1px solid var(--blue);border-radius:12px;padding:20px 24px;
+  margin:20px 0;display:flex;gap:16px;align-items:flex-start}
+.banner-icon{font-size:28px;flex-shrink:0;margin-top:2px}
+.banner-text{flex:1}
+.banner-title{font-size:15px;font-weight:700;color:var(--fg);margin-bottom:5px}
+.banner-sub{font-size:13px;color:var(--fg2)}
+
+/* TABS INSIDE */
+.itabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.itab{background:var(--bg3);border:1px solid var(--border2);color:var(--fg3);
+  padding:5px 14px;border-radius:6px;font-size:12px;cursor:pointer;transition:all .15s}
+.itab.on,.itab:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.iview{display:none}.iview.on{display:block}
+
+/* SCORE METER */
+.score-row{display:flex;align-items:center;gap:10px;margin:8px 0}
+.score-label{min-width:180px;font-size:12.5px;color:var(--fg2)}
+.score-bar{flex:1;height:6px;background:#222;border-radius:3px;overflow:hidden}
+.score-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.score-val{min-width:32px;text-align:right;font-size:12px;font-weight:700}
+
+/* PRINT */
+@media print{#nav{display:none}body{padding-top:0}.sec{display:block !important}}
+</style>
+</head>
+<body>
+
+<div id="nav">
+  <span class="brand">🍎 Apple GPU — 5-Session Battle Plan</span>
+  <button class="tab on" onclick="show('overview')">Overview</button>
+  <button class="tab" onclick="show('s1')">Session 1</button>
+  <button class="tab" onclick="show('s2')">Session 2</button>
+  <button class="tab" onclick="show('s3')">Session 3</button>
+  <button class="tab" onclick="show('s4')">Session 4</button>
+  <button class="tab" onclick="show('s5')">Session 5</button>
+  <button class="tab" onclick="show('apple_arch')">Apple Architecture</button>
+  <button class="tab" onclick="show('metal')">Metal API</button>
+  <button class="tab" onclick="show('technical')">Technical Depth</button>
+  <button class="tab" onclick="show('stories')">STAR Stories</button>
+  <button class="tab" onclick="show('whiteboard')">Whiteboard</button>
+</div>
+
+<script>
+function show(id){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  event.target.classList.add('on');
+  window.scrollTo(0,0);
+}
+function itab(id,groupClass,el){
+  document.querySelectorAll('.'+groupClass).forEach(v=>v.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  el.closest('.itabs').querySelectorAll('.itab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+}
+</script>
+
+<!-- ═══ OVERVIEW ═══ -->
+<div class="sec on" id="overview">
+  <h1>🍎 Apple GPU Interview — 5-Session Battle Plan</h1>
+  <p style="color:var(--fg3);margin-bottom:20px">Venkat Vinjam · GPU Performance Analysis Engineer · Silicon Technologies Group</p>
+
+  <div class="banner">
+    <div class="banner-icon">⚡</div>
+    <div class="banner-text">
+      <div class="banner-title">The Core Narrative You Must Establish in Every Session</div>
+      <div class="banner-sub">You are a performance architect who has worked at the hardware-software boundary for 20+ years at Intel, Cisco, IBM, and AMD. You think in <strong>bottleneck hierarchies</strong>, not individual metrics. You've taken performance findings all the way to silicon changes. At Apple, you will apply that same discipline to mobile SoC GPU performance — a domain where <strong>performance-per-watt</strong> is the primary constraint and tight cross-stack collaboration is the norm.</div>
+    </div>
+  </div>
+
+  <h2>Your 5-Session Schedule</h2>
+  <div class="sessions-grid">
+    <div class="session-card current" onclick="show('s1')">
+      <div class="session-num">1</div>
+      <div class="session-who">Hiring Manager</div>
+      <div class="session-type">Culture Fit + Career Narrative + Role Scope</div>
+    </div>
+    <div class="session-card" onclick="show('s2')">
+      <div class="session-num">2</div>
+      <div class="session-who">Technical Lead</div>
+      <div class="session-type">GPU Architecture & Performance Analysis Deep Dive</div>
+    </div>
+    <div class="session-card" onclick="show('s3')">
+      <div class="session-num">3</div>
+      <div class="session-who">Senior Engineer</div>
+      <div class="session-type">Profiling, Counters, Bottleneck Debug</div>
+    </div>
+    <div class="session-card" onclick="show('s4')">
+      <div class="session-num">4</div>
+      <div class="session-who">Cross-Functional</div>
+      <div class="session-type">Architecture Partner / SW Partner Collaboration</div>
+    </div>
+    <div class="session-card" onclick="show('s5')">
+      <div class="session-num">5</div>
+      <div class="session-who">Bar Raiser</div>
+      <div class="session-type">Problem Solving, Novel Ideas, Hard Technical Questions</div>
+    </div>
+  </div>
+
+  <h2>Strength Profile vs. Apple JD</h2>
+  <div class="score-row"><div class="score-label">Computer Architecture Depth</div>
+    <div class="score-bar"><div class="score-fill" style="width:95%;background:var(--green)"></div></div>
+    <div class="score-val str">★★★</div></div>
+  <div class="score-row"><div class="score-label">GPU Performance Analysis</div>
+    <div class="score-bar"><div class="score-fill" style="width:95%;background:var(--green)"></div></div>
+    <div class="score-val str">★★★</div></div>
+  <div class="score-row"><div class="score-label">HW Feature Innovation / Proposals</div>
+    <div class="score-bar"><div class="score-fill" style="width:88%;background:var(--green)"></div></div>
+    <div class="score-val str">★★★</div></div>
+  <div class="score-row"><div class="score-label">Perf Tool Development</div>
+    <div class="score-bar"><div class="score-fill" style="width:85%;background:var(--green)"></div></div>
+    <div class="score-val str">★★★</div></div>
+  <div class="score-row"><div class="score-label">Mobile / Power-aware GPU</div>
+    <div class="score-bar"><div class="score-fill" style="width:72%;background:var(--orange)"></div></div>
+    <div class="score-val med">★★☆</div></div>
+  <div class="score-row"><div class="score-label">Metal API / OpenGL / OpenCL</div>
+    <div class="score-bar"><div class="score-fill" style="width:45%;background:var(--orange)"></div></div>
+    <div class="score-val med">★☆☆</div></div>
+  <div class="score-row"><div class="score-label">Apple TBDR Architecture</div>
+    <div class="score-bar"><div class="score-fill" style="width:50%;background:var(--orange)"></div></div>
+    <div class="score-val med">★☆☆</div></div>
+
+  <h2>The Gap Strategy — Own It, Bridge It, Commit</h2>
+  <div class="g2">
+    <div class="card orange">
+      <div class="card-title">⚠ Your Honest Gap</div>
+      <p>Direct Metal API / OpenGL ES hands-on experience. Apple TBDR-specific profiling. Mobile power domain analysis on an Apple SoC.</p>
+    </div>
+    <div class="card green">
+      <div class="card-title">✓ Your Bridge Statement</div>
+      <p>"I haven't written production Metal shaders, but I deeply understand the abstraction they sit on. HIP/ROCm is architecturally equivalent to Metal Compute. TBDR's tile memory is the mobile analogue of the shared memory tiling I optimize daily. I'm a fast learner and this is a targeted ramp, not a fundamental gap."</p>
+    </div>
+  </div>
+
+  <h2>Key Numbers to Memorize — Apple Silicon</h2>
+  <table>
+    <tr><th>Chip</th><th>GPU Cores</th><th>GPU TFLOPS (FP32)</th><th>Memory BW</th><th>TDP Class</th></tr>
+    <tr><td><strong>A17 Pro</strong></td><td>6 cores</td><td>~2.1 TFLOPS</td><td>68.3 GB/s (LPDDR5)</td><td>~7W phone</td></tr>
+    <tr><td><strong>A18 Pro</strong></td><td>6 cores</td><td>~2.5 TFLOPS</td><td>~68 GB/s LPDDR5X</td><td>~7W phone</td></tr>
+    <tr><td><strong>M3</strong></td><td>10–18 cores</td><td>3.6–7 TFLOPS</td><td>100 GB/s (LP5)</td><td>15–35W laptop</td></tr>
+    <tr><td><strong>M4</strong></td><td>10–40 cores</td><td>3.7–14.2 TFLOPS</td><td>120–546 GB/s</td><td>15–60W</td></tr>
+    <tr><td><strong>AMD MI300X (ref)</strong></td><td>304 CUs</td><td>163 TFLOPS (FP16)</td><td>5.3 TB/s HBM3</td><td>750W</td></tr>
+  </table>
+  <p style="color:var(--fg4);font-size:12px">Note: Apple doesn't publish all GPU specs officially. Use TFLOPS estimates from credible third-party benchmarks. Acknowledge this honestly if asked.</p>
+
+  <h2>Critical Apple-vs-AMD Concept Mapping</h2>
+  <table>
+    <tr><th>AMD Concept (Your World)</th><th>Apple Equivalent</th><th>Key Difference</th></tr>
+    <tr><td>Wavefront (64 threads)</td><td>SIMD group (~32 threads in Metal)</td><td>Smaller SIMD width; occupancy model differs</td></tr>
+    <tr><td>LDS (Local Data Share)</td><td>Threadgroup memory (Metal)</td><td>Same concept, different name + capacity</td></tr>
+    <tr><td>HBM / GDDR bandwidth</td><td>UMA LPDDR5/5X</td><td>Shared with CPU; contention matters</td></tr>
+    <tr><td>ROCm Profiler / omniperf</td><td>Instruments + Metal GPU Frame Capture</td><td>Tile-based rendering adds hidden bandwidth phase</td></tr>
+    <tr><td>RDNA/CDNA Compute Units</td><td>Apple GPU cores</td><td>TBDR pipeline; binning pass + render pass</td></tr>
+    <tr><td>rocBLAS / MIOpen</td><td>Metal Performance Shaders (MPS)</td><td>MPS covers both graphics and ML kernels</td></tr>
+    <tr><td>SRAMs / caches</td><td>On-chip tile memory (TBDR)</td><td>Persistent across draw calls in a render pass</td></tr>
+    <tr><td>HSA / shared virtual memory</td><td>UMA pointer sharing CPU↔GPU</td><td>Zero-copy is default; CPU-GPU sync is critical</td></tr>
+    <tr><td>Power cap / TDP</td><td>SoC power budget (thermal throttle)</td><td>Phone = 3–7W sustained; watch thermals closely</td></tr>
+  </table>
+</div>
+
+<!-- ═══ SESSION 1 — HIRING MANAGER ═══ -->
+<div class="sec" id="s1">
+  <h1>Session 1 — Hiring Manager</h1>
+  <p style="color:var(--fg3)">Duration: 45–60 min · Focus: Career story, culture fit, role alignment, leadership mindset</p>
+
+  <div class="callout key">
+    <strong>Your Goal This Session</strong>
+    Establish that you are a high-caliber, self-directed performance engineer who has operated at the principal/staff level, knows how to influence hardware decisions with data, and is genuinely excited about the SoC domain specifically — not just "a GPU job."
+  </div>
+
+  <h2>Your 90-Second Opening (Memorize This)</h2>
+  <div class="card blue">
+    <div class="card-title">Crafted Opening Statement</div>
+    <p>"I'm a Principal Performance Architect with 20 years of experience at Intel, Cisco, IBM, and now AMD — working at the exact intersection where hardware and software meet. At AMD, my focus is GPU performance for AI/ML workloads: roofline analysis, kernel profiling, hardware counter interpretation, and translating performance findings into architecture recommendations that actually change silicon design. What draws me to this role is the SoC context. At Intel I worked on mobile platform GPU performance for Ultrabook — I understand what it means when power budget is 5 watts and you're balancing graphics, CPU, and memory bandwidth simultaneously. That's a different and more interesting optimization problem than data center GPUs. I want to bring that bottleneck-first analytical discipline to Apple's GPU architecture team."</p>
+  </div>
+
+  <h2>Expected HM Questions & Your Answers</h2>
+
+  <div class="story">
+    <div class="story-label">Q1 — Career Motivation</div>
+    <div class="story-q">"Why Apple, and why this GPU role specifically — not another AI/ML data center role?"</div>
+    <p><strong>Answer:</strong> "Data center GPU optimization is increasingly about software-level tuning on architectures that are well-understood. The most interesting problems right now are on constrained hardware where every cycle, every watt, and every byte of bandwidth matters. Apple's SoC GPU represents that: tight thermal envelope, UMA shared bandwidth, TBDR architecture — these are unsolved optimization challenges where a strong performance analyst can make hardware-changing impact. My Intel mobile background prepared me for this reasoning. I want to do the deepest GPU work at the most constrained and innovative silicon, and that's Apple."</p>
+  </div>
+
+  <div class="story">
+    <div class="story-label">Q2 — Leadership / Influence Without Authority</div>
+    <div class="story-q">"Tell me about a time you influenced a hardware design decision with data."</div>
+    <p><strong>Answer (STAR):</strong><br>
+    <strong>S:</strong> AMD was evaluating tiling configurations for the next-generation CDNA cache hierarchy. There was disagreement between the architecture team and the software team about L2 cache sizing trade-offs.<br>
+    <strong>T:</strong> My role was to validate which cache configuration delivered the best sustained throughput on real AI workloads — not microbenchmarks.<br>
+    <strong>A:</strong> I designed a microbenchmark suite that isolated L2 hit rate as a function of tiling stride, then ran it across GEMM shapes that represented actual transformer attention and FFN workloads. I built a roofline model showing that the proposed 2× L2 increase would move the knee of the curve for the most critical workloads by ~18%.<br>
+    <strong>R:</strong> The architecture team adopted the finding and adjusted the cache sizing. I was invited to present at the next architecture review cycle. This is the kind of data-to-silicon feedback loop I want to do at Apple.</p>
+  </div>
+
+  <div class="story">
+    <div class="story-label">Q3 — Dealing with Ambiguity / Pre-Silicon Work</div>
+    <div class="story-q">"How do you validate GPU performance on hardware that doesn't exist yet?"</div>
+    <p><strong>Answer:</strong> "Pre-silicon validation is about building reliable analytical models and calibrating them against available proxies. The process: identify the hardware parameter that changed (cache size, bandwidth, pipeline latency), design a microbenchmark that isolates exactly that parameter, measure the baseline on current hardware, then project the improvement using the hardware spec or RTL simulation output. The discipline is: clearly separate what is measured from what is modeled, and always document your assumptions. When you present projected benefit numbers, the hardware team needs to know the confidence level of each component."</p>
+  </div>
+
+  <div class="story">
+    <div class="story-label">Q4 — Apple Culture (Collaboration + Ownership)</div>
+    <div class="story-q">"Apple values deep ownership and collaboration with hardware partners. What does that mean to you?"</div>
+    <p><strong>Answer:</strong> "At AMD I work directly with hardware architects — I'm not just a software consumer of GPU specs, I'm part of the feedback loop that shapes them. When I find a performance cliff, I don't just file a bug — I root-cause it to a specific hardware behavior, model the expected improvement from a design change, and present that to the architecture team with supporting data. Ownership means you take the finding all the way to impact, not just to a report. That's exactly the mode I want to operate in at Apple."</p>
+  </div>
+
+  <h2>Questions to Ask the Hiring Manager</h2>
+  <div class="card blue">
+    <ul>
+      <li>"What does the feedback loop look like between a performance finding in this team and an actual hardware architecture change? What's the typical timeline?"</li>
+      <li>"Is the team's primary focus on graphics pipeline performance, ML/compute workloads, or is it roughly balanced right now?"</li>
+      <li>"How does this team interact with the ANE (Neural Engine) team when workload routing decisions affect both?"</li>
+      <li>"What does 'success in the first 6 months' look like for someone in this role?"</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══ SESSION 2 — TECHNICAL LEAD ═══ -->
+<div class="sec" id="s2">
+  <h1>Session 2 — Technical Lead</h1>
+  <p style="color:var(--fg3)">Duration: 60 min · Focus: GPU architecture, TBDR, performance analysis methodology, hardware feature proposals</p>
+
+  <div class="callout key">
+    <strong>Your Goal This Session</strong>
+    Demonstrate that you can speak the language of GPU hardware architects: pipeline stages, execution units, bandwidth models, occupancy, and the link between microarchitectural events and observed performance.
+  </div>
+
+  <h2>Deep Technical Questions — Apple GPU Architecture</h2>
+
+  <div class="story">
+    <div class="story-label">Expected Q — TBDR Architecture</div>
+    <div class="story-q">"Explain how Tile-Based Deferred Rendering works and what performance implications it has."</div>
+    <p><strong>Your Answer:</strong></p>
+    <p>TBDR splits rendering into two passes. <strong>Pass 1 (Binning / Tiling):</strong> The GPU processes all geometry, determines which triangles touch which screen tiles (typically 32×32 pixels), and records only primitive metadata — no shading. <strong>Pass 2 (Rendering):</strong> Each tile is loaded into on-chip tile memory, all pixels in that tile are fully shaded, then the completed tile is written back to main memory.</p>
+    <p><strong>Performance implications:</strong></p>
+    <ul>
+      <li><strong>Hidden surface removal before shading:</strong> Pixels occluded by opaque geometry never run the fragment shader. On a dense scene this is a major compute saving.</li>
+      <li><strong>Bandwidth saving:</strong> The framebuffer never leaves the tile memory during a render pass. Depth buffer, color buffer, and MSAA samples all live on-chip. Main memory only sees the final resolved color — massive bandwidth reduction vs. immediate-mode.</li>
+      <li><strong>Latency sensitivity:</strong> All geometry must be submitted before shading begins. This creates a binning bottleneck on geometry-heavy scenes. A perf analyst must profile whether the binning pass or the rendering pass is the limiter.</li>
+      <li><strong>Bridge to my experience:</strong> "This is architecturally the same principle as the shared memory tiling I apply to GEMM kernels — maximize on-chip data reuse before going to main memory. The TBDR tile IS shared memory for the rendering pipeline."</li>
+    </ul>
+  </div>
+
+  <div class="story">
+    <div class="story-label">Expected Q — UMA Bandwidth Contention</div>
+    <div class="story-q">"In a UMA system where GPU and CPU share memory bandwidth, how do you profile and isolate GPU bandwidth consumption?"</div>
+    <p><strong>Your Answer:</strong> "On a UMA system, the memory controller is the shared resource. You need system-level bandwidth profiling, not just GPU-level. On Apple SoCs, Instruments gives you per-client bandwidth visibility — GPU, CPU, ANE each appear as bandwidth consumers. The technique: profile the workload under two conditions: (1) GPU running alone (CPU parked), and (2) CPU+GPU concurrent. The delta in GPU throughput is bandwidth contention loss. I've done exactly this analysis on Intel Ultrabook platforms where iGPU and CPU cores compete for the LPDDR4 bus. At Intel I found that aggressive CPU prefetch patterns were stealing 15% of iGPU effective bandwidth on multimedia playback — fixed with a BIOS-level arbitration weight change."</p>
+  </div>
+
+  <div class="story">
+    <div class="story-label">Expected Q — Hardware Feature Proposal Process</div>
+    <div class="story-q">"Walk me through how you'd propose a novel hardware feature to improve GPU performance."</div>
+    <p><strong>Your Answer:</strong> "The proposal has four components: (1) <strong>Empirical bottleneck identification</strong> — show with counter data that the bottleneck is real and recurring across the target workload class. (2) <strong>First-principles model</strong> — derive the expected speedup from the proposed change using a roofline or latency model. Be explicit about assumptions. (3) <strong>Workload coverage analysis</strong> — quantify what fraction of shipped workloads would benefit. A feature that helps 5% of workloads doesn't justify silicon area. (4) <strong>Area/power estimate</strong> — at minimum a rough order-of-magnitude estimate so the architecture team can evaluate the trade-off. At AMD I've done this for cache prefetch policy and tiling configuration changes. The credibility comes from showing the data, not just the idea."</p>
+  </div>
+
+  <div class="story">
+    <div class="story-label">Expected Q — Occupancy and Threadgroup Sizing</div>
+    <div class="story-q">"How do you reason about GPU occupancy, and when does maximizing occupancy NOT help performance?"</div>
+    <p><strong>Your Answer:</strong> "Occupancy measures how many active wavefronts/SIMD groups are resident on an execution unit. High occupancy is valuable when you're latency-bound — more resident warps means the scheduler can hide ALU and memory latency. But in a compute-bound kernel, you may already have enough warps in flight, and adding more occupancy just increases register pressure, which reduces register file per thread and may spill to local memory. The way to diagnose: look at IPC (Instructions Per Clock) vs. stall cycles. If memory latency dominates stall cycles and IPC is low, occupancy may help. If the kernel is compute-saturated (high IPC, low stall), occupancy is irrelevant and optimizing register use for cache performance matters more. On AMD CDNA I use omniperf's occupancy vs. IPC scatter plots to make this call automatically."</p>
+  </div>
+
+  <h2>Roofline on Apple GPU — The Analytical Framework</h2>
+  <div class="formula">
+    AI (Arithmetic Intensity) = FLOPs / Bytes_transferred<br>
+    Ridge Point = Peak_TFLOPS / Peak_BW (ops/byte)<br><br>
+    Apple M4 Max ridge point ≈ 14.2 TFLOPS / 546 GB/s ≈ 26 FLOP/byte<br>
+    Apple A18 Pro ridge point ≈ 2.5 TFLOPS / 68 GB/s ≈ 37 FLOP/byte<br><br>
+    Kernel is memory-bound if: AI &lt; ridge_point<br>
+    Kernel is compute-bound if: AI &gt; ridge_point
+  </div>
+  <div class="callout">
+    <strong>Key Insight for Interview</strong>
+    Apple's ridge points are higher than most data center GPUs per unit memory bandwidth because the TFLOPS-to-BW ratio favors compute. But the absolute bandwidth is far lower. This means memory-bound workloads feel worse on Apple SoC than on H100, and TBDR helps specifically by reducing BW demand for graphics.
+  </div>
+
+  <h2>Questions to Ask Technical Lead</h2>
+  <div class="card blue"><ul>
+    <li>"When you're profiling a TBDR workload, what counters are your first-pass indicators of whether binning or rendering is the bottleneck?"</li>
+    <li>"How much of the team's analysis work targets graphics pipeline vs. Metal Compute / ML inference?"</li>
+    <li>"What does the hardware counter access model look like — do you get full SoC counter visibility or is there gating on certain hardware blocks?"</li>
+  </ul></div>
+</div>
+
+<!-- ═══ SESSION 3 — SENIOR ENGINEER ═══ -->
+<div class="sec" id="s3">
+  <h1>Session 3 — Senior Engineer (Profiling & Debug)</h1>
+  <p style="color:var(--fg3)">Duration: 60 min · Focus: Hands-on profiling methodology, counter interpretation, root-cause debugging, tooling</p>
+
+  <div class="callout key">
+    <strong>Your Goal This Session</strong>
+    Show that you can sit down with profiling data and drive to root cause systematically — not by trial and error, but by hypothesis → measurement → elimination. Your AMD tooling expertise is fully transferable; make the bridge explicit.
+  </div>
+
+  <h2>The Profiling Methodology — Your Standard Approach</h2>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#0071e3">1</div>
+      <div class="tl-content">
+        <div class="tl-title">Timeline View — Find the Macro Pattern</div>
+        <div class="tl-sub">Instruments GPU Timeline / Counters Timeline</div>
+        <p>Open timeline, look for: idle gaps between GPU submissions (CPU-side stall), sustained GPU activity with low throughput (compute or BW bound), or irregular texture/render pass transitions. This tells you whether the problem is in submission overhead or within kernel execution.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#30d158">2</div>
+      <div class="tl-content">
+        <div class="tl-title">Regime Classification — BW, Compute, or Latency Bound</div>
+        <div class="tl-sub">GPU counters: memory read/write BW, shader utilization, occupancy</div>
+        <p>Compute achieved BW vs. peak BW. Compute achieved FLOPS vs. peak FLOPS. This classifies the kernel into one of three regimes. On Apple, TBDR adds a 4th: binning-bound (geometry throughput limited, shader units idle).</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#ff9f0a">3</div>
+      <div class="tl-content">
+        <div class="tl-title">Root Cause — Counter Drill-Down</div>
+        <div class="tl-sub">Shader stall reasons, cache hit rates, pipeline utilization per stage</div>
+        <p>If memory-bound: L1/L2 hit rates, texture cache utilization, bandwidth client breakdown (texture vs. shader vs. tile reads). If compute-bound: instruction mix, ALU vs. SFU utilization, vector vs. scalar ratio. If latency-bound: occupancy, scheduler efficiency, memory queue depth.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#ff453a">4</div>
+      <div class="tl-content">
+        <div class="tl-title">Hypothesis → Fix → Validate</div>
+        <div class="tl-sub">Always measure the fix, never just assume it worked</div>
+        <p>Formulate a specific hypothesis ("L2 miss rate is high because threadgroup size exceeds working set; reducing to 16×16 should fit in L1"). Implement the change. Re-measure the same counters. Quantify the speedup. Document for the hardware team if it reveals a microarchitectural opportunity.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>Apple Instruments → AMD Tool Mapping (Your Bridge)</h2>
+  <table>
+    <tr><th>Analysis Task</th><th>Apple Tool</th><th>AMD Equivalent (Your Experience)</th></tr>
+    <tr><td>GPU timeline / frame view</td><td>Instruments → GPU Timeline</td><td>Radeon GPU Profiler (RGP)</td></tr>
+    <tr><td>Hardware counter collection</td><td>Metal GPU Frame Capture counters</td><td>rocprof / omniperf hardware counters</td></tr>
+    <tr><td>Shader execution analysis</td><td>Metal Shader Profiler</td><td>rocprof kernel statistics</td></tr>
+    <tr><td>CPU-GPU timeline correlation</td><td>Instruments system trace</td><td>rocprof + roctracer timeline</td></tr>
+    <tr><td>Memory bandwidth breakdown</td><td>Instruments Memory counters</td><td>omniperf L1/L2/HBM bandwidth panels</td></tr>
+    <tr><td>Power / thermal monitoring</td><td>Instruments Energy Log</td><td>rocm-smi power + thermal stream</td></tr>
+    <tr><td>Render pass / draw call breakdown</td><td>Metal GPU Frame Capture</td><td>RGP per-draw profiling</td></tr>
+  </table>
+
+  <h2>Counter Interpretation — Key Questions to Answer</h2>
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">Memory Bandwidth Analysis</div>
+      <ul>
+        <li>Achieved BW / Peak BW = bandwidth utilization %</li>
+        <li>L1 hit rate: &gt;90% = well-tiled; &lt;60% = re-examine access pattern</li>
+        <li>L2 hit rate: &gt;80% = working set fits; lower = memory-bound</li>
+        <li>On TBDR: tile memory read/write separate from system BW</li>
+        <li>UMA contention: CPU bandwidth during same interval</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Compute Throughput Analysis</div>
+      <ul>
+        <li>Shader occupancy: active SIMD groups / maximum</li>
+        <li>ALU utilization vs. SFU utilization (transcendentals expensive)</li>
+        <li>Warp stall reasons: memory dependency, scoreboard, sync</li>
+        <li>Vector vs scalar instruction ratio (scalar = single-thread path)</li>
+        <li>Register spills → local memory → bandwidth spike</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Classic Debug Scenarios — Be Ready to Walk Through</h2>
+
+  <div class="story">
+    <div class="story-label">Scenario A — Regression in a Render Pass After Driver Update</div>
+    <p>"New driver version shows 15% regression in render pass time. Geometry is unchanged. Where do you look first?"</p>
+    <p><strong>Your approach:</strong> First check if the regression is in binning or rendering phase (TBDR split). If rendering: compare shader instruction counts before and after — a compiler change may have introduced a register spill or unrolled a loop differently. Check L2 hit rate — a cache policy change could degrade locality. Check fragment shader occupancy — if the new driver is allocating more registers per thread, occupancy drops and latency hiding degrades. Always isolate to a single draw call or pass using GPU Frame Capture before generalizing.</p>
+  </div>
+
+  <div class="story">
+    <div class="story-label">Scenario B — ML Inference Kernel Slower Than Expected</div>
+    <p>"A Metal Compute kernel for a GEMM-like ML layer achieves only 40% of theoretical throughput. Walk me through the diagnosis."</p>
+    <p><strong>Your approach:</strong> Calculate arithmetic intensity: FLOPs = 2 × M × N × K; Bytes = (M×K + K×N + M×N) × element_size. Compare to ridge point (~26–37 FLOP/byte on Apple). If below ridge, it's memory-bound — focus on tile size and threadgroup memory usage. If above ridge and still slow, check occupancy (register pressure? threadgroup memory size?), check instruction issue efficiency, check if the workload is using the right data type (FP16 vs FP32 ALUs). On Apple, check if MPS has an optimized version of this operation — if so, compare to it as a reference.</p>
+  </div>
+
+  <h2>Questions to Ask This Interviewer</h2>
+  <div class="card blue"><ul>
+    <li>"What's your workflow for counter collection on pre-silicon hardware — simulation models, FPGA, or something else?"</li>
+    <li>"When a performance issue is traced to a hardware behavior that's architectural rather than a bug, what's the escalation process?"</li>
+    <li>"What's the team's philosophy on automated regression detection — do you have continuous performance CI?"</li>
+  </ul></div>
+</div>
+
+<!-- ═══ SESSION 4 — CROSS-FUNCTIONAL ═══ -->
+<div class="sec" id="s4">
+  <h1>Session 4 — Cross-Functional Partner</h1>
+  <p style="color:var(--fg3)">Duration: 45–60 min · Focus: Collaboration with architecture + software partners, communication of findings, influence</p>
+
+  <div class="callout key">
+    <strong>Your Goal This Session</strong>
+    Show that you can translate between hardware engineers and software engineers fluently. You are the bridge — you speak both languages and can translate a hardware bottleneck into a software workaround and vice versa.
+  </div>
+
+  <h2>The Cross-Functional Partner Scenarios</h2>
+
+  <div class="story">
+    <div class="story-label">Q — Working With Architecture Partners</div>
+    <div class="story-q">"How do you work with GPU architects who think in RTL and pipeline timing when you're thinking in workload behavior?"</div>
+    <p><strong>Answer:</strong> "The bridge is hardware counters. Counters are the shared language — they're defined in the hardware spec, collected by profiling tools, and interpretable by both architecture and software teams. When I bring a finding to an architect, I don't say 'the GPU is slow.' I say: 'Shader cache miss rate is 65% on this draw call class; this correlates with a 32% reduction in fragment throughput; the texture access pattern has a stride that exceeds the cache line in this dimension.' That's actionable at the architecture level. At AMD I formalized this as a structured finding report: observed counter value, expected value, delta, hypothesis, workload coverage, and proposed architectural mitigation. Architects responded very well to that format."</p>
+  </div>
+
+  <div class="story">
+    <div class="story-label">Q — Working With Software/Driver Partners</div>
+    <div class="story-q">"How do you escalate a performance finding to the driver or compiler team without creating friction?"</div>
+    <p><strong>Answer:</strong> "Performance findings feel like criticism if framed wrong. The framing that works: present the finding as an opportunity, not an accusation. 'I found a workload where the current codegen is leaving 20% of peak throughput on the table — here's a minimal reproducer and here's what the optimal assembly should look like based on the hardware counter analysis.' Give them the reproducer, give them the expected result, and offer to collaborate on the fix. At Intel I worked this way with the GPA (Intel Graphics Performance Analyzer) team — I found a texture sampling path that was suboptimally scheduled and worked with the driver team directly to fix the instruction ordering. That fix shipped in a driver update and I was named in the release notes."</p>
+  </div>
+
+  <div class="story">
+    <div class="story-label">Q — Communicating to Non-Technical Stakeholders</div>
+    <div class="story-q">"How do you communicate a GPU performance finding to product management or a non-GPU engineer?"</div>
+    <p><strong>Answer:</strong> "I translate to user-observable impact first, then provide the technical backing. 'This optimization reduces render time by 12ms per frame on this use case — that's the difference between 60fps and 55fps visible to the user, and it reduces peak GPU temperature by 2°C, which has thermal margin implications for sustained workloads.' Product managers care about user experience and thermal comfort. They don't need to know about L2 hit rates unless they're curious. The technical proof is always in the appendix, never in the executive summary."</p>
+  </div>
+
+  <h2>Apple-Specific Cross-Functional Dynamics</h2>
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">GPU Perf Team ↔ Architecture Team</div>
+      <p>You generate workload data and counter-based findings. Architecture team evaluates silicon area trade-offs. Your data quality directly determines whether your feature proposal gets prioritized. Data must be: reproducible, workload-representative, and clearly linked to hardware behavior — not just "this workload is slow."</p>
+    </div>
+    <div class="card">
+      <div class="card-title">GPU Perf Team ↔ Metal/Driver/Compiler</div>
+      <p>When you find a compiler codegen issue, driver submission overhead problem, or API-level inefficiency, you work with the software team to fix it before escalating to hardware. Many "hardware" problems are actually software problems that hardware could work around — but the right fix is almost always software first.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">GPU Perf Team ↔ ANE / CPU Teams</div>
+      <p>On UMA systems, you're competing for shared bandwidth. You need to understand the ANE performance model to reason about whether a workload should be GPU or ANE, and how to quantify the contention cost of running both simultaneously.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">GPU Perf Team ↔ App/Developer Teams</div>
+      <p>Sometimes the finding is that an app is using the GPU wrong — suboptimal render pass structure, unnecessary buffer copies, missing sync primitives. You need to communicate this clearly and provide a fix path without making the developer feel blamed.</p>
+    </div>
+  </div>
+
+  <h2>Questions for This Interviewer</h2>
+  <div class="card blue"><ul>
+    <li>"How is the collaboration structured between this team and the GPU architecture team — is it pull-based (you request data) or push-based (you proactively deliver findings)?"</li>
+    <li>"When a performance analysis reveals something that requires changes across both hardware and software, how do you coordinate that?"</li>
+    <li>"How does the team stay aligned on which workloads are the priority targets as app and OS requirements evolve?"</li>
+  </ul></div>
+</div>
+
+<!-- ═══ SESSION 5 — BAR RAISER ═══ -->
+<div class="sec" id="s5">
+  <h1>Session 5 — Bar Raiser</h1>
+  <p style="color:var(--fg3)">Duration: 60 min · Focus: Problem solving under pressure, first-principles reasoning, novel ideas, intellectual depth</p>
+
+  <div class="callout crit">
+    <strong>Bar Raiser Role at Apple</strong>
+    The Bar Raiser is often not from your immediate team. They're looking for: exceptional problem-solving quality, intellectual honesty (admitting what you don't know), and evidence that you raise the talent bar — not just meet it. Don't try to impress with rehearsed answers; think out loud, show your reasoning process.
+  </div>
+
+  <h2>Hard Technical Problems — Think Out Loud</h2>
+
+  <div class="story">
+    <div class="story-label">Problem 1 — Novel Feature Proposal</div>
+    <div class="story-q">"Propose a hardware feature that doesn't exist today that would meaningfully improve GPU performance in a specific use case you care about."</div>
+    <p><strong>Your Answer — Be specific and data-driven:</strong></p>
+    <p><strong>Proposal: Adaptive Tile Size for TBDR Based on Scene Complexity Feedback</strong></p>
+    <p>Current Apple TBDR uses fixed tile sizes (typically 32×32). In scenes with many small triangles (UI, text rendering, particle systems), the binning pass overhead is high relative to the tile rendering work — lots of small primitives map to many tiles. In scenes with few large triangles (background blur, simple geometry), the binning pass is cheap but tiles may be large and efficient.</p>
+    <p><strong>Proposed feature:</strong> A hardware feedback register that reports binning-to-rendering time ratio per render pass. The driver/API could use this to dynamically adjust tile size: smaller tiles for geometry-heavy scenes (more parallelism, less per-tile work) vs. larger tiles for simple scenes (better locality). The counters to validate this already exist — binning pass duration vs. rendering pass duration. I would build a microbenchmark varying triangle count and scene complexity, measure the binning-to-rendering ratio, model the speedup from tile size adaptation, and present the workload coverage analysis.</p>
+    <p><em>Note: If the interviewer says this exists already, respond: "That's excellent — I'd love to understand how it's implemented. Does the feedback mechanism live in hardware or is it driver-managed heuristics?"</em></p>
+  </div>
+
+  <div class="story">
+    <div class="story-label">Problem 2 — First Principles Estimation</div>
+    <div class="story-q">"Estimate the memory bandwidth required to run a real-time diffusion model (e.g., image generation) at 30fps on an iPhone."</div>
+    <p><strong>Thinking out loud:</strong></p>
+    <p>A typical mobile diffusion model (Core ML / Apple ANE-optimized) has ~500M–1B parameters at INT8 = 500MB–1GB model weights. Diffusion runs 20–50 denoising steps. Each step is effectively a UNet forward pass. Let's model this:</p>
+    <div class="formula">
+      Params: 500M × 1 byte (INT8) = 500 MB model<br>
+      Per-step BW: read weights (500 MB) + activations (~100–200 MB) ≈ 700 MB/step<br>
+      30fps × 20 steps = 600 denoising steps/second<br>
+      Required BW: 700 MB × 600 = 420 GB/s continuous<br><br>
+      Apple A18 Pro memory BW: ~68 GB/s total<br>
+      → This CANNOT run on iPhone at 30fps from DRAM alone.<br><br>
+      Resolution: (1) Reduce steps (distillation → 4–8 steps)<br>
+              (2) Quantize to INT4 → 4× BW reduction → ~105 GB/s → still 1.5× over budget<br>
+              (3) Route to ANE which has dedicated weights cache<br>
+              (4) Run at lower res, upscale with FSR-equivalent
+    </div>
+    <p><strong>Conclusion:</strong> Real-time diffusion on iPhone is a bandwidth engineering problem, not a compute problem. The answer reveals why Apple's ANE has a dedicated model weight cache — it breaks the DRAM bandwidth wall.</p>
+  </div>
+
+  <div class="story">
+    <div class="story-label">Problem 3 — Architectural Trade-off</div>
+    <div class="story-q">"For a mobile SoC GPU, would you increase the number of shader cores or increase the L2 cache size? Argue both sides, then give your answer."</div>
+    <p><strong>More cores argument:</strong> More compute throughput for compute-bound workloads. Better parallelism for thread-heavy graphics. Direct benefit for any non-bandwidth-limited task.</p>
+    <p><strong>More L2 argument:</strong> On a bandwidth-constrained UMA system, bandwidth is more often the bottleneck than compute. More L2 reduces DRAM traffic, which benefits ALL workloads including the ones that look compute-bound but are actually waiting on memory latency. L2 hits cost ~50 cycles vs. DRAM's ~200+ cycles.</p>
+    <p><strong>My answer:</strong> For a mobile SoC in 2025 where LLM inference, image generation, and real-time ML are the growth workloads — all of which are severely memory-bandwidth-bound at INT8/INT4 precision — I'd take the L2 increase. But with a condition: only if it also serves the ANE and the neural engine memory path. A shared L2 that all compute engines can hit is worth more than a GPU-private one. The right answer depends on what fraction of workloads are already compute-saturated, and on Apple's SoC that fraction is low for the workloads that matter most right now.</p>
+  </div>
+
+  <h2>Intellectual Honesty Moments — Handle These Well</h2>
+  <div class="card orange">
+    <div class="card-title">⚠ When You Don't Know Something</div>
+    <p>Bar raisers often ask questions they know you can't fully answer — to see how you handle it. <strong>The right response is always:</strong></p>
+    <ol>
+      <li>"I don't know the specific answer to that, but here's how I'd approach figuring it out..."</li>
+      <li>"Based on analogous systems I've worked with, I'd estimate..." (then estimate and show your reasoning)</li>
+      <li>Never say "I'm not familiar with Apple's implementation" without offering what you DO know about the general principle.</li>
+    </ol>
+  </div>
+
+  <h2>Questions for the Bar Raiser</h2>
+  <div class="card blue"><ul>
+    <li>"What's the hardest performance problem the team has tackled in the last year — one that required new thinking rather than just applying existing methodology?"</li>
+    <li>"How does Apple decide when a performance problem is better solved in hardware vs. software vs. API design?"</li>
+    <li>"What's the one thing most people underestimate about GPU performance analysis on Apple Silicon specifically?"</li>
+  </ul></div>
+</div>
+
+<!-- ═══ APPLE ARCHITECTURE ═══ -->
+<div class="sec" id="apple_arch">
+  <h1>Apple GPU Architecture — Technical Reference</h1>
+  <p style="color:var(--fg3)">The key concepts you must understand before your first session</p>
+
+  <h2>TBDR — Tile-Based Deferred Rendering Deep Dive</h2>
+  <div class="g2">
+    <div class="card blue">
+      <div class="card-title">How TBDR Works</div>
+      <ol>
+        <li><strong>Geometry submission:</strong> App submits draw calls with vertex + index data</li>
+        <li><strong>Binning pass:</strong> GPU processes all vertices, determines per-tile primitive list (no pixel shading yet)</li>
+        <li><strong>Tiling:</strong> Screen divided into 32×32 pixel tiles (typical)</li>
+        <li><strong>Rendering pass:</strong> For each tile — load tile data to on-chip SRAM → shade all fragments → hidden surface removal → resolve → write finished tile to framebuffer memory</li>
+      </ol>
+    </div>
+    <div class="card green">
+      <div class="card-title">TBDR Performance Benefits</div>
+      <ul>
+        <li><strong>Zero bandwidth for framebuffer during render:</strong> depth + stencil + MSAA all on-chip</li>
+        <li><strong>Hidden surface removal before shading:</strong> occluded pixels never run fragment shader</li>
+        <li><strong>MSAA nearly free:</strong> resolve happens on-chip, only final image goes to memory</li>
+        <li><strong>Programmable blending:</strong> read-modify-write of tile memory is cheap vs. read-modify-write of DRAM</li>
+        <li><strong>Load/store actions:</strong> explicit control of what enters/leaves tile memory</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card orange">
+    <div class="card-title">⚠ TBDR Hazards — Common Perf Issues</div>
+    <div class="g2" style="margin:0">
+      <div>
+        <p><strong>Forced render pass splits:</strong> Certain operations force the GPU to flush the tile — reading the framebuffer mid-pass (e.g., for screen-space effects). This causes a round-trip to memory. Instruments will show this as a "store/load" pair mid-pass.</p>
+        <p><strong>Geometry overdraw in binning:</strong> Too many triangles covering the same tile means the binning pass is bottlenecked. The tile primitive list overflows, causing spills to memory.</p>
+      </div>
+      <div>
+        <p><strong>Large triangle lists per tile:</strong> UI layers with many tiny elements, text, particles — all create expensive binning passes relative to rendering work.</p>
+        <p><strong>Depth prepass trade-off:</strong> On IMR (PC GPUs), depth prepass saves shading cost. On TBDR, the hardware already does HSR — an explicit depth prepass adds binning overhead with potentially no benefit. Measure before assuming.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>Apple Unified Memory Architecture (UMA)</h2>
+  <div class="formula">
+    Total SoC BW budget (A18 Pro): ~68 GB/s<br>
+    Clients: CPU cores + GPU + ANE + ISP + Display engine<br><br>
+    GPU peak BW consumption = min(GPU_demand, SoC_BW − other_clients)<br>
+    Contention loss = GPU_demand − GPU_allocated_BW
+  </div>
+  <div class="card">
+    <div class="card-title">UMA Performance Engineering Rules</div>
+    <ul>
+      <li><strong>Zero-copy is default:</strong> CPU and GPU share physical addresses — no memcpy needed for shared buffers. This is a major design win over discrete GPU setups.</li>
+      <li><strong>CPU-GPU coherency has cost:</strong> If CPU writes a buffer while GPU reads it, cache coherency protocol runs. Use Metal buffer storage modes correctly: <code>shared</code> vs. <code>private</code> vs. <code>managed</code>.</li>
+      <li><strong>BW contention is invisible by default:</strong> GPU may appear compute-bound when it's actually stalled on BW arbitration. You must check system-wide BW counters, not just GPU-side.</li>
+      <li><strong>ANE and GPU can run concurrently:</strong> For ML inference pipelines, overlapping ANE and GPU execution is possible. Profile whether their BW demands sum within the budget.</li>
+    </ul>
+  </div>
+
+  <h2>Apple GPU Generations — Performance Scaling Context</h2>
+  <table>
+    <tr><th>Generation</th><th>SoC</th><th>Key GPU Innovation</th><th>Perf Scaling</th></tr>
+    <tr><td>A14</td><td>2020</td><td>5nm, first 5-core GPU in phone</td><td>Baseline</td></tr>
+    <tr><td>A15</td><td>2021</td><td>5-core → 5-core, improved ML acceleration</td><td>~20% GPU</td></tr>
+    <tr><td>A16</td><td>2022</td><td>4nm, hardware-accelerated ray tracing</td><td>~30% vs A14</td></tr>
+    <tr><td>A17 Pro</td><td>2023</td><td>3nm, mesh shaders, hardware MetalFX</td><td>~50% vs A14</td></tr>
+    <tr><td>A18 Pro</td><td>2024</td><td>3nm 2nd gen, hardware ray tracing improved</td><td>~20% vs A17</td></tr>
+    <tr><td>M4</td><td>2024</td><td>3nm, up to 40 GPU cores, hardware accelerated ML</td><td>40-core = ~14 TFLOPS FP32</td></tr>
+  </table>
+
+  <h2>Key Metal API Concepts — Minimum You Must Know</h2>
+  <div class="itabs">
+    <button class="itab on" onclick="itab('mt1','mttab',this)">Render Pipeline</button>
+    <button class="itab" onclick="itab('mt2','mttab',this)">Compute Pipeline</button>
+    <button class="itab" onclick="itab('mt3','mttab',this)">Memory Model</button>
+    <button class="itab" onclick="itab('mt4','mttab',this)">Sync Primitives</button>
+  </div>
+  <div id="mt1" class="iview mttab on">
+    <p>Metal render pipeline: <code>MTLRenderCommandEncoder</code> → submit draw calls within a render pass descriptor. The render pass descriptor defines load/store actions for each attachment. <strong>Key perf tip:</strong> Always set <code>loadAction</code> to <code>.dontCare</code> if you're writing every pixel, and <code>storeAction</code> to <code>.dontCare</code> for depth/stencil if you don't need them after the pass. This tells the TBDR driver to skip unnecessary loads/stores to memory.</p>
+  </div>
+  <div id="mt2" class="iview mttab">
+    <p>Metal compute pipeline: <code>MTLComputeCommandEncoder</code> → dispatch threadgroups. Threadgroup memory = Apple's equivalent of CUDA shared memory / AMD LDS. Size up to device limits (typically 32KB). Thread execution width (SIMD group size) is queryable — important for occupancy math. Metal Compute is the API for ML inference kernels, image processing, physics simulation.</p>
+  </div>
+  <div id="mt3" class="iview mttab">
+    <p>Metal has three buffer storage modes: <code>shared</code> (CPU and GPU both access, coherent, slightly slower for GPU), <code>private</code> (GPU only, fastest GPU access, no CPU mapping), <code>managed</code> (macOS only — separate CPU/GPU copies with explicit sync via <code>didModifyRange</code>). On Apple Silicon with UMA, <code>shared</code> is often the best choice since there's no physical copy overhead.</p>
+  </div>
+  <div id="mt4" class="iview mttab">
+    <p>Metal synchronization: <code>MTLFence</code> (within a command queue, signal/wait), <code>MTLEvent</code> (cross-queue, cross-device). <code>MTLSemaphore</code> for CPU-GPU synchronization. Over-synchronization is a common perf mistake — inserting fences between every pass serializes the GPU pipeline unnecessarily. Profile command buffer completion timing before adding sync barriers.</p>
+  </div>
+</div>
+
+<!-- ═══ METAL API ═══ -->
+<div class="sec" id="metal">
+  <h1>Metal API — Your Gap Bridge Plan</h1>
+
+  <div class="callout warn">
+    <strong>Honest Gap Assessment</strong>
+    Metal is the required API for this role. You have strong conceptual understanding (UMA, TBDR, compute pipelines) but limited hands-on Metal shader code experience. Here is how to bridge this confidently.
+  </div>
+
+  <h2>What to Say When Asked About Metal Experience</h2>
+  <div class="card blue">
+    <div class="card-title">Your Bridge Statement (Memorize This)</div>
+    <p>"I haven't written production Metal shaders, but I'm not starting from zero. My ROCm HIP experience maps directly — the threadgroup/threadblock model, shared memory usage, occupancy calculations, and kernel dispatch math are identical in principle. I've written GEMM-class compute kernels in HIP, profiled them with hardware counters, and optimized them against the roofline model. The performance engineering methodology for Metal compute is the same methodology; the API surface is a 1–2 week ramp for someone with my background. I'd prioritize that ramp in my first 30 days."</p>
+  </div>
+
+  <h2>Metal vs. ROCm HIP — Side-by-Side (Know This)</h2>
+  <table>
+    <tr><th>Concept</th><th>ROCm HIP (Your World)</th><th>Metal (Apple)</th></tr>
+    <tr><td>Kernel function</td><td><code>__global__ void kernel()</code></td><td><code>kernel void myKernel()</code></td></tr>
+    <tr><td>Threadgroup memory</td><td><code>__shared__ float smem[N]</code></td><td><code>threadgroup float smem[N]</code></td></tr>
+    <tr><td>Thread ID</td><td><code>threadIdx.x, blockIdx.x</code></td><td><code>thread_position_in_threadgroup</code>, <code>threadgroup_position_in_grid</code></td></tr>
+    <tr><td>Synchronize within group</td><td><code>__syncthreads()</code></td><td><code>threadgroup_barrier(mem_flags::mem_threadgroup)</code></td></tr>
+    <tr><td>Kernel launch</td><td><code>kernel&lt;&lt;&lt;grid,block&gt;&gt;&gt;()</code></td><td><code>encoder.dispatchThreadgroups(grid, threadsPerThreadgroup:)</code></td></tr>
+    <tr><td>SIMD group (subgroup)</td><td>wavefront (64 threads, CDNA)</td><td>SIMD group (32 threads typical)</td></tr>
+    <tr><td>Occupancy limit</td><td>register file / LDS pressure</td><td>threadgroup memory / register pressure</td></tr>
+    <tr><td>Profiling</td><td>omniperf, rocprof</td><td>Metal GPU Frame Capture, Instruments</td></tr>
+  </table>
+
+  <h2>OpenCL / OpenGL Experience — Leverage This</h2>
+  <div class="card green">
+    <div class="card-title">What You Can Claim (Truthfully)</div>
+    <ul>
+      <li><strong>OpenCL compute:</strong> HPC workloads from Intel/IBM era. OpenCL work-item/work-group model is nearly identical to Metal's thread/threadgroup model. You understand <code>cl_mem</code>, buffer management, kernel enqueue, and event synchronization.</li>
+      <li><strong>OpenGL:</strong> Graphics pipeline exposure at Intel during mobile GPU platform work. You understand vertex → fragment pipeline, texture sampling, framebuffer operations, and draw call submission overhead — all concepts that map directly to Metal render pipelines.</li>
+      <li><strong>ROCm HIP:</strong> Architecturally similar to Metal Compute. This is your strongest bridge. Emphasize this.</li>
+    </ul>
+  </div>
+
+  <h2>30-Day Ramp Plan (Be Ready to Articulate This)</h2>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#0071e3;font-size:11px">W1</div>
+      <div class="tl-content">
+        <div class="tl-title">Week 1 — Metal Fundamentals</div>
+        <p>Apple Metal Programming Guide (developer.apple.com), complete "Fundamentals" and "Resource Management" chapters. Write first Metal compute kernel (matrix multiply). Profile with Instruments. Compare to equivalent HIP kernel.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#30d158;font-size:11px">W2</div>
+      <div class="tl-content">
+        <div class="tl-title">Week 2 — Metal Performance Profiling</div>
+        <p>WWDC 2022/2023 GPU sessions. Learn GPU Frame Capture workflow in Xcode. Understand Instruments counter panels. Profile a real Metal app (MetalKit samples on GitHub).</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#ff9f0a;font-size:11px">W3</div>
+      <div class="tl-content">
+        <div class="tl-title">Week 3 — TBDR-Specific Patterns</div>
+        <p>Metal Best Practices Guide — render pass design, load/store actions, tile shaders. Understand framebuffer fetch extension. Study MetalFX upscaling API.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#ff453a;font-size:11px">W4</div>
+      <div class="tl-content">
+        <div class="tl-title">Week 4 — On the Job</div>
+        <p>Apply methodology to first real workload analysis. Shadow senior engineers on live profiling sessions. Build personal counter reference sheet for Apple's GPU counter taxonomy.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TECHNICAL DEPTH ═══ -->
+<div class="sec" id="technical">
+  <h1>Technical Depth Reference</h1>
+  <p style="color:var(--fg3)">Hard technical questions with precise answers</p>
+
+  <h2>GPU Memory Hierarchy — Mobile SoC Context</h2>
+  <table>
+    <tr><th>Level</th><th>Typical Size (A-series)</th><th>Latency</th><th>BW</th><th>Perf Role</th></tr>
+    <tr><td>Register file</td><td>Per-thread (opaque)</td><td>1 cycle</td><td>Very high</td><td>Zero-cost operand access</td></tr>
+    <tr><td>Threadgroup / Tile memory</td><td>32KB–64KB per tile</td><td>~10 cycles</td><td>High</td><td>TBDR on-chip framebuffer; shared memory for compute</td></tr>
+    <tr><td>L1 texture cache</td><td>~16–32KB per shader core</td><td>~40–60 cycles</td><td>Medium-high</td><td>Texture sampling locality</td></tr>
+    <tr><td>L2 system cache</td><td>~8–32MB (varies by chip)</td><td>~100–150 cycles</td><td>Medium</td><td>Shared across GPU+CPU+ANE on Apple</td></tr>
+    <tr><td>DRAM (LPDDR5/5X)</td><td>6–16GB</td><td>~200–300 cycles</td><td>68–546 GB/s</td><td>Weight loads, large activations, framebuffer</td></tr>
+  </table>
+
+  <h2>Power-Performance Reasoning — Mobile First</h2>
+  <div class="card">
+    <div class="card-title">The Mobile Constraint Model</div>
+    <p>Phone thermal envelope: ~3–7W sustained GPU power. At peak (burst) maybe 10–12W for 1–2 seconds before thermal throttle. Performance analysis on mobile must always ask: <strong>"Is this workload sustainable at this throughput, or will it throttle?"</strong></p>
+    <div class="formula">
+      Sustained throughput ≈ f(thermal_budget, power_efficiency)<br>
+      Power = Capacitance × V² × frequency + leakage<br>
+      DVFS: lower V and f = quadratic power reduction, linear throughput reduction<br><br>
+      Key metric: Performance per Watt, not absolute TFLOPS<br>
+      Apple M4 Pro: ~150 GFLOPS/W (FP32) vs. H100: ~220 GFLOPS/W (with SXM)
+    </div>
+  </div>
+
+  <h2>Performance Test Plan Design</h2>
+  <div class="card blue">
+    <div class="card-title">What Apple JD Says: "Developing performance test plans to validate GPU performance"</div>
+    <p>A good GPU performance test plan includes:</p>
+    <ol>
+      <li><strong>Workload taxonomy:</strong> Graphics-heavy (3D games, UI compositing), Compute/ML (inference, image processing), Mixed (AR/VR — graphics + compute concurrent)</li>
+      <li><strong>Metric targets per workload class:</strong> Frame time, throughput, power, temperature at sustained load</li>
+      <li><strong>Regression detection thresholds:</strong> What % change triggers an investigation? (Typically 2–5% for critical paths)</li>
+      <li><strong>Counter collection strategy:</strong> Which hardware counters to collect on every run vs. deep-dive sessions only</li>
+      <li><strong>Reproducibility controls:</strong> Thermal conditioning, governor state, background activity suppression</li>
+      <li><strong>Comparative baseline:</strong> Prior silicon, competitor device (Samsung, Qualcomm), or prior software version</li>
+    </ol>
+  </div>
+
+  <h2>Likely Coding / Pseudo-code Questions</h2>
+  <div class="story">
+    <div class="story-label">Could Be Asked — Tiled Matrix Multiply in Metal</div>
+    <p>Be ready to sketch the algorithm, not write perfect syntax:</p>
+    <pre>// Metal compute kernel — tiled GEMM
+kernel void tiledGEMM(
+    device float* A [[buffer(0)]],
+    device float* B [[buffer(1)]],
+    device float* C [[buffer(2)]],
+    threadgroup float* tileA [[threadgroup(0)]],  // 32KB shared
+    threadgroup float* tileB [[threadgroup(1)]],
+    uint2 tid [[thread_position_in_threadgroup]],
+    uint2 gid [[threadgroup_position_in_grid]])
+{
+    // Load tile of A and B into threadgroup memory
+    tileA[tid.y * TILE + tid.x] = A[...];
+    tileB[tid.y * TILE + tid.x] = B[...];
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    
+    // Compute partial dot product from tiles
+    float acc = 0.0;
+    for (uint k = 0; k < TILE; k++)
+        acc += tileA[tid.y * TILE + k] * tileB[k * TILE + tid.x];
+    
+    C[global_row * N + global_col] = acc;
+}</pre>
+    <p style="color:var(--fg3);font-size:12px">Key insight to mention: tile size choice trades off threadgroup memory pressure vs. L2 miss reduction. Optimal tile = sqrt(threadgroup_memory / 2 / sizeof(float)). On Apple with 32KB threadgroup memory: tile = 64.</p>
+  </div>
+
+  <h2>Benchmark Numbers — Know These Cold</h2>
+  <table>
+    <tr><th>Benchmark / Metric</th><th>A17 Pro</th><th>A18 Pro</th><th>M4</th><th>vs. AMD MI300X</th></tr>
+    <tr><td>Metal GPU score (3DMark Wild Life Extreme)</td><td>~7,500</td><td>~9,800</td><td>N/A (desktop)</td><td>Not comparable</td></tr>
+    <tr><td>Memory BW</td><td>68.3 GB/s</td><td>~68 GB/s</td><td>120–546 GB/s</td><td>5,300 GB/s</td></tr>
+    <tr><td>FP32 TFLOPS (GPU)</td><td>~2.1</td><td>~2.5</td><td>3.7–14.2</td><td>163 (FP16)</td></tr>
+    <tr><td>Transistors</td><td>19B</td><td>~20B</td><td>28–92B</td><td>153B</td></tr>
+    <tr><td>Perf/W (relative GPU)</td><td>★★★</td><td>★★★</td><td>★★★</td><td>★★☆ (per W)</td></tr>
+  </table>
+</div>
+
+<!-- ═══ STAR STORIES ═══ -->
+<div class="sec" id="stories">
+  <h1>STAR Stories — Your Ready-to-Tell Narratives</h1>
+
+  <div class="callout">
+    <strong>Apple Behavioral Framework</strong>
+    Apple favors direct ownership language. Use "I" not "we" when describing your specific contribution. Be specific about numbers. Always connect to impact — what changed because of your work.
+  </div>
+
+  <div class="story">
+    <div class="story-label">Story 1 — Hardware Influence (Best for Sessions 1, 2, 5)</div>
+    <h3>"The Cache Sizing Decision at AMD"</h3>
+    <p><strong>Situation:</strong> AMD architecture team debating L2 cache size for next-gen CDNA GPU. Two proposals: 4MB vs. 8MB per compute die. Software team couldn't agree on expected benefit.</p>
+    <p><strong>Task:</strong> I was asked to quantify the workload-level impact using real AI/ML benchmarks, not theoretical peak bandwidth improvement.</p>
+    <p><strong>Action:</strong> I built a stride-sensitivity microbenchmark that varied GEMM tile shapes and measured L2 hit rate vs. tile stride. I identified the "knee" in the hit rate curve — the stride at which L2 misses begin dominating. I then profiled our top-5 AI workloads and measured what fraction of operations hit that dangerous stride range. The analysis showed that transformer attention's KV cache access pattern is particularly sensitive — QK^T matmul has a stride pattern that would hit L2 misses ~38% more frequently with the smaller cache.</p>
+    <p><strong>Result:</strong> The architecture team chose the 8MB design. The decision was documented with reference to my workload analysis. The subsequent validation on early silicon confirmed a 16% L2 hit rate improvement on transformer attention, consistent with my model.</p>
+    <p><strong>Apple relevance:</strong> "This is exactly the data-to-silicon feedback loop I want to work in at Apple — where performance analysis has direct architectural impact."</p>
+  </div>
+
+  <div class="story">
+    <div class="story-label">Story 2 — Mobile / Power Perf (Best for Session 1, 4)</div>
+    <h3>"Zero-Copy Path at Intel — UMA Bandwidth Recovery"</h3>
+    <p><strong>Situation:</strong> Intel mobile iGPU performance on video playback was 30% below target. CPU utilization was also elevated. User experience: warm device, fans spinning, shorter battery life.</p>
+    <p><strong>Task:</strong> Root-cause the combined CPU+GPU overhead and find the bottleneck.</p>
+    <p><strong>Action:</strong> Used Intel VTune + Socwatch to get system-wide performance counters. Found that the video decoder was outputting frames to a cache-incoherent buffer that the iGPU had to copy into its own buffer before rendering. Two copies per frame. This was consuming 30% of system memory bandwidth unnecessarily. I proposed a zero-copy path: map the decoder output buffer directly into the GPU address space with the correct cache attribute flags so the GPU could render from it in place.</p>
+    <p><strong>Result:</strong> CPU copy overhead dropped to zero. iGPU memory bandwidth consumption dropped 30%. Device temperature reduced 2°C under sustained playback. This became a reference implementation for Intel's mobile media playback stack. This experience is directly applicable to Metal's buffer storage mode decisions on Apple Silicon.</p>
+  </div>
+
+  <div class="story">
+    <div class="story-label">Story 3 — Tooling / Test Plan (Best for Session 3)</div>
+    <h3>"Automated GPU Regression Detection at AMD"</h3>
+    <p><strong>Situation:</strong> AMD's GPU driver team shipped weekly builds. Performance regressions were being caught too late — sometimes after public release because manual testing couldn't cover all workloads.</p>
+    <p><strong>Task:</strong> Build an automated performance CI that would catch regressions before they shipped.</p>
+    <p><strong>Action:</strong> Designed a benchmark suite of 40 representative workloads spanning graphics, compute, and AI workloads. Implemented automated counter collection using rocprof scripting. Built a statistical baseline model that classified a run as regressed if it exceeded 2σ from the rolling average. Integrated into the CI pipeline — each driver build automatically triggered the benchmark suite and emailed a performance report to the driver team.</p>
+    <p><strong>Result:</strong> Caught 3 significant regressions in the first quarter of operation before they reached production. Mean time to detect a regression dropped from "post-release" to "same business day." The tooling is still in use. This is the kind of test plan development explicitly mentioned in the Apple JD.</p>
+  </div>
+
+  <div class="story">
+    <div class="story-label">Story 4 — Novel Proposal Under Pressure (Best for Session 5)</div>
+    <h3>"Tiling Configuration Recommendation for CDNA Memory Performance"</h3>
+    <p><strong>Situation:</strong> CDNA2 GPUs were showing lower-than-expected sustained memory bandwidth on large transformer models. The hardware team suspected a software issue; the software team suspected a hardware issue.</p>
+    <p><strong>Task:</strong> Determine root cause and propose a fix — with a 2-week deadline before architectural review.</p>
+    <p><strong>Action:</strong> Ran a systematic hardware counter sweep: L2 hit rate, memory controller utilization, cache eviction rate. Found that the issue was a cache thrashing pattern — the tiling strides of the attention weight matrices were aliasing in the L2 cache. Proposed a specific tiling adjustment (changing the stride from a power of 2 to a prime-offset stride) to break the aliasing pattern. Modeled the expected improvement: ~12% L2 hit rate recovery → ~8% end-to-end throughput improvement.</p>
+    <p><strong>Result:</strong> The software change was implemented in 3 days. Validation showed 9% throughput improvement on transformer workloads, closely matching the model. The hardware team confirmed that the issue was software-addressable and adjusted their next-generation cache associativity to be more robust against this class of aliasing.</p>
+  </div>
+</div>
+
+<!-- ═══ WHITEBOARD ═══ -->
+<div class="sec" id="whiteboard">
+  <h1>Whiteboard / Problem-Solving Prep</h1>
+
+  <div class="callout key">
+    <strong>Apple Whiteboard Philosophy</strong>
+    Apple interviewers are not looking for memorized answers. They're watching how you <em>think</em>. Always narrate your reasoning. Draw diagrams. Ask clarifying questions. Show the math. It's OK to say "Let me think through this step by step."
+  </div>
+
+  <h2>Problem Type 1 — Performance Estimation (Fermi Problem)</h2>
+  <div class="card">
+    <div class="card-title">Example: "How much memory bandwidth does a 60fps UI compositor use on iPhone?"</div>
+    <p><strong>Walk through out loud:</strong></p>
+    <ol>
+      <li>iPhone 16 Pro: 2796×1290 pixels @ 60fps (up to 120Hz ProMotion)</li>
+      <li>UI compositor reads: screen layers. Typical scene: 5–10 layers composited</li>
+      <li>Per frame: read 5 layers × 2796×1290 × 4 bytes (RGBA32) + write 1 output frame</li>
+      <li>= 5 × 14.4 MB + 14.4 MB = 86 MB/frame</li>
+      <li>At 60fps: 86 MB × 60 = 5.16 GB/s</li>
+      <li>At 120fps: ~10 GB/s</li>
+      <li>That's ~15% of the A18 Pro's total BW budget just for UI compositing at 120fps</li>
+    </ol>
+    <p><strong>Insight:</strong> This is why Apple invests in TBDR, display compression (LPDP), and hardware compositing accelerators — raw compositing at this resolution is BW-expensive.</p>
+  </div>
+
+  <h2>Problem Type 2 — Debug Walkthrough</h2>
+  <div class="card orange">
+    <div class="card-title">Example: "A Metal app that was 60fps on A17 Pro is only 45fps on A18 Pro with the same workload. What's going on?"</div>
+    <p><strong>Your structured approach:</strong></p>
+    <ol>
+      <li><strong>First, verify the claim:</strong> Is the hardware the same configuration? Same thermal state? Same OS? Is the regression reproducible?</li>
+      <li><strong>Check obvious candidates:</strong> A18 Pro may have a different driver/compiler. GPU core count may be same (both 6-core) but clock frequency or power policy may differ.</li>
+      <li><strong>Profile with Instruments:</strong> Is the GPU the bottleneck, or is it CPU submission overhead? If GPU is at 100% utilization in both cases but A18 is slower — possible clock throttle. If GPU is &lt;100% — CPU-bound or submission overhead.</li>
+      <li><strong>Check power/thermal:</strong> A18 Pro has a new power management policy. It may sustain lower GPU clocks under thermal load. Check Energy Log for throttle events.</li>
+      <li><strong>Hypothesis: Compiler regression.</strong> A17 → A18 driver update may have changed shader codegen. Compare shader assembly between A17 and A18 builds using GPU Frame Capture shader inspection.</li>
+      <li><strong>Resolution path:</strong> File bug with minimal reproducer + counter data + expected vs. actual perf. If throttle-related, work with power team.</li>
+    </ol>
+  </div>
+
+  <h2>Problem Type 3 — Design Question</h2>
+  <div class="card blue">
+    <div class="card-title">Example: "Design a performance test suite for validating a new GPU hardware feature."</div>
+    <p><strong>Your answer structure:</strong></p>
+    <ol>
+      <li><strong>Define the feature:</strong> What hardware behavior does it change? (e.g., new prefetch unit, wider memory bus, new texture cache size)</li>
+      <li><strong>Identify the sensitivity surface:</strong> What workload characteristics would expose this feature's benefit? (For a prefetch unit: stride-sequential access patterns. For wider bus: bandwidth-saturating workloads.)</li>
+      <li><strong>Build microbenchmarks first:</strong> Isolate exactly the hardware behavior. Sweep the parameter space. Validate that the counters show the expected hardware behavior change.</li>
+      <li><strong>Build macro benchmarks:</strong> Real apps/games that exercise the target workload class. Measure end-to-end impact.</li>
+      <li><strong>Establish statistical validity:</strong> Multiple runs, thermal conditioning, coefficient of variation &lt;2% for reliable regression detection.</li>
+      <li><strong>Automate:</strong> Integrate into CI. Define regression thresholds. Alert on deviations.</li>
+    </ol>
+  </div>
+
+  <h2>Quick Reference — Numbers to Have Ready</h2>
+  <div class="g3">
+    <div class="card">
+      <div class="card-title">iPhone Screen BW (rough)</div>
+      <ul>
+        <li>2796×1290 @ 60fps, RGBA32: ~5 GB/s read</li>
+        <li>ProMotion 120Hz doubles this</li>
+        <li>TBDR saves this by keeping FB on-chip</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Threadgroup Memory Limits</div>
+      <ul>
+        <li>Apple GPU: typically 32KB per threadgroup</li>
+        <li>Max threads/group: 1024</li>
+        <li>SIMD group size: 32 threads</li>
+        <li>Max threadgroups: device-query at runtime</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">LPDDR5/5X Specs</div>
+      <ul>
+        <li>A18 Pro: LPDDR5 ~68 GB/s</li>
+        <li>M4 base: LPDDR5X ~120 GB/s</li>
+        <li>M4 Max: 546 GB/s (wide bus)</li>
+        <li>Latency: ~100ns / ~200 cycles at 2GHz</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Last-Minute Reminders</h2>
+  <div class="card gold">
+    <div class="card-title">🎯 Do These Things in Every Session</div>
+    <ul>
+      <li><strong>Ask one great question per session.</strong> Apple values intellectual curiosity. A question that shows you've thought deeply about their architecture is more impressive than any answer.</li>
+      <li><strong>Quantify everything.</strong> "Faster" is not an answer. "12% reduction in frame time, measured across these three workload classes" is.</li>
+      <li><strong>Bridge every gap proactively.</strong> Don't wait to be asked about Metal experience. Bring it up: "I haven't used Metal in production, but here's exactly how my HIP/OpenCL experience maps..."</li>
+      <li><strong>Show the reasoning, not just the conclusion.</strong> Apple wants to see how you think, not just what you know.</li>
+      <li><strong>Thermal awareness in every answer.</strong> Every Apple GPU discussion should include power/thermal awareness. This differentiates you from data center GPU engineers.</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>

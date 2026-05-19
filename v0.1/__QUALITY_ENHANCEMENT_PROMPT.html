@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quality Enhancement Prompt — Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;font-size:13px;line-height:1.8;background:#fdfcf7;color:#111}
+.page{max-width:900px;margin:0 auto;padding:36px 52px}
+h1{font-size:24px;color:#1c2438;margin:0 0 4px}
+h2{font-size:16px;color:#1c2438;margin:24px 0 8px;border-bottom:2px solid #e3b341;padding-bottom:4px}
+h3{font-size:13.5px;color:#1a3060;margin:14px 0 5px}
+p{margin-bottom:9px;font-size:12.5px}
+.hdr{margin-bottom:22px;padding-bottom:14px;border-bottom:2px solid #e3b341}
+.tag{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:3px}
+.sub{font-size:12px;color:#555;font-style:italic}
+/* Prompt blocks */
+.prompt{background:#fff8e0;border:2px solid #e3b341;border-radius:8px;padding:14px 18px;margin:12px 0;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.72;white-space:pre-wrap;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.prompt .hl{color:#c0392b;font-weight:bold}
+.prompt .green{color:#1a7a3a;font-weight:bold}
+.prompt .blue{color:#2a6099;font-weight:bold}
+.prompt .gold{color:#8a6d1f;font-weight:bold}
+.prompt .gray{color:#888}
+/* Callouts */
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:10px 14px;margin:12px 0;border-radius:0 6px 6px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.purple{border-color:#7b2d8b;background:#fdf5ff}
+.callout strong{display:block;margin-bottom:3px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;font-family:sans-serif}
+/* Example blocks */
+.example{background:#f3f5f8;border:1px solid #d0d6e2;border-radius:7px;padding:14px 18px;margin:12px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.example h4{font-family:sans-serif;font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+.tier{margin-bottom:12px;padding:10px 14px;border-radius:6px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.tier.f{background:#e8fff0;border-left:4px solid #27ae60}
+.tier.i{background:#fff8e0;border-left:4px solid #e3b341}
+.tier.p{background:#f0f0ff;border-left:4px solid #7b2d8b}
+.tier-label{font-family:sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.tier.f .tier-label{color:#1a7a3a}
+.tier.i .tier-label{color:#8a6d1f}
+.tier.p .tier-label{color:#7b2d8b}
+.tier p{margin:0;font-size:12px;color:#333}
+ul{margin:5px 0 9px 17px}li{margin-bottom:4px;font-size:12px}
+.footer{text-align:center;margin-top:36px;padding-top:14px;border-top:1px solid #e0d8c8;font-family:sans-serif;font-size:9.5px;color:#bbb;letter-spacing:2px;text-transform:uppercase}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:11.5px}
+th{background:#1c2438;color:#fff;padding:7px 10px;text-align:left;font-family:sans-serif;font-size:9.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:5px 9px;border-bottom:1px solid #e8e0d0;vertical-align:top}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:10.5px;color:#1c2438}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="hdr">
+  <div class="tag">Add to Universal Prompt · Every Session · Material Depth Standard</div>
+  <h1>📐 Quality Enhancement Prompt</h1>
+  <p style="font-size:14px;color:#1c2438;font-weight:bold;margin:4px 0">AI/ML Infrastructure from Silicon to Scale — Venkat Vinjam</p>
+  <div class="sub">This prompt block defines the book's mission, three-tier review structure, Key Takeaways standard, and material depth requirements. Append it to the Universal Session Prompt every time.</div>
+</div>
+
+<!-- ══════════ THE BOOK'S MISSION ══════════ -->
+<h2>The Book's Central Mission (Understand This First)</h2>
+
+<div class="callout purple">
+<strong>Who This Book Grows</strong>
+The reader starts as a strong software or hardware engineer who knows their current domain well. The book guides them — in 2–3 years of deliberate study and practice — to become a Principal Performance Architect who can design, optimize, and operate AI infrastructure from GPU silicon physics all the way to 100,000-GPU cluster operations. At each level they learn to save infrastructure cost, reduce operational overhead, and increase team productivity through better systems thinking.
+</div>
+
+<p>Every chapter must serve three readers simultaneously:</p>
+<ul>
+  <li><strong>Foundational reader</strong> — a strong software engineer or CS graduate entering AI infrastructure. Has Python and systems basics. Needs mental models built from first principles.</li>
+  <li><strong>Intermediate reader</strong> — a senior engineer with 3–5 years in cloud, HPC, or ML engineering. Has seen GPU clusters. Needs to close depth gaps and connect concepts across layers.</li>
+  <li><strong>Principal-level reader</strong> — a staff/principal engineer preparing for or operating at the highest technical level. Needs quantitative rigor, cross-system reasoning, and the ability to drive architectural decisions with cost and performance data.</li>
+</ul>
+
+<!-- ══════════ THE FULL QUALITY ENHANCEMENT PROMPT ══════════ -->
+<h2>The Quality Enhancement Prompt — Paste After Universal Prompt</h2>
+
+<div class="callout red">
+<strong>How to Use</strong>
+Paste the Universal Session Prompt first (from SESSION_STARTER_KIT.html Part 2), then immediately paste this block below it. Together they define both the design standard and the content depth standard.
+</div>
+
+<div class="prompt"><span class="hl">━━━ BOOK MISSION &amp; DEPTH STANDARD ━━━</span>
+
+<span class="gold">CENTRAL PURPOSE OF THIS BOOK:</span>
+This book grows engineers from their current domain (software, hardware, HPC, cloud)
+to Principal Performance Architect level in AI/ML infrastructure over 2-3 years.
+At every level, the goal is concrete: save infrastructure cost, reduce operational
+overhead, and increase team productivity through rigorous systems thinking.
+
+Readers are at three levels — every chapter must serve all three:
+  <span class="green">Level 1 — Foundational:</span> Strong engineer new to AI infrastructure.
+    Needs: first-principles mental models, clear "why does this matter" framing,
+    intuitive analogies, no assumed GPU/ML background.
+    
+  <span class="blue">Level 2 — Intermediate:</span> Senior engineer, 3-5 years in cloud/HPC/ML.
+    Needs: quantitative depth, cross-system connections, profiling workflows,
+    production numbers they can verify on their own cluster.
+    
+  <span class="hl">Level 3 — Principal:</span> Staff/principal engineer, architecture-level decisions.
+    Needs: cost-performance tradeoff math, system design patterns at scale,
+    failure mode reasoning, ROI-driven decision frameworks, interview-ready depth.
+
+<span class="gold">MATERIAL DEPTH REQUIREMENTS — Apply to every section:</span>
+
+1. EXPLAIN THE "WHY" BEFORE THE "WHAT"
+   Every concept must start with: why does this problem exist?
+   What would break or cost more without this technique?
+   Bad: "FlashAttention uses tiling to reduce memory."
+   Good: "Standard attention materializes an N×N matrix in HBM. At S=8192 on H100,
+         that is 10.7 GB just for attention scores — for one forward pass. FlashAttention
+         eliminates that by tiling the computation into SRAM. The result: memory usage
+         drops from O(N²) to O(N), enabling context lengths that were previously
+         impossible."
+
+2. EVERY CLAIM NEEDS A NUMBER
+   Vague: "quantization reduces memory significantly"
+   Precise: "INT4 quantization reduces a 70B model from 140 GB (BF16) to 35 GB,
+            fitting on a single MI300X instead of requiring tensor parallelism across
+            two H100s — a direct infrastructure cost reduction."
+
+3. CONNECT TO COST AND PRODUCTIVITY AT EVERY OPPORTUNITY
+   After every major technique, add: what does this save?
+   Examples: "This reduces checkpoint overhead from 8 min to 45 sec — recovering
+             ~2% cluster MFU on a 72-hour training run = $14,000 saved per run at
+             $3/GPU-hr on a 1,000-GPU cluster."
+
+4. WORKED EXAMPLES — One per major concept (use .worked CSS class)
+   Show the math step by step. Use real hardware numbers.
+   Label assumptions. Show the formula, then plug in values, then interpret the result.
+
+5. PROFILING COOKBOOK — Include in technical chapters (Ch 4-17)
+   A short "how to diagnose this in production" subsection:
+   - What metric to look at first (DCGM field, nsys stat, etc.)
+   - Command to run
+   - What the number means
+   - Decision tree: if X → do Y, if Z → do W
+
+<span class="gold">KEY TAKEAWAYS SECTION — Required at end of every chapter:</span>
+
+Format the Key Takeaways as a structured block with this exact structure:
+
+&lt;div class="takeaways"&gt;
+  &lt;h3&gt;Key Takeaways&lt;/h3&gt;
+  
+  &lt;div class="takeaway-group"&gt;
+    &lt;div class="tg-label"&gt;Core Concepts&lt;/div&gt;
+    &lt;ul&gt;
+      &lt;!-- 3-4 bullets: the fundamental ideas of the chapter, phrased as durable facts --&gt;
+      &lt;!-- These should be memorable sentences a reader can recall in an interview --&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+  
+  &lt;div class="takeaway-group"&gt;
+    &lt;div class="tg-label"&gt;Cost &amp; Productivity Impact&lt;/div&gt;
+    &lt;ul&gt;
+      &lt;!-- 2-3 bullets: specific dollar/percentage savings enabled by this chapter's techniques --&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+  
+  &lt;div class="takeaway-group"&gt;
+    &lt;div class="tg-label"&gt;Principal-Level Insight&lt;/div&gt;
+    &lt;ul&gt;
+      &lt;!-- 2-3 bullets: the non-obvious insight only someone with deep experience would know --&gt;
+      &lt;!-- What separates a principal from a senior on this topic --&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+Add this CSS for the takeaways block:
+.takeaways{background:#f3f5f8;border:2px solid #1c2438;border-radius:9px;
+           padding:18px 22px;margin:32px 0;
+           -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.takeaways h3{color:#1c2438;margin:0 0 14px;font-size:15px;border:none;padding:0}
+.takeaway-group{margin-bottom:14px}
+.takeaway-group:last-child{margin-bottom:0}
+.tg-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;
+          letter-spacing:1px;color:#e3b341;margin-bottom:6px}
+.takeaway-group ul{margin-left:16px}
+.takeaway-group li{font-size:12.5px;margin-bottom:4px;color:#222}
+
+<span class="gold">REVIEW QUESTIONS — Three-Tier Required Structure:</span>
+
+Replace the flat review questions list with this three-tier structure.
+Each tier has 2-3 questions. Total: 6-9 questions per chapter.
+
+&lt;div class="review-questions"&gt;
+  &lt;h3&gt;Review Questions&lt;/h3&gt;
+  
+  &lt;!-- TIER 1: FOUNDATIONAL --&gt;
+  &lt;div class="rq-tier foundational"&gt;
+    &lt;div class="rq-tier-label"&gt;
+      &lt;span class="rq-badge"&gt;Foundational&lt;/span&gt;
+      Build the mental model — no math required
+    &lt;/div&gt;
+    &lt;ol&gt;
+      &lt;!-- 2-3 questions testing conceptual understanding --&gt;
+      &lt;!-- Answerable by someone who just read the chapter carefully --&gt;
+      &lt;!-- No formulas needed. Explanation-based. --&gt;
+    &lt;/ol&gt;
+  &lt;/div&gt;
+  
+  &lt;!-- TIER 2: INTERMEDIATE --&gt;
+  &lt;div class="rq-tier intermediate"&gt;
+    &lt;div class="rq-tier-label"&gt;
+      &lt;span class="rq-badge"&gt;Intermediate&lt;/span&gt;
+      Apply and calculate — production context
+    &lt;/div&gt;
+    &lt;ol&gt;
+      &lt;!-- 2-3 questions requiring calculation or multi-step reasoning --&gt;
+      &lt;!-- Use the formulas from the chapter with real hardware numbers --&gt;
+      &lt;!-- "Given X, calculate Y. What does this tell you about Z?" --&gt;
+    &lt;/ol&gt;
+  &lt;/div&gt;
+  
+  &lt;!-- TIER 3: PRINCIPAL LEVEL --&gt;
+  &lt;div class="rq-tier principal"&gt;
+    &lt;div class="rq-tier-label"&gt;
+      &lt;span class="rq-badge"&gt;Principal Level&lt;/span&gt;
+      Design, decide, and defend — architecture reviews
+    &lt;/div&gt;
+    &lt;ol&gt;
+      &lt;!-- 2-3 open-ended system design or tradeoff questions --&gt;
+      &lt;!-- These are 45-minute interview questions at staff/principal level --&gt;
+      &lt;!-- Must require cross-chapter reasoning and cost/performance tradeoffs --&gt;
+      &lt;!-- "Design X for Y constraints. Justify every decision quantitatively." --&gt;
+    &lt;/ol&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+Add this CSS for the three-tier review block:
+.review-questions{margin-top:36px}
+.review-questions h3{font-size:16px;color:#1c2438;margin-bottom:16px;
+                     border-bottom:2px solid #e3b341;padding-bottom:5px}
+.rq-tier{border-radius:8px;padding:14px 18px;margin-bottom:14px;
+          -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rq-tier.foundational{background:#e8fff0;border-left:5px solid #27ae60}
+.rq-tier.intermediate{background:#fffbf0;border-left:5px solid #e3b341}
+.rq-tier.principal{background:#f0f0ff;border-left:5px solid #7b2d8b}
+.rq-tier-label{font-family:sans-serif;font-size:10px;color:#555;margin-bottom:10px;
+               display:flex;align-items:center;gap:8px}
+.rq-badge{font-weight:700;font-size:9px;padding:2px 9px;border-radius:10px;
+          text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.foundational .rq-badge{background:#27ae60;color:#fff}
+.intermediate .rq-badge{background:#e3b341;color:#1c2438}
+.principal .rq-badge{background:#7b2d8b;color:#fff}
+.rq-tier ol{margin-left:18px}
+.rq-tier li{margin-bottom:10px;font-size:12.5px;line-height:1.7;color:#222}
+.rq-tier li::marker{font-weight:700}
+
+<span class="gold">CHAPTER ANATOMY — Required section order:</span>
+
+Every chapter must follow this structure:
+  1. Chapter header (.ch-hdr with label, title, subtitle, meta)
+  2. Opening quote (.pullquote)
+  3. Chapter overview paragraph — sets up the "why this matters" framing
+  4. Learning objectives (.objectives) — what the reader gains at each level
+  5. Main content sections (numbered, with inline SVG diagrams)
+  6. Profiling/diagnostic cookbook (for technical chapters Ch 4-17)
+  7. Worked example(s) — at least one per chapter using real hardware numbers
+  8. KEY TAKEAWAYS (.takeaways) — 3 groups: Core Concepts, Cost Impact, Principal Insight
+  9. REVIEW QUESTIONS (.review-questions) — 3 tiers: Foundational, Intermediate, Principal
+  10. Chapter end mark (.ch-end)
+
+<span class="gold">WRITING QUALITY STANDARDS:</span>
+
+• Never write a section that a senior engineer could have written from Wikipedia.
+  Every paragraph should contain at least one of:
+  - A number that can only be derived from the hardware spec
+  - A connection between two layers (e.g. "this is why the roofline changes when...")
+  - A production insight ("in a cluster &gt;1,000 GPUs, this becomes the dominant factor")
+  - A cost consequence ("this directly translates to X per GPU-hour")
+
+• The Foundational reader must never feel lost. Introduce every new term before using it.
+  Use analogies from everyday systems (memory as a filing cabinet, pipeline as an assembly line).
+
+• The Principal reader must never feel patronized. Include the math. Show the derivation.
+  Make every formula derivable from first principles — don't just state results.
+
+• Cross-reference liberally. If a concept builds on another chapter, say so explicitly:
+  "(See Chapter 4 for the roofline derivation)" or "(This is why Ch 11 covers KV paging)"
+
+• Use confidence labels on ALL hardware specs:
+  [SHIPPED] = measured, shipping hardware
+  [ANNOUNCED] = vendor-disclosed, not yet shipping
+  [ROADMAP] = directional, treat as approximate
+  [REPRESENTATIVE] = illustrative example, not a specific product claim</div>
+
+<!-- ══════════ EXAMPLE OUTPUT ══════════ -->
+<h2>What the Output Should Look Like — Example Excerpts</h2>
+
+<div class="example">
+  <h4>Example: Key Takeaways Block (Ch 4 — Memory Hierarchy)</h4>
+  
+  <div style="background:#f3f5f8;border:2px solid #1c2438;border-radius:9px;padding:16px 20px;">
+    <p style="font-size:14px;font-weight:bold;color:#1c2438;margin-bottom:12px">Key Takeaways</p>
+    
+    <div style="margin-bottom:12px">
+      <div style="font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#e3b341;margin-bottom:6px">Core Concepts</div>
+      <ul style="margin-left:16px;font-size:12.5px">
+        <li>Memory bandwidth — not compute FLOPS — is the primary bottleneck for most LLM operations. The roofline ridge point for H100 (295 FLOP/byte) means any operation with AI below 295 is memory-bound regardless of how many tensor cores are available.</li>
+        <li>FlashAttention reduces attention memory from O(N²) to O(N) by tiling computation into SRAM and never writing the full score matrix to HBM — enabling 4–8× longer context windows on the same hardware.</li>
+        <li>ECC protection on HBM costs 6.25% of capacity but is non-negotiable in production: a single uncorrectable bit error (Xid 63) requires immediate node replacement to prevent silent model corruption.</li>
+      </ul>
+    </div>
+    
+    <div style="margin-bottom:12px">
+      <div style="font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#e3b341;margin-bottom:6px">Cost &amp; Productivity Impact</div>
+      <ul style="margin-left:16px;font-size:12.5px">
+        <li>FlashAttention enables training at 128K context (vs 8K without) on the same H100 cluster — expanding model capability without hardware cost increase. Organizations that adopted it in 2022 saved an estimated 2–4× in GPU-hours for long-context fine-tuning.</li>
+        <li>Proper memory access pattern optimization (coalesced vs strided) alone can improve kernel throughput 3–5×, directly reducing inference cost per token for bandwidth-bound decode operations.</li>
+      </ul>
+    </div>
+    
+    <div>
+      <div style="font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#e3b341;margin-bottom:6px">Principal-Level Insight</div>
+      <ul style="margin-left:16px;font-size:12.5px">
+        <li>The roofline ridge point shifts with every GPU generation: A100 at 156, H100 at 295, B200 at 563 FLOP/byte. An operation that was memory-bound on A100 may become compute-bound on B200 — your optimization strategy must be re-evaluated when you change hardware generations, not just carried forward.</li>
+        <li>HBM capacity is the real scaling limit for inference, not FLOPS. A 70B model in BF16 requires 140 GB — fitting it on two H100s (80 GB each) requires tensor parallelism that adds AllReduce overhead on every forward pass. Every GB of HBM you save through quantization or GQA directly reduces communication overhead, not just memory cost.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="example">
+  <h4>Example: Three-Tier Review Questions (Ch 4 — Memory Hierarchy)</h4>
+
+  <div class="tier f">
+    <div class="tier-label">🟢 FOUNDATIONAL — Build the mental model</div>
+    <p><strong>Q1.</strong> A colleague says "our GPU has 989 TFLOPS, so it can do 989 trillion operations per second no matter what we run." Explain why this is wrong using the roofline model. What information is missing from their analysis?</p>
+    <br>
+    <p><strong>Q2.</strong> In plain terms, explain what FlashAttention does differently from standard attention. Why does writing intermediate results to HBM matter for performance? Use an analogy to explain the tiling concept to someone who has never seen a GPU.</p>
+  </div>
+
+  <div class="tier i" style="margin-top:10px">
+    <div class="tier-label">🟡 INTERMEDIATE — Apply and calculate</div>
+    <p><strong>Q3.</strong> You are running a GEMV operation (matrix-vector multiply) on H100 with M=1, K=8192, N=8192, BF16. (a) Calculate the arithmetic intensity. (b) Locate it on the H100 roofline. (c) What is the theoretical maximum throughput for this operation? (d) If your measured throughput is 60% of that, what are the two most likely root causes?</p>
+    <br>
+    <p><strong>Q4.</strong> Your production cluster runs LLaMA-3 70B inference with 4K context length. The KV cache is stored in FP16. (a) Calculate KV cache memory per request (L=80, H_kv=8, D=128). (b) If you switch to FP8 KV cache, how many more concurrent requests can you serve on one H100 80 GB? (c) What accuracy risk do you accept and how would you validate it?</p>
+  </div>
+
+  <div class="tier p" style="margin-top:10px">
+    <div class="tier-label">🟣 PRINCIPAL LEVEL — Design, decide, and defend</div>
+    <p><strong>Q5.</strong> You are a Principal Architect at a company about to upgrade from H100 to B200 for LLM inference. The B200 has 2.4× the FLOPS but only 2.4× the HBM bandwidth. Your current H100 inference workload runs at 35% MFU on decode (memory-bound). (a) Calculate the expected MFU on B200 for the same workload. (b) Identify which operations will shift performance regime (memory-bound → compute-bound) on B200. (c) Which optimization investments you made for H100 are now less valuable, and where should you redirect engineering effort? Justify every decision quantitatively.</p>
+    <br>
+    <p><strong>Q6.</strong> Your team is evaluating whether to enable FlashAttention-3 for a production 70B model serving 100K requests/day at 8K average context length. You need to present a cost-benefit analysis to your VP. Calculate: (a) current HBM memory used for attention scores per request, (b) throughput improvement expected from FA-3 (use data from the chapter), (c) annual compute cost savings at $2.50/GPU-hr, (d) the engineering investment to validate FA-3 on your serving stack, and (e) your recommendation with explicit assumptions labeled.</p>
+  </div>
+</div>
+
+<!-- ══════════ QUICK REFERENCE TABLE ══════════ -->
+<h2>Quick Reference — Three Tiers Compared</h2>
+
+<table>
+<thead><tr><th>Dimension</th><th>🟢 Foundational</th><th>🟡 Intermediate</th><th>🟣 Principal Level</th></tr></thead>
+<tbody>
+<tr><td><strong>Who answers it</strong></td><td>Engineer who just read the chapter</td><td>Senior with 3-5 yrs experience</td><td>Staff/Principal, architecture review</td></tr>
+<tr><td><strong>Math required</strong></td><td>None — explanation only</td><td>Yes — plug formula, interpret result</td><td>Yes — derive, then design system</td></tr>
+<tr><td><strong>Scope</strong></td><td>One concept from this chapter</td><td>Multiple concepts, production context</td><td>Cross-chapter, cost-performance tradeoff</td></tr>
+<tr><td><strong>Time to answer</strong></td><td>2–3 minutes</td><td>5–10 minutes</td><td>20–45 minutes (interview question)</td></tr>
+<tr><td><strong>Success criteria</strong></td><td>Correct mental model, right analogy</td><td>Right number, right diagnosis</td><td>Defensible design with quantified tradeoffs</td></tr>
+<tr><td><strong>Career level target</strong></td><td>Junior → Mid in year 1</td><td>Mid → Senior in year 2</td><td>Senior → Principal in year 3</td></tr>
+</tbody>
+</table>
+
+<!-- ══════════ HOW TO COMBINE ══════════ -->
+<h2>Combining the Prompts — Exact Order</h2>
+
+<div class="callout blue">
+<strong>The Two-Prompt Pattern — Every New Chat</strong>
+Start every new session chat with both blocks in this order. Together they take about 30 seconds to paste and guarantee consistent, high-quality, three-tier output.
+</div>
+
+<div style="background:#f3f5f8;border:1px solid #d0d6e2;border-radius:8px;padding:16px 18px;margin:12px 0;font-size:12.5px">
+  <p style="font-family:sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:10px">PASTE IN THIS ORDER:</p>
+  <p><strong>Block 1</strong> — Universal Session Prompt (from SESSION_STARTER_KIT.html Part 2)<br>
+  <span style="color:#555;font-size:12px">Contains: design contract, CSS tokens, print fix, PDF pipeline code, content requirements</span></p>
+  <br>
+  <p><strong>Block 2</strong> — Quality Enhancement Prompt (this file, the large yellow block above)<br>
+  <span style="color:#555;font-size:12px">Contains: book mission, depth standards, Key Takeaways format, three-tier review questions format, writing quality rules</span></p>
+  <br>
+  <p><strong>Block 3</strong> — Chapter-specific addition (from SESSION_STARTER_KIT.html Part 3)<br>
+  <span style="color:#555;font-size:12px">Contains: source filename, required diagrams, key formulas, cross-references for that chapter</span></p>
+</div>
+
+<div class="callout green">
+<strong>What Changes vs What Stays Constant</strong>
+Blocks 1 and 2 are IDENTICAL across every session — copy-paste them verbatim, no editing. Only Block 3 changes each session (chapter name, source file, required diagrams). The consistency comes from the invariant blocks.
+</div>
+
+<div class="footer">QUALITY_ENHANCEMENT_PROMPT.html · AI/ML Infrastructure from Silicon to Scale · Venkat Vinjam · May 2026</div>
+</div>
+</body>
+</html>

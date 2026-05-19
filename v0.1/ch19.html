@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 19 — Production Resilience | AI/ML Infrastructure from Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
+.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
+.mem-tier-body{flex:1}
+.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
+.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+.fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+
+h1{font-size:28px;color:#1c2438;margin:0 0 8px;line-height:1.2}
+h2{font-size:19px;color:#1c2438;margin:34px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15.5px;color:#1a3060;margin:24px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:16px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 20px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.ch-hdr{margin-bottom:36px;padding-bottom:20px;border-bottom:1px solid #e0d8c8}
+.ch-n{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:6px}
+.ch-t{font-size:30px;font-weight:900;color:#1c2438;line-height:1.2;margin-bottom:7px}
+.ch-s{font-size:12.5px;color:#555;font-style:italic;line-height:1.6}
+.part-banner{text-align:center;padding:32px 20px;background:linear-gradient(135deg,#1c2438 0%,#2a4580 100%);color:#fff;margin:0 -58px 36px;border-radius:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.part-n{font-family:sans-serif;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#e3b341;margin-bottom:8px}
+.part-t{font-size:22px;font-weight:900}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.purple{border-color:#7b2d8b;background:#fdf5ff}
+.callout strong{display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.formula{background:#12131f;color:#cde;padding:14px 18px;border-radius:6px;font-family:'Courier New',monospace;font-size:11px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.diagram-wrap{background:#f3f5f8;border:1px solid #d0d6e2;border-radius:8px;padding:10px;margin:18px 0;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.diagram-wrap figcaption{font-family:sans-serif;font-size:10.5px;color:#666;margin-top:8px;font-style:italic}
+code{background:#f0f2f5;padding:1px 4px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#1c2438}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e0d0}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#1a7a3a;font-weight:600}.warn{color:#a55000;font-weight:600}.bad{color:#c0392b;font-weight:600}
+.box{border:2px solid #1c2438;border-radius:8px;padding:16px 20px;margin:24px 0;background:#fff}
+.box h4{color:#1c2438;margin:0 0 9px;font-size:11.5px;text-transform:uppercase;letter-spacing:1px;font-style:normal}
+.tip{background:#f0f6ff;border:1px solid #aac4e8;padding:9px 13px;border-radius:6px;margin:13px 0;font-size:12px}
+.label-shipped{display:inline-block;background:#e8fff0;color:#1a7a3a;font-family:sans-serif;font-size:9.5px;padding:2px 7px;border-radius:10px;margin-left:4px;font-weight:700}
+.label-conf{display:inline-block;background:#e8fff0;color:#1a7a3a;font-family:sans-serif;font-size:9.5px;padding:2px 7px;border-radius:10px;margin-left:4px;font-weight:700}
+.label-env{display:inline-block;background:#fff8e0;color:#a55000;font-family:sans-serif;font-size:9.5px;padding:2px 7px;border-radius:10px;margin-left:4px;font-weight:700}
+.ch-end{text-align:center;margin-top:48px;padding-top:20px;border-top:1px solid #e0d8c8;font-family:sans-serif;font-size:10px;color:#bbb;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:14px;font-size:12.5px;line-height:1.7}
+.section-anchor{color:#1c2438;text-decoration:none}</style>
+</head>
+<body>
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="ch18.html">&#8592; Ch 18</a>
+  <a href="ch20.html">Ch 20 &#8594;</a>
+  <a href="ch06.html">Ch 6</a>
+  <a href="ch10.html">Ch 10</a>
+  <a href="ch17.html">Ch 17</a>
+</div>
+<div id="sidebar">
+  <h4>Chapter 19</h4>
+  <a href="#s191">19.1 Why Production Resilience Is the Hidd</a>
+  <a href="#s192">19.2 Failure Taxonomy: What Breaks and How</a>
+  <a href="#s193">19.3 Checkpointing Strategies</a>
+  <a href="#s194">19.4 NCCL Failure Detection and Recovery</a>
+  <a href="#s195">19.5 GPU Health Monitoring with DCGM</a>
+  <a href="#s196">19.6 Job Scheduler Resilience: Kubernetes </a>
+  <a href="#s197">19.7 SRE Playbooks for AI Infrastructure</a>
+  <a href="#s198">19.8 Quantifying the MFU Impact of Resilie</a>
+  <a href="#s199">19.9 Resilience Design Patterns for the He</a>
+  <a href="#review">Chapter 19 Review Questions</a>
+</div>
+<div class="page">
+<div class="ch-label">Chapter 19</div>
+<h1 class="ch-title">Production Resilience, Fault Tolerance &amp; SRE for AI Infrastructure</h1>
+<div class="ch-subtitle">GPU failure rates · Checkpoint strategies · NCCL recovery · Job preemption · Cluster-level MFU protection · SRE playbooks for distributed training and inference at scale</div>
+<div class="ch-divider"></div>
+
+<blockquote style="border-left:3px solid #e3b341;padding:10px 20px;margin:0 0 24px;font-style:italic;color:#444;font-size:13px;background:#fffbf0;border-radius:0 6px 6px 0">
+"A 10,000-GPU training job that fails at hour 47 of a 72-hour run and cannot recover loses 47 GPU-hours multiplied by 10,000. That is 470,000 GPU-hours of compute — more than some organizations use in a year. Fault tolerance is not a reliability concern. It is an economics concern."
+<br><span style="font-size:11px;color:#888;font-style:normal;display:block;margin-top:6px">— Production AI Infrastructure Principle</span>
+</blockquote>
+
+<h2 id="s191">19.1 Why Production Resilience Is the Hidden Bottleneck</h2>
+
+<p>The infographic framing has shifted: we moved from "GPU shortage problem" to "system bottleneck problem." The next hidden bottleneck is <strong>operational resilience</strong> — the ability of AI infrastructure to maintain high cluster utilization despite the inevitable reality that hardware fails, networks partition, and software deadlocks.</p>
+
+<p>At the scale of 10,000–100,000 GPUs, failure is not an exception. It is a <em>constant background condition</em>. A single GPU failing every 200,000 GPU-hours sounds rare — until you realize a 10,000-GPU cluster experiences that failure statistically every 20 hours. Without resilience engineering, each failure terminates the job. With it, recovery happens in minutes.</p>
+
+<!-- DIAGRAM 1: The Resilience Gap -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 320" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1c2438"/>
+      <stop offset="100%" stop-color="#2a4580"/>
+    </linearGradient>
+  </defs>
+  <!-- Title -->
+  <text x="390" y="22" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">The Resilience Gap: Cluster MFU Without vs With Fault Tolerance</text>
+
+  <!-- Y axis -->
+  <line x1="80" y1="40" x2="80" y2="280" stroke="#999" stroke-width="1.5"/>
+  <!-- X axis -->
+  <line x1="80" y1="280" x2="740" y2="280" stroke="#999" stroke-width="1.5"/>
+
+  <!-- Y labels -->
+  <text x="72" y="44" text-anchor="end" font-family="sans-serif" font-size="10" fill="#666">100%</text>
+  <text x="72" y="104" text-anchor="end" font-family="sans-serif" font-size="10" fill="#666">80%</text>
+  <text x="72" y="164" text-anchor="end" font-family="sans-serif" font-size="10" fill="#666">60%</text>
+  <text x="72" y="224" text-anchor="end" font-family="sans-serif" font-size="10" fill="#666">40%</text>
+  <text x="72" y="280" text-anchor="end" font-family="sans-serif" font-size="10" fill="#666">0%</text>
+  <text x="20" y="165" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666" transform="rotate(-90,20,165)">Cluster MFU</text>
+
+  <!-- Grid lines -->
+  <line x1="80" y1="104" x2="740" y2="104" stroke="#eee" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="80" y1="164" x2="740" y2="164" stroke="#eee" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="80" y1="224" x2="740" y2="224" stroke="#eee" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <!-- Without resilience: drops sharply at failures -->
+  <!-- High MFU, then crash to 0, recovery time, back up -->
+  <polyline points="80,80 200,80 200,280 260,280 260,80 380,80 380,280 440,280 440,80 560,80 560,280 620,280 620,80 740,80"
+    fill="none" stroke="#c0392b" stroke-width="2.5"/>
+  <!-- Shade under bad line -->
+  <polygon points="80,80 200,80 200,280 260,280 260,80 380,80 380,280 440,280 440,80 560,80 560,280 620,280 620,80 740,80 740,280 80,280"
+    fill="#c0392b" fill-opacity="0.08"/>
+
+  <!-- With resilience: stays mostly high with small dips -->
+  <polyline points="80,90 200,90 200,130 230,130 230,95 380,95 380,135 410,135 410,98 560,98 560,138 590,138 590,100 740,100"
+    fill="none" stroke="#27ae60" stroke-width="2.5"/>
+  <polygon points="80,90 200,90 200,130 230,130 230,95 380,95 380,135 410,135 410,98 560,98 560,138 590,138 590,100 740,100 740,280 80,280"
+    fill="#27ae60" fill-opacity="0.10"/>
+
+  <!-- Failure event markers -->
+  <line x1="200" y1="40" x2="200" y2="280" stroke="#c0392b" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="202" y="56" font-family="sans-serif" font-size="9" fill="#c0392b">GPU fail</text>
+  <line x1="380" y1="40" x2="380" y2="280" stroke="#c0392b" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="382" y="56" font-family="sans-serif" font-size="9" fill="#c0392b">NCCL hang</text>
+  <line x1="560" y1="40" x2="560" y2="280" stroke="#c0392b" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="562" y="56" font-family="sans-serif" font-size="9" fill="#c0392b">Node loss</text>
+
+  <!-- Legend -->
+  <rect x="440" y="240" width="12" height="3" fill="#c0392b" rx="1"/>
+  <text x="458" y="245" font-family="sans-serif" font-size="10" fill="#555">No resilience — avg MFU ~38%</text>
+  <rect x="440" y="258" width="12" height="3" fill="#27ae60" rx="1"/>
+  <text x="458" y="263" font-family="sans-serif" font-size="10" fill="#555">With resilience — avg MFU ~78%</text>
+
+  <!-- X label -->
+  <text x="410" y="298" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">Training Job Timeline (hours) →</text>
+</svg>
+<figcaption>Figure 19.1 — Cluster MFU with vs without fault tolerance. GPU failures without recovery collapse utilization to 0% until manual restart. With checkpointing + auto-recovery, the dip is 5–15 minutes instead of hours.</figcaption>
+</div>
+
+<div class="callout blue">
+<strong>The Economics Formula</strong>
+At $2–3/GPU-hour, a 10,000-GPU cluster costs $20,000–30,000 per hour. A 3-hour unrecoverable failure = $60,000–90,000 lost. A 15-minute checkpoint recovery = $5,000–7,500 lost. Resilience engineering ROI pays back in the first incident.
+</div>
+
+<h3>19.1.1 The New Bottleneck Hierarchy</h3>
+<p>The bottleneck hierarchy has shifted. In 2020–2024, the constraint was GPU compute availability. Today, for organizations that have secured GPU capacity, the constraint is <em>effective utilization</em> — keeping those GPUs doing productive work rather than sitting idle due to failures, hangs, and recovery overhead.</p>
+
+<table>
+<thead><tr><th>Bottleneck Era</th><th>Primary Constraint</th><th>Principal Engineer's Job</th></tr></thead>
+<tbody>
+<tr><td>2020–2024</td><td>GPU availability (shortage)</td><td>Get access to compute</td></tr>
+<tr><td>2024–2026</td><td>Memory BW, networking, power</td><td>Maximize per-GPU utilization</td></tr>
+<tr><td>2026+</td><td class="warn">Operational resilience &amp; sustained MFU</td><td class="good">Keep large jobs running, minimize MTTR</td></tr>
+</tbody>
+</table>
+
+<h2 id="s192">19.2 Failure Taxonomy: What Breaks and How Often</h2>
+
+<p>Understanding failure modes is prerequisite to designing recovery strategies. Failures in large AI clusters fall into four categories with very different detection and recovery characteristics.</p>
+
+<!-- DIAGRAM 2: Failure Taxonomy Tree -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 360" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <text x="390" y="22" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">AI Cluster Failure Taxonomy</text>
+
+  <!-- Root -->
+  <rect x="310" y="34" width="160" height="36" rx="6" fill="#1c2438"/>
+  <text x="390" y="56" text-anchor="middle" font-family="sans-serif" font-size="11" fill="white" font-weight="bold">AI Cluster Failures</text>
+
+  <!-- 4 branches -->
+  <!-- HW -->
+  <rect x="30" y="120" width="150" height="40" rx="6" fill="#c0392b"/>
+  <text x="105" y="135" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">Hardware Failures</text>
+  <text x="105" y="150" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white">GPU · Memory · NIC · PSU</text>
+  <line x1="390" y1="70" x2="105" y2="120" stroke="#888" stroke-width="1.5"/>
+
+  <!-- Network -->
+  <rect x="210" y="120" width="150" height="40" rx="6" fill="#d4820a"/>
+  <text x="285" y="135" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">Network Failures</text>
+  <text x="285" y="150" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white">NCCL hang · Switch drop · BW</text>
+  <line x1="390" y1="70" x2="285" y2="120" stroke="#888" stroke-width="1.5"/>
+
+  <!-- SW -->
+  <rect x="400" y="120" width="150" height="40" rx="6" fill="#2a6099"/>
+  <text x="475" y="135" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">Software Failures</text>
+  <text x="475" y="150" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white">OOM · CUDA error · Deadlock</text>
+  <line x1="390" y1="70" x2="475" y2="120" stroke="#888" stroke-width="1.5"/>
+
+  <!-- Infra -->
+  <rect x="590" y="120" width="160" height="40" rx="6" fill="#27ae60"/>
+  <text x="670" y="135" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">Infrastructure Failures</text>
+  <text x="670" y="150" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white">Power · Cooling · Storage I/O</text>
+  <line x1="390" y1="70" x2="670" y2="120" stroke="#888" stroke-width="1.5"/>
+
+  <!-- HW sub-items -->
+  <rect x="10" y="210" width="100" height="50" rx="4" fill="#fff" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="60" y="228" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b" font-weight="bold">GPU ECC/XID</text>
+  <text x="60" y="242" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">Xid 63,79,94</text>
+  <text x="60" y="255" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#c0392b">→ Node replace</text>
+  <line x1="60" y1="160" x2="60" y2="210" stroke="#c0392b" stroke-width="1"/>
+
+  <rect x="125" y="210" width="100" height="50" rx="4" fill="#fff" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="175" y="228" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b" font-weight="bold">HBM ECC UE</text>
+  <text x="175" y="242" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">Uncorrectable</text>
+  <text x="175" y="255" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#c0392b">→ GPU drain</text>
+  <line x1="175" y1="160" x2="175" y2="210" stroke="#c0392b" stroke-width="1"/>
+
+  <!-- Network sub-items -->
+  <rect x="215" y="210" width="110" height="50" rx="4" fill="#fff" stroke="#d4820a" stroke-width="1.5"/>
+  <text x="270" y="228" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#d4820a" font-weight="bold">NCCL Timeout</text>
+  <text x="270" y="242" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">Watchdog: 30s</text>
+  <text x="270" y="255" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#d4820a">→ Job restart</text>
+  <line x1="285" y1="160" x2="270" y2="210" stroke="#d4820a" stroke-width="1"/>
+
+  <rect x="335" y="210" width="110" height="50" rx="4" fill="#fff" stroke="#d4820a" stroke-width="1.5"/>
+  <text x="390" y="228" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#d4820a" font-weight="bold">Stragglers</text>
+  <text x="390" y="242" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">1 slow rank</text>
+  <text x="390" y="255" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#d4820a">→ Profile &amp; fix</text>
+  <line x1="390" y1="160" x2="390" y2="210" stroke="#d4820a" stroke-width="1"/>
+
+  <!-- SW sub-items -->
+  <rect x="455" y="210" width="110" height="50" rx="4" fill="#fff" stroke="#2a6099" stroke-width="1.5"/>
+  <text x="510" y="228" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#2a6099" font-weight="bold">OOM / CUDA</text>
+  <text x="510" y="242" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">CUDA_ERROR_OOM</text>
+  <text x="510" y="255" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#2a6099">→ Reduce batch/TP</text>
+  <line x1="475" y1="160" x2="510" y2="210" stroke="#2a6099" stroke-width="1"/>
+
+  <!-- Infra sub-items -->
+  <rect x="600" y="210" width="110" height="50" rx="4" fill="#fff" stroke="#27ae60" stroke-width="1.5"/>
+  <text x="655" y="228" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#27ae60" font-weight="bold">Thermal Throttle</text>
+  <text x="655" y="242" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">TGP drop → straggler</text>
+  <text x="655" y="255" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#27ae60">→ Check cooling</text>
+  <line x1="670" y1="160" x2="655" y2="210" stroke="#27ae60" stroke-width="1"/>
+
+  <!-- Recovery time legend -->
+  <rect x="50" y="300" width="680" height="42" rx="6" fill="#f3f5f8" stroke="#d0d6e2" stroke-width="1"/>
+  <text x="390" y="316" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#1c2438">Mean Time to Recovery (MTTR) by Failure Type</text>
+  <text x="130" y="332" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b">Hardware: 2–8 hrs</text>
+  <text x="280" y="332" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#d4820a">Network hang: 1–30 min</text>
+  <text x="450" y="332" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#2a6099">Software: 5–60 min</text>
+  <text x="630" y="332" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#27ae60">Thermal: 15–90 min</text>
+</svg>
+<figcaption>Figure 19.2 — Failure taxonomy for large AI clusters with recovery strategies and MTTR ranges.</figcaption>
+</div>
+
+<h3>19.2.1 GPU Failure Rates at Scale</h3>
+
+<div class="formula">GPU FAILURE RATE MODEL (Production Observations):
+
+Single GPU MTBF (Mean Time Between Failures):
+  Consumer GPU (RTX 4090): ~50,000 hours
+  Data center GPU (H100 SXM): ~100,000–200,000 hours
+  [ENV-SPECIFIC] Varies significantly with: power draw, cooling, workload
+
+EXPECTED FAILURES IN A CLUSTER:
+  Cluster size:     1,000 GPUs    10,000 GPUs    100,000 GPUs
+  MTBF per GPU:     150,000 hrs   150,000 hrs    150,000 hrs
+  Expected failures:
+    Per day:        0.16          1.6            16
+    Per week:       1.1           11             110
+    Per month:      4.4           44             440
+
+  → A 10,000-GPU cluster expects a GPU failure roughly every 15 hours.
+  → Without recovery: every training job > 15 hours will likely fail once.
+
+TOP NVIDIA GPU FAILURE SIGNALS (DCGM + XID Errors):
+  Xid 63  → Row remapping failure (HBM ECC uncorrectable) → replace GPU
+  Xid 79  → GPU has fallen off the bus (PCIe/NVLink failure) → reboot
+  Xid 94  → Contained ECC error (correctable, monitor closely)
+  Xid 119 → NVLink error → check NVLink topology, may need isolation
+  
+  AMD equivalent: RAS (Reliability/Availability/Serviceability) errors
+  ROCm-SMI: rocm-smi --showrasinfo all → ue_count (uncorrectable errors)</div>
+
+<h3>19.2.2 NCCL Hangs — The Silent Killer</h3>
+<p>GPU hardware failures are visible and detectable. NCCL hangs are far more dangerous because they are <em>silent</em> — all ranks appear to be running, but the collective operation never completes. Without a watchdog, a NCCL hang can hold a 10,000-GPU job for hours while billing continues and no progress is made.</p>
+
+<div class="formula">NCCL HANG ROOT CAUSES (in order of frequency):
+
+1. NETWORK PACKET LOSS (most common)
+   One corrupted or dropped packet in an AllReduce stalls all ranks.
+   Detection: NCCL_TIMEOUT (default: 30s in PyTorch)
+   Root cause check: ibstat | grep -i error; ethtool -S eth0 | grep error
+
+2. STRAGGLER RANK (second most common)
+   One GPU is 10× slower (thermal throttle, PCIe bandwidth degradation).
+   All other ranks wait at the collective barrier indefinitely.
+   Detection: per-rank timing logs; step time variance > 20% → investigate
+
+3. DEADLOCK IN PIPELINE PARALLELISM
+   PP rank 1 waiting for rank 2 while rank 2 waits for rank 1.
+   Requires careful ordering of send/recv operations.
+   Detection: py-spy dump → shows all threads blocked in ncclAllReduce
+
+4. NVLink FABRIC DEGRADATION
+   Partial NVLink failure reduces bandwidth but does not kill connection.
+   Appears as: NCCL timeout on large tensors, success on small.
+   Detection: nvidia-smi nvlink --status → check error counters
+
+PREVENTION:
+  NCCL_DEBUG=WARN              → enable NCCL warning logging
+  NCCL_TIMEOUT=1800            → set 30-minute hard timeout
+  TORCH_NCCL_HEARTBEAT_TIMEOUT → PyTorch watchdog (default: 120s)
+  NCCL_SOCKET_IFNAME=eth0      → force specific NIC (avoid ambiguity)</div>
+
+<h2 id="s193">19.3 Checkpointing Strategies</h2>
+
+<p>Checkpointing is the primary mechanism for limiting data loss when failures occur. The engineering challenge is that naively saving all model state is expensive — at scale, a checkpoint of a 70B parameter model in BF16 takes 140 GB, and writing that to distributed storage can itself take 5–10 minutes, during which training pauses.</p>
+
+<!-- DIAGRAM 3: Checkpoint Strategy Comparison -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 310" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <text x="390" y="20" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">Checkpoint Strategy Comparison</text>
+
+  <!-- Headers -->
+  <rect x="10" y="34" width="185" height="26" rx="4" fill="#1c2438"/>
+  <text x="102" y="51" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="white">Strategy</text>
+  <rect x="200" y="34" width="120" height="26" rx="4" fill="#1c2438"/>
+  <text x="260" y="51" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="white">Checkpoint Size</text>
+  <rect x="325" y="34" width="120" height="26" rx="4" fill="#1c2438"/>
+  <text x="385" y="51" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="white">Save Time</text>
+  <rect x="450" y="34" width="120" height="26" rx="4" fill="#1c2438"/>
+  <text x="510" y="51" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="white">Recovery Loss</text>
+  <rect x="575" y="34" width="195" height="26" rx="4" fill="#1c2438"/>
+  <text x="672" y="51" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="white">Best For</text>
+
+  <!-- Row 1 -->
+  <rect x="10" y="62" width="185" height="36" fill="#f3f5f8" stroke="#ddd" stroke-width="1"/>
+  <text x="102" y="76" text-anchor="middle" font-family="Georgia,serif" font-size="10.5" fill="#1c2438" font-weight="bold">Synchronous Full</text>
+  <text x="102" y="91" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">Pause → Save → Resume</text>
+  <rect x="200" y="62" width="120" height="36" fill="#f3f5f8" stroke="#ddd" stroke-width="1"/>
+  <text x="260" y="83" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">140 GB (70B BF16)</text>
+  <rect x="325" y="62" width="120" height="36" fill="#fff8e0" stroke="#ddd" stroke-width="1"/>
+  <text x="385" y="76" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#a55000" font-weight="bold">5–10 min</text>
+  <text x="385" y="90" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#a55000">Training paused</text>
+  <rect x="450" y="62" width="120" height="36" fill="#f3f5f8" stroke="#ddd" stroke-width="1"/>
+  <text x="510" y="83" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1a7a3a" font-weight="bold">Minutes</text>
+  <rect x="575" y="62" width="195" height="36" fill="#f3f5f8" stroke="#ddd" stroke-width="1"/>
+  <text x="672" y="83" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#555">Small jobs &lt;1,000 GPU</text>
+
+  <!-- Row 2 -->
+  <rect x="10" y="100" width="185" height="36" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  <text x="102" y="114" text-anchor="middle" font-family="Georgia,serif" font-size="10.5" fill="#1c2438" font-weight="bold">Async / Background</text>
+  <text x="102" y="129" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">Copy → Save in parallel</text>
+  <rect x="200" y="100" width="120" height="36" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  <text x="260" y="121" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">140 GB (2× memory peak)</text>
+  <rect x="325" y="100" width="120" height="36" fill="#e8fff0" stroke="#ddd" stroke-width="1"/>
+  <text x="385" y="114" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1a7a3a" font-weight="bold">~0 (async)</text>
+  <text x="385" y="128" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1a7a3a">Training continues</text>
+  <rect x="450" y="100" width="120" height="36" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  <text x="510" y="121" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1a7a3a" font-weight="bold">Minutes</text>
+  <rect x="575" y="100" width="195" height="36" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  <text x="672" y="121" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#555">Large training runs</text>
+
+  <!-- Row 3 -->
+  <rect x="10" y="138" width="185" height="36" fill="#f3f5f8" stroke="#ddd" stroke-width="1"/>
+  <text x="102" y="152" text-anchor="middle" font-family="Georgia,serif" font-size="10.5" fill="#1c2438" font-weight="bold">Incremental / Delta</text>
+  <text x="102" y="167" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">Changed tensors only</text>
+  <rect x="200" y="138" width="120" height="36" fill="#f3f5f8" stroke="#ddd" stroke-width="1"/>
+  <text x="260" y="159" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1a7a3a" font-weight="bold">5–20 GB (typical)</text>
+  <rect x="325" y="138" width="120" height="36" fill="#e8fff0" stroke="#ddd" stroke-width="1"/>
+  <text x="385" y="152" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1a7a3a" font-weight="bold">&lt;30 sec</text>
+  <text x="385" y="166" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1a7a3a">Minimal pause</text>
+  <rect x="450" y="138" width="120" height="36" fill="#f3f5f8" stroke="#ddd" stroke-width="1"/>
+  <text x="510" y="159" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1a7a3a" font-weight="bold">Minutes</text>
+  <rect x="575" y="138" width="195" height="36" fill="#f3f5f8" stroke="#ddd" stroke-width="1"/>
+  <text x="672" y="159" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#555">RLHF/fine-tuning runs</text>
+
+  <!-- Row 4 -->
+  <rect x="10" y="176" width="185" height="36" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  <text x="102" y="190" text-anchor="middle" font-family="Georgia,serif" font-size="10.5" fill="#1c2438" font-weight="bold">Distributed (PyTorch DCP)</text>
+  <text x="102" y="205" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">Per-rank sharded save</text>
+  <rect x="200" y="176" width="120" height="36" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  <text x="260" y="197" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">140 GB sharded</text>
+  <rect x="325" y="176" width="120" height="36" fill="#e8fff0" stroke="#ddd" stroke-width="1"/>
+  <text x="385" y="190" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1a7a3a" font-weight="bold">1–2 min</text>
+  <text x="385" y="204" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1a7a3a">Parallel I/O</text>
+  <rect x="450" y="176" width="120" height="36" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  <text x="510" y="197" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1a7a3a" font-weight="bold">Minutes</text>
+  <rect x="575" y="176" width="195" height="36" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  <text x="672" y="197" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#555">>1,000 GPU training</text>
+
+  <!-- Recommendation box -->
+  <rect x="10" y="226" width="760" height="64" rx="6" fill="#fffbf0" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="390" y="244" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#1c2438">Principal Architect Recommendation</text>
+  <text x="390" y="262" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">For jobs &gt;1,000 GPUs: Use PyTorch DCP (Distributed Checkpoint) with async saves every 15–30 minutes.</text>
+  <text x="390" y="278" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">Target checkpoint overhead: &lt;2% of total training time. Keep 3 rolling checkpoints to protect against checkpoint corruption.</text>
+</svg>
+<figcaption>Figure 19.3 — Checkpoint strategy comparison. PyTorch DCP is the recommended approach for large-scale distributed training.</figcaption>
+</div>
+
+<h3>19.3.1 PyTorch Distributed Checkpoint (DCP) — Production Configuration</h3>
+
+<div class="formula">PYTORCH DCP — PRODUCTION CHECKPOINT SETUP:
+
+import torch.distributed.checkpoint as dcp
+from torch.distributed.checkpoint.state_dict import get_state_dict, set_state_dict
+
+# Save checkpoint — each rank saves its own shard
+def save_checkpoint(model, optimizer, step, ckpt_dir):
+    state_dict = {"model": model, "optimizer": optimizer}
+    model_sd, optim_sd = get_state_dict(model, optimizer)
+    
+    dcp.save(
+        {"model": model_sd, "optimizer": optim_sd, "step": step},
+        checkpoint_id=f"{ckpt_dir}/step_{step}",
+        storage_writer=dcp.FileSystemWriter(f"{ckpt_dir}/step_{step}")
+    )
+
+# Key configuration parameters:
+#   planner=dcp.DefaultSavePlanner()  → shard by rank automatically
+#   storage_writer=FileSystemWriter   → local NFS/Lustre/S3
+
+CHECKPOINT FREQUENCY FORMULA:
+  Given: job runtime T_total hours
+         checkpoint time T_ckpt minutes
+         GPU-hr cost C $/hr
+         failure probability per hour P_fail
+
+  Expected wasted compute without checkpointing:
+    E[wasted] = P_fail × T_total × T_total/2 × N_GPUs × C
+
+  Optimal checkpoint interval (minimizes expected wasted compute):
+    T_interval = sqrt(2 × T_ckpt / P_fail)
+    
+  Example: T_ckpt=2min, P_fail=0.07/hr (10K GPU cluster)
+    T_interval = sqrt(2 × 2/60 / 0.07) = sqrt(0.952) ≈ 0.976 hr ≈ 58 min
+    
+  → Checkpoint every ~60 minutes for a 10K GPU cluster. [ENV-SPECIFIC]</div>
+
+<h3>19.3.2 Checkpointing Optimizer State — The Hidden Cost</h3>
+<p>Model weights are only part of the checkpoint. For full training recovery, you also need optimizer state (Adam momentum and variance tensors), which is typically <em>3× the model size</em> for a 32-bit Adam optimizer.</p>
+
+<div class="formula">CHECKPOINT SIZE BREAKDOWN (LLaMA-3 70B, BF16 training):
+
+Component               Size        Notes
+─────────────────────────────────────────────────────
+Model weights (BF16)    140 GB      2 bytes × 70B params
+Adam m (FP32)           280 GB      4 bytes × 70B params
+Adam v (FP32)           280 GB      4 bytes × 70B params
+Gradient buffer (BF16)  140 GB      same shape as weights
+RNG state               ~1 MB       per-rank RNG for dropout
+Scheduler state         ~1 KB       negligible
+
+TOTAL FULL CHECKPOINT:  ~840 GB    (6× model size in BF16)
+TOTAL WEIGHTS ONLY:     ~140 GB    (sufficient for inference)
+
+PRACTICAL STRATEGIES:
+  1. BF16 Adam states → reduces 560 GB → 280 GB (half precision)
+     Implemented via: torch.optim.AdamW(..., foreach=True)
+     Loss: minor numerical precision (acceptable for pre-training)
+  
+  2. CPU offload checkpointing → optimizer state lives on CPU
+     Zero-3 approach: each rank saves its shard only (~840/N_ranks GB each)
+     At 1,000 ranks: each rank saves 0.84 GB → fast parallel write
+  
+  3. Storage target: NFS with >10 GB/s aggregate throughput minimum
+     At 1,000 ranks × 0.84 GB × parallel: need ~840 GB write bandwidth</div>
+
+<h2 id="s194">19.4 NCCL Failure Detection and Recovery</h2>
+
+<!-- DIAGRAM 4: NCCL Recovery Flow -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 380" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <text x="390" y="20" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">NCCL Failure Detection &amp; Recovery Pipeline</text>
+
+  <!-- Flow boxes -->
+  <!-- Step 1 -->
+  <rect x="30" y="40" width="140" height="50" rx="6" fill="#1c2438"/>
+  <text x="100" y="60" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">Training Step</text>
+  <text x="100" y="78" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#e3b341">AllReduce triggered</text>
+  <!-- Arrow -->
+  <polygon points="175,65 185,60 185,70" fill="#888"/>
+  <line x1="170" y1="65" x2="185" y2="65" stroke="#888" stroke-width="1.5"/>
+
+  <!-- Watchdog box -->
+  <rect x="190" y="34" width="160" height="62" rx="6" fill="#2a6099"/>
+  <text x="270" y="54" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">Heartbeat Watchdog</text>
+  <text x="270" y="70" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#ddd">TORCH_NCCL_HEARTBEAT</text>
+  <text x="270" y="84" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#ddd">_TIMEOUT=120s</text>
+  <!-- Arrow -->
+  <polygon points="355,65 365,60 365,70" fill="#888"/>
+  <line x1="350" y1="65" x2="365" y2="65" stroke="#888" stroke-width="1.5"/>
+
+  <!-- Timeout check -->
+  <rect x="370" y="34" width="140" height="62" rx="6" fill="#d4820a"/>
+  <text x="440" y="54" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">Timeout Check</text>
+  <text x="440" y="70" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#fff">≥120s no progress?</text>
+  <text x="440" y="84" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#fff">YES → trigger abort</text>
+
+  <!-- No path -->
+  <line x1="440" y1="96" x2="440" y2="116" stroke="#1a7a3a" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="448" y="110" font-family="sans-serif" font-size="9" fill="#1a7a3a">NO</text>
+  <rect x="370" y="116" width="140" height="36" rx="4" fill="#e8fff0" stroke="#27ae60" stroke-width="1.5"/>
+  <text x="440" y="132" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1a7a3a" font-weight="bold">Continue Training</text>
+  <text x="440" y="146" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1a7a3a">Step completes</text>
+
+  <!-- Yes path -->
+  <polygon points="515,65 525,60 525,70" fill="#888"/>
+  <line x1="510" y1="65" x2="525" y2="65" stroke="#888" stroke-width="1.5"/>
+
+  <!-- Abort -->
+  <rect x="530" y="34" width="140" height="62" rx="6" fill="#c0392b"/>
+  <text x="600" y="54" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">NCCL Abort</text>
+  <text x="600" y="70" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white">All ranks abort</text>
+  <text x="600" y="84" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white">ncclAbort() called</text>
+
+  <!-- Abort flows down -->
+  <line x1="600" y1="96" x2="600" y2="180" stroke="#c0392b" stroke-width="1.5"/>
+  <polygon points="595,176 605,176 600,186" fill="#c0392b"/>
+
+  <!-- Diagnosis -->
+  <rect x="520" y="186" width="160" height="50" rx="6" fill="#fff" stroke="#c0392b" stroke-width="2"/>
+  <text x="600" y="206" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#c0392b" font-weight="bold">Diagnose Failure</text>
+  <text x="600" y="222" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">XID errors? DCGM alert?</text>
+  <text x="600" y="234" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Network drop? Straggler?</text>
+
+  <!-- Two paths from diagnosis -->
+  <!-- GPU fail path -->
+  <line x1="540" y1="236" x2="400" y2="296" stroke="#c0392b" stroke-width="1.5"/>
+  <rect x="310" y="296" width="160" height="50" rx="6" fill="#fff" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="390" y="316" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#c0392b" font-weight="bold">Node Replacement</text>
+  <text x="390" y="330" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Drain node, substitute</text>
+  <text x="390" y="344" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">spare, restart from ckpt</text>
+
+  <!-- Network/SW path -->
+  <line x1="660" y1="236" x2="680" y2="296" stroke="#d4820a" stroke-width="1.5"/>
+  <rect x="620" y="296" width="150" height="50" rx="6" fill="#fff" stroke="#d4820a" stroke-width="1.5"/>
+  <text x="695" y="316" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#d4820a" font-weight="bold">Restart from Ckpt</text>
+  <text x="695" y="330" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Same nodes, reload</text>
+  <text x="695" y="344" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">last good checkpoint</text>
+
+  <!-- Both merge -->
+  <line x1="390" y1="346" x2="390" y2="366" stroke="#27ae60" stroke-width="1.5"/>
+  <line x1="695" y1="346" x2="695" y2="366" stroke="#27ae60" stroke-width="1.5"/>
+  <line x1="390" y1="366" x2="695" y2="366" stroke="#27ae60" stroke-width="1.5"/>
+  <line x1="542" y1="366" x2="542" y2="356" stroke="#27ae60" stroke-width="1.5"/>
+  <rect x="472" y="340" width="140" height="30" rx="4" fill="#e8fff0" stroke="#27ae60" stroke-width="1.5"/>
+  <text x="542" y="351" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#1a7a3a" font-weight="bold">Resume Training</text>
+  <text x="542" y="365" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#1a7a3a">MTTR: 5–20 minutes</text>
+
+  <!-- MTTR label -->
+  <text x="390" y="396" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#888" font-style="italic">Target MTTR with auto-recovery: &lt;15 minutes for network/SW failures, &lt;60 min for hardware replacement</text>
+</svg>
+<figcaption>Figure 19.4 — NCCL failure detection and recovery pipeline. The watchdog timeout triggers abort, diagnosis routes to node replacement or checkpoint restart.</figcaption>
+</div>
+
+<div class="formula">PYTORCH NCCL WATCHDOG CONFIGURATION (production):
+
+# Environment variables for NCCL resilience
+export NCCL_DEBUG=WARN
+export NCCL_TIMEOUT=1800                    # 30 min hard timeout
+export TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC=120 # 2 min heartbeat
+export TORCH_NCCL_ASYNC_ERROR_HANDLING=1    # async abort on error
+export NCCL_SOCKET_NTHREADS=4              # network threading
+export NCCL_NSOCKS_PERTHREAD=4
+
+# Elastic training with torchrun (auto-restart):
+torchrun \
+  --nnodes=1:10 \          # min:max nodes (elastic!)
+  --nproc-per-node=8 \
+  --max-restarts=3 \       # auto-restart up to 3 times
+  --rdzv-backend=etcd \    # distributed rendezvous
+  --rdzv-endpoint=etcd:2379 \
+  train.py
+
+# Elastic training code pattern:
+from torch.distributed.elastic.multiprocessing.errors import record
+
+@record  # captures stack trace on crash
+def main():
+    dist.init_process_group("nccl")
+    # ... training loop
+    if step % 1000 == 0:
+        save_checkpoint(model, optimizer, step)  # checkpoint every 1000 steps</div>
+
+<h2 id="s195">19.5 GPU Health Monitoring with DCGM</h2>
+
+<p>NVIDIA's Data Center GPU Manager (DCGM) is the primary tool for fleet-level GPU health monitoring. It runs as a daemon on every node and exposes GPU metrics at 1-second resolution for integration with Prometheus/Grafana.</p>
+
+<!-- DIAGRAM 5: DCGM Monitoring Architecture -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 260" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <text x="390" y="20" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">GPU Fleet Health Monitoring Stack</text>
+
+  <!-- Left: Nodes -->
+  <rect x="10" y="36" width="160" height="200" rx="6" fill="#f3f5f8" stroke="#d0d6e2" stroke-width="1.5"/>
+  <text x="90" y="56" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#1c2438">Compute Nodes</text>
+  <!-- Node 1 -->
+  <rect x="20" y="64" width="140" height="40" rx="4" fill="#1c2438"/>
+  <text x="90" y="79" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white">Node 1: 8× H100</text>
+  <text x="90" y="94" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#e3b341">DCGM Daemon</text>
+  <!-- Node 2 -->
+  <rect x="20" y="110" width="140" height="40" rx="4" fill="#1c2438"/>
+  <text x="90" y="125" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white">Node 2: 8× H100</text>
+  <text x="90" y="140" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#e3b341">DCGM Daemon</text>
+  <!-- Node N -->
+  <text x="90" y="166" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#888">· · ·</text>
+  <rect x="20" y="174" width="140" height="40" rx="4" fill="#1c2438"/>
+  <text x="90" y="189" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white">Node N: 8× H100</text>
+  <text x="90" y="204" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#e3b341">DCGM Daemon</text>
+
+  <!-- Arrow -->
+  <line x1="174" y1="136" x2="214" y2="136" stroke="#888" stroke-width="1.5"/>
+  <polygon points="210,130 220,136 210,142" fill="#888"/>
+  <text x="196" y="128" font-family="sans-serif" font-size="8.5" fill="#666">push</text>
+
+  <!-- Center: Prometheus -->
+  <rect x="224" y="80" width="150" height="114" rx="6" fill="#fff" stroke="#2a6099" stroke-width="2"/>
+  <text x="299" y="102" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#2a6099">Prometheus</text>
+  <text x="299" y="118" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">dcgm_fi_dev_gpu_util</text>
+  <text x="299" y="132" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">dcgm_fi_dev_mem_copy_util</text>
+  <text x="299" y="146" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">dcgm_fi_dev_ecc_sbe_vol_total</text>
+  <text x="299" y="160" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">dcgm_fi_dev_power_usage</text>
+  <text x="299" y="174" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">dcgm_fi_dev_xid_errors_total</text>
+
+  <!-- Arrow -->
+  <line x1="378" y1="136" x2="418" y2="136" stroke="#888" stroke-width="1.5"/>
+  <polygon points="414,130 424,136 414,142" fill="#888"/>
+
+  <!-- Grafana -->
+  <rect x="428" y="80" width="130" height="80" rx="6" fill="#fff" stroke="#d4820a" stroke-width="2"/>
+  <text x="493" y="102" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#d4820a">Grafana</text>
+  <text x="493" y="118" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Real-time dashboards</text>
+  <text x="493" y="132" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Per-GPU heatmaps</text>
+  <text x="493" y="146" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Cluster MFU tracking</text>
+
+  <!-- Arrow to alerts -->
+  <line x1="428" y1="180" x2="428" y2="200" stroke="#888" stroke-width="1.5"/>
+  <polygon points="422,196 434,196 428,206" fill="#888"/>
+  <rect x="368" y="208" width="120" height="36" rx="6" fill="#fff5f5" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="428" y="224" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b" font-weight="bold">AlertManager</text>
+  <text x="428" y="238" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">PagerDuty / Slack / OpsGenie</text>
+
+  <!-- Right: Actions -->
+  <rect x="580" y="36" width="190" height="200" rx="6" fill="#f3f5f8" stroke="#d0d6e2" stroke-width="1.5"/>
+  <text x="675" y="56" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#1c2438">Auto-Remediation</text>
+  <!-- Boxes -->
+  <rect x="590" y="66" width="170" height="36" rx="4" fill="#e8fff0" stroke="#27ae60" stroke-width="1"/>
+  <text x="675" y="81" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1a7a3a" font-weight="bold">XID detected → quarantine</text>
+  <text x="675" y="95" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">Node drained from scheduler</text>
+  <rect x="590" y="110" width="170" height="36" rx="4" fill="#fff8e0" stroke="#d4820a" stroke-width="1"/>
+  <text x="675" y="125" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#d4820a" font-weight="bold">MFU &lt;60% → alert SRE</text>
+  <text x="675" y="139" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">Check straggler / NCCL</text>
+  <rect x="590" y="154" width="170" height="36" rx="4" fill="#f0f6ff" stroke="#2a6099" stroke-width="1"/>
+  <text x="675" y="169" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#2a6099" font-weight="bold">Power spike → throttle</text>
+  <text x="675" y="183" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">Reduce SM freq via nvidia-smi</text>
+  <rect x="590" y="198" width="170" height="30" rx="4" fill="#f3f5f8" stroke="#888" stroke-width="1"/>
+  <text x="675" y="217" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">Ckpt triggered → restart job</text>
+
+  <!-- Connect alert to actions -->
+  <line x1="558" y1="220" x2="578" y2="220" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="574,214 584,220 574,226" fill="#c0392b"/>
+</svg>
+<figcaption>Figure 19.5 — GPU fleet health monitoring stack: DCGM → Prometheus → Grafana → AlertManager → Auto-remediation actions.</figcaption>
+</div>
+
+<div class="formula">KEY DCGM METRICS FOR AI TRAINING CLUSTERS:
+
+Metric                              Normal Range    Alert Threshold
+──────────────────────────────────────────────────────────────────
+dcgm_fi_dev_gpu_util                85-100%         <70% sustained
+dcgm_fi_dev_mem_copy_util           10-60%          >95% sustained
+dcgm_fi_dev_power_usage             600-700W(H100)  >700W or <200W
+dcgm_fi_dev_gpu_temp                60-80°C         >85°C → throttle
+dcgm_fi_dev_ecc_sbe_vol_total       0 (ideal)       >1000/hr → drain
+dcgm_fi_dev_ecc_dbe_vol_total       0               >0 → IMMEDIATE drain
+dcgm_fi_dev_xid_errors_total        0               >0 → investigate
+dcgm_fi_dev_nvlink_bandwidth_total  ~300 GB/s/link  <250 GB/s → check
+
+PROMETHEUS ALERTING RULES (production):
+  # GPU temperature alert
+  - alert: GPUTemperatureCritical
+    expr: dcgm_fi_dev_gpu_temp > 85
+    for: 2m
+    labels: {severity: critical}
+    annotations:
+      summary: "GPU {{ $labels.gpu }} on {{ $labels.instance }} overheating"
+
+  # ECC double-bit error → immediate action
+  - alert: GPUUncorrectableECC
+    expr: increase(dcgm_fi_dev_ecc_dbe_vol_total[5m]) > 0
+    labels: {severity: critical}
+    annotations:
+      summary: "Uncorrectable ECC error - GPU {{ $labels.gpu }} must be drained NOW"</div>
+
+<h2 id="s196">19.6 Job Scheduler Resilience: Kubernetes + Volcano</h2>
+
+<p>At cluster scale, job scheduling must be resilience-aware. A job scheduler that simply queues work without understanding GPU health, checkpoint availability, or partial failure modes will amplify outages rather than contain them.</p>
+
+<!-- DIAGRAM 6: Scheduler Decision Tree -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 300" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <text x="390" y="20" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">Scheduler Resilience Decision Tree</text>
+
+  <!-- Root -->
+  <rect x="310" y="34" width="160" height="40" rx="6" fill="#1c2438"/>
+  <text x="390" y="49" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">Job Failure Detected</text>
+  <text x="390" y="67" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#e3b341">Volcano / Kueue signals</text>
+
+  <!-- Diamond: checkpoint available? -->
+  <polygon points="390,90 460,116 390,142 320,116" fill="#2a6099"/>
+  <text x="390" y="111" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="white" font-weight="bold">Checkpoint</text>
+  <text x="390" y="126" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="white" font-weight="bold">available?</text>
+  <line x1="390" y1="74" x2="390" y2="90" stroke="#888" stroke-width="1.5"/>
+
+  <!-- YES branch -->
+  <line x1="460" y1="116" x2="540" y2="116" stroke="#1a7a3a" stroke-width="1.5"/>
+  <text x="498" y="110" font-family="sans-serif" font-size="9" fill="#1a7a3a">YES</text>
+
+  <!-- NO branch -->
+  <line x1="320" y1="116" x2="240" y2="116" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="275" y="110" font-family="sans-serif" font-size="9" fill="#c0392b">NO</text>
+
+  <!-- YES: GPU health? -->
+  <polygon points="580,90 640,116 580,142 520,116" fill="#d4820a"/>
+  <text x="580" y="111" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white" font-weight="bold">GPU healthy?</text>
+  <text x="580" y="126" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white">DCGM check</text>
+  <line x1="540" y1="116" x2="520" y2="116" stroke="#888" stroke-width="1"/>
+
+  <!-- YES GPU healthy: restart -->
+  <line x1="580" y1="142" x2="580" y2="170" stroke="#1a7a3a" stroke-width="1.5"/>
+  <text x="588" y="158" font-family="sans-serif" font-size="9" fill="#1a7a3a">YES</text>
+  <rect x="520" y="170" width="120" height="50" rx="6" fill="#e8fff0" stroke="#27ae60" stroke-width="1.5"/>
+  <text x="580" y="190" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#1a7a3a" font-weight="bold">Restart from Ckpt</text>
+  <text x="580" y="206" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">Same allocation</text>
+  <text x="580" y="218" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">MTTR: 5–10 min</text>
+
+  <!-- NO GPU healthy: drain + reschedule -->
+  <line x1="640" y1="116" x2="700" y2="116" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="668" y="110" font-family="sans-serif" font-size="9" fill="#c0392b">NO</text>
+  <rect x="700" y="92" width="72" height="50" rx="6" fill="#fff5f5" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="736" y="110" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b" font-weight="bold">Drain</text>
+  <text x="736" y="124" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">Bad GPU</text>
+  <text x="736" y="136" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">quarantined</text>
+  <line x1="736" y1="142" x2="736" y2="165" stroke="#c0392b" stroke-width="1.5"/>
+  <line x1="580" y1="165" x2="736" y2="165" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="650" y="175" font-family="sans-serif" font-size="8.5" fill="#c0392b">reschedule on spare nodes</text>
+
+  <!-- NO checkpoint: full restart -->
+  <rect x="140" y="92" width="140" height="50" rx="6" fill="#fff5f5" stroke="#c0392b" stroke-width="2"/>
+  <text x="210" y="112" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#c0392b" font-weight="bold">Full Restart</text>
+  <text x="210" y="128" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">From step 0</text>
+  <text x="210" y="140" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#c0392b">All progress lost!</text>
+
+  <!-- Priority queue -->
+  <rect x="140" y="190" width="140" height="50" rx="6" fill="#f3f5f8" stroke="#888" stroke-width="1.5"/>
+  <text x="210" y="210" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#1c2438" font-weight="bold">Queue Priority</text>
+  <text x="210" y="226" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">Preempt lower-priority jobs</text>
+  <text x="210" y="238" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">to get GPUs for restart</text>
+  <line x1="210" y1="142" x2="210" y2="190" stroke="#c0392b" stroke-width="1.5"/>
+
+  <!-- Lesson box at bottom -->
+  <rect x="30" y="260" width="720" height="28" rx="4" fill="#fffbf0" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="390" y="279" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1c2438"><tspan font-weight="bold">Principal Rule:</tspan> Never run a multi-day job without checkpoints. A restart from step 0 on a 1,000 GPU job costs tens of thousands of dollars.</text>
+</svg>
+<figcaption>Figure 19.6 — Scheduler resilience decision tree. Checkpoint availability is the primary branch point. No checkpoint = catastrophic restart.</figcaption>
+</div>
+
+<h3>19.6.1 Elastic Training — Surviving Node Loss Without Full Restart</h3>
+
+<div class="formula">ELASTIC TRAINING WITH PYTORCH TORCHRUN:
+
+Concept: training job can shrink/grow from min_nodes to max_nodes
+         If a node fails, job continues at smaller scale
+         New node joins → job scales back up
+
+Configuration:
+  --nnodes=8:16     # run with 8 to 16 nodes, adapt on failure
+  --nproc-per-node=8
+  --max-restarts=5  # per agent
+
+Code requirements for elasticity:
+  1. Model must handle variable world_size between restarts
+  2. DataLoader must handle new number of replicas gracefully
+  3. Checkpoint must save/restore with arbitrary topology
+
+Example elastic training loop:
+  state = {"epoch": 0, "global_step": 0}
+  
+  while state["global_step"] < MAX_STEPS:
+      try:
+          train_one_step(model, state)
+          if state["global_step"] % CKPT_FREQ == 0:
+              checkpoint(state)   # always checkpoint before barriers
+      except elastic.RendezvousClosedException:
+          break   # membership changed, agent will restart
+      except Exception as e:
+          record_failure(e)
+          break   # non-recoverable, escalate
+
+TRADEOFFS:
+  Pro: job survives single-node failures without full restart
+  Con: requires careful gradient accumulation to maintain effective batch size
+  Con: learning rate schedule must account for variable world_size
+  Con: pipeline parallelism is NOT elastic (requires fixed topology)</div>
+
+<h2 id="s197">19.7 SRE Playbooks for AI Infrastructure</h2>
+
+<p>Site Reliability Engineering (SRE) practices developed for web services translate directly to AI infrastructure, with AI-specific adaptations for GPU failure modes and distributed training semantics.</p>
+
+<h3>19.7.1 The Three SLOs That Matter for Training</h3>
+
+<table>
+<thead><tr><th>SLO</th><th>Definition</th><th>Target</th><th>Alert Threshold</th></tr></thead>
+<tbody>
+<tr><td><strong>Cluster MFU</strong></td><td>Actual FLOPS / Peak FLOPS across all GPUs</td><td class="good">&gt;60%</td><td class="bad">&lt;50%</td></tr>
+<tr><td><strong>Job Completion Rate</strong></td><td>% of scheduled jobs that complete without manual intervention</td><td class="good">&gt;95%</td><td class="bad">&lt;85%</td></tr>
+<tr><td><strong>Recovery MTTR</strong></td><td>Mean time from failure detection to training resumption</td><td class="good">&lt;15 min</td><td class="bad">&gt;60 min</td></tr>
+</tbody>
+</table>
+
+<h3>19.7.2 Runbooks — Common Failure Scenarios</h3>
+
+<div class="formula">RUNBOOK 1: NCCL TIMEOUT (most frequent scenario)
+
+Symptoms: Training step time >5× normal; NCCL timeout in logs
+          TORCH_NCCL_HEARTBEAT timeout fired; all ranks stuck
+
+Step 1 — Identify straggler rank:
+  # Check per-rank step times via metrics
+  kubectl logs <pod> | grep "step_time" | awk '{print $3}' | sort -n
+  # Rank with 2x+ step time is the straggler
+
+Step 2 — Check straggler node:
+  ssh straggler-node
+  nvidia-smi  # GPU utilization low? Temperature high?
+  ibstat      # InfiniBand port state = ACTIVE?
+  
+Step 3 — If hardware healthy: restart job from last checkpoint
+  kubectl delete pod <stuck-pod>
+  # Job controller auto-restarts from checkpoint
+  
+Step 4 — If hardware sick: quarantine and reschedule
+  kubectl taint node <node> nvidia.com/gpu=quarantine:NoSchedule
+  kubectl delete pod <stuck-pod>
+  # Job restarts on healthy nodes
+
+Expected MTTR: 5–15 minutes
+
+─────────────────────────────────────────────────────────────
+
+RUNBOOK 2: GPU XID 79 (GPU FELL OFF BUS)
+
+Symptoms: DCGM alert XID 79; nvidia-smi shows N/A for affected GPU
+          Training hangs immediately; NCCL error on the rank using that GPU
+
+Step 1 — Identify affected node/GPU:
+  dcgmi diag -g <group_id> -r 1  # run diagnostics
+  nvidia-smi --query-gpu=index,pci.bus_id,ecc.errors.uncorrected.volatile.total \
+             --format=csv
+
+Step 2 — Immediate actions:
+  # Quarantine node
+  kubectl taint node <node> node.kubernetes.io/unreachable:NoSchedule
+  
+  # Check if GPU-reset recovers the device (sometimes works):
+  nvidia-smi --gpu-reset -i <gpu_id>
+  
+  # If not recovered → node replacement required
+  # File hardware ticket with datacenter team
+
+Step 3 — Resume training:
+  # Job scheduler detects node drain, finds replacement, restarts from ckpt
+  # Monitor: dcgm_fi_dev_xid_errors_total{instance="new_node"} == 0
+
+Expected MTTR: 15–60 minutes (depends on spare node availability)</div>
+
+<h2 id="s198">19.8 Quantifying the MFU Impact of Resilience Engineering</h2>
+
+<!-- DIAGRAM 7: MFU Budget -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 260" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <text x="390" y="20" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">Cluster MFU Budget: Where Efficiency Is Lost</text>
+
+  <!-- Waterfall chart -->
+  <!-- 100% bar -->
+  <rect x="60" y="40" width="90" height="180" rx="3" fill="#1c2438"/>
+  <text x="105" y="236" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Peak</text>
+  <text x="105" y="248" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">100%</text>
+  <text x="105" y="130" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">100%</text>
+
+  <!-- Checkpoint overhead -->
+  <rect x="170" y="144" width="90" height="36" rx="3" fill="#c0392b"/>
+  <line x1="150" y1="40" x2="170" y2="40" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="150" y1="40" x2="150" y2="144" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="215" y="236" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Checkpoint</text>
+  <text x="215" y="248" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b">-2%</text>
+  <text x="215" y="165" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="white" font-weight="bold">-2%</text>
+
+  <!-- NCCL overhead -->
+  <rect x="280" y="108" width="90" height="36" rx="3" fill="#d4820a"/>
+  <line x1="260" y1="40" x2="280" y2="40" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="260" y1="40" x2="260" y2="108" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="325" y="236" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">NCCL Comm</text>
+  <text x="325" y="248" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#d4820a">-3%</text>
+  <text x="325" y="128" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="white" font-weight="bold">-3%</text>
+
+  <!-- Failures without resilience -->
+  <rect x="390" y="40" width="90" height="65" rx="3" fill="#c0392b"/>
+  <line x1="370" y1="40" x2="390" y2="40" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="435" y="236" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Failures</text>
+  <text x="435" y="248" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b">(no resil.) -25%</text>
+  <text x="435" y="72" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="white" font-weight="bold">-25%</text>
+
+  <!-- Failures WITH resilience -->
+  <rect x="390" y="100" width="90" height="5" rx="2" fill="#27ae60"/>
+  <text x="435" y="120" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1a7a3a">(with resil.) -2%</text>
+
+  <!-- Load imbalance -->
+  <rect x="500" y="72" width="90" height="36" rx="3" fill="#7b2d8b"/>
+  <line x1="480" y1="40" x2="500" y2="40" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="480" y1="40" x2="480" y2="72" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="545" y="236" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Load</text>
+  <text x="545" y="248" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#7b2d8b">Imbalance -3%</text>
+  <text x="545" y="92" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="white" font-weight="bold">-3%</text>
+
+  <!-- Thermal throttle -->
+  <rect x="610" y="50" width="90" height="22" rx="3" fill="#2a6099"/>
+  <line x1="590" y1="40" x2="610" y2="40" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="590" y1="40" x2="590" y2="50" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="655" y="236" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Thermal</text>
+  <text x="655" y="248" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#2a6099">-1%</text>
+  <text x="655" y="63" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white" font-weight="bold">-1%</text>
+
+  <!-- Result bar -->
+  <rect x="700" y="72" width="65" height="148" rx="3" fill="#27ae60"/>
+  <text x="732" y="236" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Achieved</text>
+  <text x="732" y="248" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1a7a3a">MFU</text>
+  <text x="732" y="150" text-anchor="middle" font-family="sans-serif" font-size="11" fill="white" font-weight="bold">~89%</text>
+  <text x="732" y="165" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white">ideal</text>
+
+  <!-- Y axis label -->
+  <text x="18" y="140" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666" transform="rotate(-90,18,140)">MFU %</text>
+  <line x1="52" y1="40" x2="52" y2="220" stroke="#ccc" stroke-width="1"/>
+  <text x="48" y="44" text-anchor="end" font-family="sans-serif" font-size="8.5" fill="#666">100</text>
+  <text x="48" y="134" text-anchor="end" font-family="sans-serif" font-size="8.5" fill="#666">50</text>
+  <text x="48" y="220" text-anchor="end" font-family="sans-serif" font-size="8.5" fill="#666">0</text>
+</svg>
+<figcaption>Figure 19.7 — MFU budget waterfall. Without resilience, failures alone can cost 25% MFU. With proper resilience engineering, total overhead is reduced to ~11%, yielding ~89% achievable MFU on ideal hardware.</figcaption>
+</div>
+
+<h2 id="s199">19.9 Resilience Design Patterns for the Heterogeneous Era</h2>
+
+<p>As the compute stack shifts from homogeneous GPU clusters to heterogeneous architectures (GPU + CPU + ASIC + memory-pooled infrastructure), new resilience design patterns become necessary.</p>
+
+<h3>19.9.1 Five Resilience Invariants That Survive Every Hardware Generation</h3>
+
+<div class="callout green">
+<strong>Invariant 1: Checkpoint or Die</strong>
+No training job longer than 2 hours should run without checkpointing. This is not optional. The cost of a single unrecovered failure exceeds the engineering cost of adding checkpointing.
+</div>
+
+<div class="callout blue">
+<strong>Invariant 2: Failure Detection Must Be Faster Than Failure Impact</strong>
+NCCL watchdog timeout should be shorter than your checkpoint interval. If your checkpoint is every 30 min, your watchdog should fire in &lt;5 min, so the worst-case loss is 30 min of compute, not hours.
+</div>
+
+<div class="callout">
+<strong>Invariant 3: Separate Data Path from Compute Path</strong>
+Storage for checkpoints must not share the same network fabric as training communication. A networking failure that kills NCCL should not also prevent checkpoint writes to the recovery store.
+</div>
+
+<div class="callout purple">
+<strong>Invariant 4: Design for N-1 Availability</strong>
+Any critical infrastructure component — scheduler, rendezvous server, checkpoint storage — must have redundancy. A single-point-of-failure in the control plane can take down thousands of GPUs simultaneously.
+</div>
+
+<div class="callout gray">
+<strong>Invariant 5: MTTR Is a Metric, Not an Anecdote</strong>
+Track P50, P95, P99 MTTR by failure type. If your P95 MTTR for GPU failures is 3 hours, that is a SLO violation regardless of how smoothly the median case goes. Instrument recovery, not just failures.
+</div>
+
+<h3>19.9.2 Production Checklist — Before Launching a Large Training Run</h3>
+
+<table>
+<thead><tr><th>#</th><th>Requirement</th><th>Verification Command</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Checkpoint tested (write + restore verified)</td><td><code>python test_checkpoint.py --verify-restore</code></td><td>☐</td></tr>
+<tr><td>2</td><td>DCGM running on all nodes</td><td><code>dcgmi discovery -l</code></td><td>☐</td></tr>
+<tr><td>3</td><td>NCCL watchdog configured</td><td><code>echo $TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC</code></td><td>☐</td></tr>
+<tr><td>4</td><td>GPU health check passed (DCGM diag level 2)</td><td><code>dcgmi diag -g all -r 2</code></td><td>☐</td></tr>
+<tr><td>5</td><td>NVLink / InfiniBand all links active</td><td><code>nvidia-smi nvlink --status; ibstat</code></td><td>☐</td></tr>
+<tr><td>6</td><td>Storage I/O benchmarked for checkpoint writes</td><td><code>fio --rw=write --bs=4m --size=140G ...</code></td><td>☐</td></tr>
+<tr><td>7</td><td>Alert routing configured (PagerDuty/Slack)</td><td>Test alert → confirm receipt</td><td>☐</td></tr>
+<tr><td>8</td><td>Elastic training enabled (if job &gt;1 week)</td><td><code>--nnodes=min:max</code> in torchrun args</td><td>☐</td></tr>
+<tr><td>9</td><td>Thermal limits verified (ambient temp, cooling)</td><td><code>dcgmi dmon -e 150,155</code> (temp, power)</td><td>☐</td></tr>
+<tr><td>10</td><td>Runbooks accessible to on-call engineer</td><td>Link in incident management system</td><td>☐</td></tr>
+</tbody>
+</table>
+
+<h2 id="review">Chapter 19 Review Questions</h2>
+
+<ol class="review-q">
+<li>A 4,096-GPU training run has GPU MTBF of 150,000 hours. Calculate the expected number of GPU failures per 72-hour run. If each failure causes a 45-minute recovery (with checkpointing every 30 minutes), what is the expected total recovery overhead as a percentage of wall-clock time?</li>
+
+<li>Your 2,048-GPU job has been running for 18 hours when a NCCL timeout fires. DCGM shows XID 94 (correctable ECC error) on one GPU. What is your response sequence? Should you replace the node immediately or attempt restart on the same allocation? What factors determine this decision?</li>
+
+<li>Compare the checkpoint overhead for a 70B parameter model using: (a) synchronous full checkpoint every 30 min to NFS at 5 GB/s, (b) PyTorch DCP with 256 ranks each writing 3.3 GB shards in parallel to the same NFS at 5 GB/s aggregate. Calculate the training pause time for each. Which strategy does less harm to MFU?</li>
+
+<li>Design a resilience architecture for a 10,000-GPU training cluster with a target MTTR of &lt;10 minutes for NCCL failures and &lt;45 minutes for GPU hardware failures. What components are required, and what are the key failure modes of the resilience system itself (i.e., what are the control plane single points of failure)?</li>
+
+<li>Your cluster MFU drops from 72% to 55% over a week. DCGM shows no GPU errors, no NCCL timeouts, and CPU utilization is normal. What failure mode do you suspect, and what is your diagnostic sequence? (Hint: consider thermal, load imbalance, and network straggler hypotheses.)</li>
+</ol>
+
+<div class="ch-end">— End of Chapter 19 · AI/ML Infrastructure from Silicon to Scale · Venkat Vinjam —</div>
+
+</div><!-- .page -->
+</body>
+</html>
+</div>
+</body>
+</html>

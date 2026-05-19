@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI/ML Infrastructure from Silicon to Scale — Venkat Vinjam</title>
+<style>
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
+.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
+.mem-tier-body{flex:1}
+.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
+.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+.fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+
+body{padding-top:48px}
+.cover-hero{background:linear-gradient(140deg,#1c2438 0%,#2a4070 55%,#1a3060 100%);color:#fff;padding:64px 52px 52px;margin:-42px -52px 40px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cover-eyebrow{font-family:sans-serif;font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#e3b341;margin-bottom:16px}
+.cover-title{font-size:42px;font-weight:900;color:#fff;line-height:1.08;margin-bottom:12px}
+.cover-sub{font-size:14px;color:rgba(255,255,255,.72);font-style:italic;margin-bottom:22px;line-height:1.65;max-width:680px}
+.cover-rule{width:60px;height:3px;background:#e3b341;margin:0 0 20px;border-radius:2px}
+.cover-author{font-size:18px;font-weight:700;color:#fff;margin-bottom:3px}
+.cover-role{font-family:sans-serif;font-size:11px;color:rgba(255,255,255,.55)}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:24px 0}
+.stat-box{background:#fff;border:1px solid #d8d4c8;border-radius:7px;padding:12px;text-align:center}
+.stat-n{font-size:24px;font-weight:900;color:#1c2438}
+.stat-l{font-family:sans-serif;font-size:8.5px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.num-strip{background:#1c2438;border-radius:7px;padding:12px 20px;margin:20px 0;display:flex;flex-wrap:wrap;gap:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.num-item{text-align:center;padding:5px 14px;flex:1;min-width:88px}
+.num-val{font-family:'Courier New',monospace;font-size:15px;font-weight:700;color:#e3b341}
+.num-lbl{font-family:sans-serif;font-size:7.5px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.6px;margin-top:2px}
+.shdr{display:flex;align-items:center;gap:10px;margin:30px 0 14px;padding-bottom:8px;border-bottom:2px solid #e3b341}
+.stag{font-family:sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#888;background:#f5f3ec;border:1px solid #d8d4c8;padding:2px 7px;border-radius:3px}
+.path-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
+.path-card{padding:14px 16px;border-radius:6px;border:1px solid}
+</style>
+</head>
+<body>
+
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="ch00.html">Ch 00</a>
+  <a href="ch01.html">Ch 1</a>
+  <a href="ch02.html">Ch 2</a>
+  <a href="ch03.html">Ch 3</a>
+  <a href="ch03a.html">3A</a>
+  <a href="ch03b.html">3B</a>
+  <a href="ch04.html">Ch 4</a>
+  <a href="ch05.html">Ch 5</a>
+  <a href="ch06.html">Ch 6</a>
+  <a href="ch18.html">Ch 18</a>
+  <a href="ch19.html">Ch 19</a>
+  <a href="ch20.html">Ch 20</a>
+  <a href="appendix_a.html">App A</a>
+  <a href="appendix_b.html">App B</a>
+  <a href="appendix_c.html">App C</a>
+  <a href="appendix_d.html">App D</a>
+  <a href="appendix_e.html">App E</a>
+</div>
+
+<div id="sidebar">
+  <h4>Navigate</h4>
+  <a href="#cover">Cover</a>
+  <a href="#numbers">Key Numbers</a>
+  <a href="#paths">Reader Paths</a>
+  <a href="#chapters">All Chapters</a>
+  <a href="#appendices">Appendices</a>
+  <h4 style="margin-top:12px">Chapters</h4>
+  <a href="ch01.html">Ch 1 — Mindset</a>
+  <a href="ch02.html">Ch 2 — Transformers</a>
+  <a href="ch03b.html">Ch 3B — Roadmap</a>
+  <a href="ch04.html">Ch 4 — Memory</a>
+  <a href="ch05.html">Ch 5 — TCO</a>
+  <a href="ch06.html">Ch 6 — Inference</a>
+  <a href="ch18.html">Ch 18 — Career</a>
+  <a href="ch19.html">Ch 19 — Resilience</a>
+  <a href="ch20.html">Ch 20 — Future</a>
+  <h4 style="margin-top:12px">Appendices</h4>
+  <a href="appendix_a.html">App A — HW Ref</a>
+  <a href="appendix_b.html">App B — Tools</a>
+  <a href="appendix_c.html">App C — Glossary</a>
+  <a href="appendix_d.html">App D — Formulas</a>
+  <a href="appendix_e.html">App E — Roadmap</a>
+</div>
+
+<div class="page">
+
+<div id="cover" class="cover-hero">
+  <div class="cover-eyebrow">2026 · Principal Performance Architecture · Complete Reference</div>
+  <div class="cover-title">AI/ML Infrastructure<br>from Silicon to Scale</div>
+  <div class="cover-sub">The complete technical reference for Principal Performance Architects — from GPU silicon physics through 10,000-GPU fleet orchestration. Every claim quantified. Every formula derivable from first principles.</div>
+  <div class="cover-rule"></div>
+  <div class="cover-author">Venkat Vinjam</div>
+  <div class="cover-role">Principal Performance Architect &middot; AMD &middot; Ex-Intel &middot; Ex-Cisco &middot; Ex-IBM &middot; vvinjamu.github.io/silicon-to-scale</div>
+</div>
+
+<div class="stat-row">
+  <div class="stat-box"><div class="stat-n">24</div><div class="stat-l">Chapters</div></div>
+  <div class="stat-box"><div class="stat-n">5</div><div class="stat-l">Appendices</div></div>
+  <div class="stat-box"><div class="stat-n">29</div><div class="stat-l">Files Complete</div></div>
+  <div class="stat-box"><div class="stat-n">2026</div><div class="stat-l">Edition</div></div>
+</div>
+
+<div id="numbers" class="num-strip">
+  <div class="num-item"><div class="num-val">989T</div><div class="num-lbl">H100 BF16</div></div><div class="num-item"><div class="num-val">3.35</div><div class="num-lbl">HBM3 TB/s</div></div><div class="num-item"><div class="num-val">295</div><div class="num-lbl">Ridge F/byte</div></div><div class="num-item"><div class="num-val">41.8ms</div><div class="num-lbl">70B TPOT min</div></div><div class="num-item"><div class="num-val">5.37 GB</div><div class="num-lbl">KV/req 4K</div></div><div class="num-item"><div class="num-val">10–30×</div><div class="num-lbl">Cont. batch</div></div><div class="num-item"><div class="num-val">2–3×</div><div class="num-lbl">TRT-LLM gain</div></div><div class="num-item"><div class="num-val">82%</div><div class="num-lbl">KV alert</div></div>
+</div>
+
+<div id="paths" class="shdr">
+  <span class="stag">Reader Paths</span>
+  <h2 style="margin:0;border:none;padding:0;font-size:18px">Choose Your Track</h2>
+</div>
+<div class="path-grid">
+  <div class="path-card" style="background:#fff8e0;border-color:#e3b341">
+    <div style="font-size:17px;margin-bottom:5px">&#127919;</div>
+    <div style="font-family:sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#e3b341;margin-bottom:2px">2 weeks · 2 hr/day</div>
+    <div style="font-size:13.5px;font-weight:700;color:#1c2438;margin-bottom:5px">Interview Fast-Track</div>
+    <div style="font-family:sans-serif;font-size:9.5px;background:rgba(0,0,0,.05);border-radius:3px;padding:5px 8px;color:#856404;font-weight:600;margin-bottom:5px">Ch 01 → Ch 02 → Ch 06 → Ch 11 → Ch 10 → Ch 14 → Ch 18</div>
+    <div style="font-size:11.5px;color:#555">Formulas first. Numbers beat prose in every interview. All review questions are your drill set.</div>
+  </div>
+  <div class="path-card" style="background:#e8fff0;border-color:#27ae60">
+    <div style="font-size:17px;margin-bottom:5px">&#9889;</div>
+    <div style="font-family:sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#27ae60;margin-bottom:2px">Weeks 1–3 core</div>
+    <div style="font-size:13.5px;font-weight:700;color:#1c2438;margin-bottom:5px">Inference Engineer</div>
+    <div style="font-family:sans-serif;font-size:9.5px;background:rgba(0,0,0,.05);border-radius:3px;padding:5px 8px;color:#27ae60;font-weight:600;margin-bottom:5px">Ch 01 → Ch 06 → Ch 11 → Ch 13 → Ch 08 → Ch 17</div>
+    <div style="font-size:11.5px;color:#555">vLLM · TRT-LLM · PagedAttn · Disaggregation · SLA engineering · Observability.</div>
+  </div>
+  <div class="path-card" style="background:#f0f0ff;border-color:#7b2d8b">
+    <div style="font-size:17px;margin-bottom:5px">&#127758;</div>
+    <div style="font-family:sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#7b2d8b;margin-bottom:2px">Weeks 1–3 systems</div>
+    <div style="font-size:13.5px;font-weight:700;color:#1c2438;margin-bottom:5px">Training Engineer</div>
+    <div style="font-family:sans-serif;font-size:9.5px;background:rgba(0,0,0,.05);border-radius:3px;padding:5px 8px;color:#7b2d8b;font-weight:600;margin-bottom:5px">Ch 01 → Ch 10 → Ch 14 → Ch 09 → Ch 07 → Ch 12</div>
+    <div style="font-size:11.5px;color:#555">Megatron · ZeRO · FSDP · NCCL · 4D parallelism · Benchmarking pipeline.</div>
+  </div>
+  <div class="path-card" style="background:#fff5f5;border-color:#c0392b">
+    <div style="font-size:17px;margin-bottom:5px">&#127959;&#65039;</div>
+    <div style="font-family:sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#c0392b;margin-bottom:2px">Start broad</div>
+    <div style="font-size:13.5px;font-weight:700;color:#1c2438;margin-bottom:5px">Infrastructure Architect</div>
+    <div style="font-family:sans-serif;font-size:9.5px;background:rgba(0,0,0,.05);border-radius:3px;padding:5px 8px;color:#c0392b;font-weight:600;margin-bottom:5px">Ch 03B → Ch 05 → Ch 14 → Ch 16 → Ch 17 → Ch 15</div>
+    <div style="font-size:11.5px;color:#555">TCO · Thermal · Cluster ops · Observability · Networking · Storage I/O at scale.</div>
+  </div>
+</div>
+
+<div id="chapters" class="shdr">
+  <span class="stag">Ch 00 – Ch 21</span>
+  <h2 style="margin:0;border:none;padding:0;font-size:18px">All Chapters</h2>
+  <div style="margin-left:auto;font-family:sans-serif;font-size:10px;color:#888">&#128214; HTML &nbsp;&#8681; PDF — all available</div>
+</div>
+
+
+<div style="margin-bottom:24px">
+  <div style="background:#2a2218;color:#fff;padding:10px 18px;border-radius:6px 6px 0 0;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+    <span style="font-family:sans-serif;font-size:8.5px;letter-spacing:3px;text-transform:uppercase;color:#c8a060">Front Matter</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr;gap:8px;padding:8px;background:#f5f3ec;border:1px solid #d8d4c8;border-top:none;border-radius:0 0 6px 6px">
+    <div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 00</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Preface &amp; Table of Contents</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">Reader paths, confidence labels, 12-month curriculum, complete TOC</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch00.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch00.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+  </div>
+</div>
+<div style="margin-bottom:24px">
+  <div style="background:#1c2438;color:#fff;padding:10px 18px;border-radius:6px 6px 0 0;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+    <span style="font-family:sans-serif;font-size:8.5px;letter-spacing:3px;text-transform:uppercase;color:#e3b341">Part I — Foundations</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:8px;background:#f5f3ec;border:1px solid #d8d4c8;border-top:none;border-radius:0 0 6px 6px">
+    <div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 01</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">The AI/ML Performance Architecture Mindset</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">Seven-layer stack, three regimes, roofline model, MFU/HFU, optimization leverage hierarchy</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch01.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch01.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 02</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Transformer Architecture Deep Dive</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">Attention FLOP budget, GQA/MQA/MLA, RoPE, SwiGLU — complete LLaMA-3 70B derivation</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch02.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch02.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 03</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">GPU Architecture: From Silicon to FLOPS</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">SM hierarchy, Tensor Cores, Transformer Engine FP8, memory subsystem, ridge point</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch03.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch03.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 3A</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Accelerator Landscape: Beyond GPUs</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">TPU, Apple ANE, AWS Trainium/Inferentia, Intel Gaudi 3, Meta MTIA, Groq LPU — decision matrix</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch03a.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch03a.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 3B</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">GPU Generation Roadmap</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">H100→GB300, MI300X→MI455X — architecture deltas, TCO comparisons, hardware selection</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch03b.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch03b.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+  </div>
+</div>
+<div style="margin-bottom:24px">
+  <div style="background:#1a3a28;color:#fff;padding:10px 18px;border-radius:6px 6px 0 0;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+    <span style="font-family:sans-serif;font-size:8.5px;letter-spacing:3px;text-transform:uppercase;color:#27ae60">Part II — Physics of Compute</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px;background:#f5f3ec;border:1px solid #d8d4c8;border-top:none;border-radius:0 0 6px 6px">
+    <div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 04</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Memory Hierarchy, HBM &amp; FlashAttention</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">Memory wall, five-tier hierarchy, HBM3 physics, FlashAttention v1/v2/v3 complete derivation</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch04.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch04.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 05</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Thermal Design, Power &amp; TCO</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">TDP vs sustained power, cooling architectures, 130 kW racks, $/token/day formula</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch05.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch05.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+  </div>
+</div>
+<div style="margin-bottom:24px">
+  <div style="background:#162638;color:#fff;padding:10px 18px;border-radius:6px 6px 0 0;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+    <span style="font-family:sans-serif;font-size:8.5px;letter-spacing:3px;text-transform:uppercase;color:#58a6ff">Part III — Inference &amp; Kernel Engineering</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:8px;background:#f5f3ec;border:1px solid #d8d4c8;border-top:none;border-radius:0 0 6px 6px">
+    <div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 06</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Inference System Architecture</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">Prefill/decode physics, continuous batching, PagedAttention, disaggregation, fleet sizing</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch06.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch06.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 07</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">GPU Kernels &amp; GEMM Optimization</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">Tiling hierarchy, Tensor Core alignment, Triton, CUTLASS, FlashDecoding, profiling</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch07.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch07.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 08</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Quantization: FP8, INT4, MXFP, QAT</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">FP8 E4M3/E5M2 recipes, AWQ/GPTQ, SmoothQuant, KV cache quantization, NVFP4</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch08.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch08.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 09</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Kernel Fusion &amp; Compiler Stack</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">torch.compile, Dynamo→Inductor→Triton, TensorRT, XLA, CUDA Graphs, graph breaks</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch09.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch09.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+  </div>
+</div>
+<div style="margin-bottom:24px">
+  <div style="background:#261638;color:#fff;padding:10px 18px;border-radius:6px 6px 0 0;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+    <span style="font-family:sans-serif;font-size:8.5px;letter-spacing:3px;text-transform:uppercase;color:#bc8cff">Part IV — Training at Scale</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:8px;background:#f5f3ec;border:1px solid #d8d4c8;border-top:none;border-radius:0 0 6px 6px">
+    <div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 10</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Distributed Training Systems</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">4D parallelism (TP/PP/DP/SP), ZeRO stages 1/2/3, RLHF/PPO memory layout, MoE training</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch10.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch10.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 11</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">KV Cache: Heart of LLM Serving</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">PagedAttention deep dive, RadixAttention prefix caching, KV offloading, eviction policies</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch11.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch11.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 12</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Benchmarking &amp; Performance Validation</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">MFU/HFU measurement, MLPerf context, TTFT/TPOT curves, regression CI pipelines</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch12.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch12.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+  </div>
+</div>
+<div style="margin-bottom:24px">
+  <div style="background:#281818;color:#fff;padding:10px 18px;border-radius:6px 6px 0 0;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+    <span style="font-family:sans-serif;font-size:8.5px;letter-spacing:3px;text-transform:uppercase;color:#f47c7c">Part V — Infrastructure at Scale</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:8px;background:#f5f3ec;border:1px solid #d8d4c8;border-top:none;border-radius:0 0 6px 6px">
+    <div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 13</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Speculative Decoding &amp; MoE Architecture</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">Draft-verify acceptance rate, Medusa, MoE expert routing, load balance, All-to-All</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch13.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch13.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 14</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Networking &amp; Collective Communication</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">NVLink topologies, InfiniBand NDR/XDR, NCCL algorithms, RDMA, RoCEv2 at scale</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch14.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch14.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 15</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Storage, Data Pipelines &amp; I/O</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">NVMe RAID, Lustre/GPFS/WekaFS, DALI, checkpoint I/O cadence, dataset streaming</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch15.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch15.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 16</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Cluster Management &amp; Scheduling</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">SLURM topology-aware placement, Kubernetes GPU, gang scheduling, MIG/MPS, SDC</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch16.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch16.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 17</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Observability, Profiling &amp; Telemetry</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">Nsight Systems/Compute workflow, DCGM exporters, Prometheus/Grafana dashboard design</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch17.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch17.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+  </div>
+</div>
+<div style="margin-bottom:24px">
+  <div style="background:#1a2432;color:#fff;padding:10px 18px;border-radius:6px 6px 0 0;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+    <span style="font-family:sans-serif;font-size:8.5px;letter-spacing:3px;text-transform:uppercase;color:#e3b341">Part VI — The Principal Architect</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:8px;background:#f5f3ec;border:1px solid #d8d4c8;border-top:none;border-radius:0 0 6px 6px">
+    <div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 18</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Career, Interviews &amp; System Design</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">STAR+Impact framework, system design walkthroughs, ChatGPT design, 90-day onboarding</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch18.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch18.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 19</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Production Resilience &amp; Fault Tolerance</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">Failure taxonomy, checkpointing strategy, NCCL recovery, SDC detection, chaos engineering</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch19.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch19.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 20</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">The Future of AI Compute</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">CXL, photonic interconnects, new memory technologies, 2029 outlook, strategic positioning</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch20.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch20.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#e3b341;letter-spacing:1px">Ch 21</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Real-World Case Studies</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">70B → 405B deployment, multimodal at scale, MoE fleet, before/after profiling walkthroughs</div>
+  <div style="display:flex;gap:6px">
+    <a href="ch21.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="ch21.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+  </div>
+</div>
+
+<div id="appendices" class="shdr">
+  <span class="stag">App A – App E</span>
+  <h2 style="margin:0;border:none;padding:0;font-size:18px">Appendices</h2>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px">
+<div style="background:#fff;border:1px solid #c8a060;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#c8a060">App A</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Hardware Quick Reference</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">GPU specs (NVIDIA + AMD), HBM generations, interconnect table, 30 numbers cold, ridge points, MFU reference</div>
+  <div style="display:flex;gap:6px">
+    <a href="appendix_a.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="appendix_a.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #c8a060;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#c8a060">App B</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Profiling Tools Reference</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">Nsight/NCU command reference, DCGM field catalog, NCCL env vars, nccl-tests, AMD omniperf, vLLM metrics</div>
+  <div style="display:flex;gap:6px">
+    <a href="appendix_b.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="appendix_b.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #c8a060;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#c8a060">App C</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Glossary of Key Terms</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">A–Z glossary with chapter cross-references and formula pointers for every major term (~200 terms)</div>
+  <div style="display:flex;gap:6px">
+    <a href="appendix_c.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="appendix_c.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #c8a060;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#c8a060">App D</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Performance Formulas</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">Every formula a principal must derive — roofline, GEMM, KV cache, AllReduce, TCO, training throughput</div>
+  <div style="display:flex;gap:6px">
+    <a href="appendix_d.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="appendix_d.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+<div style="background:#fff;border:1px solid #c8a060;border-radius:6px;padding:13px 15px">
+  <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+    <span style="font-family:sans-serif;font-size:9px;font-weight:700;color:#c8a060">App E</span>
+    <span style="font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;background:#27ae60;color:#fff">&#10003; Done</span>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#1c2438;line-height:1.3;margin-bottom:4px">Reading Roadmap &amp; Continued Learning</div>
+  <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:9px">Canonical papers, tools, frameworks, 12-month learning path, community resources</div>
+  <div style="display:flex;gap:6px">
+    <a href="appendix_e.html" style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#1c2438;color:#fff;text-decoration:none">&#128214; HTML</a>
+    <a href="appendix_e.pdf" download style="display:inline-flex;align-items:center;gap:4px;font-family:sans-serif;font-size:9px;font-weight:700;padding:4px 10px;border-radius:4px;background:#e3b341;color:#1c2438;text-decoration:none">&#8681; PDF</a>
+  </div>
+</div>
+</div>
+
+<div class="callout navy">
+  <strong>How to Use This Navigator</strong>
+  Click <strong>HTML</strong> to read any chapter in your browser with sidebar navigation, inline SVG diagrams, and cross-reference links. Click <strong>&#8681; PDF</strong> to download a print-quality PDF. Both open directly — no intermediate pages.
+</div>
+
+<div class="ch-end">AI/ML Infrastructure from Silicon to Scale &nbsp;&middot;&nbsp; Venkat Vinjam &nbsp;&middot;&nbsp; 2026 &nbsp;&middot;&nbsp; vvinjamu.github.io/silicon-to-scale</div>
+</div>
+</body>
+</html>

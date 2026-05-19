@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI/ML Infrastructure from Silicon to Scale — Venkat Vinjam</title>
+<style>
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
+.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
+.mem-tier-body{flex:1}
+.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
+.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+.fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+
+.takeaways{background:#f3f5f8;border:2px solid #1c2438;border-radius:9px;padding:18px 22px;margin:32px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.takeaways h3{color:#1c2438;margin:0 0 14px;font-size:15px;border:none;padding:0}
+.takeaway-group{margin-bottom:14px}.takeaway-group:last-child{margin-bottom:0}
+.tg-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#e3b341;margin-bottom:6px}
+.takeaway-group ul{margin-left:16px}.takeaway-group li{font-size:12.5px;margin-bottom:4px;color:#222}
+.review-questions{margin-top:36px}
+.review-questions h3{font-size:16px;color:#1c2438;margin-bottom:16px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+.rq-tier{border-radius:8px;padding:14px 18px;margin-bottom:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rq-tier.foundational{background:#e8fff0;border-left:5px solid #27ae60}
+.rq-tier.intermediate{background:#fffbf0;border-left:5px solid #e3b341}
+.rq-tier.principal{background:#f0f0ff;border-left:5px solid #7b2d8b}
+.rq-tier-label{font-family:sans-serif;font-size:10px;color:#555;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.rq-badge{font-weight:700;font-size:9px;padding:2px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.foundational .rq-badge{background:#27ae60;color:#fff}
+.intermediate .rq-badge{background:#e3b341;color:#1c2438}
+.principal .rq-badge{background:#7b2d8b;color:#fff}
+.rq-tier ol{margin-left:18px}
+.rq-tier li{margin-bottom:10px;font-size:12.5px;line-height:1.7;color:#222}
+.objectives{background:#f0f6ff;border:1px solid #c5cfe0;border-radius:8px;padding:14px 18px;margin:18px 0}
+.objectives h4{color:#2a4a8a;margin:0 0 8px;font-style:normal;font-size:13px}
+.objectives ul{margin-left:16px}.objectives li{font-size:12px;margin-bottom:3px;color:#333}
+.worked{background:#fff8e0;border:1px solid #e3b341;border-radius:8px;padding:14px 18px;margin:16px 0}
+.worked h4{color:#856404;margin:0 0 8px;font-style:normal;font-size:13px}
+.diag-cookbook{background:#f8f6f0;border:1px solid #d8d4c8;border-radius:8px;padding:14px 18px;margin:16px 0}
+.diag-cookbook h4{color:#1a3060;margin:0 0 8px;font-style:normal;font-size:13px}
+.shipped{display:inline-block;background:#d4edda;color:#155724;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px}
+.announced{display:inline-block;background:#fff3cd;color:#856404;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px}
+.roadmap{display:inline-block;background:#e2d9f3;color:#4a0e8f;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px}
+
+
+body{padding-top:48px}
+.cover-hero{background:linear-gradient(135deg,#1c2438 0%,#2a4070 50%,#1a3060 100%);color:#fff;padding:60px 52px 52px;margin:-42px -52px 48px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cover-eyebrow{font-family:sans-serif;font-size:9.5px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:14px}
+.cover-title{font-size:38px;font-weight:900;color:#fff;line-height:1.1;margin-bottom:10px}
+.cover-sub{font-size:14px;color:rgba(255,255,255,.75);font-style:italic;margin-bottom:22px;line-height:1.6;max-width:640px}
+.cover-rule{width:70px;height:3px;background:#e3b341;margin:0 0 20px}
+.cover-author{font-size:18px;font-weight:700;color:#fff;margin-bottom:3px}
+.cover-role{font-size:11px;color:rgba(255,255,255,.6)}
+.cover-tags{margin-top:18px;display:flex;gap:8px;flex-wrap:wrap}
+.cover-tag{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;font-family:sans-serif;font-size:9.5px;padding:4px 12px;border-radius:14px}
+.stat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:28px 0}
+.stat-box{background:#fff;border:1px solid #d8d4c8;border-radius:8px;padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.stat-n{font-size:26px;font-weight:900;color:#1c2438}
+.stat-l{font-family:sans-serif;font-size:9px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.part-hdr{font-family:sans-serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;background:#1c2438;padding:6px 14px;border-radius:4px 4px 0 0;margin:28px 0 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.ch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px}
+.ch-card{background:#fff;border:1px solid #d8d4c8;border-radius:0 0 6px 6px;padding:12px 14px;font-size:12px;transition:border-color .15s}
+.ch-card:hover{border-color:#e3b341}
+.ch-card a{text-decoration:none;color:inherit}
+.ch-card .cnum{font-family:sans-serif;font-size:9px;color:#e3b341;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
+.ch-card .ctitle{font-weight:700;color:#1c2438;margin-bottom:3px;line-height:1.3;font-size:12.5px}
+.ch-card .csub{color:#666;font-style:italic;font-size:11.5px}
+.badge-done{display:inline-block;background:#27ae60;color:#fff;font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;margin-top:5px}
+.badge-v3{display:inline-block;background:#2a6099;color:#fff;font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;margin-top:5px}
+.badge-todo{display:inline-block;background:#aaa;color:#fff;font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 7px;border-radius:8px;margin-top:5px}
+
+</style>
+</head>
+<body>
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">⌂ Index</a>
+  <a href="ch00.html">Front Matter</a>
+  <a href="ch01.html">Ch 1</a>
+  <a href="ch02.html">Ch 2</a>
+  <a href="ch03.html">Ch 3</a>
+  <a href="ch04.html">Ch 4</a>
+  <a href="ch06.html">Ch 6</a>
+  <a href="appendix_a.html">App A</a>
+  <a href="SESSION_STARTER_KIT.html">📦 Kit</a>
+</div>
+<div class="page" style="margin-left:0;max-width:100%;padding:0">
+<div style="max-width:900px;margin:0 auto;padding:42px 52px">
+
+<div class="cover-hero">
+  <div class="cover-eyebrow">Second Edition · 2026 · Living Reference</div>
+  <div class="cover-title">AI/ML Infrastructure<br>from Silicon to Scale</div>
+  <div class="cover-sub">The complete technical reference for Principal Performance Architects — from GPU silicon physics through 10,000-GPU fleet orchestration</div>
+  <div class="cover-rule"></div>
+  <div class="cover-author">Venkat Vinjam</div>
+  <div class="cover-role">Principal Performance Architect · AMD · vvinjamu.github.io/silicon-to-scale</div>
+  <div class="cover-tags">
+    <span class="cover-tag">21 Chapters</span>
+    <span class="cover-tag">6 Parts</span>
+    <span class="cover-tag">5 Appendices</span>
+    <span class="cover-tag">~580 Pages</span>
+    <span class="cover-tag">200+ Formulas</span>
+    <span class="cover-tag">60+ Diagrams</span>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat-box"><div class="stat-n">21</div><div class="stat-l">Chapters</div></div>
+  <div class="stat-box"><div class="stat-n">6</div><div class="stat-l">Parts</div></div>
+  <div class="stat-box"><div class="stat-n">200+</div><div class="stat-l">Formulas</div></div>
+  <div class="stat-box"><div class="stat-n">60+</div><div class="stat-l">SVG Diagrams</div></div>
+  <div class="stat-box"><div class="stat-n">2026</div><div class="stat-l">Edition</div></div>
+</div>
+
+<p>This book unifies the complete AI/ML infrastructure stack: silicon physics → GPU microarchitecture → memory hierarchy → kernel engineering → quantization → compiler/fusion → training at scale → inference serving → KV cache engineering → communication topology → storage I/O → cluster orchestration → observability → principal-level career mastery.</p>
+
+<div class="callout navy" style="margin-bottom:0"><strong>How to read this book</strong> — Four paths: (1) <em>Hardware track</em>: Ch 3A → 3B → 4 → 5 → 7. (2) <em>Inference track</em>: Ch 6 → 11 → 8 → 13 → 9. (3) <em>Training track</em>: Ch 10 → 14 → 15 → 16 → 17. (4) <em>Career track</em>: Ch 1 → 18 → 12 → any deep-dive chapter. Every chapter stands alone — use the sidebar cross-references to navigate.</div>
+
+<div class="part-hdr">Front Matter</div>
+<div class="ch-grid" style="grid-template-columns:1fr 1fr">
+  <div class="ch-card"><a href="ch00.html"><div class="cnum">Ch 00 · Front Matter</div><div class="ctitle">Preface, Table of Contents &amp; How to Use This Book</div><div class="csub">Confidence labels, reader paths, 12-month curriculum</div><span class="badge-done">✓ HTML + PDF</span></a></div>
+  <div class="ch-card"><a href="SESSION_STARTER_KIT.html"><div class="cnum">Utility</div><div class="ctitle">Session Starter Kit</div><div class="csub">Chapter status, build pipeline, prompt templates</div><span class="badge-done">✓ Current</span></a></div>
+</div>
+
+<div class="part-hdr">Part I — Foundations</div>
+<div class="ch-grid">
+  <div class="ch-card"><a href="ch01.html"><div class="cnum">Chapter 1</div><div class="ctitle">The AI/ML Performance Architecture Mindset</div><div class="csub">Seven-layer stack, three regimes, roofline, MFU/HFU</div><span class="badge-done">✓ HTML + PDF</span></a></div>
+  <div class="ch-card"><a href="ch02.html"><div class="cnum">Chapter 2</div><div class="ctitle">Transformer Architecture Deep Dive</div><div class="csub">Attention as matrix ops, GQA/MQA/MLA, MoE variants</div><span class="badge-done">✓ HTML + PDF</span></a></div>
+  <div class="ch-card"><a href="ch03.html"><div class="cnum">Chapter 3</div><div class="ctitle">GPU Architecture Overview</div><div class="csub">SMs, Tensor Cores, HBM, NVLink, design hierarchy</div><span class="badge-done">✓ HTML + PDF</span></a></div>
+</div>
+<div class="ch-grid">
+  <div class="ch-card"><a href="ch03a.html"><div class="cnum">Chapter 3A</div><div class="ctitle">Accelerator Landscape: Beyond GPUs</div><div class="csub">TPU, Trainium, Gaudi, Groq, MTIA — when each wins</div><span class="badge-done">✓ HTML + PDF</span></a></div>
+  <div class="ch-card"><a href="ch03b.html"><div class="cnum">Chapter 3B</div><div class="ctitle">GPU Generation Roadmap</div><div class="csub">H100→GB300, MI300X→MI455X — architecture deltas &amp; TCO</div><span class="badge-done">✓ HTML + PDF</span></a></div>
+  <div class="ch-card" style="background:#fdfcf7;border-style:dashed"><div class="cnum">&nbsp;</div><div class="ctitle" style="color:#aaa">—</div></div>
+</div>
+
+<div class="part-hdr">Part II — Physics of Compute</div>
+<div class="ch-grid">
+  <div class="ch-card"><a href="ch04.html"><div class="cnum">Chapter 4</div><div class="ctitle">Memory Hierarchy, HBM &amp; FlashAttention</div><div class="csub">Memory wall, roofline, FA v1/v2/v3 complete derivation</div><span class="badge-done">✓ HTML + PDF</span></a></div>
+  <div class="ch-card"><a href="ch05.html"><div class="cnum">Chapter 5</div><div class="ctitle">Thermal Design, Power &amp; TCO</div><div class="csub">Cooling architectures, $/token/day, 130 kW racks</div><span class="badge-todo">Pending</span></a></div>
+  <div class="ch-card" style="background:#fdfcf7;border-style:dashed"><div class="cnum">&nbsp;</div></div>
+</div>
+
+<div class="part-hdr">Part III — Inference &amp; Kernel Engineering</div>
+<div class="ch-grid">
+  <div class="ch-card"><a href="ch06.html"><div class="cnum">Chapter 6</div><div class="ctitle">Inference System Architecture</div><div class="csub">Prefill/decode, PagedAttention, disaggregation, SLA</div><span class="badge-done">✓ HTML + PDF</span></a></div>
+  <div class="ch-card"><a href="ch07.html"><div class="cnum">Chapter 7</div><div class="ctitle">GPU Kernels &amp; GEMM Optimization</div><div class="csub">Tiling, Tensor Core alignment, Triton, CUTLASS</div><span class="badge-todo">Pending</span></a></div>
+  <div class="ch-card"><a href="ch08.html"><div class="cnum">Chapter 8</div><div class="ctitle">Quantization: FP8, INT4, MXFP, QAT</div><div class="csub">FP8 recipes, PTQ/QAT, KV cache quantization</div><span class="badge-todo">Pending</span></a></div>
+</div>
+<div class="ch-grid" style="grid-template-columns:1fr 1fr">
+  <div class="ch-card"><a href="ch09.html"><div class="cnum">Chapter 9</div><div class="ctitle">Kernel Fusion &amp; Compiler Optimization</div><div class="csub">torch.compile, CUDA Graphs, TensorRT, XLA</div><span class="badge-todo">Pending</span></a></div>
+</div>
+
+<div class="part-hdr">Part IV — Training at Scale</div>
+<div class="ch-grid">
+  <div class="ch-card"><a href="ch10.html"><div class="cnum">Chapter 10</div><div class="ctitle">Distributed Training Systems</div><div class="csub">4D parallelism, ZeRO, RLHF/PPO, MoE training</div><span class="badge-todo">Pending</span></a></div>
+  <div class="ch-card"><a href="ch11.html"><div class="cnum">Chapter 11</div><div class="ctitle">KV Cache: Heart of LLM Serving</div><div class="csub">PagedAttention, fragmentation, offloading, radix attn</div><span class="badge-todo">Pending</span></a></div>
+  <div class="ch-card"><a href="ch12.html"><div class="cnum">Chapter 12</div><div class="ctitle">Benchmarking &amp; Validation</div><div class="csub">MFU/HFU, MLPerf, TTFT/TPOT, regression CI</div><span class="badge-todo">Pending</span></a></div>
+</div>
+
+<div class="part-hdr">Part V — Infrastructure at Scale</div>
+<div class="ch-grid">
+  <div class="ch-card"><a href="ch13.html"><div class="cnum">Chapter 13</div><div class="ctitle">Speculative Decoding &amp; MoE</div><div class="csub">Draft-verify loop, acceptance rate, expert routing</div><span class="badge-todo">Pending</span></a></div>
+  <div class="ch-card"><a href="ch14.html"><div class="cnum">Chapter 14</div><div class="ctitle">Networking &amp; Collective Comms</div><div class="csub">NVLink, InfiniBand NDR, NCCL, AllReduce algorithms</div><span class="badge-todo">Pending</span></a></div>
+  <div class="ch-card"><a href="ch15.html"><div class="cnum">Chapter 15</div><div class="ctitle">Storage, Data Pipelines &amp; I/O</div><div class="csub">NVMe, Lustre, DALI, checkpoint I/O cadence</div><span class="badge-todo">Pending</span></a></div>
+</div>
+<div class="ch-grid">
+  <div class="ch-card"><a href="ch16.html"><div class="cnum">Chapter 16</div><div class="ctitle">Cluster Management &amp; Scheduling</div><div class="csub">SLURM, Kubernetes, gang scheduling, SDC, MIG</div><span class="badge-todo">Pending</span></a></div>
+  <div class="ch-card"><a href="ch17.html"><div class="cnum">Chapter 17</div><div class="ctitle">Observability, Profiling &amp; Telemetry</div><div class="csub">Nsight, DCGM, Prometheus/Grafana complete guide</div><span class="badge-todo">Pending</span></a></div>
+</div>
+
+<div class="part-hdr">Part VI — The Principal Architect</div>
+<div class="ch-grid">
+  <div class="ch-card"><a href="ch18.html"><div class="cnum">Chapter 18</div><div class="ctitle">Career, Interviews &amp; System Design</div><div class="csub">STAR+Impact, ChatGPT system design walkthrough</div><span class="badge-todo">Pending</span></a></div>
+  <div class="ch-card"><a href="ch19.html"><div class="cnum">Chapter 19</div><div class="ctitle">Production Resilience</div><div class="csub">Fault tolerance, SDC, recovery, fleet hardening</div><span class="badge-done">✓ HTML + PDF</span></a></div>
+  <div class="ch-card"><a href="ch20.html"><div class="cnum">Chapter 20</div><div class="ctitle">Future of AI Compute</div><div class="csub">Chiplets, optical interconnects, neuromorphic, 2030+ roadmap</div><span class="badge-done">✓ HTML + PDF</span></a></div>
+</div>
+<div class="ch-grid" style="grid-template-columns:1fr 1fr">
+  <div class="ch-card"><a href="ch21.html"><div class="cnum">Chapter 21</div><div class="ctitle">Real-World Case Studies 🆕</div><div class="csub">Production deployments: 70B, 405B, multimodal, MoE at fleet scale</div><span class="badge-todo">Pending</span></a></div>
+</div>
+
+<div class="part-hdr">Back Matter — Appendices</div>
+<div class="ch-grid">
+  <div class="ch-card"><a href="appendix_a.html"><div class="cnum">Appendix A</div><div class="ctitle">Hardware Quick Reference</div><div class="csub">GPU specs, key formulas, 30 numbers to know cold</div><span class="badge-done">✓ HTML + PDF</span></a></div>
+  <div class="ch-card"><a href="appendix_b.html"><div class="cnum">Appendix B</div><div class="ctitle">Profiling Tools Reference</div><div class="csub">Nsight, DCGM, PyTorch Profiler, omniperf commands</div><span class="badge-todo">Pending</span></a></div>
+  <div class="ch-card"><a href="appendix_c.html"><div class="cnum">Appendix C</div><div class="ctitle">Glossary (~200 Terms)</div><div class="csub">Full A–Z with chapter cross-references</div><span class="badge-todo">Pending</span></a></div>
+</div>
+<div class="ch-grid" style="grid-template-columns:1fr 1fr">
+  <div class="ch-card"><a href="appendix_d.html"><div class="cnum">Appendix D</div><div class="ctitle">Performance Formulas</div><div class="csub">All key formulas, derivations, and reference values</div><span class="badge-done">✓ HTML + PDF</span></a></div>
+  <div class="ch-card"><a href="appendix_e.html"><div class="cnum">Appendix E</div><div class="ctitle">Reading Roadmap</div><div class="csub">4 reader paths with weekly schedule</div><span class="badge-done">✓ HTML + PDF</span></a></div>
+</div>
+
+<div class="ch-end">AI/ML Infrastructure from Silicon to Scale · Venkat Vinjam · V2 Edition · 2026 · vvinjamu.github.io/silicon-to-scale</div>
+
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 10 — Training Systems at Scale | Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.82;color:#1c2438;background:#fdfcf7;padding-top:48px}
+#nav{position:fixed;top:0;left:0;right:0;height:48px;background:#1c2438;display:flex;align-items:center;gap:5px;padding:0 16px;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,.35);overflow-x:auto}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:12px;white-space:nowrap;margin-right:10px;flex-shrink:0}
+#nav a{color:#c8d0e0;font-family:sans-serif;font-size:10.5px;text-decoration:none;padding:4px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.15);white-space:nowrap;flex-shrink:0;transition:all .15s}
+#nav a:hover{background:#e3b341;color:#1c2438;border-color:#e3b341;font-weight:700}
+#nav a.home{border-color:#e3b341;color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:210px;height:calc(100vh - 48px);background:#f5f3ec;border-right:1px solid #ddd;overflow-y:auto;padding:14px 0;z-index:900}
+#sidebar h4{font-family:sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#e3b341;padding:0 14px;margin-bottom:8px;margin-top:4px}
+#sidebar a{display:block;font-family:sans-serif;font-size:11px;color:#444;text-decoration:none;padding:4px 14px;line-height:1.4;transition:background .12s,color .12s}
+#sidebar a:hover{background:#e8e4da;color:#1c2438}
+#sidebar .sub{padding-left:24px;font-size:10.5px;color:#666}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px 60px}
+.ch-label{font-family:sans-serif;font-size:9.5px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:6px}
+h1.ch-title{font-size:32px;font-weight:900;color:#1c2438;line-height:1.2;margin-bottom:8px}
+.ch-subtitle{font-size:14px;color:#556;font-style:italic;margin-bottom:12px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:11px;color:#666;margin-bottom:16px}
+.ch-meta strong{color:#1c2438}
+.xref{color:#2a6099;font-style:italic}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438);border-radius:2px;margin:18px 0 24px}
+.ch-hero-banner{background:linear-gradient(135deg,#1c2438 0%,#1a3a6b 100%);color:#fff;border-radius:10px;padding:28px 34px;margin-bottom:32px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.ch-hero-banner blockquote{border:none;background:none;padding:0;margin:0;font-style:italic;font-size:14px;line-height:1.7;color:rgba(255,255,255,.88)}
+.ch-hero-banner cite{display:block;margin-top:10px;font-size:11.5px;color:#e3b341;font-style:normal;font-family:sans-serif}
+h2{font-size:20px;color:#1c2438;margin:38px 0 12px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:16px;color:#1a3a6b;margin:26px 0 9px}
+h4{font-size:13.5px;color:#1a3a6b;margin:18px 0 6px;font-style:italic}
+p{margin-bottom:13px}
+ul,ol{margin:0 0 13px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.shipped{display:inline-block;background:#1a7a3a;color:#fff;font-family:sans-serif;font-size:8.5px;padding:1px 7px;border-radius:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-left:4px;vertical-align:middle}
+.objectives{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:24px 0}
+.obj-card{border-radius:7px;padding:14px 16px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.obj-card.foundational{background:#e8fff0;border:1px solid #b0dfc0}
+.obj-card.intermediate{background:#fffbf0;border:1px solid #e3c87a}
+.obj-card.principal{background:#f0f0ff;border:1px solid #a090d0}
+.obj-label{font-family:sans-serif;font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:7px}
+.obj-card.foundational .obj-label{color:#27ae60}
+.obj-card.intermediate .obj-label{color:#a07800}
+.obj-card.principal .obj-label{color:#7b2d8b}
+.obj-card ul{margin-left:14px}
+.obj-card li{font-size:11.5px;margin-bottom:4px;color:#333}
+.diagram-wrap{background:#fff;border:1px solid #dde2ec;border-radius:8px;padding:18px 20px;margin:24px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.diagram-wrap figcaption{font-family:sans-serif;font-size:10.5px;color:#666;margin-top:10px;font-style:italic;text-align:center;border-top:1px solid #eee;padding-top:8px}
+.formula{background:#0d1117;color:#b8ddf0;padding:14px 18px;border-radius:6px;font-family:'Courier New',monospace;font-size:11px;line-height:1.72;margin:16px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:12px 16px;margin:18px 0;border-radius:0 6px 6px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout.key{border-color:#7b2d8b;background:#fdf5ff}
+.callout.warn{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout strong{display:block;margin-bottom:4px;color:#1c2438}
+.worked{background:#fff8ec;border:2px solid #e3b341;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.worked-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#a07800;margin-bottom:10px}
+.worked h4{color:#1c2438;font-size:13px;margin:14px 0 6px;font-style:normal}
+.cookbook{background:#0d1117;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cookbook-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#e3b341;margin-bottom:12px;border-bottom:1px solid #2a3050;padding-bottom:8px}
+.cookbook pre{color:#b8ddf0;font-family:'Courier New',monospace;font-size:11px;line-height:1.72;white-space:pre;overflow-x:auto}
+.cookbook .cmt{color:#6a7a8a}.cookbook .cmd{color:#79d99a}.cookbook .out{color:#f0c060}
+.qref{background:#1c2438;color:#c8d8f0;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.qref h4{color:#e3b341;font-family:sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;font-style:normal;border-bottom:1px solid rgba(255,255,255,.15);padding-bottom:8px}
+.qref table{color:#c8d8f0;font-size:11.5px}
+.qref th{background:rgba(255,255,255,.08);color:#e3b341;font-size:10px}
+.qref td{border-color:rgba(255,255,255,.1)}
+.qref tr:nth-child(even) td{background:rgba(255,255,255,.04)}
+.takeaways{background:#f3f5f8;border:2px solid #1c2438;border-radius:9px;padding:18px 22px;margin:32px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.takeaways h3{color:#1c2438;margin:0 0 14px;font-size:15px;border:none;padding:0}
+.takeaway-group{margin-bottom:14px}.takeaway-group:last-child{margin-bottom:0}
+.tg-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#e3b341;margin-bottom:6px}
+.takeaway-group ul{margin-left:16px}
+.takeaway-group li{font-size:12.5px;margin-bottom:4px;color:#222}
+.review-questions{margin-top:36px}
+.review-questions h3{font-size:16px;color:#1c2438;margin-bottom:16px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+.rq-tier{border-radius:8px;padding:14px 18px;margin-bottom:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rq-tier.foundational{background:#e8fff0;border-left:5px solid #27ae60}
+.rq-tier.intermediate{background:#fffbf0;border-left:5px solid #e3b341}
+.rq-tier.principal{background:#f0f0ff;border-left:5px solid #7b2d8b}
+.rq-tier-label{font-family:sans-serif;font-size:10px;color:#555;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.rq-badge{font-weight:700;font-size:9px;padding:2px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.foundational .rq-badge{background:#27ae60;color:#fff}
+.intermediate .rq-badge{background:#e3b341;color:#1c2438}
+.principal .rq-badge{background:#7b2d8b;color:#fff}
+.rq-tier ol{margin-left:18px}
+.rq-tier li{margin-bottom:10px;font-size:12.5px;line-height:1.7;color:#222}
+.rq-tier li::marker{font-weight:700}
+.ch-end{text-align:center;margin-top:48px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#999;letter-spacing:2px;text-transform:uppercase}
+.ch-end a{color:#2a6099;text-decoration:none;font-weight:700}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#2a4a8a}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e8e8;vertical-align:top}
+tr:nth-child(even) td{background:#f8f9fb;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout,.worked,.cookbook{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+</style>
+</head>
+<body>
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="ch09.html">&#8592; Ch 9</a>
+  <a href="ch11.html">Ch 11 &#8594;</a>
+  <a href="ch01.html">Ch 1</a>
+  <a href="ch04.html">Ch 4</a>
+  <a href="ch07.html">Ch 7</a>
+  <a href="ch14.html">Ch 14</a>
+  <a href="ch17.html">Ch 17</a>
+</div>
+<div id="sidebar">
+  <h4>Chapter 10</h4>
+  <a href="#overview">Overview</a>
+  <a href="#objectives">Objectives</a>
+  <a href="#s101">10.1 Training Stack</a>
+  <a class="sub" href="#s1012">&nbsp;&nbsp;&#8627; Six Layers</a>
+  <a class="sub" href="#s1013">&nbsp;&nbsp;&#8627; Data Pipeline BW</a>
+  <a href="#s102">10.2 4D Parallelism</a>
+  <a class="sub" href="#s1021">&nbsp;&nbsp;&#8627; Tensor Parallelism</a>
+  <a class="sub" href="#s1022">&nbsp;&nbsp;&#8627; Sequence Parallelism</a>
+  <a class="sub" href="#s1023">&nbsp;&nbsp;&#8627; Pipeline Parallelism</a>
+  <a class="sub" href="#s1024">&nbsp;&nbsp;&#8627; Data Parallel/FSDP</a>
+  <a class="sub" href="#s1025">&nbsp;&nbsp;&#8627; Context Parallelism</a>
+  <a class="sub" href="#s1026">&nbsp;&nbsp;&#8627; Expert Parallelism</a>
+  <a class="sub" href="#s1027">&nbsp;&nbsp;&#8627; Decision Tree</a>
+  <a href="#s103">10.3 ZeRO &amp; FSDP</a>
+  <a class="sub" href="#s1031">&nbsp;&nbsp;&#8627; Memory Budget</a>
+  <a class="sub" href="#s1032">&nbsp;&nbsp;&#8627; ZeRO Stages</a>
+  <a class="sub" href="#s1033">&nbsp;&nbsp;&#8627; Communication Vol.</a>
+  <a href="#s104">10.4 Gradient Overlap</a>
+  <a href="#s105">10.5 Fault Tolerance</a>
+  <a href="#s106">10.6 Advanced Techniques</a>
+  <a class="sub" href="#s1062">&nbsp;&nbsp;&#8627; Activation Checkpt.</a>
+  <a class="sub" href="#s1063">&nbsp;&nbsp;&#8627; Mixed Precision</a>
+  <a class="sub" href="#s1064">&nbsp;&nbsp;&#8627; Sequence Packing</a>
+  <a href="#s107">10.7 RLHF Infrastructure</a>
+  <a href="#s108">10.8 MFU &amp; Anti-Patterns</a>
+  <a href="#cookbook">Profiling Cookbook</a>
+  <a href="#worked">Worked Example</a>
+  <a href="#qref">Quick Reference</a>
+  <a href="#takeaways">Key Takeaways</a>
+  <a href="#review">Review Questions</a>
+</div>
+<div class="page">
+<div class="ch-label">Part IV &middot; Chapter 10</div>
+<h1 class="ch-title">Training Systems at Scale</h1>
+<div class="ch-subtitle">From Data Pipeline to Fault Recovery &#8212; Engineering Reliable, High-Throughput Training for Hundred-Billion-Parameter Models</div>
+<div class="ch-meta">
+  <strong>Book:</strong> AI/ML Infrastructure from Silicon to Scale &nbsp;|&nbsp;
+  <strong>Author:</strong> Venkat Vinjam &nbsp;|&nbsp;
+  <strong>Cross-ref:</strong> <span class="xref">HBM memory (Ch 4) &middot; GPU kernels (Ch 7) &middot; Quantization (Ch 8) &middot; Compiler stack (Ch 9) &middot; Networking/NCCL (Ch 14) &middot; Cluster mgmt (Ch 16) &middot; Telemetry (Ch 17)</span>
+</div>
+<div class="ch-divider"></div>
+<div class="ch-hero-banner">
+  <blockquote>"Anyone can run a training job on eight GPUs. The discipline is making 8,192 GPUs behave like one &#8212; reliably, efficiently, and continuously &#8212; for months at a time."</blockquote>
+  <cite>&#8212; AI Infrastructure Engineering Maxim</cite>
+</div>
+<div id="overview">
+<p>Training large language models at scale is one of the most demanding distributed systems problems in existence. A single 70B parameter pretraining run consumes tens of thousands of GPU-days, generates petabytes of gradient traffic, and must operate continuously for weeks without interruption despite hardware failures, software bugs, and numerical instabilities that emerge only at scale. The difference between a cluster running at 35% MFU and 65% MFU is the difference between $18M and $10M for the same training run.</p>
+<p>This chapter is the training systems counterpart to Chapter 14 (networking) and Chapter 16 (cluster management). Where those chapters cover <em>how NCCL moves data</em> and <em>how SLURM places jobs</em>, this chapter covers <em>how to architect and optimize the training system itself</em>. We use a running example throughout: configuring and optimizing a 70B transformer pretraining run on 512 NVIDIA H100 SXM5 GPUs connected via NVLink (intra-node) and InfiniBand NDR 400G (inter-node). Every number is derived from real hardware specifications.</p>
+</div>
+<div id="objectives">
+<div class="objectives">
+  <div class="obj-card foundational"><div class="obj-label">Foundational</div><ul>
+    <li>Name the six training stack layers and what bottleneck each produces</li>
+    <li>Explain the four parallelism dimensions (TP, PP, DP, CP) in plain terms</li>
+    <li>Understand why ZeRO Stage 3 is a mathematical necessity, not an optimization</li>
+    <li>Know why TP must never cross InfiniBand</li>
+  </ul></div>
+  <div class="obj-card intermediate"><div class="obj-label">Intermediate</div><ul>
+    <li>Calculate per-GPU memory at every ZeRO stage for any model size</li>
+    <li>Compute pipeline bubble fraction and determine optimal M</li>
+    <li>Derive MFU from tokens/sec and hardware peak TFLOPS</li>
+    <li>Configure FSDP overlap with correct backward_prefetch flags</li>
+  </ul></div>
+  <div class="obj-card principal"><div class="obj-label">Principal Level</div><ul>
+    <li>Design complete 4D parallelism configuration for any model/cluster</li>
+    <li>Build a fault tolerance architecture with &lt;5% checkpointing overhead</li>
+    <li>Construct an MFU waterfall from 100% to achieved and identify each loss source</li>
+    <li>Size and configure RLHF infrastructure for PPO with 70B+ policy models</li>
+  </ul></div>
+</div>
+</div>
+<h2 id="s101">10.1 The Training Stack &#8212; Six Layers</h2>
+<p>A production training system is a six-layer stack in which every layer can become the bottleneck. The system runs at the speed of its slowest component. The first skill of a Principal Performance Architect is identifying <em>exactly</em> where the bottleneck lives before touching a single configuration parameter.</p>
+<div class="formula">TRAINING SYSTEM STACK &#8212; SIX LAYERS:
+
+Layer 6: GPU HARDWARE
+  Tensor Core execution, HBM bandwidth, NVLink/NVSwitch fabric
+  Signals: MFU &lt;40%, high SM idle%, HBM BW saturation
+  Tools: Nsight Compute, DCGM, nvidia-smi
+
+Layer 5: COMMUNICATION LIBRARY (NCCL / RCCL)
+  AllReduce, AllGather, ReduceScatter, All-to-All collectives
+  Signals: NCCL ops appear AFTER compute in Nsight trace (sequential)
+  Tools: nsys profile --trace=nccl, NCCL_DEBUG=INFO
+
+Layer 4: TRAINING FRAMEWORK (Megatron-LM / FSDP / DeepSpeed)
+  4D parallelism, ZeRO, gradient accumulation
+  Signals: Python overhead, large PP bubbles, no overlap
+  Tools: torch.profiler, NVTX regions
+
+Layer 3: JOB SCHEDULER (SLURM / Kubernetes)
+  GPU placement, topology-aware scheduling, auto-restart
+  Signals: &gt;10 min restart time, TP traffic crossing IB
+  Tools: squeue, nvidia-smi topo -m
+
+Layer 2: DATA PIPELINE (DataLoader, tokenizer, prefetch)
+  Must deliver tokens at exactly the GPU consumption rate
+  Signals: GPU idle between batches, CPU at 100%
+  Tools: vmstat, iostat, torch.profiler DataLoader trace
+
+Layer 1: DATA STORAGE (Lustre/GPFS/WekaFS, object store)
+  Serves petabytes of tokenized shards to many readers
+  Signals: IOPS saturation, metadata thrashing, open latency spikes
+  Tools: lctl stats (Lustre), wekawatch, iostat
+
+RULE: Profile all six before optimizing any one.
+Most common mistake: kernel-tuning when the data pipeline is the bottleneck.
+GPU shows 95% SM utilization but sits idle 30% of the time waiting for batches.</div>
+
+<h3 id="s1013">10.1.3 Data Pipeline Bandwidth Requirement</h3>
+<div class="formula">DATA PIPELINE BANDWIDTH REQUIREMENT:
+
+BW_total = batch_size &#215; seq_len &#215; token_bytes &#215; steps_per_sec
+
+70B on 512&#215; H100: batch=2048, seq=4096, token_bytes=2, steps_per_sec=0.5
+BW_total = 2048 &#215; 4096 &#215; 2 &#215; 0.5 = 8 MB/s &#8592; trivially small!
+
+REAL BOTTLENECK IS METADATA IOPS:
+  At 1M tokens/shard: 4 file reads/sec
+  With 10,000 DataLoader workers: ~40,000 metadata ops/sec
+  Lustre MDT saturation: ~50,000 metadata ops/sec &#8594; metadata is the limit!
+
+DESIGN RULES:
+  1. Pre-tokenize to large binary shards (&gt;100M tokens/file)
+  2. Memory-mapped files (np.memmap) for O(1) random access
+  3. Shuffle at shard level, not token level
+  4. Async prefetch: num_workers &#8805; 4, pin_memory=True
+  5. Sequence packing for variable-length documents (+20% throughput)</div>
+
+<h2 id="s102">10.2 &#8212; 4D Parallelism Deep Dive</h2>
+<p>Modern large-model training uses four orthogonal parallelism strategies simultaneously. Each operates at a different granularity and requires a different interconnect. Wrong choices can cut MFU in half &#8212; and the error is often invisible in logs until you measure step time vs. theoretical minimum.</p>
+
+<div class="diagram-wrap" id="diag-4d"><figure>
+<svg viewBox="0 0 760 430" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <defs>
+    <marker id="arrP" markerWidth="7" markerHeight="7" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#7b2d8b"/></marker>
+    <marker id="arrG" markerWidth="7" markerHeight="7" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#1a7a3a"/></marker>
+    <marker id="arrD" markerWidth="7" markerHeight="7" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#888"/></marker>
+  </defs>
+  <text x="380" y="20" text-anchor="middle" fill="#1c2438" font-size="13" font-weight="bold" font-family="sans-serif">4D PARALLELISM &#8212; 70B on 512&#215; H100 (TP=8, PP=4, DP=16)</text>
+  <rect x="10" y="30" width="740" height="195" rx="8" fill="#e8fff0" stroke="#1a7a3a" stroke-width="2"/>
+  <text x="380" y="48" text-anchor="middle" fill="#1a7a3a" font-size="11" font-weight="bold" font-family="sans-serif">DP Replica 0 &#8212; FSDP shards all parameters across 32 GPUs</text>
+  <!-- PP Stage 0 -->
+  <rect x="20" y="56" width="163" height="158" rx="6" fill="#f0f0ff" stroke="#7b2d8b" stroke-width="1.5"/>
+  <text x="101" y="73" text-anchor="middle" fill="#7b2d8b" font-size="10" font-weight="bold" font-family="sans-serif">PP Stage 0 (Layers 0-19)</text>
+  <rect x="28" y="82" width="34" height="26" rx="3" fill="#1a3a6b"/><text x="45" y="99" text-anchor="middle" fill="#e3b341" font-size="7.5">GPU0</text>
+  <rect x="65" y="82" width="34" height="26" rx="3" fill="#1a3a6b"/><text x="82" y="99" text-anchor="middle" fill="#e3b341" font-size="7.5">GPU1</text>
+  <rect x="102" y="82" width="34" height="26" rx="3" fill="#1a3a6b"/><text x="119" y="99" text-anchor="middle" fill="#e3b341" font-size="7.5">GPU2</text>
+  <rect x="139" y="82" width="34" height="26" rx="3" fill="#1a3a6b"/><text x="156" y="99" text-anchor="middle" fill="#e3b341" font-size="7.5">GPU3</text>
+  <rect x="28" y="114" width="34" height="26" rx="3" fill="#1a3a6b"/><text x="45" y="131" text-anchor="middle" fill="#e3b341" font-size="7.5">GPU4</text>
+  <rect x="65" y="114" width="34" height="26" rx="3" fill="#1a3a6b"/><text x="82" y="131" text-anchor="middle" fill="#e3b341" font-size="7.5">GPU5</text>
+  <rect x="102" y="114" width="34" height="26" rx="3" fill="#1a3a6b"/><text x="119" y="131" text-anchor="middle" fill="#e3b341" font-size="7.5">GPU6</text>
+  <rect x="139" y="114" width="34" height="26" rx="3" fill="#1a3a6b"/><text x="156" y="131" text-anchor="middle" fill="#e3b341" font-size="7.5">GPU7</text>
+  <text x="101" y="160" text-anchor="middle" fill="#2a6099" font-size="8.5">&#8596; NVLink 600GB/s (TP AllReduce)</text>
+  <text x="101" y="173" text-anchor="middle" fill="#888" font-size="8">0.45ms per AllReduce &#8592; fast!</text>
+  <text x="101" y="200" text-anchor="middle" fill="#888" font-size="8">Weight slice: W[:,0:1K]..W[:,7K:8K]</text>
+  <!-- PP Stage 1 -->
+  <rect x="196" y="56" width="163" height="158" rx="6" fill="#f0f0ff" stroke="#7b2d8b" stroke-width="1.5"/>
+  <text x="277" y="73" text-anchor="middle" fill="#7b2d8b" font-size="10" font-weight="bold" font-family="sans-serif">PP Stage 1 (Layers 20-39)</text>
+  <rect x="204" y="82" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="241" y="82" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="278" y="82" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="315" y="82" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="204" y="114" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="241" y="114" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="278" y="114" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="315" y="114" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <text x="277" y="160" text-anchor="middle" fill="#2a6099" font-size="8.5">&#8596; NVLink 600GB/s</text>
+  <!-- PP Stage 2 -->
+  <rect x="372" y="56" width="163" height="158" rx="6" fill="#f0f0ff" stroke="#7b2d8b" stroke-width="1.5"/>
+  <text x="453" y="73" text-anchor="middle" fill="#7b2d8b" font-size="10" font-weight="bold" font-family="sans-serif">PP Stage 2 (Layers 40-59)</text>
+  <rect x="380" y="82" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="417" y="82" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="454" y="82" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="491" y="82" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="380" y="114" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="417" y="114" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="454" y="114" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="491" y="114" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <text x="453" y="160" text-anchor="middle" fill="#2a6099" font-size="8.5">&#8596; NVLink 600GB/s</text>
+  <!-- PP Stage 3 -->
+  <rect x="548" y="56" width="193" height="158" rx="6" fill="#f0f0ff" stroke="#7b2d8b" stroke-width="1.5"/>
+  <text x="644" y="73" text-anchor="middle" fill="#7b2d8b" font-size="10" font-weight="bold" font-family="sans-serif">PP Stage 3 (Layers 60-79)</text>
+  <rect x="556" y="82" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="594" y="82" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="632" y="82" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="670" y="82" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="556" y="114" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="594" y="114" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="632" y="114" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <rect x="670" y="114" width="34" height="26" rx="3" fill="#1a3a6b"/>
+  <text x="644" y="160" text-anchor="middle" fill="#2a6099" font-size="8.5">&#8596; NVLink 600GB/s</text>
+  <!-- PP arrows between stages -->
+  <line x1="183" y1="135" x2="196" y2="135" stroke="#7b2d8b" stroke-width="2.5" marker-end="url(#arrP)"/>
+  <line x1="359" y1="135" x2="372" y2="135" stroke="#7b2d8b" stroke-width="2.5" marker-end="url(#arrP)"/>
+  <line x1="535" y1="135" x2="548" y2="135" stroke="#7b2d8b" stroke-width="2.5" marker-end="url(#arrP)"/>
+  <text x="189" y="129" text-anchor="middle" fill="#7b2d8b" font-size="8">IB</text>
+  <text x="365" y="129" text-anchor="middle" fill="#7b2d8b" font-size="8">IB</text>
+  <text x="541" y="129" text-anchor="middle" fill="#7b2d8b" font-size="8">IB</text>
+  <!-- DP Replica 1 -->
+  <rect x="10" y="240" width="740" height="50" rx="8" fill="#e8fff0" stroke="#1a7a3a" stroke-width="2"/>
+  <text x="380" y="262" text-anchor="middle" fill="#1a7a3a" font-size="11" font-weight="bold" font-family="sans-serif">DP Replica 1 (same TP&#215;PP structure, different micro-batches)</text>
+  <text x="380" y="278" text-anchor="middle" fill="#555" font-size="9.5">FSDP AllGather + ReduceScatter via InfiniBand NDR 400G between all 16 replicas</text>
+  <line x1="380" y1="224" x2="380" y2="240" stroke="#1a7a3a" stroke-width="2" stroke-dasharray="5" marker-end="url(#arrG)"/>
+  <text x="415" y="235" fill="#1a7a3a" font-size="9">FSDP: 420 GB/step</text>
+  <text x="380" y="305" text-anchor="middle" fill="#888" font-size="9.5">... DP Replicas 2-15 ...</text>
+  <!-- Rules box -->
+  <rect x="10" y="315" width="740" height="108" rx="7" fill="#f3f5f8" stroke="#1c2438" stroke-width="1.5"/>
+  <text x="380" y="333" text-anchor="middle" fill="#1c2438" font-size="11" font-weight="bold" font-family="sans-serif">PARALLELISM PLACEMENT RULES</text>
+  <text x="25" y="352" fill="#1c2438" font-size="10">TP (Tensor Parallel):</text>
+  <text x="145" y="352" fill="#2a6099" font-size="10">ALWAYS within NVLink (8 GPUs/node) &#8594; 0.45ms AllReduce</text>
+  <text x="550" y="352" fill="#c0392b" font-size="10" font-weight="bold">IB = 5.4ms (FATAL 12x)</text>
+  <text x="25" y="369" fill="#1c2438" font-size="10">PP (Pipeline Parallel):</text>
+  <text x="152" y="369" fill="#2a6099" font-size="10">P2P activation transfers between stages over IB (one hop between adjacent stages)</text>
+  <text x="25" y="386" fill="#1c2238" font-size="10">DP/FSDP:</text>
+  <text x="90" y="386" fill="#2a6099" font-size="10">AllGather + ReduceScatter across all nodes via IB &#8594; 3&#215;&#936; per step = 420 GB for 70B</text>
+  <text x="25" y="403" fill="#1c2438" font-size="10" font-weight="bold">MNEMONIC: Small, frequent comms &#8594; NVLink | Large, infrequent &#8594; IB</text>
+  <text x="25" y="416" fill="#555" font-size="9.5">Verify assignment: TP &#215; PP &#215; CP &#215; DP = Total GPUs = 8 &#215; 4 &#215; 1 &#215; 16 = 512 &#9989;</text>
+</svg>
+<figcaption><strong>Figure 10.1</strong> &#8212; 4D parallelism decomposition for 70B on 512&#215; H100. TP=8 splits each weight matrix column/row-wise within one NVLink node. PP=4 assigns 20 layers per stage, with P2P activation transfers over IB between stages. FSDP (ZeRO-3) shards all parameters across all 16 DP replicas over IB. The golden rule: TP AllReduce (268 MB &#215; 160 calls/step) must stay on NVLink &#8212; crossing IB multiplies latency 12&#215;.</figcaption>
+</figure></div>
+<h3 id="s1021">10.2.1 Tensor Parallelism &#8212; Column/Row Split</h3>
+<div class="formula">TENSOR PARALLELISM (Megatron column/row split):
+  Column-parallel (QKV proj, FFN first linear):
+    GPU i holds W[:, i*d/TP : (i+1)*d/TP]
+    Y_i = X * W_i  (no communication in forward)
+  Row-parallel (output proj, FFN second linear):
+    GPU i holds W[i*d/TP : (i+1)*d/TP, :]
+    Z = AllReduce(Z_0 + Z_1 + ... + Z_TP)  &#8592; ONE AllReduce per layer
+
+AllReduce volume (70B, TP=8, micro-batch=4, seq=4096):
+  4 * 4096 * 8192 * 2 bytes = 268 MB per AllReduce
+  NVLink 600 GB/s: 268/600000 = 0.45 ms  &#9989;
+  IB NDR 50 GB/s:  268/50000  = 5.4 ms   &#10060; FATAL
+
+  80 layers * 2 AllReduces/layer:
+    NVLink: 80 * 2 * 0.45 ms =  72 ms/step  &#9989;
+    IB:     80 * 2 * 5.4 ms  = 864 ms/step  &#10060; DESTROYS MFU</div>
+
+<h3 id="s1022">10.2.2 Sequence Parallelism</h3>
+<div class="formula">SEQUENCE PARALLELISM (Megatron-LM --sequence-parallel):
+  LayerNorm + Dropout sharded along sequence dim &#8594; each GPU holds [seq/TP, d_model]
+  Extra comms: AllGather before column-parallel, ReduceScatter after row-parallel
+  
+  Savings (70B, 80 layers, TP=8, micro-batch=4):
+    Without SP: ~10.7 GB replicated activations per GPU (8 copies of same data)
+    With SP:    ~1.34 GB per GPU &#8594; 8 GB freed per GPU
+  
+  RULE: Always enable when TP > 1. One flag: --sequence-parallel</div>
+
+<h3 id="s1023">10.2.3 Pipeline Parallelism and the Bubble Formula</h3>
+<div class="diagram-wrap" id="diag-pipeline"><figure>
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <defs>
+    <marker id="aP" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#888"/></marker>
+  </defs>
+  <text x="380" y="18" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">PIPELINE SCHEDULING &#8212; bubble = (PP&#8722;1) / (PP&#8722;1 + M)</text>
+
+  <!-- Naive: PP=4, M=4, bubble=75% -->
+  <text x="10" y="42" fill="#c0392b" font-size="10.5" font-weight="bold" font-family="sans-serif">GPipe (Naive) PP=4, M=4 &#8594; bubble=75%</text>
+  <!-- Stage rows, each 28px unit wide -->
+  <!-- Stage 0 -->
+  <text x="58" y="60" text-anchor="end" fill="#555" font-size="8.5" font-family="sans-serif">S0</text>
+  <rect x="62" y="49" width="26" height="10" rx="2" fill="#2a6099"/><text x="75" y="58" text-anchor="middle" fill="#fff" font-size="6.5">F0</text>
+  <rect x="90" y="49" width="26" height="10" rx="2" fill="#2a6099"/><text x="103" y="58" text-anchor="middle" fill="#fff" font-size="6.5">F1</text>
+  <rect x="118" y="49" width="26" height="10" rx="2" fill="#2a6099"/><text x="131" y="58" text-anchor="middle" fill="#fff" font-size="6.5">F2</text>
+  <rect x="146" y="49" width="26" height="10" rx="2" fill="#2a6099"/><text x="159" y="58" text-anchor="middle" fill="#fff" font-size="6.5">F3</text>
+  <rect x="174" y="49" width="26" height="10" rx="2" fill="#c0392b"/><text x="187" y="58" text-anchor="middle" fill="#fff" font-size="6.5">B3</text>
+  <rect x="202" y="49" width="26" height="10" rx="2" fill="#c0392b"/><text x="215" y="58" text-anchor="middle" fill="#fff" font-size="6.5">B2</text>
+  <rect x="230" y="49" width="26" height="10" rx="2" fill="#c0392b"/><text x="243" y="58" text-anchor="middle" fill="#fff" font-size="6.5">B1</text>
+  <rect x="258" y="49" width="26" height="10" rx="2" fill="#c0392b"/><text x="271" y="58" text-anchor="middle" fill="#fff" font-size="6.5">B0</text>
+  <!-- Stage 1: 1 bubble then F0..F3, B3..B0 -->
+  <text x="58" y="74" text-anchor="end" fill="#555" font-size="8.5" font-family="sans-serif">S1</text>
+  <rect x="62" y="63" width="26" height="10" rx="2" fill="#c0392b" opacity=".2"/>
+  <rect x="90" y="63" width="26" height="10" rx="2" fill="#2a6099"/><text x="103" y="72" text-anchor="middle" fill="#fff" font-size="6.5">F0</text>
+  <rect x="118" y="63" width="26" height="10" rx="2" fill="#2a6099"/><text x="131" y="72" text-anchor="middle" fill="#fff" font-size="6.5">F1</text>
+  <rect x="146" y="63" width="26" height="10" rx="2" fill="#2a6099"/><text x="159" y="72" text-anchor="middle" fill="#fff" font-size="6.5">F2</text>
+  <rect x="174" y="63" width="26" height="10" rx="2" fill="#2a6099"/><text x="187" y="72" text-anchor="middle" fill="#fff" font-size="6.5">F3</text>
+  <rect x="202" y="63" width="26" height="10" rx="2" fill="#c0392b"/><text x="215" y="72" text-anchor="middle" fill="#fff" font-size="6.5">B3</text>
+  <rect x="230" y="63" width="26" height="10" rx="2" fill="#c0392b"/><text x="243" y="72" text-anchor="middle" fill="#fff" font-size="6.5">B2</text>
+  <rect x="258" y="63" width="26" height="10" rx="2" fill="#c0392b"/><text x="271" y="72" text-anchor="middle" fill="#fff" font-size="6.5">B1</text>
+  <rect x="286" y="63" width="26" height="10" rx="2" fill="#c0392b"/><text x="299" y="72" text-anchor="middle" fill="#fff" font-size="6.5">B0</text>
+  <!-- Stage 2: 2 bubbles -->
+  <text x="58" y="88" text-anchor="end" fill="#555" font-size="8.5" font-family="sans-serif">S2</text>
+  <rect x="62" y="77" width="54" height="10" rx="2" fill="#c0392b" opacity=".2"/>
+  <rect x="118" y="77" width="26" height="10" rx="2" fill="#2a6099"/><text x="131" y="86" text-anchor="middle" fill="#fff" font-size="6.5">F0</text>
+  <rect x="146" y="77" width="26" height="10" rx="2" fill="#2a6099"/><text x="159" y="86" text-anchor="middle" fill="#fff" font-size="6.5">F1</text>
+  <rect x="174" y="77" width="26" height="10" rx="2" fill="#2a6099"/><text x="187" y="86" text-anchor="middle" fill="#fff" font-size="6.5">F2</text>
+  <rect x="202" y="77" width="26" height="10" rx="2" fill="#2a6099"/><text x="215" y="86" text-anchor="middle" fill="#fff" font-size="6.5">F3</text>
+  <rect x="230" y="77" width="26" height="10" rx="2" fill="#c0392b"/><text x="243" y="86" text-anchor="middle" fill="#fff" font-size="6.5">B3</text>
+  <rect x="258" y="77" width="82" height="10" rx="2" fill="#c0392b"/><text x="299" y="86" text-anchor="middle" fill="#fff" font-size="6.5">B2..B0</text>
+  <text x="390" y="70" fill="#c0392b" font-size="12" font-weight="bold" font-family="sans-serif">Bubble=75%</text>
+  <text x="390" y="83" fill="#888" font-size="9.5" font-family="sans-serif">Stage idle 3/4 of the time!</text>
+
+  <!-- 1F1B: PP=4, M=8, bubble=27% -->
+  <text x="10" y="116" fill="#27ae60" font-size="10.5" font-weight="bold" font-family="sans-serif">1F1B Schedule PP=4, M=8 &#8594; bubble=27%</text>
+  <!-- unit=20px wide -->
+  <text x="58" y="133" text-anchor="end" fill="#555" font-size="8.5" font-family="sans-serif">S0</text>
+  <rect x="62" y="122" width="20" height="10" rx="2" fill="#2a6099"/><text x="72" y="131" text-anchor="middle" fill="#fff" font-size="6">F0</text>
+  <rect x="84" y="122" width="20" height="10" rx="2" fill="#2a6099"/><text x="94" y="131" text-anchor="middle" fill="#fff" font-size="6">F1</text>
+  <rect x="106" y="122" width="20" height="10" rx="2" fill="#2a6099"/><text x="116" y="131" text-anchor="middle" fill="#fff" font-size="6">F2</text>
+  <rect x="128" y="122" width="20" height="10" rx="2" fill="#2a6099"/><text x="138" y="131" text-anchor="middle" fill="#fff" font-size="6">F3</text>
+  <rect x="150" y="122" width="20" height="10" rx="2" fill="#c0392b"/><text x="160" y="131" text-anchor="middle" fill="#fff" font-size="6">B0</text>
+  <rect x="172" y="122" width="20" height="10" rx="2" fill="#2a6099"/><text x="182" y="131" text-anchor="middle" fill="#fff" font-size="6">F4</text>
+  <rect x="194" y="122" width="20" height="10" rx="2" fill="#c0392b"/><text x="204" y="131" text-anchor="middle" fill="#fff" font-size="6">B1</text>
+  <rect x="216" y="122" width="20" height="10" rx="2" fill="#2a6099"/><text x="226" y="131" text-anchor="middle" fill="#fff" font-size="6">F5</text>
+  <rect x="238" y="122" width="20" height="10" rx="2" fill="#c0392b"/><text x="248" y="131" text-anchor="middle" fill="#fff" font-size="6">B2</text>
+  <rect x="260" y="122" width="20" height="10" rx="2" fill="#2a6099"/><text x="270" y="131" text-anchor="middle" fill="#fff" font-size="6">F6</text>
+  <rect x="282" y="122" width="20" height="10" rx="2" fill="#c0392b"/><text x="292" y="131" text-anchor="middle" fill="#fff" font-size="6">B3</text>
+  <rect x="304" y="122" width="20" height="10" rx="2" fill="#2a6099"/><text x="314" y="131" text-anchor="middle" fill="#fff" font-size="6">F7</text>
+  <rect x="326" y="122" width="20" height="10" rx="2" fill="#c0392b"/><text x="336" y="131" text-anchor="middle" fill="#fff" font-size="6">B4</text>
+  <rect x="348" y="122" width="20" height="10" rx="2" fill="#c0392b"/><text x="358" y="131" text-anchor="middle" fill="#fff" font-size="6">B5</text>
+  <rect x="370" y="122" width="20" height="10" rx="2" fill="#c0392b"/><text x="380" y="131" text-anchor="middle" fill="#fff" font-size="6">B6</text>
+  <rect x="392" y="122" width="20" height="10" rx="2" fill="#c0392b"/><text x="402" y="131" text-anchor="middle" fill="#fff" font-size="6">B7</text>
+  <text x="470" y="131" fill="#27ae60" font-size="11" font-weight="bold" font-family="sans-serif">Bubble=27%</text>
+  <text x="470" y="144" fill="#888" font-size="9" font-family="sans-serif">(PP-1)/(PP-1+M)=3/11</text>
+
+  <!-- Interleaved: PP=4, V=2, M=8, bubble=15.8% -->
+  <text x="10" y="180" fill="#1a7a3a" font-size="10.5" font-weight="bold" font-family="sans-serif">Interleaved (V=2 virtual stages) PP=4, M=8 &#8594; bubble=15.8%</text>
+  <text x="10" y="193" fill="#888" font-size="9" font-family="sans-serif">Each GPU holds 2 non-contiguous layer chunks. bubble=(PP-1)/(PP-1+V*M)=3/(3+16)=15.8%</text>
+  <text x="58" y="210" text-anchor="end" fill="#555" font-size="8.5" font-family="sans-serif">S0</text>
+  <rect x="62" y="199" width="16" height="10" rx="2" fill="#2a6099"/><text x="70" y="208" text-anchor="middle" fill="#fff" font-size="5.5">F0a</text>
+  <rect x="80" y="199" width="16" height="10" rx="2" fill="#1a7a3a"/><text x="88" y="208" text-anchor="middle" fill="#fff" font-size="5.5">F0b</text>
+  <rect x="98" y="199" width="16" height="10" rx="2" fill="#2a6099"/><text x="106" y="208" text-anchor="middle" fill="#fff" font-size="5.5">F1a</text>
+  <rect x="116" y="199" width="16" height="10" rx="2" fill="#1a7a3a"/><text x="124" y="208" text-anchor="middle" fill="#fff" font-size="5.5">F1b</text>
+  <rect x="134" y="199" width="16" height="10" rx="2" fill="#c0392b"/><text x="142" y="208" text-anchor="middle" fill="#fff" font-size="5.5">B0b</text>
+  <rect x="152" y="199" width="16" height="10" rx="2" fill="#c0392b"/><text x="160" y="208" text-anchor="middle" fill="#fff" font-size="5.5">B0a</text>
+  <rect x="170" y="199" width="16" height="10" rx="2" fill="#2a6099"/><text x="178" y="208" text-anchor="middle" fill="#fff" font-size="5.5">F2a</text>
+  <rect x="188" y="199" width="16" height="10" rx="2" fill="#1a7a3a"/><text x="196" y="208" text-anchor="middle" fill="#fff" font-size="5.5">F2b</text>
+  <text x="220" y="208" fill="#888" font-size="8" font-family="sans-serif">... denser, fewer bubbles ...</text>
+  <text x="470" y="208" fill="#1a7a3a" font-size="11" font-weight="bold" font-family="sans-serif">Bubble=15.8%</text>
+
+  <!-- Formula box -->
+  <rect x="10" y="235" width="740" height="76" rx="7" fill="#fff8ec" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="380" y="253" text-anchor="middle" fill="#a07800" font-size="11" font-weight="bold" font-family="sans-serif">BUBBLE FRACTION FORMULA: bubble = (PP &#8722; 1) / (PP &#8722; 1 + M)</text>
+  <text x="380" y="267" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">PP = pipeline stages, M = micro-batches in pipeline at steady state</text>
+  <text x="100" y="287" text-anchor="middle" fill="#c0392b" font-size="10" font-family="sans-serif">PP=4, M=8: 27%</text>
+  <text x="260" y="287" text-anchor="middle" fill="#e3b341" font-size="10" font-family="sans-serif">PP=4, M=32: 8.6%</text>
+  <text x="420" y="287" text-anchor="middle" fill="#1a7a3a" font-size="10" font-family="sans-serif">PP=4, M=128: 2.3%</text>
+  <text x="600" y="287" text-anchor="middle" fill="#c0392b" font-size="10" font-family="sans-serif">PP=8, M=32: 17.9%</text>
+  <text x="380" y="305" text-anchor="middle" fill="#1c2438" font-size="10" font-weight="bold" font-family="sans-serif">RULE: Always set M &#8805; 4&#215;PP to keep pipeline bubble below 10%</text>
+</svg>
+<figcaption><strong>Figure 10.2</strong> &#8212; Pipeline scheduling comparison. Naive (GPipe): stages wait for all forward passes before beginning backward &#8212; 75% bubble at PP=4, M=4. 1F1B: alternates one forward and one backward per stage &#8212; 27% bubble at M=8. Interleaved (V=2 virtual stages): each GPU holds two non-contiguous layer chunks, denser scheduling &#8212; 15.8% bubble at same M=8. Formula: bubble = (PP&#8722;1)/(PP&#8722;1+M). Always set M&#8805;4&#215;PP.</figcaption>
+</figure></div>
+
+<h3 id="s1024">10.2.4 Data Parallelism and FSDP</h3>
+<div class="formula">EFFECTIVE BATCH SIZE:
+  effective_batch = micro_batch &#215; gradient_accum_steps &#215; DP_degree
+  
+  70B on 512&#215;H100 (DP=16, TP=8, PP=4): micro_batch=2, grad_accum=8
+    effective_batch = 2 &#215; 8 &#215; 16 = 256 seq &#215; 4096 = 1M tokens/update
+  
+  Pipeline micro-batch count: M = grad_accum &#215; DP / PP = 8&#215;16/4 = 32
+  Bubble = (4-1)/(4-1+32) = 3/35 = 8.6% &#9989;
+
+FSDP CONFIGURATION (PyTorch ZeRO Stage 3):
+  model = FSDP(model,
+    sharding_strategy=ShardingStrategy.FULL_SHARD,
+    backward_prefetch=BackwardPrefetch.BACKWARD_PRE,   # overlap CRITICAL
+    forward_prefetch=True,
+    use_orig_params=True)     # required for torch.compile composability</div>
+
+<h3 id="s1025">10.2.5 Context Parallelism &#8212; Long-Sequence Training</h3>
+<div class="formula">CONTEXT PARALLELISM (Ring Attention) &#8212; use when seq > 32K:
+
+PROBLEM: self-attention memory = O(seq^2)
+  seq=128K, 80 layers: QK^T = 128K^2 * 2 bytes per layer = 32 GB * 80 = 2.56 TB &#10060;
+
+RING ATTENTION: shard sequence across CP GPUs, rotate K,V around ring
+  Memory: (seq/CP)^2 &#8594; 64x reduction for CP=8
+  Comm per layer = 2 * seq * d_model * 2 bytes
+    = 2 * 128K * 8192 * 2 = 4.3 GB (manageable over NVLink)
+  
+  When to use: CP=1 (seq&#8804;32K), CP=2 (32K-64K), CP=4 (64K-128K), CP=8 (128K+)</div>
+
+<h3 id="s1026">10.2.6 Expert Parallelism &#8212; MoE Routing</h3>
+<div class="formula">EXPERT PARALLELISM (EP) &#8212; All-to-All routing:
+  Volume = tokens/GPU * (EP-1)/EP * K * d_model * 2 bytes
+  Mixtral-8x7B EP=8: ~56 MB per All-to-All (dispatch + combine = 2 calls/layer)
+  Unlike TP: All-to-All is bandwidth-bound &#8594; IB is acceptable for EP
+  Load balancing: auxiliary loss + expert capacity factor monitoring</div>
+
+<h3 id="s1027">10.2.7 4D Configuration Decision Tree</h3>
+<div class="diagram-wrap" id="diag-decision4d"><figure>
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <defs><marker id="aD" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#888"/></marker></defs>
+  <text x="380" y="18" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">4D PARALLELISM DECISION TREE</text>
+  <rect x="270" y="28" width="220" height="32" rx="6" fill="#1c2438"/>
+  <text x="380" y="44" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">STEP 1: TP = GPUs per NVLink domain</text>
+  <text x="380" y="56" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">Usually TP=8 (DGX H100: 8 GPUs/node)</text>
+  <line x1="380" y1="60" x2="380" y2="76" stroke="#888" stroke-width="1.5" marker-end="url(#aD)"/>
+  <rect x="260" y="76" width="240" height="32" rx="6" fill="#2a6099"/>
+  <text x="380" y="92" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">STEP 2: Does model fit at TP=8 + ZeRO-3?</text>
+  <text x="380" y="104" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">Check: 16&#936;/N_DP &#8804; 75 GB per H100</text>
+  <line x1="260" y1="92" x2="140" y2="122" stroke="#1a7a3a" stroke-width="1.5" marker-end="url(#aD)"/>
+  <text x="185" y="113" fill="#1a7a3a" font-size="9" font-family="sans-serif">YES &#8594;</text>
+  <line x1="500" y1="92" x2="610" y2="122" stroke="#c0392b" stroke-width="1.5" marker-end="url(#aD)"/>
+  <text x="520" y="113" fill="#c0392b" font-size="9" font-family="sans-serif">NO &#8594; add PP</text>
+  <rect x="50" y="122" width="175" height="32" rx="5" fill="#1a7a3a"/>
+  <text x="137" y="138" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">PP = 1</text>
+  <text x="137" y="150" text-anchor="middle" fill="#c8f0d8" font-size="9" font-family="sans-serif">DP = Total/(TP&#215;CP)</text>
+  <rect x="516" y="122" width="222" height="32" rx="5" fill="#c0392b"/>
+  <text x="627" y="138" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">PP = ceil(L/layers_per_stage)</text>
+  <text x="627" y="150" text-anchor="middle" fill="#ffc8c8" font-size="9" font-family="sans-serif">Target: &#8805;10 layers/stage</text>
+  <line x1="380" y1="108" x2="380" y2="166" stroke="#888" stroke-width="1.5" marker-end="url(#aD)"/>
+  <rect x="255" y="166" width="250" height="30" rx="6" fill="#1a3a6b"/>
+  <text x="380" y="182" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">STEP 3: DP = Total / (TP &#215; PP &#215; CP)</text>
+  <text x="380" y="193" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">Enable FSDP ZeRO Stage 3 &#8592; always</text>
+  <line x1="380" y1="196" x2="380" y2="212" stroke="#888" stroke-width="1.5" marker-end="url(#aD)"/>
+  <rect x="248" y="212" width="264" height="30" rx="6" fill="#2a6099"/>
+  <text x="380" y="228" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">STEP 4: CP=1 unless seq&gt;32K</text>
+  <text x="380" y="239" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">CP=2(32-64K), CP=4(64-128K), CP=8(128K+)</text>
+  <line x1="380" y1="242" x2="380" y2="258" stroke="#888" stroke-width="1.5" marker-end="url(#aD)"/>
+  <rect x="210" y="258" width="340" height="30" rx="6" fill="#7b2d8b"/>
+  <text x="380" y="274" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">STEP 5: Verify bubble=(PP-1)/(PP-1+M) &lt;10%</text>
+  <text x="380" y="285" text-anchor="middle" fill="#e8c8f0" font-size="9.5" font-family="sans-serif">Increase grad_accum until M&#8805;4&#215;PP</text>
+</svg>
+<figcaption><strong>Figure 10.3</strong> &#8212; 4D parallelism decision tree. TP = NVLink domain (usually 8). PP only if model doesn't fit. DP gets remaining GPUs. CP only for seq&gt;32K. Always verify bubble fraction.</figcaption>
+</figure></div>
+<h2 id="s103">10.3 &#8212; ZeRO and FSDP: The Memory Math</h2>
+<h3 id="s1031">10.3.1 Complete Memory Budget</h3>
+<div class="formula">TRAINING MEMORY COMPONENTS (per GPU, full Adam, 70B, NO sharding):
+  Component             Formula            70B Amount
+  &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
+  Weights BF16:         P &#215; 2 bytes          140 GB
+  Gradients BF16:       P &#215; 2 bytes          140 GB
+  FP32 master weights:  P &#215; 4 bytes          280 GB &#8592;
+  FP32 momentum m:      P &#215; 4 bytes          280 GB &#8592; optimizer = 840 GB
+  FP32 variance v:      P &#215; 4 bytes          280 GB &#8592;
+  &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
+  TOTAL STATES:         P &#215; 16 bytes        1,120 GB   &#8592; 16 bytes/param rule!
+  Activations (selec.): ~11-22 GB            22 GB (batch=4)
+  
+  16 bytes/param is the number to remember: 70B &#215; 16 = 1,120 GB &#8592; 14&#215; H100 capacity</div>
+
+<h3 id="s1032">10.3.2 ZeRO Stage Breakdown</h3>
+<div class="diagram-wrap" id="diag-zero"><figure>
+<svg viewBox="0 0 760 285" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="380" y="18" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">ZeRO MEMORY SAVINGS WATERFALL &#8212; 70B, N_DP=16 (H100 80 GB limit)</text>
+  <!-- X labels -->
+  <text x="76" y="265" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">No ZeRO</text>
+  <text x="76" y="277" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">(DDP)</text>
+  <text x="218" y="265" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">ZeRO Stage 1</text>
+  <text x="218" y="277" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">shard opt. states</text>
+  <text x="370" y="265" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">ZeRO Stage 2</text>
+  <text x="370" y="277" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">+ shard grads</text>
+  <text x="530" y="265" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">ZeRO Stage 3 (FSDP)</text>
+  <text x="530" y="277" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">+ shard params</text>
+  <!-- H100 limit line: at y=220 (80 GB on scale where 0=255, 500GB=30, 1GB=0.45px) -->
+  <line x1="22" y1="219" x2="720" y2="219" stroke="#c0392b" stroke-width="2" stroke-dasharray="6"/>
+  <text x="690" y="215" fill="#c0392b" font-size="9.5" font-weight="bold" font-family="sans-serif">80 GB limit</text>
+  <!-- Bars: scale 500GB=225px from top (y=30), 1GB=0.45px: bar_top = 255 - GB*0.45 -->
+  <!-- No ZeRO: 1120 GB -> top = 30 (capped), show overflow arrow -->
+  <rect x="36" y="30" width="80" height="225" rx="3" fill="#c0392b" opacity=".8"/>
+  <text x="76" y="50" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">1,120 GB</text>
+  <text x="76" y="63" text-anchor="middle" fill="#fff" font-size="8.5" font-family="sans-serif">&#10008; impossible</text>
+  <!-- Stage components (simplified internal labels) -->
+  <rect x="36" y="190" width="80" height="25" rx="0" fill="#c0392b" opacity=".5"/>
+  <text x="76" y="205" text-anchor="middle" fill="#fff" font-size="7.5" font-family="sans-serif">Grads 140GB</text>
+  <rect x="36" y="165" width="80" height="25" rx="0" fill="#2a6099" opacity=".7"/>
+  <text x="76" y="180" text-anchor="middle" fill="#fff" font-size="7.5" font-family="sans-serif">Wts 140GB</text>
+  <text x="76" y="135" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">Opt 840GB</text>
+  <!-- Stage 1: 334 GB -> top = 255-334*0.45 = 255-150 = 105; height=150 -->
+  <rect x="178" y="105" width="80" height="150" rx="3" fill="#e3b341" opacity=".85"/>
+  <text x="218" y="122" text-anchor="middle" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">334 GB</text>
+  <rect x="178" y="190" width="80" height="25" rx="0" fill="#c0392b" opacity=".45"/>
+  <text x="218" y="205" text-anchor="middle" fill="#fff" font-size="7.5" font-family="sans-serif">Grads 140GB</text>
+  <rect x="178" y="215" width="80" height="40" rx="0" fill="#2a6099" opacity=".7"/>
+  <text x="218" y="240" text-anchor="middle" fill="#fff" font-size="7.5" font-family="sans-serif">Wts 140GB</text>
+  <text x="218" y="138" text-anchor="middle" fill="#333" font-size="7.5" font-family="sans-serif">Opt: 52.5GB/GPU</text>
+  <!-- Stage 2: 201 GB -> top = 255-90 = 165; height=90 -->
+  <rect x="330" y="165" width="80" height="90" rx="3" fill="#e3b341" opacity=".7"/>
+  <text x="370" y="182" text-anchor="middle" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">201 GB</text>
+  <rect x="330" y="218" width="80" height="37" rx="0" fill="#2a6099" opacity=".7"/>
+  <text x="370" y="240" text-anchor="middle" fill="#fff" font-size="7.5" font-family="sans-serif">Wts 140GB</text>
+  <text x="370" y="198" text-anchor="middle" fill="#333" font-size="7.5" font-family="sans-serif">Opt+Grad sharded</text>
+  <!-- Stage 3: 70 GB -> top = 255-31.5 = 223; height=32 -->
+  <rect x="490" y="223" width="80" height="32" rx="3" fill="#1a7a3a" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="530" y="242" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">70 GB &#9989;</text>
+  <!-- Reduction arrows -->
+  <text x="148" y="165" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">3.4&#215;</text>
+  <line x1="120" y1="155" x2="176" y2="130" stroke="#888" stroke-width="1.2" marker-end="url(#aD)"/>
+  <text x="308" y="180" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">1.7&#215;</text>
+  <line x1="260" y1="175" x2="328" y2="180" stroke="#888" stroke-width="1.2" marker-end="url(#aD)"/>
+  <text x="462" y="210" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">2.9&#215;</text>
+  <line x1="412" y1="205" x2="488" y2="228" stroke="#888" stroke-width="1.2" marker-end="url(#aD)"/>
+  <!-- Formula annotation -->
+  <rect x="600" y="35" width="150" height="52" rx="5" fill="#fff8ec" stroke="#e3b341" stroke-width="1"/>
+  <text x="675" y="52" text-anchor="middle" fill="#a07800" font-size="9.5" font-weight="bold" font-family="sans-serif">Formula:</text>
+  <text x="675" y="65" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">ZeRO-3 = 16&#936; / N_DP</text>
+  <text x="675" y="78" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">70B, N=16: 70 GB &#9989;</text>
+</svg>
+<figcaption><strong>Figure 10.4</strong> &#8212; ZeRO memory savings waterfall for 70B, N_DP=16. Without sharding: 1,120 GB/GPU. ZeRO-1 shards optimizer states: 334 GB. ZeRO-2 adds gradient sharding: 201 GB. ZeRO-3 (FSDP) shards everything: 70 GB &#8212; fits in H100. Formula: Memory/GPU = 16&#936;/N_DP. This is a mathematical necessity, not an optimization choice.</figcaption>
+</figure></div>
+
+<div class="formula">ZERO STAGE FORMULAS (N = N_DP):
+  None (DDP):   16&#936; / 1       &#8594; 70B: 1,120 GB &#10060;
+  Stage 1:      (4 + 12/N)&#936;  &#8594; 70B N=16:  334 GB &#10060;
+  Stage 2:      (2 + 14/N)&#936;  &#8594; 70B N=16:  201 GB &#10060;
+  Stage 3 (FSDP): 16&#936;/N      &#8594; 70B N=16:   70 GB &#9989;
+
+STAGE 3 COMMUNICATION PER STEP (70B):
+  AllGather fwd:      &#936;&#215;2 = 140 GB
+  AllGather bwd:      &#936;&#215;2 = 140 GB
+  ReduceScatter bwd:  &#936;&#215;2 = 140 GB
+  Total: 420 GB per step at 400 GB/s = ~1.05s &#8592; MUST overlap with compute!</div>
+
+<h3 id="s1033">10.3.3 Ring-AllReduce: How Gradients Move</h3>
+<div class="diagram-wrap" id="diag-allreduce"><figure>
+<svg viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <defs>
+    <marker id="aR" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L0,8 L8,4 z" fill="#2a6099"/></marker>
+    <marker id="aRG" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L0,8 L8,4 z" fill="#1a7a3a"/></marker>
+  </defs>
+  <text x="380" y="18" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">RING-ALLREDUCE: 4-Node Step-by-Step (Scatter-Reduce + All-Gather)</text>
+  <text x="380" y="32" text-anchor="middle" fill="#555" font-size="10" font-family="sans-serif">AllReduce time = 2&#215;(N-1)/N &#215; msg_size / bandwidth &nbsp;|&nbsp; Traffic per GPU = 2&#215;msg_size</text>
+  <!-- Phase 1 label -->
+  <text x="185" y="55" text-anchor="middle" fill="#2a6099" font-size="11" font-weight="bold" font-family="sans-serif">PHASE 1: Scatter-Reduce (N-1 steps)</text>
+  <text x="185" y="67" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">Each GPU accumulates ONE chunk</text>
+  <!-- 4 GPU circles in ring -->
+  <circle cx="185" cy="145" r="24" fill="#1c2438" stroke="#2a6099" stroke-width="2"/>
+  <text x="185" y="142" text-anchor="middle" fill="#e3b341" font-size="9" font-weight="bold" font-family="sans-serif">GPU 0</text>
+  <text x="185" y="154" text-anchor="middle" fill="#c8d8f0" font-size="8" font-family="sans-serif">G[0..3]</text>
+  <circle cx="115" cy="208" r="24" fill="#1c2438" stroke="#2a6099" stroke-width="2"/>
+  <text x="115" y="205" text-anchor="middle" fill="#e3b341" font-size="9" font-weight="bold" font-family="sans-serif">GPU 1</text>
+  <text x="115" y="217" text-anchor="middle" fill="#c8d8f0" font-size="8" font-family="sans-serif">G[0..3]</text>
+  <circle cx="185" cy="245" r="24" fill="#1c2438" stroke="#2a6099" stroke-width="2"/>
+  <text x="185" y="242" text-anchor="middle" fill="#e3b341" font-size="9" font-weight="bold" font-family="sans-serif">GPU 2</text>
+  <text x="185" y="254" text-anchor="middle" fill="#c8d8f0" font-size="8" font-family="sans-serif">G[0..3]</text>
+  <circle cx="255" cy="208" r="24" fill="#1c2438" stroke="#2a6099" stroke-width="2"/>
+  <text x="255" y="205" text-anchor="middle" fill="#e3b341" font-size="9" font-weight="bold" font-family="sans-serif">GPU 3</text>
+  <text x="255" y="217" text-anchor="middle" fill="#c8d8f0" font-size="8" font-family="sans-serif">G[0..3]</text>
+  <!-- Ring arrows P1 -->
+  <line x1="198" y1="163" x2="243" y2="192" stroke="#2a6099" stroke-width="2" marker-end="url(#aR)"/>
+  <line x1="243" y1="228" x2="200" y2="233" stroke="#2a6099" stroke-width="2" marker-end="url(#aR)"/>
+  <line x1="169" y1="233" x2="132" y2="228" stroke="#2a6099" stroke-width="2" marker-end="url(#aR)"/>
+  <line x1="127" y1="192" x2="170" y2="163" stroke="#2a6099" stroke-width="2" marker-end="url(#aR)"/>
+  <!-- After phase 1 -->
+  <rect x="22" y="82" width="280" height="44" rx="5" fill="#fff8ec" stroke="#e3b341" stroke-width="1"/>
+  <text x="162" y="98" text-anchor="middle" fill="#a07800" font-size="9.5" font-weight="bold" font-family="sans-serif">After N-1=3 scatter-reduce steps:</text>
+  <text x="162" y="112" text-anchor="middle" fill="#444" font-size="9" font-family="sans-serif">GPU0 holds fully-reduced chunk[0] &#10003;</text>
+  <text x="162" y="124" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">Each GPU: 1 reduced chunk, 3 partial chunks</text>
+
+  <!-- Divider -->
+  <line x1="390" y1="50" x2="390" y2="265" stroke="#ddd" stroke-width="1.5" stroke-dasharray="5"/>
+
+  <!-- Phase 2 label -->
+  <text x="575" y="55" text-anchor="middle" fill="#1a7a3a" font-size="11" font-weight="bold" font-family="sans-serif">PHASE 2: All-Gather (N-1 steps)</text>
+  <text x="575" y="67" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">Broadcast reduced chunks to all GPUs</text>
+  <!-- 4 GPU circles in ring (all-gather) -->
+  <circle cx="575" cy="145" r="24" fill="#1c2438" stroke="#1a7a3a" stroke-width="2"/>
+  <text x="575" y="142" text-anchor="middle" fill="#e3b341" font-size="9" font-weight="bold" font-family="sans-serif">GPU 0</text>
+  <text x="575" y="154" text-anchor="middle" fill="#79d99a" font-size="8" font-family="sans-serif">&#10003; chunk[0]</text>
+  <circle cx="505" cy="208" r="24" fill="#1c2438" stroke="#1a7a3a" stroke-width="2"/>
+  <text x="505" y="205" text-anchor="middle" fill="#e3b341" font-size="9" font-weight="bold" font-family="sans-serif">GPU 1</text>
+  <text x="505" y="217" text-anchor="middle" fill="#79d99a" font-size="8" font-family="sans-serif">&#10003; chunk[1]</text>
+  <circle cx="575" cy="245" r="24" fill="#1c2438" stroke="#1a7a3a" stroke-width="2"/>
+  <text x="575" y="242" text-anchor="middle" fill="#e3b341" font-size="9" font-weight="bold" font-family="sans-serif">GPU 2</text>
+  <text x="575" y="254" text-anchor="middle" fill="#79d99a" font-size="8" font-family="sans-serif">&#10003; chunk[2]</text>
+  <circle cx="645" cy="208" r="24" fill="#1c2438" stroke="#1a7a3a" stroke-width="2"/>
+  <text x="645" y="205" text-anchor="middle" fill="#e3b341" font-size="9" font-weight="bold" font-family="sans-serif">GPU 3</text>
+  <text x="645" y="217" text-anchor="middle" fill="#79d99a" font-size="8" font-family="sans-serif">&#10003; chunk[3]</text>
+  <!-- Ring arrows P2 (green) -->
+  <line x1="588" y1="163" x2="633" y2="192" stroke="#1a7a3a" stroke-width="2" marker-end="url(#aRG)"/>
+  <line x1="633" y1="228" x2="590" y2="233" stroke="#1a7a3a" stroke-width="2" marker-end="url(#aRG)"/>
+  <line x1="559" y1="233" x2="522" y2="228" stroke="#1a7a3a" stroke-width="2" marker-end="url(#aRG)"/>
+  <line x1="517" y1="192" x2="560" y2="163" stroke="#1a7a3a" stroke-width="2" marker-end="url(#aRG)"/>
+  <!-- After phase 2 -->
+  <rect x="420" y="82" width="316" height="44" rx="5" fill="#e8fff0" stroke="#1a7a3a" stroke-width="1"/>
+  <text x="578" y="98" text-anchor="middle" fill="#1a7a3a" font-size="9.5" font-weight="bold" font-family="sans-serif">After N-1=3 all-gather steps:</text>
+  <text x="578" y="112" text-anchor="middle" fill="#444" font-size="9" font-family="sans-serif">ALL GPUs hold complete reduced gradient &#10003;</text>
+  <text x="578" y="124" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">Total traffic per GPU = 2 &#215; msg_size</text>
+</svg>
+<figcaption><strong>Figure 10.5</strong> &#8212; Ring-AllReduce: 4-node step-by-step. Phase 1 (Scatter-Reduce): Each GPU sends one gradient chunk clockwise while accumulating partial sums. After N&#8722;1=3 steps, each GPU holds one fully-reduced chunk. Phase 2 (All-Gather): Broadcast reduced chunks around the ring. After another N&#8722;1 steps, every GPU has the complete gradient. Total traffic per GPU = 2&#215;msg_size. Time = 2(N&#8722;1)/N &#215; msg_size/bandwidth.</figcaption>
+</figure></div>
+
+<h2 id="s104">10.4 &#8212; Gradient Communication: Overlap and Bucketing</h2>
+<div class="formula">COMPUTE-COMMUNICATION OVERLAP MODEL:
+
+Without overlap: step_time = T_fwd + T_bwd + T_comm + T_opt
+With overlap:    step_time = T_fwd + max(T_bwd, T_comm) + T_opt
+
+For 70B on 512&#215;H100 (measured):
+  T_fwd = 450 ms, T_bwd = 1,100 ms, T_comm = 1,050 ms, T_opt = 80 ms
+
+  Without overlap: 450 + 1100 + 1050 + 80 = 2,680 ms
+  Perfect overlap: 450 + 1100 + 80 = 1,630 ms  &#8594; 1.64&#215; faster
+  Practical (70%): 450 + 1100 + 315 + 80 = 1,945 ms  &#8594; 1.38&#215; faster
+
+MECHANISM: GPU has multiple independent streams
+  Stream 0: backward GEMM (uses Tensor Cores)
+  Stream 1: NCCL AllReduce (uses NVLink/IB DMA engines)
+  Two different hardware units &#8594; true simultaneous execution
+
+FSDP OVERLAP CONFIGURATION:
+  backward_prefetch=BackwardPrefetch.BACKWARD_PRE   # start AllGather BEFORE layer
+  forward_prefetch=True                              # also overlap during forward
+
+GRADIENT BUCKETING (DDP):
+  Bucket size 25-50 MB for 70B (too small &#8594; 70K tiny NCCL calls; too large &#8594; late start)
+  model = DistributedDataParallel(model, bucket_cap_mb=50, gradient_as_bucket_view=True)
+
+DIAGNOSIS &#8212; is your overlap working?
+  nsys profile --trace=cuda,nvtx,nccl python train.py
+  GOOD: NCCL bars overlap with CUDA bars (same time window)
+  BAD:  NCCL bars appear AFTER all CUDA bars (sequential)
+  Target: NCCL fraction of step time &lt;10%</div>
+
+<h2 id="s105">10.5 &#8212; Fault Tolerance at Scale</h2>
+<div class="formula">CLUSTER FAILURE RATE ANALYSIS (~1%/GPU/week):
+
+  GPUs      Failures/week   MTBF
+  &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
+  512       5.1             ~33 hours
+  1,024     10.2            ~16 hours
+  4,096     40.9            ~4 hours
+  16,384    163.8           ~1 hour!
+
+LLaMA-3 405B on 16,384 GPUs for 50 days:
+  Expected failures: ~1,148 total (23/day)
+  Without fault tolerance: job dies in ~1 hour
+  With fault tolerance: 1,148 recovered; run completes
+
+OPTIMAL CHECKPOINT INTERVAL:
+  interval = sqrt(2 * T_checkpoint * T_recovery)
+  
+  Async checkpoint: T_c = 5s (snapshot to CPU RAM, then async write)
+  MTTR: T_r = 600s (10 min)
+  interval = sqrt(2 * 5 * 600) = sqrt(6000) = 77.5s &#8776; 38 steps at 2s/step
+
+OVERHEAD COMPARISON:
+  Synchronous (90s write, 38-step interval):
+    overhead = 90 / (38*2 + 90) = 90/166 = 54% &#8592; UNACCEPTABLE
+
+  Async (5s snapshot, write in background):
+    overhead = 5 / (38*2 + 5) = 5/81 = 6.2% &#8592; acceptable
+
+HOT-STANDBY NODES: pre-allocate 5% spare nodes
+  512-GPU cluster: 4 spare nodes; booted, drivers loaded, container pulled
+  Restart target: &lt;10 minutes from failure to training resumption</div>
+
+<h2 id="s106">10.6 &#8212; Advanced Training Techniques</h2>
+<h3 id="s1062">10.6.2 Activation Checkpointing</h3>
+<div class="diagram-wrap" id="diag-actckpt"><figure>
+<svg viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="380" y="18" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">GRADIENT CHECKPOINTING: Memory vs Recompute Tradeoff (70B on H100)</text>
+  <!-- Three columns -->
+  <rect x="14" y="30" width="226" height="230" rx="7" fill="#fff0f0" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="127" y="49" text-anchor="middle" fill="#c0392b" font-size="11" font-weight="bold" font-family="sans-serif">No Checkpointing</text>
+  <text x="127" y="62" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">Store all activations</text>
+  <rect x="25" y="70" width="204" height="12" rx="2" fill="#c0392b" opacity=".7"/>
+  <rect x="25" y="85" width="204" height="12" rx="2" fill="#c0392b" opacity=".65"/>
+  <rect x="25" y="100" width="204" height="12" rx="2" fill="#c0392b" opacity=".6"/>
+  <rect x="25" y="115" width="204" height="12" rx="2" fill="#c0392b" opacity=".55"/>
+  <rect x="25" y="130" width="204" height="12" rx="2" fill="#c0392b" opacity=".5"/>
+  <text x="127" y="160" text-anchor="middle" fill="#c0392b" font-size="9" font-family="sans-serif">75 more layers...</text>
+  <rect x="22" y="175" width="213" height="36" rx="4" fill="#fff" stroke="#c0392b" stroke-width="1"/>
+  <text x="128" y="191" text-anchor="middle" fill="#c0392b" font-size="11" font-weight="bold" font-family="sans-serif">144 GB activations</text>
+  <text x="128" y="204" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">Doesn't fit any useful batch</text>
+  <rect x="22" y="218" width="213" height="34" rx="4" fill="#e8f0ff"/>
+  <text x="128" y="233" text-anchor="middle" fill="#2a6099" font-size="10" font-weight="bold" font-family="sans-serif">Compute overhead: 0%</text>
+  <text x="128" y="247" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Impractical</text>
+
+  <rect x="263" y="30" width="234" height="230" rx="7" fill="#e8fff0" stroke="#1a7a3a" stroke-width="2"/>
+  <text x="380" y="49" text-anchor="middle" fill="#1a7a3a" font-size="11" font-weight="bold" font-family="sans-serif">&#9733; Selective Recompute</text>
+  <text x="380" y="62" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">Store inputs + FlashAttn LSE; recompute FFN</text>
+  <rect x="273" y="70" width="214" height="6" rx="2" fill="#1a7a3a" opacity=".9"/>
+  <rect x="273" y="80" width="214" height="6" rx="2" fill="#1a7a3a" opacity=".9"/>
+  <rect x="273" y="90" width="214" height="6" rx="2" fill="#1a7a3a" opacity=".9"/>
+  <text x="380" y="112" text-anchor="middle" fill="#1a7a3a" font-size="9" font-family="sans-serif">Recomputed (cheap):</text>
+  <rect x="273" y="118" width="214" height="8" rx="2" fill="#e3b341" opacity=".7"/>
+  <text x="380" y="126" text-anchor="middle" fill="#a07800" font-size="8" font-family="sans-serif">FFN activations (2 GEMMs &#8592; cheap!)</text>
+  <rect x="273" y="130" width="214" height="8" rx="2" fill="#e3b341" opacity=".7"/>
+  <text x="380" y="138" text-anchor="middle" fill="#a07800" font-size="8" font-family="sans-serif">Attention &#8592; FlashAttn backward free</text>
+  <rect x="270" y="175" width="220" height="36" rx="4" fill="#fff" stroke="#1a7a3a" stroke-width="1"/>
+  <text x="380" y="191" text-anchor="middle" fill="#1a7a3a" font-size="11" font-weight="bold" font-family="sans-serif">22 GB activations</text>
+  <text x="380" y="204" text-anchor="middle" fill="#1a7a3a" font-size="9" font-family="sans-serif">85% reduction | batch=4 fits in H100</text>
+  <rect x="270" y="218" width="220" height="34" rx="4" fill="#e8fff0"/>
+  <text x="380" y="233" text-anchor="middle" fill="#1a7a3a" font-size="10" font-weight="bold" font-family="sans-serif">Overhead: ~30%</text>
+  <text x="380" y="247" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">RECOMMENDED DEFAULT</text>
+
+  <rect x="520" y="30" width="226" height="230" rx="7" fill="#fffbf0" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="633" y="49" text-anchor="middle" fill="#a07800" font-size="11" font-weight="bold" font-family="sans-serif">Full Recompute</text>
+  <text x="633" y="62" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">Store only layer inputs</text>
+  <rect x="530" y="70" width="205" height="4" rx="2" fill="#e3b341"/>
+  <rect x="530" y="78" width="205" height="4" rx="2" fill="#e3b341"/>
+  <rect x="530" y="86" width="205" height="4" rx="2" fill="#e3b341"/>
+  <text x="633" y="108" text-anchor="middle" fill="#a07800" font-size="9" font-family="sans-serif">Recomputes ENTIRE layer forward</text>
+  <text x="633" y="120" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">All attn + FFN ops recomputed</text>
+  <rect x="526" y="175" width="210" height="36" rx="4" fill="#fff" stroke="#e3b341" stroke-width="1"/>
+  <text x="631" y="191" text-anchor="middle" fill="#a07800" font-size="11" font-weight="bold" font-family="sans-serif">11 GB activations</text>
+  <text x="631" y="204" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">92% reduction | max batch size</text>
+  <rect x="526" y="218" width="210" height="34" rx="4" fill="#fffbf0"/>
+  <text x="631" y="233" text-anchor="middle" fill="#a07800" font-size="10" font-weight="bold" font-family="sans-serif">Overhead: ~33%</text>
+  <text x="631" y="247" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Use for 100B+ or max batch</text>
+</svg>
+<figcaption><strong>Figure 10.6</strong> &#8212; Gradient checkpointing tradeoff for 70B on H100. No checkpointing: 144 GB activations &#8212; impractical. Selective recompute (recommended): store layer inputs and FlashAttention LSE statistics, recompute FFN activations in backward &#8212; 22 GB at ~30% overhead. Full recompute: store only one tensor per layer &#8212; 11 GB at ~33% overhead for 100B+ models.</figcaption>
+</figure></div>
+
+<h3 id="s1063">10.6.3 Mixed Precision: The Three-Level Recipe</h3>
+<div class="formula">MIXED PRECISION TRAINING (H100, recommended):
+
+Level 1 &#8212; BF16 compute:
+  All GEMM ops (QKV, FFN, output projections), FlashAttention
+  BF16: same exponent range as FP32 &#8594; no overflow risk in training
+  H100 BF16 GEMM: 989 TFLOPS (8&#215; FP32)
+
+Level 2 &#8212; FP32 optimizer:
+  FP32 master weights + Adam m,v states
+  Why: Adam accumulates tiny gradient updates; BF16 rounds many to zero
+  Cost: 12 bytes/param (840 GB for 70B, sharded via ZeRO-3)
+
+Level 3 &#8212; FP8 GEMM (H100+ with Transformer Engine):
+  FP8 GEMM: 1,979 TFLOPS (2&#215; BF16)
+  Dynamic per-tensor scaling automatic via TE
+  --fp8-format hybrid: E4M3 forward, E5M2 backward (recommended)
+  Quality: &lt;0.3% MMLU degradation (see Chapter 8)</div>
+
+<h3 id="s1064">10.6.4 Sequence Packing</h3>
+<div class="formula">SEQUENCE PACKING &#8212; eliminate padding waste:
+
+PROBLEM: web text averages ~600 tokens; seq_len=4096
+  Without packing: (4096-600)/4096 = 85% padding waste
+  Every GEMM operates on 85% useless tokens
+
+SOLUTION: pack multiple docs per sequence
+  [doc_A=2048][doc_B=1024][doc_C=1024] &#8594; 100% utilization
+  Block-diagonal attention mask: tokens can't attend across doc boundaries
+
+THROUGHPUT GAIN: 15-25% on typical web corpus
+  For 70B on 512&#215;H100: +20% = equivalent of 102 extra GPUs
+  from pure software optimization (zero hardware cost)</div>
+
+<h2 id="s107">10.7 &#8212; RLHF Infrastructure</h2>
+<div class="formula">RLHF/PPO SYSTEM (70B policy + 70B reference + 13B reward on 512&#215;H100):
+
+Process 1: ROLLOUT WORKERS (40% alloc, ~205 H100s)
+  Policy generates responses to prompts
+  Needs continuous batching, KV cache, fast decode
+  Config: TP=8, ~25 replicas of 70B
+
+Process 2: REWARD SCORER (15% alloc, ~77 H100s)
+  13B reward model scores (prompt, response) pairs
+  Must match rollout throughput
+  Config: TP=4, ~19 replicas of 13B
+
+Process 3: REFERENCE MODEL (25% alloc, ~128 H100s)
+  Frozen 70B SFT model computes KL divergence penalty
+  Memory mitigation: weight sharing with policy (LoRA delta storage)
+    or CPU offload during idle phases
+
+Process 4: PPO POLICY UPDATE (20% alloc, ~102 H100s)
+  Gradient updates from PPO objective
+  Config: TP=8, PP=2, FSDP for 70B training
+
+DPO vs PPO DECISION:
+  Use DPO first: single training process, 4&#215; less infrastructure complexity
+  Use PPO when: online feedback loops needed, iterative self-improvement,
+                sparse rewards requiring generation-time exploration</div>
+
+<h2 id="s108">10.8 &#8212; MFU Formula, Monitoring, and Anti-Patterns</h2>
+<div class="diagram-wrap" id="diag-mfu"><figure>
+<svg viewBox="0 0 760 285" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="380" y="18" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">MFU BUDGET WATERFALL &#8212; 70B on 512&#215; H100 (target 55%+ MFU)</text>
+  <text x="380" y="33" text-anchor="middle" fill="#555" font-size="10" font-family="sans-serif">MFU = (tok/s &#215; 6P) / (N_GPUs &#215; F_peak) &nbsp;&nbsp; F_peak = 989 TFLOPS/GPU BF16</text>
+
+  <!-- Waterfall bars (scale: 100%=y40, 0%=y270, 1%=2.3px) -->
+  <!-- 1: 100% theoretical -->
+  <rect x="30" y="40" width="75" height="230" rx="3" fill="#1a7a3a" opacity=".85"/>
+  <text x="67" y="60" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">100%</text>
+  <text x="67" y="73" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">Theoretical</text>
+  <!-- Loss 1: kernel/overhead -10%, red cap -->
+  <rect x="115" y="63" width="75" height="207" rx="3" fill="#2a6099"/>
+  <rect x="115" y="40" width="75" height="23" rx="2" fill="#c0392b" opacity=".5"/>
+  <text x="152" y="56" text-anchor="middle" fill="#c0392b" font-size="8.5" font-family="sans-serif">&#8722;10% overhead</text>
+  <text x="152" y="80" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">90%</text>
+  <!-- Loss 2: recompute -10% -->
+  <rect x="200" y="86" width="75" height="184" rx="3" fill="#2a6099"/>
+  <rect x="200" y="63" width="75" height="23" rx="2" fill="#c0392b" opacity=".5"/>
+  <text x="237" y="79" text-anchor="middle" fill="#c0392b" font-size="8.5" font-family="sans-serif">&#8722;10% recompute</text>
+  <text x="237" y="104" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">80%</text>
+  <!-- Loss 3: PP bubble -9% -->
+  <rect x="285" y="107" width="75" height="163" rx="3" fill="#2a6099"/>
+  <rect x="285" y="86" width="75" height="21" rx="2" fill="#c0392b" opacity=".5"/>
+  <text x="322" y="100" text-anchor="middle" fill="#c0392b" font-size="8.5" font-family="sans-serif">&#8722;9% PP bubble</text>
+  <text x="322" y="127" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">71%</text>
+  <!-- Loss 4: comm -6% -->
+  <rect x="370" y="121" width="75" height="149" rx="3" fill="#2a6099"/>
+  <rect x="370" y="107" width="75" height="14" rx="2" fill="#c0392b" opacity=".5"/>
+  <text x="407" y="120" text-anchor="middle" fill="#c0392b" font-size="8.5" font-family="sans-serif">&#8722;6% comm</text>
+  <text x="407" y="141" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">65%</text>
+  <!-- Loss 5: misc -5% -->
+  <rect x="455" y="133" width="75" height="137" rx="3" fill="#7b2d8b"/>
+  <rect x="455" y="121" width="75" height="12" rx="2" fill="#c0392b" opacity=".5"/>
+  <text x="492" y="133" text-anchor="middle" fill="#c0392b" font-size="8.5" font-family="sans-serif">&#8722;5% misc</text>
+  <text x="492" y="157" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">60%</text>
+  <!-- Achieved MFU bar -->
+  <rect x="558" y="132" width="85" height="138" rx="4" fill="#1a7a3a" stroke="#e3b341" stroke-width="2"/>
+  <text x="600" y="160" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold" font-family="sans-serif">58%</text>
+  <text x="600" y="175" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">ACHIEVED MFU</text>
+  <text x="600" y="188" text-anchor="middle" fill="#c8f0d8" font-size="8.5" font-family="sans-serif">typical well-tuned run</text>
+  <!-- Target zone -->
+  <rect x="550" y="109" width="100" height="3" rx="1" fill="#e3b341"/>
+  <text x="658" y="113" fill="#a07800" font-size="9.5" font-weight="bold" font-family="sans-serif">Target: 55-65%</text>
+  <text x="658" y="125" fill="#c0392b" font-size="8.5" font-family="sans-serif">Below 40% &#8594; investigate!</text>
+  <!-- Formula -->
+  <rect x="558" y="220" width="185" height="50" rx="5" fill="#f3f5f8" stroke="#ddd" stroke-width="1"/>
+  <text x="650" y="237" text-anchor="middle" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">LOSS BUDGET:</text>
+  <text x="565" y="250" fill="#c0392b" font-size="9" font-family="sans-serif">&#8226; Kernel/overhead: ~10%</text>
+  <text x="565" y="262" fill="#c0392b" font-size="9" font-family="sans-serif">&#8226; Activation recompute: ~10%</text>
+  <!-- X axis labels -->
+  <text x="67" y="279" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Theoretical</text>
+  <text x="152" y="279" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">-Overhead</text>
+  <text x="237" y="279" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">-Recompute</text>
+  <text x="322" y="279" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">-PP Bubble</text>
+  <text x="407" y="279" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">-Comm</text>
+  <text x="492" y="279" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">-Misc</text>
+  <text x="600" y="279" text-anchor="middle" fill="#1a7a3a" font-size="9" font-weight="bold" font-family="sans-serif">Achieved</text>
+</svg>
+<figcaption><strong>Figure 10.7</strong> &#8212; MFU budget waterfall from 100% to achieved performance. Each bar represents one loss source: kernel/launch overhead (~10%), activation recompute (~10%), pipeline bubble at M=32 (~9%), unabsorbed communication (~6%), and miscellaneous stalls (~5%). A well-tuned run achieves 55&#8211;65% MFU. Below 40% requires systematic six-layer investigation.</figcaption>
+</figure></div>
+
+<div class="formula">MFU FORMULA:
+  MFU = (tokens_per_second &#215; 6 &#215; P) / (N_GPUs &#215; F_peak)
+  
+  P = parameters, F_peak = 989 TFLOPS BF16 per H100
+  6 = FLOPs per token per parameter (2 fwd + 4 bwd)
+  
+  Example: 70B on 512&#215;H100, measured 500K tok/s:
+    MFU = (500,000 &#215; 6 &#215; 70e9) / (512 &#215; 989e12)
+        = 210e15 / 506.4e15 = 41.5%  &#8592; below target, investigate!
+  
+  TYPICAL MFU RANGES:
+    &lt;30%: Critical bottleneck &#8212; investigate all 6 layers immediately
+    30-45%: Suboptimal &#8212; worth tuning (usually comm overlap or bubble)
+    45-60%: Good &#8212; well-configured
+    60-70%: Excellent &#8212; near state of practice (Meta LLaMA-3 level)
+    &gt;70%: Outstanding &#8212; best-in-class systems only</div>
+
+<div class="diagram-wrap" id="diag-scaling"><figure>
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="380" y="18" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">TRAINING SCALING EFFICIENCY vs WORLD SIZE (70B LLaMA-style, H100)</text>
+  <!-- Axes -->
+  <line x1="80" y1="210" x2="680" y2="210" stroke="#1c2438" stroke-width="2"/>
+  <line x1="80" y1="30" x2="80" y2="210" stroke="#1c2438" stroke-width="2"/>
+  <!-- X labels -->
+  <text x="145" y="225" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">64</text>
+  <text x="235" y="225" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">128</text>
+  <text x="355" y="225" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">256</text>
+  <text x="490" y="225" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">512</text>
+  <text x="625" y="225" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">1,024</text>
+  <text x="380" y="242" text-anchor="middle" fill="#1c2438" font-size="10.5" font-weight="bold" font-family="sans-serif">World Size (GPUs)</text>
+  <!-- Y labels (0-100%) -->
+  <text x="74" y="214" text-anchor="end" fill="#555" font-size="9.5" font-family="sans-serif">0%</text>
+  <text x="74" y="168" text-anchor="end" fill="#555" font-size="9.5" font-family="sans-serif">20%</text>
+  <text x="74" y="120" text-anchor="end" fill="#555" font-size="9.5" font-family="sans-serif">50%</text>
+  <text x="74" y="72" text-anchor="end" fill="#555" font-size="9.5" font-family="sans-serif">80%</text>
+  <text x="74" y="38" text-anchor="end" fill="#555" font-size="9.5" font-family="sans-serif">100%</text>
+  <text x="28" y="130" text-anchor="middle" fill="#1c2438" font-size="10.5" font-weight="bold" font-family="sans-serif" transform="rotate(-90,28,130)">Scaling Efficiency</text>
+  <!-- Grid -->
+  <line x1="80" y1="168" x2="680" y2="168" stroke="#eee" stroke-width="1"/>
+  <line x1="80" y1="120" x2="680" y2="120" stroke="#eee" stroke-width="1"/>
+  <line x1="80" y1="72" x2="680" y2="72" stroke="#eee" stroke-width="1"/>
+  <!-- Ideal line -->
+  <line x1="80" y1="30" x2="680" y2="30" stroke="#888" stroke-width="1.5" stroke-dasharray="6"/>
+  <text x="692" y="34" fill="#888" font-size="9" font-family="sans-serif">Ideal</text>
+  <!-- Well-tuned: 92%@64, 88%@128, 83%@256, 77%@512, 73%@1024 -->
+  <!-- y = 210 - (pct/100)*(210-30) = 210 - pct*1.8 -->
+  <polyline points="145,44 235,52 355,62 490,71 625,79" stroke="#1a7a3a" stroke-width="3" fill="none"/>
+  <circle cx="145" cy="44" r="5" fill="#1a7a3a"/>
+  <circle cx="235" cy="52" r="5" fill="#1a7a3a"/>
+  <circle cx="355" cy="62" r="5" fill="#1a7a3a"/>
+  <circle cx="490" cy="71" r="5" fill="#1a7a3a"/>
+  <circle cx="625" cy="79" r="5" fill="#1a7a3a"/>
+  <text x="145" y="39" text-anchor="middle" fill="#1a7a3a" font-size="8.5" font-family="sans-serif">92%</text>
+  <text x="235" y="47" text-anchor="middle" fill="#1a7a3a" font-size="8.5" font-family="sans-serif">88%</text>
+  <text x="355" y="57" text-anchor="middle" fill="#1a7a3a" font-size="8.5" font-family="sans-serif">83%</text>
+  <text x="490" y="66" text-anchor="middle" fill="#1a7a3a" font-size="8.5" font-family="sans-serif">77%</text>
+  <text x="640" y="74" fill="#1a7a3a" font-size="9.5" font-weight="bold" font-family="sans-serif">Well-tuned</text>
+  <!-- Poorly-tuned: 88%@64, 70%@128, 52%@256, 30%@512, 12%@1024 -->
+  <polyline points="145,52 235,84 355,116 490,156 625,188" stroke="#c0392b" stroke-width="2.5" fill="none" stroke-dasharray="7"/>
+  <circle cx="145" cy="52" r="5" fill="#c0392b"/>
+  <circle cx="625" cy="188" r="5" fill="#c0392b"/>
+  <text x="640" y="187" fill="#c0392b" font-size="9.5" font-weight="bold" font-family="sans-serif">Poorly-tuned</text>
+  <text x="640" y="200" fill="#c0392b" font-size="8.5" font-family="sans-serif">~12% at 1K GPU</text>
+  <!-- Annotation -->
+  <rect x="82" y="140" width="290" height="60" rx="5" fill="#fff8ec" stroke="#e3b341" stroke-width="1"/>
+  <text x="227" y="157" text-anchor="middle" fill="#a07800" font-size="9.5" font-weight="bold" font-family="sans-serif">Efficiency loss drivers at scale:</text>
+  <text x="92" y="171" fill="#555" font-size="9" font-family="sans-serif">&#8226; FSDP AllGather volume grows with world size</text>
+  <text x="92" y="183" fill="#555" font-size="9" font-family="sans-serif">&#8226; PP bubble grows with PP degree</text>
+  <text x="92" y="195" fill="#555" font-size="9" font-family="sans-serif">&#8226; More GPUs = more potential stragglers</text>
+</svg>
+<figcaption><strong>Figure 10.8</strong> &#8212; Training scaling efficiency vs world size. A well-tuned configuration (correct TP/PP placement, FSDP overlap, adequate M) maintains ~83% efficiency at 256 GPUs and ~77% at 1,024. A poorly-tuned configuration (TP across IB, no overlap, small M) can fall to ~12% at 1,024 GPUs &#8212; paying for 1,024 GPUs but getting the work of ~123.</figcaption>
+</figure></div>
+
+<div class="formula">EIGHT NUMBERS EVERY TRAINING ENGINEER KNOWS COLD:
+  1. 16 bytes/param    &#8212; Full Adam memory: 2(wts)+2(grads)+4(m)+4(v)+4(master)
+  2. TP &#8804; 8           &#8212; Max safe TP degree; IB is 12&#215; worse than NVLink for TP
+  3. (PP-1)/(PP-1+M)   &#8212; Pipeline bubble formula; M &#8805; 4&#215;PP for &lt;10%
+  4. sqrt(2&#215;Tc&#215;Tr)   &#8212; Optimal checkpoint interval
+  5. 3&#215; AllReduce     &#8212; ZeRO Stage 3 communication (AllGather+AllGather+RS)
+  6. ~1%/GPU/week      &#8212; GPU failure rate; 512 GPUs &#8594; failure every 33 hours
+  7. ~30% compute      &#8212; Activation recompute overhead (full recompute strategy)
+  8. ~20% throughput   &#8212; Sequence packing gain on variable-length web corpus</div>
+
+<h2 id="cookbook">10.9 Profiling Cookbook</h2>
+<div class="cookbook">
+<div class="cookbook-label">&#128300; Profiling Cookbook &#8212; Training System Diagnosis</div>
+<pre><span class="cmt"># &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
+# SYMPTOM: MFU = 28%; GPU SM utilization shows 95% in Nsight Compute
+# (These two numbers are NOT contradictory &#8212; see Step 2 for why)
+# &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</span>
+
+<span class="cmt"># STEP 1: Compute true MFU from training log</span>
+<span class="cmd">python3 -c "
+tokens_per_sec = 42500   # from training log (global tokens/sec)
+P = 30e9                 # model parameters
+N = 256                  # GPUs
+F_peak = 989e12          # H100 BF16 TFLOPS
+MFU = (tokens_per_sec * 6 * P) / (N * F_peak)
+print(f'MFU = {MFU:.1%}')
+"</span>
+<span class="out"># MFU = 28.7%  -- confirmed low. Now find which layer is the bottleneck.</span>
+
+<span class="cmt"># STEP 2: Why 95% SM util != 95% MFU?
+# SM "active" = executing SOMETHING. Could be FP32 CUDA cores (33 TFLOPS)
+# not BF16 Tensor Cores (989 TFLOPS). Check TC utilization specifically:</span>
+<span class="cmd">ncu --section ComputeWorkloadAnalysis \
+    --kernel-name ".*gemm.*" --launch-skip 10 --launch-count 2 \
+    python train.py --steps 3</span>
+<span class="out"># sm__pipe_tensor_cycles_active.avg.pct_of_peak: 31%  &lt;&#8212; LOW!
+# Cause: weight dimensions not aligned to Tensor Core requirements (mult of 16)
+# Fix: ensure all hidden/FFN dims are multiples of 64</span>
+
+<span class="cmt"># STEP 3: Check gradient communication overlap with nsys</span>
+<span class="cmd">nsys profile \
+    --trace=cuda,nvtx,nccl \
+    --output=/tmp/train_trace \
+    --duration=30 \
+    python train.py --steps 10</span>
+<span class="out"># Open in Nsight Systems GUI. Look for:
+# GOOD: NCCL AllReduce timeline rows overlap with CUDA kernel rows
+# BAD:  NCCL rows appear entirely AFTER compute rows (sequential!)
+# BAD signature: FSDP AllGather completes, then backward starts (not pipelined)</span>
+
+<span class="cmt"># STEP 4: Verify FSDP overlap is configured correctly</span>
+<span class="cmd">python3 -c "
+from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp import BackwardPrefetch
+# Check your model config has these set:
+print('Required FSDP overlap config:')
+print('  backward_prefetch=BackwardPrefetch.BACKWARD_PRE')
+print('  forward_prefetch=True')
+print('  limit_all_gathers=True  # memory safety')
+"</span>
+
+<span class="cmt"># STEP 5: Check pipeline bubble fraction</span>
+<span class="cmd">python3 -c "
+PP = 4    # your pipeline stages
+M  = 8    # micro-batches per step (grad_accum * DP / PP)
+bubble = (PP-1) / (PP-1 + M)
+print(f'Bubble fraction: {bubble:.1%}')
+target_M = (PP-1) * 10 - (PP-1) + 1  # for <10% bubble: M >= 4*PP
+print(f'Target M for <10% bubble: {4*PP}')
+print(f'Action: set gradient_accumulation_steps = {4*PP * PP // max(1,16)}')
+"</span>
+<span class="out"># Bubble fraction: 27.3%  &#8212; VERY HIGH
+# Target M for &lt;10% bubble: 16
+# Action: increase gradient_accumulation_steps</span>
+
+<span class="cmt"># STEP 6: Check data pipeline is not starving the GPU</span>
+<span class="cmd">watch -n 0.5 "nvidia-smi --query-gpu=utilization.gpu,utilization.memory \
+    --format=csv,noheader"</span>
+<span class="out"># If GPU util drops to 0% periodically between steps: DataLoader starvation
+# Fix: increase num_workers, use larger shard files, enable pin_memory=True</span>
+
+<span class="cmt"># STEP 7: Diagnose silent data corruption (run periodically)</span>
+<span class="cmd">python3 -c "
+# In your training loop, add gradient norm monitoring:
+grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+if torch.isnan(grad_norm) or grad_norm > 5.0:
+    print(f'WARNING: gradient spike at step {step}: {grad_norm:.2f}')
+    # Skip optimizer step; increment spike counter
+    # If >3 spikes in 100 steps: trigger checkpoint rollback
+"</span>
+<span class="out"># ECC error check: nvidia-smi --query-gpu=ecc.errors.uncorrected.volatile.total
+# If XID 79 (DBE): immediately drain that GPU; checkpoint current state</span></pre>
+</div>
+
+<h2 id="worked">Worked Example: Configuring 70B from Scratch on 512&#215; H100</h2>
+<div class="worked">
+<div class="worked-label">Worked Example 10.1 &#8212; Complete 70B Training Configuration: Memory Math, Parallelism, and Expected MFU</div>
+
+<h4>Step 1: Memory Sizing</h4>
+<div class="formula">MODEL: LLaMA-3 70B (P=70B, L=80, d_model=8192, GQA 8 KV heads)
+HARDWARE: 512&#215; H100 SXM5, 80 GB HBM, NVLink intra-node, IB NDR 400G inter
+
+Without sharding: 70B &#215; 16 bytes/param = 1,120 GB &#8594; need ZeRO Stage 3
+
+Minimum N_DP for ZeRO-3 to fit:
+  16 &#215; 70B / N_DP &#8804; 75 GB (leaving 5 GB headroom for activations and misc)
+  N_DP &#8805; 16 &#215; 70 / 75 = 14.9 &#8594; N_DP = 16
+
+ZeRO-3 states at N_DP=16:
+  16 &#215; 70B / 16 = 70.0 GB
+
+Activations (selective recompute, micro-batch=2, seq=4096):
+  ~11 GB (from Chapter 2 derivation; full recompute = ~5.5 GB)
+
+Total per GPU: 70.0 + 11.0 = 81.0 GB &#8592; slightly over! Fix: micro-batch=1 &#8594; ~6 GB activations
+  OR: enable SP (saves ~8 GB activation) &#8594; micro-batch=2 works &#9989;
+
+With sequence parallelism (TP=8):
+  Activation savings: ~8 GB &#8594; total = 70.0 + 3.0 = 73.0 GB &#9989; fits with headroom</div>
+
+<h4>Step 2: Parallelism Configuration</h4>
+<div class="formula">STEP 2A: TP = 8 (full NVLink node, mandatory)
+  AllReduce latency/layer: 268 MB / 600 GB/s = 0.45 ms
+  80 layers &#215; 2 AllReduces &#215; 0.45 ms = 72 ms/step &#9989;
+
+STEP 2B: PP = 4 (assigns 20 layers per stage)
+  P2P activation volume/stage: 2 &#215; 4096 &#215; 8192 &#215; 2 = 134 MB
+  IB latency: 134 MB / 50 GB/s = 2.7 ms/hop &#9989; (acceptable; only 3 hops/step)
+
+STEP 2C: CP = 1 (seq_len = 4096 &lt; 32K threshold)
+
+STEP 2D: DP = 512 / (8 &#215; 4 &#215; 1) = 16 FSDP replicas
+  Verify: 8 &#215; 4 &#215; 1 &#215; 16 = 512 &#9989;
+
+STEP 2E: Gradient accumulation for bubble control
+  Target M &#8805; 4 &#215; PP = 16
+  grad_accum = 8 &#8594; M = 8 &#215; 16 / 4 = 32
+  Bubble = (4-1)/(4-1+32) = 3/35 = 8.6% &#9989;
+
+STEP 2F: Effective batch size
+  effective_batch = 2 &#215; 8 &#215; 16 = 256 sequences &#215; 4096 = 1,048,576 tokens
+  Chinchilla-optimal range: 2M&#8211;4M tokens &#8594; consider doubling grad_accum to 16</div>
+
+<h4>Step 3: Expected MFU Estimation</h4>
+<div class="formula">THEORETICAL MAXIMUM THROUGHPUT (100% MFU):
+  tokens/s = N &#215; F_peak / (6 &#215; P) = 512 &#215; 989e12 / (6 &#215; 70e9)
+           = 506.4e15 / 420e9 = 1,205,714 tok/s
+
+APPLY LOSS FACTORS:
+  PP bubble (8.6%):            &#215; 0.914
+  Activation recompute (~10%): &#215; 0.90
+  Comm overhead (not hidden):  &#215; 0.92
+  Kernel/launch overhead:      &#215; 0.95
+
+Expected: 1,205,714 &#215; 0.914 &#215; 0.90 &#215; 0.92 &#215; 0.95
+        = 1,205,714 &#215; 0.721 = 869,320 tok/s
+
+Expected MFU: 869,320 / 1,205,714 = 72.1% (optimistic; practical ~58&#8211;65%)
+
+VERIFY AT RUNTIME (first thing to check after launch):
+  MFU = (measured_tok/s &#215; 6 &#215; 70e9) / (512 &#215; 989e12)
+  At 700K tok/s: MFU = (700K &#215; 420e9) / 506.4e15 = 58.1% &#9989; good
+  At 300K tok/s: MFU = (300K &#215; 420e9) / 506.4e15 = 24.9% &#10060; investigate!</div>
+
+<h4>Step 4: Cost Projection</h4>
+<div class="formula">TRAINING RUN COST (300B token pretraining budget, owned hardware):
+
+Hardware cost: 512 &#215; H100 at $2/GPU-hr fully loaded
+Token target: 300 billion tokens (Chinchilla-optimal for 70B)
+
+At 700K tok/s (58% MFU):
+  Time = 300e9 / 700,000 = 428,571 seconds = 119 hours = 5.0 days
+  Cost = 512 GPUs &#215; 119 hours &#215; $2/hr = $121,856
+
+At 400K tok/s (33% MFU, poorly tuned):
+  Time = 300e9 / 400,000 = 750,000 seconds = 208 hours = 8.7 days
+  Cost = 512 &#215; 208 &#215; $2 = $212,992
+
+DIFFERENCE: $91,136 saved per training run from proper configuration.
+At 4 training runs/quarter: $364K/year savings from setup discipline alone.</div>
+</div>
+
+<div class="qref" id="qref">
+<h4>Chapter 10 Quick Reference &#8212; Key Formulas and Numbers</h4>
+<table>
+<tr><th>Formula</th><th>Definition</th><th>70B on 512&#215; H100</th></tr>
+<tr><td><strong>MFU</strong> = (tok/s &#215; 6P) / (N &#215; F_peak)</td><td>Model FLOPs Utilization</td><td>Target 55&#8211;65%; F_peak=989 TFLOPS BF16</td></tr>
+<tr><td><strong>Bubble</strong> = (PP&#8722;1) / (PP&#8722;1+M)</td><td>Pipeline idle fraction</td><td>PP=4, M=32 &#8594; 8.6%; need M &#8805; 4&#215;PP</td></tr>
+<tr><td><strong>ZeRO-3</strong> = 16&#936; / N_DP</td><td>Per-GPU memory, full sharding</td><td>16&#215;70B/16 = 70 GB; N_DP &#8805; 15 needed</td></tr>
+<tr><td><strong>AllReduce</strong> = 2(N&#8722;1)/N &#215; M / BW</td><td>Ring-AllReduce latency</td><td>TP: 268 MB, NVLink 600 GB/s &#8594; 0.45 ms</td></tr>
+<tr><td><strong>Eff. batch</strong> = mbs &#215; accum &#215; DP</td><td>Global tokens per optimizer step</td><td>2&#215;8&#215;16=256 seq &#215; 4096 = 1M tokens</td></tr>
+<tr><td><strong>Opt. ckpt</strong> = sqrt(2&#215;Tc&#215;Tr)</td><td>Optimal checkpoint interval</td><td>Async Tc=5s, Tr=600s &#8594; 77.5s &#8776; 38 steps</td></tr>
+<tr><td><strong>FSDP comm</strong> = 3&#936; &#215; 2 bytes</td><td>Communication per step</td><td>3&#215;140 GB = 420 GB; ~1.05s at 400 GB/s</td></tr>
+</table>
+<table>
+<tr><th>Parameter</th><th>70B, 512&#215; H100</th><th>Rule / Constraint</th></tr>
+<tr><td>TP</td><td>8</td><td>Must &#8804; GPUs per NVLink node; NEVER cross IB</td></tr>
+<tr><td>PP</td><td>4</td><td>20 layers/stage; bubble = (PP&#8722;1)/(PP&#8722;1+M)</td></tr>
+<tr><td>DP</td><td>16</td><td>Total/(TP&#215;PP&#215;CP); enables ZeRO-3 via FSDP</td></tr>
+<tr><td>CP</td><td>1</td><td>Enable only for seq &gt; 32K tokens</td></tr>
+<tr><td>Grad accum</td><td>8</td><td>M = accum&#215;DP/PP = 32 &#8594; bubble = 8.6%</td></tr>
+<tr><td>ZeRO-3 states/GPU</td><td>70 GB</td><td>16&#215;70B/16 = 70 GB; 10 GB headroom for activations</td></tr>
+<tr><td>TP AllReduce latency</td><td>0.45 ms/layer</td><td>268 MB at NVLink 600 GB/s vs 5.4 ms at IB</td></tr>
+<tr><td>FSDP total comm/step</td><td>420 GB</td><td>3&#215;&#936;&#215;2; ~1.05s; MUST overlap with backward</td></tr>
+<tr><td>GPU failure rate</td><td>~1%/GPU/week</td><td>512 GPUs &#8594; failure every ~33 hours</td></tr>
+<tr><td>Achieved MFU (typical)</td><td>55&#8211;65%</td><td>Meta LLaMA-3 runs achieved ~65%</td></tr>
+<tr><td>Sequence packing gain</td><td>~20%</td><td>Variable-length web corpus; zero hardware cost</td></tr>
+<tr><td>Async checkpoint overhead</td><td>~6%</td><td>5s snapshot / (38&#215;2+5)s = 6.2%</td></tr>
+</table>
+</div>
+
+<div class="takeaways" id="takeaways">
+  <h3>Key Takeaways</h3>
+  <div class="takeaway-group">
+    <div class="tg-label">Core Concepts</div>
+    <ul>
+      <li>Training at scale is a six-layer stack. The bottleneck shifts unpredictably between GPU hardware, NCCL communication, framework overhead, data pipeline, and storage. Profile all six layers before optimizing any one &#8212; the most common mistake is kernel-tuning when the data pipeline is actually starving the GPU.</li>
+      <li>ZeRO Stage 3 (FSDP) is a mathematical necessity, not an optimization. The formula 16&#936;/N_DP determines per-GPU memory after full sharding. For 70B with N_DP=16: exactly 70 GB &#8212; fitting a H100 by design. Without it, 70B requires 1,120 GB per GPU &#8212; 14&#215; capacity. Every model above ~5B parameters on typical GPU counts requires Stage 3.</li>
+      <li>The pipeline bubble formula bubble = (PP&#8722;1)/(PP&#8722;1+M) governs how much cluster compute is idle during pipeline fill and drain. Set M &#8805; 4&#215;PP. The interleaved schedule with V virtual stages reduces the formula denominator to V&#215;M &#8212; the most reliable way to reduce bubbles without reducing PP degree.</li>
+      <li>TP must never cross InfiniBand. AllReduce latency on NVLink is 0.45 ms per layer; on IB it is 5.4 ms &#8212; a 12&#215; difference. With 80 layers &#215; 2 AllReduces per step, this means 72 ms vs 864 ms per step from TP communication alone. This single anti-pattern can cut MFU by 50%.</li>
+    </ul>
+  </div>
+  <div class="takeaway-group">
+    <div class="tg-label">Cost &amp; Productivity Impact</div>
+    <ul>
+      <li>Sequence packing delivers 15&#8211;25% throughput improvement on variable-length web corpora at zero hardware cost. On a 512-GPU cluster at $2/GPU-hr, a 20% throughput gain saves $90K per 5-day training run. This is a two-line configuration change: enable packing, set correct attention mask for document boundaries.</li>
+      <li>Async checkpointing reduces overhead from 54% (synchronous, 90s write every 38 steps) to 6.2% (5s snapshot, then background write). Applied to a 30-day run: that is 13 days of recovered training time. At $2/GPU-hr on 512 GPUs, 13 days = $748,800 saved per long run &#8212; from a one-day engineering change.</li>
+      <li>Proper 4D configuration (vs poorly-tuned) saves $91K per 300B-token pretraining run at $2/GPU-hr on 512 GPUs (58% vs 33% MFU). Four runs per quarter = $364K/year purely from configuration discipline. No hardware purchase required.</li>
+    </ul>
+  </div>
+  <div class="takeaway-group">
+    <div class="tg-label">Principal-Level Insight</div>
+    <ul>
+      <li>95% SM utilization is consistent with 28% MFU. The SM is active but executing FP32 CUDA core ops instead of BF16 Tensor Core ops &#8212; a 30&#215; throughput gap (33 TFLOPS vs 989 TFLOPS). The revealing metric is <code>sm__pipe_tensor_cycles_active.avg.pct_of_peak</code> in Nsight Compute, not SM utilization. Misaligned weight dimensions (not multiples of 16) silently trigger this fallback with no visible error.</li>
+      <li>The optimal checkpoint interval is deterministic: sqrt(2&#215;Tc&#215;Tr). With async snapshot Tc=5s and MTTR Tr=600s, the optimal is ~77.5 seconds (~38 steps at 2s/step). Teams that checkpoint every 100 steps on a 2s/step run are not at the optimum &#8212; they are accepting more expected recompute loss on failure than necessary. Always derive the interval from the formula, not from "round numbers feel safe."</li>
+      <li>Gradient communication overlap is the single highest-ROI training optimization that teams consistently misconfigure. The failure modes are subtle: <code>NCCL_LAUNCH_MODE=GROUP</code> serializes streams; missing <code>backward_prefetch=BACKWARD_PRE</code> delays AllGather start; bucket sizes under 5 MB cause tens of thousands of tiny NCCL calls instead of hundreds of large ones. The Nsight Systems signature of a working overlap is NCCL bars and compute bars occurring at the same wall-clock time &#8212; anything else means overlap has failed.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="review-questions" id="review">
+  <h3>Review Questions</h3>
+  <div class="rq-tier foundational">
+    <div class="rq-tier-label"><span class="rq-badge">Foundational</span> Build the mental model &#8212; no math required</div>
+    <ol>
+      <li>Explain why Tensor Parallelism must always stay within a NVLink domain and must never cross InfiniBand. What is the quantitative consequence for a 70B model if TP is placed across IB instead of NVLink? Express your answer in ms/step.</li>
+      <li>A colleague proposes using ZeRO Stage 1 for a 70B model on 32 H100s instead of Stage 3, arguing "Stage 3 has too much communication overhead." Using the memory formula, show numerically why Stage 1 is physically impossible on this hardware, then explain why Stage 3's communication overhead is actually acceptable when overlapped correctly.</li>
+      <li>A training run shows 95% GPU SM utilization but only 28% MFU. These numbers appear contradictory. Explain precisely how both can be simultaneously true, name the specific Nsight Compute metric that reveals the true bottleneck, and describe what it means when that metric reads 31%.</li>
+    </ol>
+  </div>
+  <div class="rq-tier intermediate">
+    <div class="rq-tier-label"><span class="rq-badge">Intermediate</span> Apply and calculate &#8212; production context</div>
+    <ol>
+      <li>You are configuring training for a 30B model (48 layers, d_model=8192) on 256&#215; H100s (32 nodes, 8 GPUs/node). (a) What is TP? (b) Calculate ZeRO-3 memory/GPU at N_DP=4, 8, and 16. Which is the minimum that fits? (c) Choose PP and verify layers/stage &#8805; 10. (d) With your chosen PP and minimum viable DP, calculate the gradient accumulation steps needed for pipeline bubble &lt;10%. (e) Verify: TP&#215;PP&#215;DP = 256.</li>
+      <li>An Nsight Systems trace shows a 70B training step on 512&#215;H100: forward=450ms, backward=900ms, NCCL AllGather+ReduceScatter=480ms (entirely sequential with backward), optimizer=80ms, total=1,910ms. (a) Compute current MFU at 85,000 tok/s. (b) What is the theoretical minimum step time with perfect overlap? (c) List the exact FSDP configuration parameters that enable overlap. (d) What is the expected MFU improvement if 80% overlap efficiency is achieved?</li>
+      <li>A 4,096-GPU training cluster fails at 1%/GPU/week. Synchronous checkpoints take 120 seconds to write and are triggered every 100 steps at 1.5s/step. (a) What is the mean time between failures? (b) Using the optimal checkpoint interval formula with async Tc=8s and MTTR Tr=600s, what is the optimal interval in steps? (c) What is the checkpoint overhead percentage under both synchronous and async approaches? (d) How many total GPU-hours per week are wasted by synchronous checkpointing vs async?</li>
+    </ol>
+  </div>
+  <div class="rq-tier principal">
+    <div class="rq-tier-label"><span class="rq-badge">Principal Level</span> Design, decide, and defend &#8212; architecture reviews</div>
+    <ol>
+      <li><strong>175B configuration on 2,048&#215; H100:</strong> 175B parameters, 96 layers, d_model=12,288, on 256 nodes (8 GPUs/node, NVLink intra, IB NDR 400G inter). (a) Derive TP, PP, DP, and CP values. Show the complete ZeRO-3 memory calculation including activations at batch=4, seq=4096 &#8212; prove your configuration fits in 80 GB. (b) Compute TP AllReduce latency for your TP choice; verify it's acceptable on NVLink. (c) Calculate pipeline bubble fraction with your PP. Determine gradient accumulation steps for bubble &lt;8%. (d) If the run requires 128K-token sequences for long-context capability, what changes and why? Show the new memory calculation with CP enabled.</li>
+      <li><strong>Fault tolerance architecture for production 8,192-GPU cluster:</strong> Design a fault tolerance system achieving &lt;5% throughput overhead from checkpointing and &lt;10-minute mean recovery time. (a) Calculate expected failures/week and mean time between failures at 1%/GPU/week. (b) Using the optimal checkpoint interval formula with async Tc=6s and Tr=8 minutes, compute the optimal interval in steps at 1.5s/step. (c) Show the checkpoint overhead percentage at this interval. (d) Design the four-layer silent data corruption detection hierarchy &#8212; specify the exact metric, action threshold, and automated response for each layer. (e) Size the hot-standby node pool for 99.5% uptime. Show your math using the MTBF from part (a) and the 10-minute recovery target.</li>
+      <li><strong>End-to-end MFU investigation:</strong> A 30B model on 256&#215; H100s achieves 28% MFU. SM utilization is 95%. Construct a complete systematic debugging plan covering all six training stack layers. For each layer: (a) specify the diagnostic tool and exact metric to examine, (b) describe what a positive finding looks like in that tool's output, and (c) give the specific remediation. Then: (d) explain how 95% SM utilization is consistent with 28% MFU &#8212; which specific profiler counter distinguishes the two, and what does it reveal? (e) Assume the root cause is that gradient communication is entirely sequential with the backward pass. Calculate the current step time breakdown and the theoretical improvement from achieving 80% overlap efficiency. (f) List all six anti-patterns from the chapter that could each independently cause 28% MFU, and rank them by frequency of occurrence in production systems.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="ch-end">
+  &#8212;&#8212;&#8212; End of Chapter 10 &#8212;&#8212;&#8212;<br>
+  <a href="ch11.html">Next: Chapter 11 &#8212; Inference Systems at Scale: Disaggregation, Continuous Batching &amp; Speculative Decoding &#8594;</a>
+</div>
+
+</div><!-- .page -->
+</body>
+</html>

@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 9 — Operator Fusion &amp; the Compiler Stack | Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.82;color:#1c2438;background:#fdfcf7;padding-top:48px}
+#nav{position:fixed;top:0;left:0;right:0;height:48px;background:#1c2438;display:flex;align-items:center;gap:5px;padding:0 16px;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,.35);overflow-x:auto}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:12px;white-space:nowrap;margin-right:10px;flex-shrink:0}
+#nav a{color:#c8d0e0;font-family:sans-serif;font-size:10.5px;text-decoration:none;padding:4px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.15);white-space:nowrap;flex-shrink:0;transition:all .15s}
+#nav a:hover{background:#e3b341;color:#1c2438;border-color:#e3b341;font-weight:700}
+#nav a.home{border-color:#e3b341;color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:210px;height:calc(100vh - 48px);background:#f5f3ec;border-right:1px solid #ddd;overflow-y:auto;padding:14px 0;z-index:900}
+#sidebar h4{font-family:sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#e3b341;padding:0 14px;margin-bottom:8px;margin-top:4px}
+#sidebar a{display:block;font-family:sans-serif;font-size:11px;color:#444;text-decoration:none;padding:4px 14px;line-height:1.4;transition:background .12s,color .12s}
+#sidebar a:hover{background:#e8e4da;color:#1c2438}
+#sidebar .sub{padding-left:24px;font-size:10.5px;color:#666}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px 60px}
+.ch-label{font-family:sans-serif;font-size:9.5px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:6px}
+h1.ch-title{font-size:32px;font-weight:900;color:#1c2438;line-height:1.2;margin-bottom:8px}
+.ch-subtitle{font-size:14px;color:#556;font-style:italic;margin-bottom:12px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:11px;color:#666;margin-bottom:16px}
+.ch-meta strong{color:#1c2438}
+.xref{color:#2a6099;font-style:italic}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438);border-radius:2px;margin:18px 0 24px}
+.ch-hero-banner{background:linear-gradient(135deg,#1c2438 0%,#1a3a6b 100%);color:#fff;border-radius:10px;padding:28px 34px;margin-bottom:32px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.ch-hero-banner blockquote{border:none;background:none;padding:0;margin:0;font-style:italic;font-size:14px;line-height:1.7;color:rgba(255,255,255,.88)}
+.ch-hero-banner cite{display:block;margin-top:10px;font-size:11.5px;color:#e3b341;font-style:normal;font-family:sans-serif}
+h2{font-size:20px;color:#1c2438;margin:38px 0 12px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:16px;color:#1a3a6b;margin:26px 0 9px}
+h4{font-size:13.5px;color:#1a3a6b;margin:18px 0 6px;font-style:italic}
+p{margin-bottom:13px}
+ul,ol{margin:0 0 13px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.shipped{display:inline-block;background:#1a7a3a;color:#fff;font-family:sans-serif;font-size:8.5px;padding:1px 7px;border-radius:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-left:4px;vertical-align:middle}
+.announced{display:inline-block;background:#2a6099;color:#fff;font-family:sans-serif;font-size:8.5px;padding:1px 7px;border-radius:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-left:4px;vertical-align:middle}
+.objectives{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:24px 0}
+.obj-card{border-radius:7px;padding:14px 16px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.obj-card.foundational{background:#e8fff0;border:1px solid #b0dfc0}
+.obj-card.intermediate{background:#fffbf0;border:1px solid #e3c87a}
+.obj-card.principal{background:#f0f0ff;border:1px solid #a090d0}
+.obj-label{font-family:sans-serif;font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:7px}
+.obj-card.foundational .obj-label{color:#27ae60}
+.obj-card.intermediate .obj-label{color:#a07800}
+.obj-card.principal .obj-label{color:#7b2d8b}
+.obj-card ul{margin-left:14px}
+.obj-card li{font-size:11.5px;margin-bottom:4px;color:#333}
+.diagram-wrap{background:#fff;border:1px solid #dde2ec;border-radius:8px;padding:18px 20px;margin:24px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.diagram-wrap figcaption{font-family:sans-serif;font-size:10.5px;color:#666;margin-top:10px;font-style:italic;text-align:center;border-top:1px solid #eee;padding-top:8px}
+.formula{background:#0d1117;color:#b8ddf0;padding:14px 18px;border-radius:6px;font-family:'Courier New',monospace;font-size:11px;line-height:1.72;margin:16px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:12px 16px;margin:18px 0;border-radius:0 6px 6px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout.key{border-color:#7b2d8b;background:#fdf5ff}
+.callout.warn{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout strong{display:block;margin-bottom:4px;color:#1c2438}
+.worked{background:#fff8ec;border:2px solid #e3b341;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.worked-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#a07800;margin-bottom:10px}
+.worked h4{color:#1c2438;font-size:13px;margin:14px 0 6px;font-style:normal}
+.cookbook{background:#0d1117;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cookbook-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#e3b341;margin-bottom:12px;border-bottom:1px solid #2a3050;padding-bottom:8px}
+.cookbook pre{color:#b8ddf0;font-family:'Courier New',monospace;font-size:11px;line-height:1.72;white-space:pre;overflow-x:auto}
+.cookbook .cmt{color:#6a7a8a}
+.cookbook .cmd{color:#79d99a}
+.cookbook .out{color:#f0c060}
+.qref{background:#1c2438;color:#c8d8f0;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.qref h4{color:#e3b341;font-family:sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;font-style:normal;border-bottom:1px solid rgba(255,255,255,.15);padding-bottom:8px}
+.qref table{color:#c8d8f0;font-size:11.5px}
+.qref th{background:rgba(255,255,255,.08);color:#e3b341;font-size:10px}
+.qref td{border-color:rgba(255,255,255,.1)}
+.qref tr:nth-child(even) td{background:rgba(255,255,255,.04)}
+.takeaways{background:#f3f5f8;border:2px solid #1c2438;border-radius:9px;padding:18px 22px;margin:32px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.takeaways h3{color:#1c2438;margin:0 0 14px;font-size:15px;border:none;padding:0}
+.takeaway-group{margin-bottom:14px}
+.takeaway-group:last-child{margin-bottom:0}
+.tg-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#e3b341;margin-bottom:6px}
+.takeaway-group ul{margin-left:16px}
+.takeaway-group li{font-size:12.5px;margin-bottom:4px;color:#222}
+.review-questions{margin-top:36px}
+.review-questions h3{font-size:16px;color:#1c2438;margin-bottom:16px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+.rq-tier{border-radius:8px;padding:14px 18px;margin-bottom:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rq-tier.foundational{background:#e8fff0;border-left:5px solid #27ae60}
+.rq-tier.intermediate{background:#fffbf0;border-left:5px solid #e3b341}
+.rq-tier.principal{background:#f0f0ff;border-left:5px solid #7b2d8b}
+.rq-tier-label{font-family:sans-serif;font-size:10px;color:#555;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.rq-badge{font-weight:700;font-size:9px;padding:2px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.foundational .rq-badge{background:#27ae60;color:#fff}
+.intermediate .rq-badge{background:#e3b341;color:#1c2438}
+.principal .rq-badge{background:#7b2d8b;color:#fff}
+.rq-tier ol{margin-left:18px}
+.rq-tier li{margin-bottom:10px;font-size:12.5px;line-height:1.7;color:#222}
+.rq-tier li::marker{font-weight:700}
+.ch-end{text-align:center;margin-top:48px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#999;letter-spacing:2px;text-transform:uppercase}
+.ch-end a{color:#2a6099;text-decoration:none;font-weight:700}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#2a4a8a}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e8e8;vertical-align:top}
+tr:nth-child(even) td{background:#f8f9fb;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout,.worked,.cookbook{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+</style>
+</head>
+<body>
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="ch08.html">&#8592; Ch 8</a>
+  <a href="ch10.html">Ch 10 &#8594;</a>
+  <a href="ch01.html">Ch 1</a>
+  <a href="ch07.html">Ch 7</a>
+  <a href="ch08.html">Ch 8</a>
+  <a href="ch17.html">Ch 17</a>
+</div>
+<div id="sidebar">
+  <h4>Chapter 9</h4>
+  <a href="#overview">Overview</a>
+  <a href="#objectives">Objectives</a>
+  <a href="#s91">9.1 Three Regimes</a>
+  <a href="#s92">9.2 Operator Fusion</a>
+  <a class="sub" href="#s921">&nbsp;&nbsp;&#8627; HBM Waste</a>
+  <a class="sub" href="#s922">&nbsp;&nbsp;&#8627; Factory Metaphor</a>
+  <a class="sub" href="#s923">&nbsp;&nbsp;&#8627; Fusion Types</a>
+  <a class="sub" href="#s924">&nbsp;&nbsp;&#8627; Min-Cut Recomputation</a>
+  <a href="#s93">9.3 torch.compile Stack</a>
+  <a class="sub" href="#s931">&nbsp;&nbsp;&#8627; 4-Layer Architecture</a>
+  <a class="sub" href="#s932">&nbsp;&nbsp;&#8627; Compile Modes</a>
+  <a class="sub" href="#s933">&nbsp;&nbsp;&#8627; Benchmarks</a>
+  <a href="#s94">9.4 XLA / JAX</a>
+  <a href="#s95">9.5 TensorRT</a>
+  <a class="sub" href="#s952">&nbsp;&nbsp;&#8627; TRT-LLM</a>
+  <a href="#s96">9.6 NVFuser</a>
+  <a href="#s97">9.7 Graph Optimizations</a>
+  <a href="#s98">9.8 Graph Breaks</a>
+  <a href="#s99">9.9 Strategy Guide</a>
+  <a href="#s910">9.10 KernelEvolve</a>
+  <a href="#cookbook">Profiling Cookbook</a>
+  <a href="#worked">Worked Example</a>
+  <a href="#qref">Quick Reference</a>
+  <a href="#takeaways">Key Takeaways</a>
+  <a href="#review">Review Questions</a>
+</div>
+<div class="page">
+
+<div class="ch-label">Part III &middot; Chapter 9</div>
+<h1 class="ch-title">Operator Fusion &amp; the Compiler Stack</h1>
+<div class="ch-subtitle">How Compilers Turn Naive PyTorch into Near-Peak Hardware Performance</div>
+<div class="ch-meta">
+  <strong>Book:</strong> AI/ML Infrastructure from Silicon to Scale &nbsp;|&nbsp;
+  <strong>Author:</strong> Venkat Vinjam &nbsp;|&nbsp;
+  <strong>Cross-ref:</strong> <span class="xref">Roofline &amp; regimes (Ch 1) &middot; HBM bandwidth (Ch 4) &middot; CUDA kernels/Triton (Ch 7) &middot; Quantization (Ch 8) &middot; Training (Ch 10) &middot; KV cache (Ch 11)</span>
+</div>
+<div class="ch-divider"></div>
+
+<div class="ch-hero-banner">
+  <blockquote>"The most important optimization in deep learning compilers is operator fusion. Every other optimization is either a special case of fusion or a precondition for it."</blockquote>
+  <cite>&#8212; Horace He, "Making Deep Learning Go Brrrr From First Principles"</cite>
+</div>
+
+<div id="overview">
+<p>A naive PyTorch model executes each operation &#8212; every LayerNorm, every activation, every matrix multiply &#8212; as a separate GPU kernel. Each kernel launch carries ~5&#956;s of CPU overhead. Each intermediate result makes a full round-trip through HBM at 3.35 TB/s. A single transformer layer in eager mode executes approximately 80 kernel launches and 120 HBM round-trips, even though the computation theoretically requires only 2 (input &#8594; output). The result: models running at 10&#8211;20% of theoretical peak despite perfect algorithmic design.</p>
+<p>The compiler stack exists to close this gap. Through operator fusion, graph optimization, and code generation, modern DL compilers &#8212; TorchInductor, XLA, and TensorRT &#8212; routinely close 60&#8211;80% of the gap between naive dispatch and hardware limits. Applied together (torch.compile + FP8 + FlashAttention + TRT-LLM), the cumulative gain reaches 5&#215; throughput over PyTorch eager on identical hardware. This chapter explains how &#8212; from first principles of HBM round-trips through the full four-layer compilation pipeline.</p>
+</div>
+
+<div id="objectives">
+<div class="objectives">
+  <div class="obj-card foundational"><div class="obj-label">Foundational</div><ul>
+    <li>Explain why separate GPU kernels waste HBM bandwidth even for correct computation</li>
+    <li>Describe the three performance regimes and which compilers target which</li>
+    <li>Understand what torch.compile does in plain terms (no compiler theory needed)</li>
+    <li>Know the factory metaphor for why fused cos&#215;64 takes the same time as cos&#215;1</li>
+  </ul></div>
+  <div class="obj-card intermediate"><div class="obj-label">Intermediate</div><ul>
+    <li>Explain the four-layer PyTorch 2.x compilation pipeline with each layer's role</li>
+    <li>Quantify HBM traffic saved by fusing LayerNorm+GeLU+Dropout with exact numbers</li>
+    <li>Diagnose and fix the six most common torch.compile graph break causes</li>
+    <li>Compare XLA vs TorchInductor vs TensorRT for a given deployment scenario</li>
+  </ul></div>
+  <div class="obj-card principal"><div class="obj-label">Principal Level</div><ul>
+    <li>Design the full compiler optimization strategy for a new LLM serving system</li>
+    <li>Quantify the cumulative speedup stack and ROI for each compiler investment</li>
+    <li>Explain min-cut recomputation and how fusion changes activation checkpointing economics</li>
+    <li>Evaluate KernelEvolve-style AI-driven optimization for custom operators</li>
+  </ul></div>
+</div>
+</div>
+<h2 id="s91">9.1 The Three Performance Regimes &#8212; Diagnose Before Optimizing</h2>
+<p>Every GPU kernel and every workload falls into one of three performance regimes. Applying the wrong optimization wastes engineering time and can hurt performance. Identifying the regime is the prerequisite for every decision in this chapter.</p>
+<div class="formula">THE THREE PERFORMANCE REGIMES (from Ch 1 Roofline):
+
+REGIME 1: COMPUTE-BOUND
+  Symptom:  Tensor Cores fully saturated; HBM bandwidth underused
+  Diagnosis: Arithmetic Intensity &gt; Ridge Point (~295 FLOP/byte H100)
+  Examples: Large-batch prefill GEMM, training forward pass
+  Compiler impact: MINIMAL &#8212; computation is the bottleneck, not overhead
+  What TO do: FP8 quantization, larger tile sizes, TC alignment (Ch 7+8)
+
+REGIME 2: MEMORY-BANDWIDTH-BOUND
+  Symptom:  HBM BW saturated; Tensor Cores mostly idle
+  Diagnosis: Arithmetic Intensity &lt; Ridge Point
+  Examples: Decode at batch=1, LayerNorm, activations, RMSNorm, GEMV
+  Compiler impact: HIGH &#8212; operator fusion eliminates HBM round-trips
+  What TO do: Fusion (this chapter), quantization to reduce bytes/token
+
+REGIME 3: OVERHEAD-BOUND (Launch/CPU-Bound)
+  Symptom:  GPU idle between tiny kernels; CPU dispatch is bottleneck
+  Diagnosis: SM util &lt;30% despite non-trivial work; GPU time &lt;&lt; CPU dispatch time
+  Examples: batch=1 decode without CUDA Graphs; many small ops
+  Compiler impact: VERY HIGH &#8212; CUDA Graphs + torch.compile eliminate launch overhead
+  What TO do: CUDA Graphs, torch.compile, C++ runtime
+
+QUICK DIAGNOSIS:
+  Step 1: nvidia-smi dmon -s u &#8594; watch SM utilization during inference
+  Step 2: If SM util &lt;50%: likely overhead-bound or memory-bound
+  Step 3: Nsight Compute Roofline:
+           - Below memory ceiling &#8594; memory-bandwidth-bound
+           - Below compute ceiling &#8594; compute-bound
+           - Below BOTH but neither saturated &#8594; overhead-bound
+  Step 4: DCGM_FI_PROF_SM_ACTIVE vs DCGM_FI_PROF_SM_OCCUPANCY:
+           - Active high, occupancy low &#8594; compute or memory bound
+           - Both low &#8594; overhead/launch bound</div>
+
+<h2 id="s92">9.2 Operator Fusion &#8212; The Foundation of DL Compilation</h2>
+<h3 id="s921">9.2.1 The HBM Round-Trip Problem</h3>
+<p>Every unoptimized neural network layer executes as a sequence of separate kernel launches, each with its own HBM read&#8211;compute&#8211;write cycle. The waste is not in the arithmetic &#8212; it is in the truck trips between warehouse and factory floor.</p>
+
+<div class="diagram-wrap" id="diag-fusion"><figure>
+<svg viewBox="0 0 760 440" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <defs>
+    <marker id="arr9" markerWidth="7" markerHeight="7" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#888"/></marker>
+    <marker id="arrg" markerWidth="7" markerHeight="7" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#1a7a3a"/></marker>
+    <marker id="arrr" markerWidth="7" markerHeight="7" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#c0392b"/></marker>
+  </defs>
+  <text x="380" y="20" text-anchor="middle" fill="#1c2438" font-size="13" font-weight="bold" font-family="sans-serif">HBM ROUND-TRIP ELIMINATION: LayerNorm + GeLU + Dropout</text>
+
+  <!-- LEFT: Unfused -->
+  <rect x="10" y="32" width="360" height="398" rx="9" fill="#fff0f0" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="190" y="52" text-anchor="middle" fill="#c0392b" font-size="12" font-weight="bold" font-family="sans-serif">&#10008; UNFUSED &#8212; 4 Separate Kernels</text>
+  <text x="190" y="66" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">Each op reads from HBM, writes back to HBM</text>
+
+  <!-- HBM block left -->
+  <rect x="20" y="76" width="340" height="26" rx="5" fill="#1c2438"/>
+  <text x="190" y="93" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">HBM &#8212; Input x (BF16, 8192-dim hidden, batch=32, seq=2048)</text>
+  <text x="190" y="107" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">Size: 32 &#215; 2048 &#215; 8192 &#215; 2 bytes = 1.07 GB</text>
+
+  <!-- Op 1: LayerNorm mean/var -->
+  <line x1="190" y1="113" x2="190" y2="130" stroke="#c0392b" stroke-width="1.5" marker-end="url(#arrr)"/>
+  <rect x="60" y="130" width="260" height="32" rx="5" fill="#2a6099"/>
+  <text x="190" y="147" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">Kernel 1: LayerNorm &#8212; compute mean+var</text>
+  <text x="190" y="160" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">Reads: 1.07 GB (x) | Writes: mean (0.5 MB) + var (0.5 MB)</text>
+  <line x1="190" y1="162" x2="190" y2="178" stroke="#c0392b" stroke-width="1.5" marker-end="url(#arrr)"/>
+  <!-- Intermediate: mean/var -->
+  <rect x="20" y="178" width="340" height="20" rx="4" fill="#c0392b" opacity=".2" stroke="#c0392b"/>
+  <text x="190" y="192" text-anchor="middle" fill="#c0392b" font-size="9" font-weight="bold" font-family="sans-serif">HBM write: mean + var (1 MB) &#8592; WASTED TRIP #1</text>
+
+  <!-- Op 2: LayerNorm normalize+scale -->
+  <line x1="190" y1="198" x2="190" y2="215" stroke="#c0392b" stroke-width="1.5" marker-end="url(#arrr)"/>
+  <rect x="60" y="215" width="260" height="32" rx="5" fill="#2a6099"/>
+  <text x="190" y="232" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">Kernel 2: LayerNorm &#8212; normalize + scale/shift</text>
+  <text x="190" y="245" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">Reads: 1.07 GB (x) + 1 MB (mean,var) &#8594; Writes: 1.07 GB (x_norm)</text>
+  <line x1="190" y1="247" x2="190" y2="263" stroke="#c0392b" stroke-width="1.5" marker-end="url(#arrr)"/>
+  <rect x="20" y="263" width="340" height="20" rx="4" fill="#c0392b" opacity=".2" stroke="#c0392b"/>
+  <text x="190" y="277" text-anchor="middle" fill="#c0392b" font-size="9" font-weight="bold" font-family="sans-serif">HBM write: x_norm (1.07 GB) &#8592; WASTED TRIP #2</text>
+
+  <!-- Op 3: GeLU -->
+  <line x1="190" y1="283" x2="190" y2="300" stroke="#c0392b" stroke-width="1.5" marker-end="url(#arrr)"/>
+  <rect x="60" y="300" width="260" height="32" rx="5" fill="#2a6099"/>
+  <text x="190" y="317" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">Kernel 3: GeLU activation</text>
+  <text x="190" y="330" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">Reads: 1.07 GB (x_norm) | Writes: 1.07 GB (x_gelu)</text>
+  <line x1="190" y1="332" x2="190" y2="348" stroke="#c0392b" stroke-width="1.5" marker-end="url(#arrr)"/>
+  <rect x="20" y="348" width="340" height="20" rx="4" fill="#c0392b" opacity=".2" stroke="#c0392b"/>
+  <text x="190" y="362" text-anchor="middle" fill="#c0392b" font-size="9" font-weight="bold" font-family="sans-serif">HBM write: x_gelu (1.07 GB) &#8592; WASTED TRIP #3</text>
+
+  <!-- Op 4: Dropout -->
+  <line x1="190" y1="368" x2="190" y2="385" stroke="#c0392b" stroke-width="1.5" marker-end="url(#arrr)"/>
+  <rect x="60" y="385" width="260" height="24" rx="5" fill="#7b2d8b"/>
+  <text x="190" y="400" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">Kernel 4: Dropout mask + apply</text>
+  <text x="190" y="412" text-anchor="middle" fill="#e8c8f0" font-size="9" font-family="sans-serif">Reads: 1.07 GB | Writes: 1.07 GB output</text>
+
+  <!-- Total cost left -->
+  <rect x="20" y="418" width="340" height="20" rx="4" fill="#c0392b"/>
+  <text x="190" y="432" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">Total HBM traffic: ~6.5 GB | 4 kernel launches | ~1.94ms</text>
+
+  <!-- RIGHT: Fused -->
+  <rect x="390" y="32" width="360" height="398" rx="9" fill="#e8fff0" stroke="#1a7a3a" stroke-width="1.5"/>
+  <text x="570" y="52" text-anchor="middle" fill="#1a7a3a" font-size="12" font-weight="bold" font-family="sans-serif">&#10003; FUSED &#8212; 1 Kernel, Everything in Registers</text>
+  <text x="570" y="66" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">Reads once from HBM, writes once to HBM</text>
+
+  <!-- HBM block right -->
+  <rect x="400" y="76" width="340" height="26" rx="5" fill="#1c2438"/>
+  <text x="570" y="93" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">HBM &#8212; Input x (same 1.07 GB)</text>
+
+  <!-- ONE fused kernel -->
+  <line x1="570" y1="102" x2="570" y2="130" stroke="#1a7a3a" stroke-width="2" marker-end="url(#arrg)"/>
+  <rect x="410" y="130" width="320" height="200" rx="7" fill="#1a3a6b"/>
+  <text x="570" y="150" text-anchor="middle" fill="#e3b341" font-size="11" font-weight="bold" font-family="sans-serif">Fused Kernel (1 launch)</text>
+  <text x="570" y="168" text-anchor="middle" fill="#fff" font-size="10" font-family="sans-serif">Thread reads one element x[i] from HBM</text>
+  <!-- Register pipeline inside kernel -->
+  <rect x="425" y="178" width="290" height="24" rx="4" fill="#1a7a3a" opacity=".7"/>
+  <text x="570" y="194" text-anchor="middle" fill="#fff" font-size="9.5" font-family="sans-serif">In registers: compute mean (warp reduction)</text>
+  <rect x="425" y="208" width="290" height="24" rx="4" fill="#1a7a3a" opacity=".7"/>
+  <text x="570" y="224" text-anchor="middle" fill="#fff" font-size="9.5" font-family="sans-serif">In registers: compute var (warp reduction)</text>
+  <rect x="425" y="238" width="290" height="24" rx="4" fill="#1a7a3a" opacity=".7"/>
+  <text x="570" y="254" text-anchor="middle" fill="#fff" font-size="9.5" font-family="sans-serif">In registers: normalize + scale &#947;, &#946;</text>
+  <rect x="425" y="268" width="290" height="24" rx="4" fill="#1a7a3a" opacity=".7"/>
+  <text x="570" y="284" text-anchor="middle" fill="#fff" font-size="9.5" font-family="sans-serif">In registers: GeLU(x_norm)</text>
+  <rect x="425" y="298" width="290" height="24" rx="4" fill="#1a7a3a" opacity=".7"/>
+  <text x="570" y="314" text-anchor="middle" fill="#fff" font-size="9.5" font-family="sans-serif">In registers: apply dropout mask</text>
+  <line x1="570" y1="330" x2="570" y2="360" stroke="#1a7a3a" stroke-width="2" marker-end="url(#arrg)"/>
+  <text x="570" y="356" text-anchor="middle" fill="#1a7a3a" font-size="10" font-family="sans-serif">&#8595; All intermediates stay in registers &#8212; ZERO HBM writes!</text>
+
+  <!-- Output -->
+  <rect x="400" y="365" width="340" height="26" rx="5" fill="#1c2438"/>
+  <text x="570" y="383" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">HBM write: output (1.07 GB) &#8212; only ONE write!</text>
+
+  <rect x="400" y="418" width="340" height="20" rx="4" fill="#1a7a3a"/>
+  <text x="570" y="432" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">Total HBM traffic: ~2.14 GB | 1 kernel | ~0.64ms &#8594; 3&#215; faster!</text>
+</svg>
+<figcaption><strong>Figure 9.1</strong> &#8212; HBM round-trip elimination via operator fusion. The unfused sequence (LayerNorm mean/var &#8594; LayerNorm normalize &#8594; GeLU &#8594; Dropout) requires 4 kernel launches and ~6.5 GB HBM traffic for batch=32, seq=2048, d=8192. The fused kernel performs all four operations in registers between one HBM read and one write &#8212; total traffic drops to ~2.14 GB (~3&#215; reduction) and latency falls from ~1.94ms to ~0.64ms. The intermediate activations (mean, var, x_norm, x_gelu) never touch HBM.</figcaption>
+</figure></div>
+
+<h3 id="s922">9.2.2 The Factory Metaphor &#8212; Why Fusion Works</h3>
+<p>The clearest mental model for fusion: HBM is a warehouse, SMEM/registers are a factory floor, and HBM transactions are delivery trucks. Separate kernels truck results back to the warehouse between every operation. Fusion keeps data on the factory floor until all work is done.</p>
+<div class="formula">WITHOUT FUSION &#8212; truck the result back between every operation:
+  Warehouse (HBM) &#8594; Truck &#8594; Factory (registers): x.cos()
+  Factory &#8594; Truck &#8594; Warehouse: write cos_x
+  Warehouse &#8594; Truck &#8594; Factory: read cos_x.cos()
+  Factory &#8594; Truck &#8594; Warehouse: write cos_cos_x
+  ... &#215; 64 applications: 128 truck trips total
+  
+  99% of time is truck transport, not computation.
+
+WITH FUSION &#8212; do all operations while the truck is here:
+  Warehouse &#8594; Truck &#8594; Factory: x
+  Factory: x.cos().cos().cos()...&#215;64  &#8592; all in registers
+  Factory &#8594; Truck &#8594; Warehouse: result
+  
+  Cost: 2 truck trips TOTAL regardless of N operations.
+  
+MATHEMATICAL CONSEQUENCE:
+  fused x.cos() &#215; 64 times  &#8776;  same runtime as  fused x.cos() &#215; 1
+  
+  Both limited by: 2 HBM accesses &#247; 3.35 TB/s &#8776; 0.3&#956;s (at 1 GB tensor)
+  NOT by:          64 cos() computations &#8776; 0.001&#956;s (registers)
+  
+  The 63 extra cos() operations happen at "zero marginal cost."
+
+CRITICAL IMPLICATION: GELU is NOT slower than ReLU in a fused kernel.
+  GELU: ~8&#215; more FLOPs than ReLU
+  BUT: Both are memory-bandwidth-bound elementwise ops
+  BOTH cost exactly 2 HBM accesses &#8212; the same bottleneck
+  Extra FLOPs vanish into HBM latency.</div>
+
+<h3 id="s923">9.2.3 Fusion Categories and Impact</h3>
+<table>
+<tr><th>Type</th><th>Pattern</th><th>Example</th><th>Mechanism</th><th>Speedup</th><th>Auto-Fused By</th></tr>
+<tr><td><strong>Type 1</strong><br>Pointwise+Pointwise</td><td>Horizontal chain</td><td>RMSNorm + Scale + Dropout</td><td>All ops in registers; 1 read, 1 write</td><td>2&#8211;10&#215; for long chains</td><td>torch.compile, NVFuser, XLA</td></tr>
+<tr><td><strong>Type 2</strong><br>Pointwise+Reduction</td><td>Vertical</td><td>Subtract &#8594; Square &#8594; Mean (MSE)</td><td>Pointwise in registers; reduction via warp shuffle</td><td>3&#8211;5&#215;</td><td>NVFuser, XLA; sometimes torch.compile</td></tr>
+<tr><td><strong>Type 3</strong><br>GEMM+Epilogue</td><td>Output fusion</td><td>Linear + Bias + GELU</td><td>GEMM output stays in SMEM; epilogue before HBM write</td><td>1.3&#8211;2&#215;</td><td>cuBLASLt epilogue, CUTLASS, TRT-LLM</td></tr>
+<tr><td><strong>Type 4</strong><br>Tiled Self-Fusion</td><td>SMEM tiling</td><td>Flash Attention</td><td>SMEM tiling prevents N&#178; attention matrix from touching HBM</td><td>2&#8211;5&#215; end-to-end</td><td>Flash Attention v3, cuDNN, TRT-LLM</td></tr>
+<tr><td><strong>Type 5</strong><br>Cross-Layer</td><td>Vertical graph</td><td>GEMM &#8594; RMSNorm &#8594; GEMM</td><td>Intermediate tensor eliminated between layers</td><td>1.2&#8211;1.8&#215;</td><td>TensorRT, some torch.compile patterns</td></tr>
+</table>
+
+<h3 id="s924">9.2.4 The Min-Cut Recomputation Problem</h3>
+<p>Fusion interacts with activation checkpointing in a non-obvious and economically important way. When an operation is fused, its recomputation cost collapses to nearly zero &#8212; changing the optimal checkpoint placement dramatically.</p>
+<div class="formula">MIN-CUT RECOMPUTATION ECONOMICS:
+
+UNFUSED RMSNorm recomputation cost:
+  Forward: 5 HBM round-trips (5 kernels)
+  Recomputing in backward: another 5 HBM round-trips
+  Net recompute cost: HIGH &#8212; prefer to store activation
+
+FUSED RMSNorm recomputation cost:
+  Forward: 1 HBM round-trip (1 fused kernel)
+  Recomputing in backward: another 1 HBM round-trip
+  Net recompute cost: ~ZERO (bandwidth cost = 1 HBM read)
+  Memory saved: entire intermediate tensor (~16 GB across 80 layers LLaMA-3 70B)
+
+OPTIMAL POLICY:
+  Fused ops: RECOMPUTE (free recompute, saves memory)
+  Attention:  STORE (recomputing flash attention still reads K,V from HBM)
+  GEMM:       STORE (compute-expensive to recompute)
+
+AOTAutograd MIN-CUT ALGORITHM:
+  Models graph as flow network; finds minimum-cost partition into
+  {save set} and {recompute set} subject to memory budget.
+  Result: 60% memory reduction with &lt;5% extra compute
+  vs naive recompute-all: 60% memory reduction with 30% extra compute
+
+Enabling in PyTorch:
+  from torch.utils.checkpoint import checkpoint_wrapper, CheckpointImpl
+  model = checkpoint_wrapper(model, checkpoint_impl=CheckpointImpl.NO_REENTRANT)</div>
+
+<h2 id="s93">9.3 The PyTorch 2.x Compiler Stack</h2>
+
+<div class="diagram-wrap" id="diag-stack"><figure>
+<svg viewBox="0 0 760 390" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="380" y="20" text-anchor="middle" fill="#1c2438" font-size="13" font-weight="bold" font-family="sans-serif">PYTORCH 2.x COMPILATION PIPELINE: Eager Python &#8594; PTX</text>
+
+  <!-- Layer 1: Python code -->
+  <rect x="20" y="32" width="720" height="52" rx="7" fill="#f5f3ec" stroke="#1c2438" stroke-width="1.5"/>
+  <text x="380" y="52" text-anchor="middle" fill="#1c2438" font-size="11" font-weight="bold" font-family="sans-serif">USER CODE &#8212; Arbitrary PyTorch Python</text>
+  <text x="380" y="68" text-anchor="middle" fill="#666" font-size="10" font-family="sans-serif">model = LLaMAModel(config).cuda().bfloat16()</text>
+  <text x="380" y="80" text-anchor="middle" fill="#666" font-size="10" font-family="sans-serif">compiled = torch.compile(model, mode="reduce-overhead") &#8592; ONE LINE</text>
+
+  <line x1="380" y1="84" x2="380" y2="100" stroke="#888" stroke-width="2" marker-end="url(#arr9)"/>
+
+  <!-- Layer 1: TorchDynamo -->
+  <rect x="20" y="100" width="720" height="65" rx="7" fill="#1c2438" stroke="#1c2438" stroke-width="1.5"/>
+  <text x="130" y="118" text-anchor="middle" fill="#e3b341" font-size="11" font-weight="bold" font-family="sans-serif">LAYER 1: TorchDynamo</text>
+  <text x="130" y="132" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">Python Graph Capture</text>
+  <text x="380" y="120" fill="#c8d8f0" font-size="9" font-family="sans-serif">Input: Arbitrary Python function with PyTorch ops</text>
+  <text x="380" y="133" fill="#c8d8f0" font-size="9" font-family="sans-serif">Output: FX Graph (PyTorch ops only; Python stripped away)</text>
+  <text x="380" y="146" fill="#c8d8f0" font-size="9" font-family="sans-serif">Mechanism: Bytecode interception + Guard system (shape/mode conditions)</text>
+  <text x="680" y="128" text-anchor="middle" fill="#e3b341" font-size="9" font-family="sans-serif">~95% model</text>
+  <text x="680" y="140" text-anchor="middle" fill="#e3b341" font-size="9" font-family="sans-serif">coverage</text>
+  <text x="680" y="152" text-anchor="middle" fill="#c0392b" font-size="8.5" font-family="sans-serif">5% &#8594; graph break</text>
+
+  <line x1="380" y1="165" x2="380" y2="180" stroke="#888" stroke-width="2" marker-end="url(#arr9)"/>
+
+  <!-- Layer 2: AOTAutograd -->
+  <rect x="20" y="180" width="720" height="58" rx="7" fill="#1a3a6b" stroke="#1c2438" stroke-width="1.5"/>
+  <text x="130" y="198" text-anchor="middle" fill="#e3b341" font-size="11" font-weight="bold" font-family="sans-serif">LAYER 2: AOTAutograd</text>
+  <text x="130" y="212" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">Ahead-of-Time Autograd</text>
+  <text x="380" y="200" fill="#c8d8f0" font-size="9" font-family="sans-serif">Input: FX forward graph</text>
+  <text x="380" y="213" fill="#c8d8f0" font-size="9" font-family="sans-serif">Output: FX joint graph (forward + backward) &#8594; enables min-cut optimization</text>
+  <text x="380" y="226" fill="#c8d8f0" font-size="9" font-family="sans-serif">Why: Normal autograd builds backward dynamically (can't optimize). AOT traces both in one pass.</text>
+
+  <line x1="380" y1="238" x2="380" y2="253" stroke="#888" stroke-width="2" marker-end="url(#arr9)"/>
+
+  <!-- Layer 3: TorchInductor -->
+  <rect x="20" y="253" width="720" height="65" rx="7" fill="#2a5090" stroke="#1c2438" stroke-width="1.5"/>
+  <text x="130" y="272" text-anchor="middle" fill="#e3b341" font-size="11" font-weight="bold" font-family="sans-serif">LAYER 3: TorchInductor</text>
+  <text x="130" y="286" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">Code Generation</text>
+  <text x="380" y="273" fill="#c8d8f0" font-size="9" font-family="sans-serif">Input: Optimized FX graph (fwd + bwd)</text>
+  <text x="380" y="286" fill="#c8d8f0" font-size="9" font-family="sans-serif">Output: Triton kernel Python code (GPU) or C++/OpenMP (CPU) or Metal (Apple)</text>
+  <text x="380" y="299" fill="#c8d8f0" font-size="9" font-family="sans-serif">Passes: fusion &#8594; tiling &#8594; vectorization &#8594; loop ordering &#8594; layout propagation</text>
+  <text x="380" y="312" fill="#79d99a" font-size="9" font-family="sans-serif">Caches generated kernels to ~/.cache/torch/inductor/ &#8212; reused across runs</text>
+
+  <line x1="380" y1="318" x2="380" y2="333" stroke="#888" stroke-width="2" marker-end="url(#arr9)"/>
+
+  <!-- Layer 4: Triton JIT -->
+  <rect x="20" y="333" width="720" height="45" rx="7" fill="#1a7a3a" stroke="#1c2438" stroke-width="1.5"/>
+  <text x="130" y="352" text-anchor="middle" fill="#e3b341" font-size="11" font-weight="bold" font-family="sans-serif">LAYER 4: Triton JIT</text>
+  <text x="130" y="366" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">Device Compilation</text>
+  <text x="380" y="352" fill="#c8d8f0" font-size="9" font-family="sans-serif">Input: Triton kernel code | Output: PTX (NVIDIA) or HSACO (AMD)</text>
+  <text x="380" y="365" fill="#c8d8f0" font-size="9" font-family="sans-serif">Handles: SMEM allocation, warp scheduling, auto-tuning, architecture-specific opts</text>
+  <text x="380" y="378" fill="#79d99a" font-size="9" font-family="sans-serif">Auto-tunes tile sizes &#8212; benchmarks multiple configs, caches best per problem shape</text>
+</svg>
+<figcaption><strong>Figure 9.2</strong> &#8212; PyTorch 2.x four-layer compilation pipeline. TorchDynamo captures the computation graph from arbitrary Python. AOTAutograd creates a joint forward+backward graph for min-cut optimization. TorchInductor fuses operations and generates Triton kernels. The Triton JIT compiles to PTX/HSACO and auto-tunes tile sizes. The entire pipeline is triggered by one line: <code>torch.compile(model)</code>.</figcaption>
+</figure></div>
+
+<h3 id="s932">9.3.2 torch.compile Modes &#8212; Tradeoff Chart</h3>
+
+<div class="diagram-wrap" id="diag-modes"><figure>
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="380" y="20" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">torch.compile MODES &#8212; Compile Time vs Runtime Gain Tradeoff</text>
+
+  <!-- Axes -->
+  <line x1="80" y1="240" x2="700" y2="240" stroke="#1c2438" stroke-width="2"/>
+  <line x1="80" y1="40" x2="80" y2="240" stroke="#1c2438" stroke-width="2"/>
+  <text x="390" y="265" text-anchor="middle" fill="#1c2438" font-size="11" font-weight="bold" font-family="sans-serif">Compile Time (first run penalty)</text>
+  <text x="25" y="145" text-anchor="middle" fill="#1c2438" font-size="11" font-weight="bold" font-family="sans-serif" transform="rotate(-90,25,145)">Runtime Gain</text>
+
+  <!-- X axis labels -->
+  <text x="80" y="258" text-anchor="middle" fill="#555" font-size="10" font-family="sans-serif">0</text>
+  <text x="200" y="258" text-anchor="middle" fill="#555" font-size="10" font-family="sans-serif">10s</text>
+  <text x="330" y="258" text-anchor="middle" fill="#555" font-size="10" font-family="sans-serif">60s</text>
+  <text x="500" y="258" text-anchor="middle" fill="#555" font-size="10" font-family="sans-serif">5 min</text>
+  <text x="660" y="258" text-anchor="middle" fill="#555" font-size="10" font-family="sans-serif">30 min</text>
+
+  <!-- Y axis labels -->
+  <text x="72" y="243" text-anchor="end" fill="#555" font-size="10" font-family="sans-serif">0</text>
+  <text x="72" y="200" text-anchor="end" fill="#555" font-size="10" font-family="sans-serif">10%</text>
+  <text x="72" y="160" text-anchor="end" fill="#555" font-size="10" font-family="sans-serif">25%</text>
+  <text x="72" y="120" text-anchor="end" fill="#555" font-size="10" font-family="sans-serif">40%</text>
+  <text x="72" y="70" text-anchor="end" fill="#555" font-size="10" font-family="sans-serif">55%</text>
+  <line x1="80" y1="200" x2="700" y2="200" stroke="#eee" stroke-width="1"/>
+  <line x1="80" y1="160" x2="700" y2="160" stroke="#eee" stroke-width="1"/>
+  <line x1="80" y1="120" x2="700" y2="120" stroke="#eee" stroke-width="1"/>
+
+  <!-- Mode dots -->
+  <!-- Eager: 0 compile, 0 gain -->
+  <circle cx="80" cy="240" r="12" fill="#888"/>
+  <text x="80" y="244" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="bold" font-family="sans-serif">eager</text>
+  <text x="80" y="228" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">baseline</text>
+
+  <!-- default: ~10s compile, ~20-30% gain -->
+  <circle cx="200" cy="168" r="16" fill="#2a6099"/>
+  <text x="200" y="172" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="bold" font-family="sans-serif">default</text>
+  <text x="200" y="148" text-anchor="middle" fill="#2a6099" font-size="10" font-weight="bold" font-family="sans-serif">~25% gain</text>
+  <text x="200" y="136" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">10-30s compile</text>
+  <text x="200" y="124" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Best: training iteration</text>
+  <text x="200" y="112" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">dynamic shapes OK</text>
+
+  <!-- reduce-overhead: ~60s compile, ~35% gain -->
+  <circle cx="330" cy="138" r="18" fill="#e3b341"/>
+  <text x="330" y="135" text-anchor="middle" fill="#1c2438" font-size="8.5" font-weight="bold" font-family="sans-serif">reduce-</text>
+  <text x="330" y="146" text-anchor="middle" fill="#1c2438" font-size="8.5" font-weight="bold" font-family="sans-serif">overhead</text>
+  <text x="330" y="112" text-anchor="middle" fill="#a07800" font-size="10" font-weight="bold" font-family="sans-serif">~35% gain</text>
+  <text x="330" y="100" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">30-120s compile</text>
+  <text x="330" y="88" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">CUDA Graphs captured</text>
+  <text x="330" y="76" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Best: fixed-shape inference</text>
+
+  <!-- max-autotune: 5-30min compile, ~50% gain -->
+  <circle cx="500" cy="92" r="22" fill="#1a7a3a"/>
+  <text x="500" y="88" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="bold" font-family="sans-serif">max-</text>
+  <text x="500" y="99" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="bold" font-family="sans-serif">autotune</text>
+  <text x="500" y="68" text-anchor="middle" fill="#1a7a3a" font-size="10" font-weight="bold" font-family="sans-serif">~45-55% gain</text>
+  <text x="500" y="56" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">5-30 min compile</text>
+  <text x="500" y="44" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Exhaustive Triton tile search</text>
+
+  <!-- TRT-LLM point -->
+  <circle cx="660" cy="68" r="22" fill="#7b2d8b"/>
+  <text x="660" y="64" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="bold" font-family="sans-serif">TRT-</text>
+  <text x="660" y="75" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="bold" font-family="sans-serif">LLM</text>
+  <text x="660" y="46" text-anchor="middle" fill="#7b2d8b" font-size="10" font-weight="bold" font-family="sans-serif">~160% gain</text>
+  <text x="660" y="34" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">30+ min, but 5&#215; total</text>
+
+  <!-- Arrow curve showing trade-off frontier -->
+  <path d="M 80,240 Q 200,190 330,138 Q 450,90 660,68" stroke="#1c2438" stroke-width="1.5" fill="none" stroke-dasharray="4"/>
+
+  <!-- Annotations -->
+  <rect x="82" y="175" width="170" height="55" rx="5" fill="#fff8ec" stroke="#e3b341" stroke-width="1"/>
+  <text x="167" y="193" text-anchor="middle" fill="#a07800" font-size="9.5" font-weight="bold" font-family="sans-serif">Gain Sources (approx):</text>
+  <text x="92" y="207" fill="#444" font-size="9" font-family="sans-serif">Fusion alone: ~40% of total</text>
+  <text x="92" y="220" fill="#444" font-size="9" font-family="sans-serif">CUDA Graphs: ~30%</text>
+  <text x="92" y="233" fill="#444" font-size="9" font-family="sans-serif">Layout+tiling: ~30%</text>
+</svg>
+<figcaption><strong>Figure 9.3</strong> &#8212; torch.compile modes: compile-time investment vs runtime gain tradeoff. <code>default</code> mode gives ~25% gain in 10&#8211;30 seconds and handles dynamic shapes. <code>reduce-overhead</code> captures CUDA Graphs for an additional ~10% at 30&#8211;120s compilation cost &#8212; best for fixed-shape inference. <code>max-autotune</code> exhaustively searches Triton tile configurations for another 10&#8211;20% gain at 5&#8211;30 minutes. TRT-LLM sits above the curve &#8212; it is not just "more torch.compile" but a fundamentally different approach with 2&#215; the gain of max-autotune.</figcaption>
+</figure></div>
+
+<div class="formula">torch.compile PERFORMANCE BENCHMARKS (PyTorch official):
+
+Model               Mode              Speedup    Primary Source
+&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
+BERT-large          default           1.28&#215;      Elementwise fusion
+                    max-autotune      1.42&#215;      + tile size tuning
+LLaMA-2 7B (infer)  reduce-overhead   1.31&#215;      CUDA Graphs dominant
+LLaMA-2 7B (train)  default           1.24&#215;      Min-cut recomputation
+ViT-L/16            default           1.35&#215;      Attention + norm fusion
+
+WHEN torch.compile HURTS performance:
+  Variable input shapes:  Each new shape &#8594; recompilation
+    Fix: torch.compile(dynamic=True) &#8212; slightly slower but shape-agnostic
+  Many graph breaks:      Overhead dominates; break count &gt; 10 = problem
+  Short sequences (&lt;50 tokens): Compilation overhead not amortized
+  Python-heavy control flow: Dynamo falls back to Python repeatedly</div>
+
+<h2 id="s94">9.4 XLA &#8212; The Functional Compiler (JAX / TensorFlow)</h2>
+<p>XLA (Accelerated Linear Algebra) is Google's compiler for JAX and TensorFlow. Its design philosophy differs fundamentally: where TorchInductor works on traced Python graphs, XLA works on HLO (High-Level Operations) &#8212; a purely functional, side-effect-free IR with all shapes known at compile time.</p>
+
+<div class="diagram-wrap" id="diag-compilers"><figure>
+<svg viewBox="0 0 760 350" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="380" y="20" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">COMPILER PIPELINE COMPARISON: torch.compile vs XLA vs TensorRT</text>
+
+  <!-- Headers -->
+  <rect x="20" y="32" width="228" height="28" rx="5" fill="#2a6099"/>
+  <text x="134" y="51" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold" font-family="sans-serif">torch.compile (PyTorch)</text>
+  <rect x="260" y="32" width="228" height="28" rx="5" fill="#1a7a3a"/>
+  <text x="374" y="51" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold" font-family="sans-serif">XLA (JAX / TensorFlow)</text>
+  <rect x="500" y="32" width="240" height="28" rx="5" fill="#7b2d8b"/>
+  <text x="620" y="51" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold" font-family="sans-serif">TensorRT (NVIDIA)</text>
+
+  <!-- Pipeline stages aligned -->
+  <!-- Stage 1: Input -->
+  <rect x="20" y="70" width="228" height="36" rx="4" fill="#e8f0ff" stroke="#2a6099"/>
+  <text x="134" y="85" text-anchor="middle" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">Python + PyTorch eager</text>
+  <text x="134" y="99" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Dynamic Python; any control flow</text>
+  <rect x="260" y="70" width="228" height="36" rx="4" fill="#e8fff0" stroke="#1a7a3a"/>
+  <text x="374" y="85" text-anchor="middle" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">@jax.jit decorated function</text>
+  <text x="374" y="99" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Functional Python; no side effects</text>
+  <rect x="500" y="70" width="240" height="36" rx="4" fill="#f5f0ff" stroke="#7b2d8b"/>
+  <text x="620" y="85" text-anchor="middle" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">ONNX or torch-tensorrt</text>
+  <text x="620" y="99" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Pre-converted graph; offline only</text>
+
+  <!-- Arrows -->
+  <line x1="134" y1="106" x2="134" y2="120" stroke="#888" stroke-width="1.5" marker-end="url(#arr9)"/>
+  <line x1="374" y1="106" x2="374" y2="120" stroke="#888" stroke-width="1.5" marker-end="url(#arr9)"/>
+  <line x1="620" y1="106" x2="620" y2="120" stroke="#888" stroke-width="1.5" marker-end="url(#arr9)"/>
+
+  <!-- Stage 2: IR -->
+  <rect x="20" y="120" width="228" height="36" rx="4" fill="#e8f0ff" stroke="#2a6099"/>
+  <text x="134" y="135" text-anchor="middle" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">FX Graph (Python-based IR)</text>
+  <text x="134" y="149" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Dynamic shapes; guards + recompile</text>
+  <rect x="260" y="120" width="228" height="36" rx="4" fill="#e8fff0" stroke="#1a7a3a"/>
+  <text x="374" y="135" text-anchor="middle" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">HLO (High-Level Ops)</text>
+  <text x="374" y="149" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">ALL shapes static; purely functional</text>
+  <rect x="500" y="120" width="240" height="36" rx="4" fill="#f5f0ff" stroke="#7b2d8b"/>
+  <text x="620" y="135" text-anchor="middle" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">TRT Graph (typed, shaped)</text>
+  <text x="620" y="149" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">All shapes fixed at build time</text>
+
+  <line x1="134" y1="156" x2="134" y2="170" stroke="#888" stroke-width="1.5" marker-end="url(#arr9)"/>
+  <line x1="374" y1="156" x2="374" y2="170" stroke="#888" stroke-width="1.5" marker-end="url(#arr9)"/>
+  <line x1="620" y1="156" x2="620" y2="170" stroke="#888" stroke-width="1.5" marker-end="url(#arr9)"/>
+
+  <!-- Stage 3: Optimization -->
+  <rect x="20" y="170" width="228" height="50" rx="4" fill="#e8f0ff" stroke="#2a6099"/>
+  <text x="134" y="186" text-anchor="middle" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">TorchInductor optimization</text>
+  <text x="134" y="200" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Fusion, layout, tiling</text>
+  <text x="134" y="213" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">&#8594; Triton kernel generation</text>
+  <rect x="260" y="170" width="228" height="50" rx="4" fill="#e8fff0" stroke="#1a7a3a"/>
+  <text x="374" y="186" text-anchor="middle" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">7-pass XLA optimization</text>
+  <text x="374" y="200" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Algebraic simplify, CSE, fusion</text>
+  <text x="374" y="213" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Layout assign, rematerialization</text>
+  <rect x="500" y="170" width="240" height="50" rx="4" fill="#f5f0ff" stroke="#7b2d8b"/>
+  <text x="620" y="186" text-anchor="middle" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">5-pass TRT optimization</text>
+  <text x="620" y="200" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">DCE, const-fold, fusion</text>
+  <text x="620" y="213" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Precision assign + kernel benchmark</text>
+
+  <line x1="134" y1="220" x2="134" y2="234" stroke="#888" stroke-width="1.5" marker-end="url(#arr9)"/>
+  <line x1="374" y1="220" x2="374" y2="234" stroke="#888" stroke-width="1.5" marker-end="url(#arr9)"/>
+  <line x1="620" y1="220" x2="620" y2="234" stroke="#888" stroke-width="1.5" marker-end="url(#arr9)"/>
+
+  <!-- Stage 4: Output -->
+  <rect x="20" y="234" width="228" height="36" rx="4" fill="#2a6099"/>
+  <text x="134" y="249" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">PTX / HSACO (JIT cached)</text>
+  <text x="134" y="263" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">Re-use across runs; AMD-compatible</text>
+  <rect x="260" y="234" width="228" height="36" rx="4" fill="#1a7a3a"/>
+  <text x="374" y="249" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">PTX / HSACO (AOT)</text>
+  <text x="374" y="263" text-anchor="middle" fill="#c8f0d8" font-size="9" font-family="sans-serif">TPU-native; best for static shapes</text>
+  <rect x="500" y="234" width="240" height="36" rx="4" fill="#7b2d8b"/>
+  <text x="620" y="249" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">.engine binary (GPU-specific)</text>
+  <text x="620" y="263" text-anchor="middle" fill="#e8c8f0" font-size="9" font-family="sans-serif">No dispatch overhead at inference</text>
+
+  <!-- Comparison row -->
+  <rect x="20" y="282" width="228" height="58" rx="4" fill="#f0f4fa" stroke="#2a6099"/>
+  <text x="134" y="298" text-anchor="middle" fill="#2a6099" font-size="10" font-weight="bold" font-family="sans-serif">torch.compile</text>
+  <text x="134" y="311" text-anchor="middle" fill="#444" font-size="9" font-family="sans-serif">Speedup: 1.2&#8211;1.8&#215; eager</text>
+  <text x="134" y="323" text-anchor="middle" fill="#444" font-size="9" font-family="sans-serif">Best: PyTorch models, AMD, R&amp;D</text>
+  <text x="134" y="335" text-anchor="middle" fill="#444" font-size="9" font-family="sans-serif">&#10003; Dynamic shapes &#10003; Custom ops</text>
+  <rect x="260" y="282" width="228" height="58" rx="4" fill="#f0fff5" stroke="#1a7a3a"/>
+  <text x="374" y="298" text-anchor="middle" fill="#1a7a3a" font-size="10" font-weight="bold" font-family="sans-serif">XLA</text>
+  <text x="374" y="311" text-anchor="middle" fill="#444" font-size="9" font-family="sans-serif">Speedup: 1.3&#8211;2.0&#215; eager JAX</text>
+  <text x="374" y="323" text-anchor="middle" fill="#444" font-size="9" font-family="sans-serif">Best: JAX models, TPU, static shapes</text>
+  <text x="374" y="335" text-anchor="middle" fill="#444" font-size="9" font-family="sans-serif">&#10003; TPU-native &#10005; Dynamic shapes</text>
+  <rect x="500" y="282" width="240" height="58" rx="4" fill="#f8f0ff" stroke="#7b2d8b"/>
+  <text x="620" y="298" text-anchor="middle" fill="#7b2d8b" font-size="10" font-weight="bold" font-family="sans-serif">TensorRT / TRT-LLM</text>
+  <text x="620" y="311" text-anchor="middle" fill="#444" font-size="9" font-family="sans-serif">Speedup: 2.5&#8211;5.0&#215; eager PyTorch</text>
+  <text x="620" y="323" text-anchor="middle" fill="#444" font-size="9" font-family="sans-serif">Best: NVIDIA inference, production</text>
+  <text x="620" y="335" text-anchor="middle" fill="#444" font-size="9" font-family="sans-serif">&#10003; Maximum perf &#10005; Training/AMD</text>
+</svg>
+<figcaption><strong>Figure 9.4</strong> &#8212; Three-compiler pipeline comparison. torch.compile is JIT, handles dynamic shapes, and works on AMD &#8212; the right choice for PyTorch models, training, and research. XLA is AOT, requires static shapes, and is the only compiler for TPU &#8212; the right choice for JAX models and Google infrastructure. TensorRT is the offline maximum-performance choice for NVIDIA inference production &#8212; 2.5&#8211;5&#215; over eager with the highest engineering investment. All three converge to PTX/HSACO on the same hardware.</figcaption>
+</figure></div>
+
+<h2 id="s95">9.5 TensorRT &#8212; Production Offline Compilation <span class="shipped">SHIPPED</span></h2>
+<p>TensorRT performs exhaustive offline compilation that produces a GPU-specific engine binary. Unlike JIT compilers, TRT benchmarks every available CUDA kernel for every operation shape in the model &#8212; a 5&#8211;30 minute investment that pays back over millions of inference calls.</p>
+<div class="formula">TENSORRT 5-PASS OPTIMIZATION PIPELINE:
+
+PASS 1: Graph Cleaning
+  Dead code elimination:   Remove ops never contributing to output
+  Constant folding:        Pre-compute all-constant ops (RoPE inv_freq, attn scale)
+  Redundant elimination:   Remove unnecessary transpose/reshape ops
+
+PASS 2: Layer Fusion
+  Vertical chain fusion:   Conv &#8594; BN &#8594; ReLU &#8594; fused CBR kernel
+  Attention fusion:        QKV proj + attention + output proj &#8594; one kernel
+  QKV projection fusion:   3 separate Linear &#8594; 1 wider GEMM (3&#215; width)
+  Horizontal fusion:       Parallel ops merged into batched kernels
+
+PASS 3: Precision Assignment
+  Per-layer precision based on calibration data + quality thresholds
+  Mixed: some layers FP16, others INT8/FP8 based on sensitivity
+  
+PASS 4: Kernel Selection (most expensive, most impactful)
+  Benchmarks ALL cuBLAS GEMM algorithms for each problem shape
+  Benchmarks ALL cuDNN attention variants
+  Selects fastest kernel per op &#8212; result: O(1) dispatch at inference
+  Time: 5&#8211;30 min for 70B model | Payback: amortized over millions of calls
+
+PASS 5: Memory Planning
+  Analyzes tensor lifetimes; assigns shared memory allocations
+  In-place operations where safe
+  Result: 15&#8211;25% HBM savings vs naive allocation</div>
+
+<h3 id="s952">9.5.2 TRT-LLM vs torch.compile Performance Gap</h3>
+<div class="formula">WHY TRT-LLM BEATS torch.compile BY 2&#215; (LLaMA-3 70B, H100, FP8, batch=32):
+
+PyTorch eager:           ~850 tok/s/GPU
+torch.compile default:  ~1,100 tok/s/GPU  (+29%)
+TRT-LLM FP8:            ~2,200 tok/s/GPU  (+159% vs eager)
+
+THREE MECHANISMS EXPLAINING THE GAP:
+
+1. KERNEL SELECTION DEPTH:
+   torch.compile: Triton auto-tunes ~5 tile configurations
+   TRT-LLM:       Benchmarks 50+ cuBLAS algorithms per GEMM shape
+                  Exhaustive search finds kernels Triton never considers
+
+2. FUSED ATTENTION PLUGIN:
+   torch.compile: Uses Flash Attention through operator dispatch
+   TRT-LLM:       Uses gpt_attention_plugin &#8212; custom CUDA kernel fusing:
+                  QKV GEMM + rotary embedding + masked attention + KV cache write
+                  in one GPU kernel pass &#8212; eliminates multiple HBM round-trips
+
+3. CUDA GRAPH CAPTURE:
+   torch.compile (reduce-overhead): Captures graphs at first execution
+   TRT-LLM:       Captures CUDA Graphs at startup for ALL decode batch sizes
+                  + handles continuous batching within graph replay
+
+PRODUCTION BUILD (trtllm-build):
+  trtllm-build \
+    --checkpoint_dir ./llama3-70b-trt-ckpt \
+    --output_dir ./llama3-70b-engine \
+    --gpt_attention_plugin float16 \   # Fused attention
+    --quantization fp8 \
+    --max_batch_size 64 \
+    --tp_size 2</div>
+
+<h2 id="s96">9.6 NVFuser &#8212; NVIDIA's Runtime Fusion Engine <span class="shipped">SHIPPED</span></h2>
+<p>NVFuser is NVIDIA's production fusion compiler embedded directly in PyTorch, generating CUDA C++ rather than Triton. It is particularly effective for complex pointwise+reduction chains in transformer norms.</p>
+<div class="formula">KEY NVFUSER PATTERNS FOR LLMs:
+
+1. RMSNorm fusion (every LLaMA-family forward pass):
+   Ops: sum(x^2), sqrt(sum/N+eps), divide, multiply by weight
+   Unfused: 5 kernels, 10 HBM round-trips
+   NVFuser: 1 kernel, 2 HBM round-trips  &#8594; ~4&#215; speedup
+
+2. SiLU + element-wise multiply (SwiGLU / LLaMA MLP):
+   gate = x * sigmoid(x);  output = gate * up
+   NVFuser: 1 read (x, up) &#8594; compute gate in registers &#8594; 1 write  &#8594; ~2&#215;
+
+3. Residual + RMSNorm:
+   x = x + residual;  x = RMSNorm(x)
+   NVFuser: reads x + residual, adds, normalizes, writes &#8212; ONE kernel
+   Eliminates residual add as a separate HBM round-trip
+
+NVFuser vs TorchInductor:
+  NVFuser:       NVIDIA-only; CUDA C++ output; higher ceiling for complex norms
+  TorchInductor: NVIDIA + AMD + CPU; Triton output; easier extension; better for training</div>
+
+<h2 id="s97">9.7 Graph-Level Optimizations</h2>
+<div class="formula">FOUR CLASSIC GRAPH PASSES (applied before code generation):
+
+1. DEAD CODE ELIMINATION (DCE):
+   Training code has dropout, logging, debug stats &#8212; all dead in inference.
+   Impact: 5&#8211;15% of training ops eliminated in inference graph.
+   
+   Before DCE: x2 = dropout(x1, p=0.1); x3 = x1 + x2; x4 = debug_stats(x3)
+   After DCE:  output = x1 + x1  (dropout=0 at eval; debug removed)
+
+2. CONSTANT FOLDING:
+   inv_freq = 1.0 / (10000 ** (arange(0, d, 2) / d))  &#8592; same every step!
+   After folding: inv_freq = CONSTANT([...])  &#8592; zero runtime compute
+   Impact: RoPE positional encodings, attention scale factors &#8594; all become constants
+
+3. COMMON SUBEXPRESSION ELIMINATION (CSE):
+   Pre-norm transformers compute layer_norm(x) twice in naive code.
+   CSE: compute once, share result &#8594; eliminates duplicate computation
+
+4. LAYOUT PROPAGATION:
+   PyTorch default: row-major [batch, seq, hidden]
+   Tensor Cores prefer: specific A/B matrix layouts
+   Layout pass: inserts one-time transpose rather than per-GEMM conversion
+   Impact: 10&#8211;20% GEMM speedup when layout is non-optimal</div>
+
+<h2 id="s98">9.8 Graph Break Diagnosis and Fixes</h2>
+<div class="diagram-wrap" id="diag-graphbreak"><figure>
+<svg viewBox="0 0 760 370" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="380" y="20" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">GRAPH BREAK CAUSES + FIXES &#8212; Decision Tree</text>
+
+  <!-- Root -->
+  <rect x="280" y="32" width="200" height="36" rx="7" fill="#1c2438"/>
+  <text x="380" y="48" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">torch.compile shows graph break</text>
+  <text x="380" y="62" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">dynamo.explain(model)(input)</text>
+
+  <line x1="380" y1="68" x2="380" y2="85" stroke="#888" stroke-width="1.5" marker-end="url(#arr9)"/>
+
+  <!-- Question: what type? -->
+  <rect x="270" y="85" width="220" height="28" rx="5" fill="#2a6099"/>
+  <text x="380" y="103" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">What is the break reason?</text>
+
+  <!-- 6 break types in 2 rows -->
+  <!-- Row 1 -->
+  <!-- Break 1: Data-dependent control -->
+  <line x1="200" y1="99" x2="100" y2="130" stroke="#888" stroke-width="1.2" marker-end="url(#arr9)"/>
+  <rect x="20" y="130" width="168" height="70" rx="5" fill="#fff0f0" stroke="#c0392b" stroke-width="1"/>
+  <text x="104" y="148" text-anchor="middle" fill="#c0392b" font-size="9.5" font-weight="bold" font-family="sans-serif">Data-dependent control</text>
+  <text x="104" y="162" text-anchor="middle" fill="#555" font-size="8.5" font-family="sans-serif">if tensor.sum() &gt; threshold</text>
+  <text x="104" y="176" text-anchor="middle" fill="#555" font-size="8.5" font-family="sans-serif">Branches on VALUE not shape</text>
+  <rect x="20" y="204" width="168" height="26" rx="4" fill="#e8fff0" stroke="#1a7a3a" stroke-width="1"/>
+  <text x="104" y="218" text-anchor="middle" fill="#1a7a3a" font-size="9" font-weight="bold" font-family="sans-serif">Fix: torch.cond() or restructure</text>
+  <text x="104" y="228" text-anchor="middle" fill="#555" font-size="8" font-family="sans-serif">Move value logic out of forward()</text>
+
+  <!-- Break 2: .item() / numpy -->
+  <line x1="290" y1="99" x2="250" y2="130" stroke="#888" stroke-width="1.2" marker-end="url(#arr9)"/>
+  <rect x="200" y="130" width="162" height="70" rx="5" fill="#fff0f0" stroke="#c0392b" stroke-width="1"/>
+  <text x="281" y="148" text-anchor="middle" fill="#c0392b" font-size="9.5" font-weight="bold" font-family="sans-serif">.item() / .numpy()</text>
+  <text x="281" y="162" text-anchor="middle" fill="#555" font-size="8.5" font-family="sans-serif">Breaks graph to copy to CPU</text>
+  <text x="281" y="176" text-anchor="middle" fill="#555" font-size="8.5" font-family="sans-serif">scalar = tensor.item()  &#10008;</text>
+  <rect x="200" y="204" width="162" height="26" rx="4" fill="#e8fff0" stroke="#1a7a3a" stroke-width="1"/>
+  <text x="281" y="218" text-anchor="middle" fill="#1a7a3a" font-size="9" font-weight="bold" font-family="sans-serif">Fix: Keep as tensor; avoid .item()</text>
+  <text x="281" y="228" text-anchor="middle" fill="#555" font-size="8" font-family="sans-serif">Use tensor ops throughout forward</text>
+
+  <!-- Break 3: Custom class __getattr__ -->
+  <line x1="380" y1="113" x2="380" y2="130" stroke="#888" stroke-width="1.2" marker-end="url(#arr9)"/>
+  <rect x="373" y="130" width="3" height="0"/>
+  <rect x="370" y="130" width="28" height="0"/>
+  <rect x="365" y="130" width="50" height="0"/>
+  <!-- adjust to center -->
+  <rect x="375" y="130" width="160" height="70" rx="5" fill="#fff0f0" stroke="#c0392b" stroke-width="1"/>
+  <text x="455" y="148" text-anchor="middle" fill="#c0392b" font-size="9.5" font-weight="bold" font-family="sans-serif">Custom class __getattr__</text>
+  <text x="455" y="162" text-anchor="middle" fill="#555" font-size="8.5" font-family="sans-serif">Non-PyTorch class method</text>
+  <text x="455" y="176" text-anchor="middle" fill="#555" font-size="8.5" font-family="sans-serif">doing tensor operations</text>
+  <rect x="375" y="204" width="160" height="26" rx="4" fill="#e8fff0" stroke="#1a7a3a" stroke-width="1"/>
+  <text x="455" y="218" text-anchor="middle" fill="#1a7a3a" font-size="9" font-weight="bold" font-family="sans-serif">Fix: @torch.compiler.disable</text>
+  <text x="455" y="228" text-anchor="middle" fill="#555" font-size="8" font-family="sans-serif">Explicitly exclude from compile</text>
+
+  <!-- Break 4: Variable shapes -->
+  <line x1="470" y1="99" x2="572" y2="130" stroke="#888" stroke-width="1.2" marker-end="url(#arr9)"/>
+  <rect x="544" y="130" width="165" height="70" rx="5" fill="#fff0f0" stroke="#c0392b" stroke-width="1"/>
+  <text x="626" y="148" text-anchor="middle" fill="#c0392b" font-size="9.5" font-weight="bold" font-family="sans-serif">Variable input shapes</text>
+  <text x="626" y="162" text-anchor="middle" fill="#555" font-size="8.5" font-family="sans-serif">Different seq_len each call</text>
+  <text x="626" y="176" text-anchor="middle" fill="#555" font-size="8.5" font-family="sans-serif">Guard fails &#8594; recompile</text>
+  <rect x="544" y="204" width="165" height="26" rx="4" fill="#e8fff0" stroke="#1a7a3a" stroke-width="1"/>
+  <text x="626" y="218" text-anchor="middle" fill="#1a7a3a" font-size="9" font-weight="bold" font-family="sans-serif">Fix: dynamic=True flag</text>
+  <text x="626" y="228" text-anchor="middle" fill="#555" font-size="8" font-family="sans-serif">torch.compile(dynamic=True)</text>
+
+  <!-- Row 2: additional breaks -->
+  <rect x="20" y="270" width="340" height="26" rx="4" fill="#fffbf0" stroke="#e3b341" stroke-width="1"/>
+  <text x="190" y="283" text-anchor="middle" fill="#a07800" font-size="9" font-weight="bold" font-family="sans-serif">Break: Unsupported Python (print, assert, logging) &#8594; Fix: move outside forward()</text>
+  <text x="190" y="295" text-anchor="middle" fill="#555" font-size="8.5" font-family="sans-serif">Note: logging/debugging inside forward() always breaks graphs &#8212; wrap in model.eval() guard</text>
+
+  <rect x="400" y="270" width="340" height="26" rx="4" fill="#fffbf0" stroke="#e3b341" stroke-width="1"/>
+  <text x="570" y="283" text-anchor="middle" fill="#a07800" font-size="9" font-weight="bold" font-family="sans-serif">Break: Non-PyTorch library call (scipy, cv2) &#8594; Fix: pre/post process outside compile</text>
+  <text x="570" y="295" text-anchor="middle" fill="#555" font-size="8.5" font-family="sans-serif">Or: wrap non-PyTorch section in @torch.compiler.disable decorator</text>
+
+  <!-- Cost of breaks -->
+  <rect x="20" y="320" width="720" height="42" rx="6" fill="#fff0f0" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="380" y="337" text-anchor="middle" fill="#c0392b" font-size="10" font-weight="bold" font-family="sans-serif">COST OF GRAPH BREAKS: Each break = 1 Python frame + dispatch overhead per call</text>
+  <text x="380" y="352" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">Target: &lt;5 graph breaks per model forward pass | If &gt;10 breaks: consider not using torch.compile</text>
+  <text x="380" y="362" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">10% of ops hitting breaks &#8594; ~15% of torch.compile gain lost</text>
+</svg>
+<figcaption><strong>Figure 9.5</strong> &#8212; Graph break causes and fixes. TorchDynamo falls back to Python for six common patterns; each break is a missed fusion opportunity and adds per-call dispatch overhead. The fix for most breaks is structural: move value-dependent logic outside the compiled forward pass, avoid CPU-bound operations inside the graph, and use <code>torch.compile(dynamic=True)</code> for variable-shape workloads.</figcaption>
+</figure></div>
+
+<h2 id="s99">9.9 Compiler Strategy Guide</h2>
+<table>
+<tr><th>Use Case</th><th>Recommended</th><th>Why</th><th>Expected Gain</th></tr>
+<tr><td>LLM inference production (NVIDIA)</td><td><strong>TRT-LLM</strong></td><td>Maximum throughput; kernel benchmarking; fused attention plugin</td><td>2.5&#8211;5&#215; vs eager</td></tr>
+<tr><td>LLM inference development / AMD</td><td><strong>torch.compile</strong></td><td>Dynamic shapes; Triton on ROCm; rapid iteration</td><td>1.3&#8211;1.8&#215;</td></tr>
+<tr><td>LLM training (all)</td><td><strong>torch.compile + FSDP</strong></td><td>AOTAutograd min-cut; full gradient support; activation checkpointing</td><td>1.2&#8211;1.5&#215;</td></tr>
+<tr><td>JAX model / TPU</td><td><strong>XLA (@jax.jit)</strong></td><td>Only compiler for TPU; static shapes enable aggressive optimization</td><td>1.3&#8211;2.0&#215;</td></tr>
+<tr><td>Fixed-shape inference (NVIDIA)</td><td><strong>torch.compile reduce-overhead</strong></td><td>CUDA Graphs; fast compilation; good for batch servers</td><td>1.3&#8211;1.5&#215;</td></tr>
+<tr><td>Fine-tuning (LoRA)</td><td><strong>torch.compile default</strong></td><td>Gradient support; TRT has no gradient path</td><td>1.2&#8211;1.4&#215;</td></tr>
+<tr><td>Custom architecture / novel ops</td><td><strong>Triton + torch.compile</strong></td><td>Triton for custom kernel; compile handles fusion around it</td><td>Varies</td></tr>
+</table>
+
+<div class="callout key">
+<strong>Cumulative Compiler Optimization Stack (LLaMA-3 70B, H100)</strong>
+PyTorch eager baseline: 850 tok/s/GPU. Apply in order: &#10122; torch.compile: 1,100 tok/s (+29%). &#10123; FP8 quantization (Ch 8): 2,200 tok/s (+100%). &#10124; Flash Attention v3: ~2,900 tok/s (+32%). &#10125; TRT-LLM migration: ~4,400 tok/s (+52%). Total: 5.2&#215; throughput improvement on identical hardware through software and compiler optimization alone. No hardware upgrade required.
+</div>
+
+<h2 id="s910">9.10 Meta's KernelEvolve &#8212; AI-Driven Kernel Optimization <span class="announced">ANNOUNCED</span></h2>
+<p>KernelEvolve represents the frontier of compiler optimization: using AI-driven evolutionary search to discover kernel implementations that surpass both hand-written expert kernels and compiler output for custom operators at scale.</p>
+<div class="formula">KERNELEVOLVE ARCHITECTURE (Meta, 2025-2026):
+
+PROBLEM: Meta's production systems have thousands of CUSTOM operators
+  Feature hashing, sparse attention, fused interaction layers, custom norms
+  Compiler output: 30&#8211;50% below theoretical peak for these custom ops
+  Manual expert optimization: weeks/op &#215; thousands of ops = infeasible
+
+APPROACH: Treat kernel optimization as a SEARCH problem
+  1. SPECIFICATION: engineer defines input/output specs + correctness tests
+  2. SEARCH SPACE: tile sizes &#215; loop orderings &#215; memory patterns &#215; Triton/CUTLASS/CUDA
+  3. EVOLUTIONARY SEARCH:
+       Initial population: compiler-generated baseline + random mutations
+       Fitness function: benchmark latency on real H100/MI300X/MTIA hardware
+       Crossover: combine tile sizes from one candidate, loop order from another
+       100 candidates evaluated in parallel on dedicated eval cluster
+  4. VERIFICATION: promising candidates checked for numerical correctness
+  5. DEPLOY: best kernel shipped to production
+
+RESULTS (Meta production):
+  Ads recommendation models:     60% inference throughput gain
+  LLM fine-tuning kernels:       35&#8211;45% training speedup
+  Custom attention variants:     2.1&#215; vs compiler-generated code
+  Time to optimize one operator: Hours vs weeks manual
+  Targets: H100, MI300X, MTIA v2 simultaneously</div>
+<h2 id="cookbook">9.11 Profiling Cookbook</h2>
+<div class="cookbook">
+<div class="cookbook-label">&#128300; Profiling Cookbook &#8212; Compiler Optimization Diagnosis</div>
+<pre><span class="cmt"># &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
+# SYMPTOM: Model runs at 15% SM utilization; target 65%+
+# GOAL: Classify regime and apply correct compiler fix
+# &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</span>
+
+<span class="cmt"># STEP 1: Identify regime with nvidia-smi</span>
+<span class="cmd">nvidia-smi dmon -s u -d 1  # Watch SM utilization every 1 second</span>
+<span class="out"># SM util &lt;30% during inference &#8594; overhead-bound (CUDA Graphs fix)
+# SM util 30-80% &#8594; memory-bandwidth-bound (fusion fix)
+# SM util &gt;80% &#8594; compute-bound (quantization / TC alignment fix)</span>
+
+<span class="cmt"># STEP 2: Count graph breaks before applying torch.compile</span>
+<span class="cmd">import torch._dynamo as dynamo
+model = LLaMAModel(config).cuda().bfloat16()
+explanation = dynamo.explain(model)(dummy_input)
+print(f"Graphs: {explanation.graph_count}")
+print(f"Graph breaks: {explanation.break_count}")
+print(f"Break reasons: {explanation.break_reasons}")</span>
+<span class="out"># Target: &lt;5 graph breaks. If &gt;10: fix breaks before compiling
+# Common reason: "data-dependent control flow" &#8594; restructure conditionals
+# Common reason: "Unsupported: .item()" &#8594; remove .item() from forward()</span>
+
+<span class="cmt"># STEP 3: Benchmark properly (common mistake: no warmup)</span>
+<span class="cmd">import torch, time
+
+def bench(model, inputs, n_warmup=10, n_bench=100, label=""):
+    for _ in range(n_warmup):
+        with torch.no_grad(): _ = model(*inputs)
+    torch.cuda.synchronize()
+    
+    times = []
+    for _ in range(n_bench):
+        s = torch.cuda.Event(enable_timing=True)
+        e = torch.cuda.Event(enable_timing=True)
+        s.record()
+        with torch.no_grad(): _ = model(*inputs)
+        e.record()
+        torch.cuda.synchronize()
+        times.append(s.elapsed_time(e))
+    
+    times.sort()
+    print(f"{label}: p50={times[n_bench//2]:.2f}ms p99={times[int(n_bench*.99)]:.2f}ms")
+
+model_eager = LLaMAModel(config).cuda().bfloat16()
+bench(model_eager, inputs, label="Eager")
+
+model_compiled = torch.compile(model_eager, mode="reduce-overhead")
+bench(model_compiled, inputs, label="Compiled")  # First call compiles</span>
+<span class="out"># IMPORTANT: Measure p50 AND p99. Compilers can improve mean but worsen p99.
+# If compiled p99 &gt; eager p99: check for recompilation on variable shapes</span>
+
+<span class="cmt"># STEP 4: Inspect generated Triton code</span>
+<span class="cmd">import torch._inductor.config as config
+config.trace.enabled = True
+config.debug.save_output_code = True
+# Run one forward pass &#8594; generated kernels saved to /tmp/torchinductor_*/
+# Look for: fused_ops_0.py, fused_ops_1.py etc.
+# Verify fusion: each file should contain multiple operations</span>
+
+<span class="cmt"># STEP 5: Profile with torch.profiler to see kernel breakdown</span>
+<span class="cmd">from torch.profiler import profile, ProfilerActivity
+with profile(activities=[ProfilerActivity.CUDA], record_shapes=True) as prof:
+    with torch.no_grad():
+        for _ in range(5):
+            _ = model_compiled(*inputs)
+print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=20))</span>
+<span class="out"># Look for: many small kernels &#8594; fusion opportunity missed
+# Look for: kernel named "fused_*" &#8594; torch.compile fusion working
+# Look for: "cudaLaunchKernel" overhead &#8594; consider CUDA Graphs</span>
+
+<span class="cmt"># STEP 6: Verify correctness after compilation</span>
+<span class="cmd">with torch.no_grad():
+    out_eager = model_eager(*inputs)
+    out_compiled = model_compiled(*inputs)
+    max_diff = (out_eager - out_compiled).abs().max().item()
+    print(f"Max output difference: {max_diff:.6f}")
+    assert max_diff &lt; 1e-3, f"Compilation introduced numeric error: {max_diff}"</span>
+<span class="out"># Typical compiled vs eager diff: 1e-5 to 1e-4 (numerical rounding only)
+# If diff &gt; 1e-3: check for FP16/BF16 precision issues in fused kernel</span></pre>
+</div>
+
+<h2 id="worked">Worked Example: The Compiler Optimization Stack ROI</h2>
+<div class="worked">
+<div class="worked-label">Worked Example 9.1 &#8212; Cumulative Compiler Gains: PyTorch Eager &#8594; TRT-LLM</div>
+<h4>Setup</h4>
+<p>LLaMA-3 70B on 256&#215; H100 SXM5 cluster (TP=2, 128 model replicas). Hardware cost: $2/GPU-hour owned. Starting point: PyTorch eager BF16. Goal: quantify the ROI of each compiler investment.</p>
+
+<h4>Step 1: Baseline Measurement</h4>
+<div class="formula">PyTorch eager BF16 baseline (measured):
+  Decode throughput:       850 tok/s/GPU
+  Prefill throughput:    85,000 tok/s/GPU
+  SM utilization:            18% (overhead-bound during decode)
+  GPU cost per 1M tokens: $2/(850 tok/s * 3600) * 10^6 = $0.653/1M tokens</div>
+
+<h4>Step 2: Apply torch.compile (1 line, 2 minutes engineering)</h4>
+<div class="formula">CHANGE: model = torch.compile(model, mode="reduce-overhead")
+COMPILE TIME: 90 seconds (one-time; cached thereafter)
+
+MEASURED RESULT:
+  Decode: 850 &#8594; 1,100 tok/s (+29%)
+  Prefill: 85K &#8594; 106K tok/s (+25%)
+  SM util: 18% &#8594; 28% (CUDA Graphs eliminated most launch overhead)
+
+GAIN BREAKDOWN:
+  CUDA Graphs:         +12% (overhead regime eliminated)
+  Operator fusion:     +10% (LayerNorm, activation chains fused)
+  Layout optimization: + 7% (Tensor Core-friendly memory layouts)
+
+COST: 2 minutes engineering | 90s compile time | ZERO hardware change
+ROI: $0.653 &#8594; $0.504/1M tokens (23% cost reduction)</div>
+
+<h4>Step 3: Add FP8 Quantization (Chapter 8, 1 day engineering)</h4>
+<div class="formula">CHANGE: Enable Transformer Engine FP8 (te.Linear + fp8_autocast)
+RESULT: GEMM throughput doubles on H100 Tensor Cores
+
+  Decode: 1,100 &#8594; 2,200 tok/s (+100%)
+  Weight memory: 140 GB &#8594; 70 GB (single H100 now sufficient for TP=1)
+  
+HARDWARE REDUCTION: TP=2 &#8594; TP=1 (256 GPUs &#8594; 128 GPUs for same capacity)
+COST IMPACT: Cost per model replica: $2*2=$4/hr &#8594; $2*1=$2/hr (half the GPUs!)
+  $/1M tokens = $2 / (2,200 * 3600) * 10^6 = $0.252/1M tokens</div>
+
+<h4>Step 4: Flash Attention v3 (already in vLLM, enable in config)</h4>
+<div class="formula">CHANGE: FlashAttention-3 enabled (H100-specific WGMMA+TMA pipeline)
+RESULT: Attention throughput +30&#8211;50%; memory O(N^2) &#8594; O(N)
+
+  Decode: 2,200 &#8594; 2,860 tok/s (+30%)
+  Enables longer context (8K &#8594; 32K) without additional memory
+
+$/1M tokens = $2 / (2,860 * 3600) * 10^6 = $0.194/1M tokens</div>
+
+<h4>Step 5: TRT-LLM Migration (1 week engineering, one-time build)</h4>
+<div class="formula">CHANGE: Full TRT-LLM build with FP8, fused attention plugin, CUDA Graphs
+BUILD TIME: 45 minutes per target batch size configuration
+RESULT: Exhaustive kernel benchmarking + fused attention plugin
+
+  Decode: 2,860 &#8594; 4,400 tok/s (+54%)
+  SM utilization: 28% &#8594; 72% (approaching memory-bandwidth limit for decode)
+
+$/1M tokens = $2 / (4,400 * 3600) * 10^6 = $0.126/1M tokens</div>
+
+<h4>Final Summary</h4>
+<table>
+<tr><th>Configuration</th><th>Tok/s/GPU</th><th>$/1M Tokens</th><th>vs Baseline</th><th>Engineering Effort</th></tr>
+<tr><td>PyTorch eager BF16</td><td>850</td><td>$0.653</td><td>1.00&#215;</td><td>0 (baseline)</td></tr>
+<tr><td>+ torch.compile</td><td>1,100</td><td>$0.504</td><td>1.29&#215;</td><td>1 line + 2 min</td></tr>
+<tr><td>+ FP8 (TE)</td><td>2,200</td><td>$0.252</td><td>2.59&#215;</td><td>1 day</td></tr>
+<tr><td>+ Flash Attn v3</td><td>2,860</td><td>$0.194</td><td>3.36&#215;</td><td>Config change</td></tr>
+<tr><td>+ TRT-LLM</td><td>4,400</td><td>$0.126</td><td>5.18&#215;</td><td>1 week</td></tr>
+</table>
+<div class="formula">TOTAL SAVINGS AT SCALE (256-GPU cluster, 50B tokens/day):
+
+Annual tokens: 18.25 trillion (50B/day * 365)
+Annual cost (eager BF16):  18,250,000 * $0.653 = $11.9M
+Annual cost (TRT-LLM):     18,250,000 * $0.126 = $2.3M
+
+ANNUAL SAVINGS: $9.6M from software + compiler optimization alone.
+Hardware: unchanged &#8212; same 256 H100s.
+Engineering investment: ~2 weeks total across the 4 optimization steps.
+ROI: $9.6M savings / ~$30K engineering cost = 320&#215; return.</div>
+</div>
+
+<div class="qref" id="qref">
+<h4>Chapter 9 Quick Reference &#8212; Numbers to Know Cold</h4>
+<table>
+<tr><th>Metric</th><th>Value</th><th>Context</th></tr>
+<tr><td>torch.compile speedup (typical)</td><td>1.2&#8211;1.8&#215;</td><td>PyTorch eager baseline; LLM inference</td></tr>
+<tr><td>torch.compile default compile time</td><td>10&#8211;30 seconds</td><td>One-time; cached to ~/.cache/torch/inductor/</td></tr>
+<tr><td>torch.compile max-autotune time</td><td>5&#8211;30 minutes</td><td>Exhaustive Triton tile search</td></tr>
+<tr><td>TRT-LLM vs torch.compile</td><td>~2&#215; more throughput</td><td>LLaMA-3 70B FP8 on H100</td></tr>
+<tr><td>CUDA Graph overhead savings</td><td>2.4ms/step</td><td>480 kernels &#215; 5&#956;s eliminated (see Ch 7)</td></tr>
+<tr><td>Graph break cost</td><td>~15% gain lost per 10%</td><td>10% of ops hitting breaks</td></tr>
+<tr><td>Graph break target</td><td>&lt;5 per forward pass</td><td>Run dynamo.explain() to count</td></tr>
+<tr><td>LayerNorm unfused HBM trips</td><td>10 round-trips</td><td>5 kernels &#215; 2 trips each</td></tr>
+<tr><td>LayerNorm fused HBM trips</td><td>2 round-trips</td><td>1 read + 1 write; ~4&#215; speedup</td></tr>
+<tr><td>RMSNorm fused speedup</td><td>~4&#215;</td><td>NVFuser; 5 kernels &#8594; 1</td></tr>
+<tr><td>XLA speedup vs JAX eager</td><td>1.3&#8211;2.0&#215;</td><td>Static shapes; TPU-native</td></tr>
+<tr><td>KernelEvolve vs compiler output</td><td>35&#8211;60%</td><td>Meta custom ops; hours vs weeks</td></tr>
+<tr><td>Total compiler stack gain</td><td>~5.2&#215;</td><td>Eager &#8594; torch.compile + FP8 + FAv3 + TRT-LLM</td></tr>
+<tr><td>DCE eliminates (inference)</td><td>5&#8211;15% of ops</td><td>Dropout, debug stats removed</td></tr>
+<tr><td>Min-cut extra compute</td><td>&lt;5% (selective)</td><td>vs 30% naive recompute-all</td></tr>
+</table>
+</div>
+
+<div class="takeaways" id="takeaways">
+  <h3>Key Takeaways</h3>
+  <div class="takeaway-group">
+    <div class="tg-label">Core Concepts</div>
+    <ul>
+      <li>The three performance regimes &#8212; compute-bound, memory-bandwidth-bound, and overhead-bound &#8212; require different fixes. Compilers primarily target overhead (CUDA Graphs) and memory (fusion). Applying a compiler to a compute-bound workload yields minimal gain. Classify the regime first, always.</li>
+      <li>Operator fusion eliminates HBM round-trips by keeping intermediate results in registers. A 4-op chain (LayerNorm mean/var, normalize, GeLU, Dropout) requires 6.5 GB of HBM traffic unfused but only 2.1 GB fused &#8212; a 3&#215; traffic reduction that translates to proportional latency improvement for memory-bound ops.</li>
+      <li>The factory metaphor captures why fused cos()&#215;64 takes the same time as cos()&#215;1: both are limited by 2 HBM accesses. The 63 extra operations happen at zero marginal cost in registers. This also explains why GeLU is not slower than ReLU in a fused context &#8212; both cost exactly 2 HBM transactions.</li>
+      <li>Fusion changes the economics of activation checkpointing. Unfused RMSNorm is expensive to recompute (10 HBM trips). Fused RMSNorm is nearly free (2 HBM trips). AOTAutograd's min-cut algorithm exploits this: fused ops become the primary recomputation targets, yielding 60% memory reduction at &lt;5% compute overhead vs 30% for naive recompute-all.</li>
+    </ul>
+  </div>
+  <div class="takeaway-group">
+    <div class="tg-label">Cost &amp; Productivity Impact</div>
+    <ul>
+      <li>The compiler optimization stack delivers 5.2&#215; throughput on identical hardware through four sequential changes: torch.compile (+29%), FP8 quantization (+100%), Flash Attention v3 (+30%), and TRT-LLM migration (+54%). Engineering investment: ~2 weeks. Annual savings on a 256-GPU cluster serving 50B tokens/day: $9.6M.</li>
+      <li>torch.compile delivers 1.2&#8211;1.8&#215; speedup with one line of code and 10&#8211;30 seconds compile time. This is the highest-ROI optimization available in AI infrastructure: the ratio of gain to engineering effort exceeds nearly any other optimization in this book. Apply it before anything else.</li>
+      <li>TRT-LLM achieves ~2&#215; more throughput than torch.compile on the same hardware for inference &#8212; not by being a "better torch.compile" but by exhaustively benchmarking 50+ cuBLAS kernel variants per GEMM shape (Kernel Selection pass) and using fused custom attention plugins. The 1-week migration investment pays back in days at production scale.</li>
+    </ul>
+  </div>
+  <div class="takeaway-group">
+    <div class="tg-label">Principal-Level Insight</div>
+    <ul>
+      <li>Graph breaks are the silent killer of torch.compile performance. Each break costs ~15% of total compiler gain per 10% of operations affected. Run <code>dynamo.explain()</code> before deploying any compiled model and fix every break source. The target is &lt;5 graph breaks per forward pass &#8212; anything above 10 suggests torch.compile may not be worth applying at all.</li>
+      <li>XLA and TorchInductor have fundamentally different compilation models, not just different APIs. XLA requires static shapes (all dimensions fixed at compile time); TorchInductor handles dynamic shapes via guard recompilation. For TPU and completely static workloads (fixed-batch inference), XLA's static analysis enables more aggressive optimization. For variable-length inference (the common LLM case), TorchInductor is the correct choice regardless of performance claims.</li>
+      <li>KernelEvolve-style AI-driven search is not a research curiosity &#8212; it is the answer to a real scalability problem. When a production system has thousands of custom operators each needing per-hardware optimization, manual expert tuning is infeasible and compiler output is 30&#8211;50% below peak. Evolutionary search on dedicated eval clusters closes this gap in hours. Any infrastructure team at Meta/Google/Microsoft scale building custom operators should be building equivalent capability.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="review-questions" id="review">
+  <h3>Review Questions</h3>
+  <div class="rq-tier foundational">
+    <div class="rq-tier-label"><span class="rq-badge">Foundational</span> Build the mental model &#8212; no math required</div>
+    <ol>
+      <li>A LLaMA-3 70B inference system shows 18% GPU SM utilization during batch=1 decode. Nsight Compute shows the system is not near either the compute or memory bandwidth ceiling. Which of the three performance regimes applies? What is the most likely root cause, and what is the single highest-impact fix?</li>
+      <li>Explain using the factory metaphor why a fused chain of 64 cos() operations takes the same time as a single cos() operation. Where do the 63 intermediate results live? What would break this equality and force the intermediate results back to HBM?</li>
+      <li>A team switches to torch.compile and observes 47 graph breaks in their model. What does each graph break mean for fusion and performance? Without knowing the specific break reasons, what two diagnostic steps would you take first?</li>
+    </ol>
+  </div>
+  <div class="rq-tier intermediate">
+    <div class="rq-tier-label"><span class="rq-badge">Intermediate</span> Apply and calculate &#8212; production context</div>
+    <ol>
+      <li>A transformer layer applies LayerNorm (2 kernels: mean/var + normalize), GELU, Dropout, and Residual Add unfused. Input tensor: batch=32, seq=2048, d=8192, BF16 (2 bytes/element). (a) Calculate total HBM traffic for the unfused sequence. (b) Calculate HBM traffic after fusing all 4 ops into one kernel. (c) At H100 3.35 TB/s, what is the latency improvement? (d) How many such layers are in LLaMA-3 70B, and what is the total per-forward-pass savings?</li>
+      <li>You run torch.compile on a LLaMA model and measure: eager=18ms, compiled=13ms per forward pass. You then switch to mode="max-autotune" and measure 11ms. (a) What is the speedup of each mode vs eager? (b) What additional optimization does max-autotune perform that default does not? (c) If compilation took 20 minutes for max-autotune and the model runs 1M inferences per day, what is the break-even analysis in compute time recovered vs compilation cost?</li>
+      <li>A model that runs perfectly in PyTorch eager has three graph breaks in torch.compile: one from <code>if activations.sum() &gt; threshold: clip_grads()</code>, one from <code>stats = activations.std().item()</code>, and one from a custom logging call inside forward(). (a) Classify the type of each break. (b) Provide the specific fix for each. (c) If the model has 400 total operations and 10% hit a break each step, approximately how much of the theoretical torch.compile gain is being lost?</li>
+    </ol>
+  </div>
+  <div class="rq-tier principal">
+    <div class="rq-tier-label"><span class="rq-badge">Principal Level</span> Design, decide, and defend &#8212; architecture reviews</div>
+    <ol>
+      <li><strong>End-to-end compiler strategy for a new LLM serving system:</strong> Your team is launching a production serving system for a custom 30B MoE model (8 experts, top-2 routing, novel sparse attention mechanism, variable sequence lengths 256&#8211;32K). Hardware: 64&#215; H100 SXM5. Quality bar: MMLU within 0.5% of BF16. (a) For each compiler option (torch.compile, TRT-LLM, XLA), assess feasibility given the MoE routing and variable shapes. (b) Design a compilation strategy for the sparse attention: what can the compiler handle, what needs a custom Triton kernel, and what would KernelEvolve add? (c) Estimate the end-to-end throughput gain from your proposed stack vs PyTorch eager, and calculate the cost-per-1M-tokens at $2/GPU-hr.</li>
+      <li><strong>Min-cut recomputation design for training:</strong> You are training LLaMA-3 70B on 1,024 H100s with FSDP. Memory is tight: 78 GB used of 80 GB HBM. Activation checkpointing is needed. (a) Without fusion, what is the extra compute overhead of checkpointing every transformer sub-layer? (b) After enabling torch.compile with full fusion, which operations become essentially free to recompute (give specific examples) and which remain expensive? (c) Design the min-cut partition for one transformer layer: which tensors should be saved, which should be recomputed, and what is your estimated memory savings and compute overhead? (d) How does this change if you also enable FP8 training via Transformer Engine?</li>
+      <li><strong>Compiler investment ROI analysis for a growing platform:</strong> You operate a platform serving 3 models (LLaMA-3 70B, Code-Llama 34B, Mistral 7B) on 512 H100s at $2/GPU-hr. Current state: PyTorch eager BF16. Monthly serving volume: 200B tokens. You have three compiler investment options with the following profiles: (A) torch.compile for all models &#8212; 2 weeks, 1 engineer, +30% throughput; (B) TRT-LLM for 70B only (80% of volume) &#8212; 6 weeks, 2 engineers, +160% throughput on that model; (C) Custom Triton kernels for 7B model (5% of volume) &#8212; 4 weeks, 1 engineer, +80% on that model. (a) Calculate monthly cost before optimization. (b) Calculate monthly savings and ROI for each option individually. (c) Design the optimal investment sequence given an engineering team of 3 people and a 12-week horizon. Justify every priority decision quantitatively.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="ch-end">
+  &#8212;&#8212;&#8212; End of Chapter 9 &#8212;&#8212;&#8212;<br>
+  <a href="ch10.html">Next: Chapter 10 &#8212; Distributed Training Architecture: Data Parallelism, Tensor Parallelism &amp; Pipeline Parallelism &#8594;</a>
+</div>
+
+</div><!-- .page -->
+</body>
+</html>

@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 16 — Cluster Management &amp; Orchestration | Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;
+     color:#111;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;
+              position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;
+              position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout,.takeaways,.review-questions{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+/* ── TOP NAV ── */
+#nav{position:fixed;top:0;left:0;right:0;height:48px;background:#1c2438;
+     padding:0 14px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;
+     z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ddd;font-family:sans-serif;font-size:10px;text-decoration:none;
+       background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+       border-radius:4px;padding:3px 8px;white-space:nowrap;transition:all .15s}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav a.active{background:#e3b341;color:#1c2438;font-weight:700}
+/* ── SIDEBAR ── */
+#sidebar{position:fixed;top:48px;left:0;width:210px;bottom:0;
+         background:#f3f1ea;border-right:1px solid #d8d0c0;
+         padding:16px 10px;overflow-y:auto;z-index:100;font-family:sans-serif}
+#sidebar .sb-title{font-size:9.5px;font-weight:700;letter-spacing:2px;
+                   text-transform:uppercase;color:#e3b341;margin-bottom:12px;
+                   padding-bottom:6px;border-bottom:1px solid #d8d0c0}
+#sidebar a{display:block;font-size:10.5px;color:#444;text-decoration:none;
+           padding:4px 8px;border-radius:4px;margin-bottom:2px;line-height:1.4;
+           transition:all .15s;border-left:2px solid transparent}
+#sidebar a:hover{background:#ede8df;color:#1c2438;border-left-color:#e3b341}
+#sidebar .sb-section{font-size:9px;font-weight:700;letter-spacing:1.5px;
+                     text-transform:uppercase;color:#999;margin:12px 0 4px 4px}
+/* ── PAGE ── */
+.page{margin:0 auto 0 216px;max-width:840px;padding:36px 48px 80px}
+/* ── CHAPTER HEADER ── */
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;
+          text-transform:uppercase;color:#e3b341;margin-bottom:6px}
+h1.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.2;margin-bottom:8px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:12px}
+.ch-meta{display:flex;gap:18px;flex-wrap:wrap;font-family:sans-serif;font-size:10.5px;
+         color:#777;margin-bottom:14px}
+.ch-meta strong{color:#1c2438}
+.ch-divider{height:2px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);
+            margin:14px 0 20px}
+blockquote{border-left:3px solid #e3b341;background:#fffbf0;padding:10px 16px;
+           margin:0 0 24px;border-radius:0 6px 6px 0;font-style:italic;
+           font-size:12.5px;color:#444;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+blockquote cite{display:block;margin-top:6px;font-style:normal;font-size:11px;
+                color:#888;font-family:sans-serif}
+/* ── HEADINGS ── */
+h2{font-size:19px;color:#1c2438;margin:34px 0 10px;
+   border-bottom:2px solid #e3b341;padding-bottom:5px;scroll-margin-top:60px}
+h3{font-size:15.5px;color:#1a3060;margin:22px 0 7px}
+h4{font-size:13px;color:#1a3060;margin:15px 0 5px;font-style:italic}
+p{margin-bottom:11px}
+ul,ol{margin:0 0 12px 20px}
+li{margin-bottom:5px;font-size:13px}
+strong{color:#1c2438}
+/* ── FORMULA / CODE BLOCKS ── */
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;
+         font-family:'Courier New',monospace;font-size:10.5px;line-height:1.72;
+         margin:14px 0;white-space:pre;overflow-x:auto;
+         -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.formula .hl{color:#e3b341;font-weight:700}
+.formula .cm{color:#5a7a5a}
+.formula .res{color:#7ec8a0;font-weight:700}
+.formula .warn{color:#f78166}
+/* ── CALLOUT ── */
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;
+         margin:16px 0;border-radius:0 6px 6px 0;
+         -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.purple{border-color:#7b2d8b;background:#fdf5ff}
+.callout strong{display:block;margin-bottom:4px;font-size:11px;
+                text-transform:uppercase;letter-spacing:.5px}
+/* ── TABLES ── */
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;
+   font-family:sans-serif;font-size:10px;
+   -webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e0d0;vertical-align:top}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#1a7a3a;font-weight:600}.warn{color:#a55000;font-weight:600}
+.bad{color:#c0392b;font-weight:600}.inf{color:#6a3a9a;font-weight:600}
+/* ── DIAGRAM WRAP ── */
+.diagram-wrap{margin:20px 0;background:#f3f5f8;border:1px solid #d0d6e2;
+              border-radius:8px;padding:16px;overflow-x:auto;
+              -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.diagram-wrap figcaption{font-family:sans-serif;font-size:10.5px;color:#666;
+                         text-align:center;margin-top:10px;font-style:italic}
+svg{display:block;max-width:100%;margin:0 auto}
+/* ── WORKED EXAMPLE ── */
+.worked{background:#f0f6ff;border:2px solid #2a6099;border-radius:8px;
+        padding:16px 20px;margin:22px 0;
+        -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.worked-label{font-family:sans-serif;font-size:9.5px;font-weight:700;
+              letter-spacing:1.5px;text-transform:uppercase;color:#2a6099;margin-bottom:8px}
+/* ── OBJECTIVES ── */
+.objectives{background:#f3f5f8;border-left:4px solid #1c2438;padding:12px 18px;
+            margin:18px 0;border-radius:0 6px 6px 0;
+            -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.objectives h4{color:#1c2438;font-style:normal;font-size:11.5px;
+               text-transform:uppercase;letter-spacing:.8px;margin:0 0 8px}
+.objectives li{font-size:12px;margin-bottom:4px}
+/* ── BADGE LABELS ── */
+.badge{display:inline-block;font-family:sans-serif;font-size:9px;padding:2px 7px;
+       border-radius:10px;margin-left:5px;font-weight:700;vertical-align:middle}
+.badge-shipped{background:#e8fff0;color:#1a7a3a}
+.badge-ann{background:#fff8e0;color:#a55000}
+.badge-road{background:#f0e8ff;color:#6a3a9a}
+.badge-rep{background:#f0f6ff;color:#2a6099}
+/* ── TAKEAWAYS ── */
+.takeaways{background:#f3f5f8;border:2px solid #1c2438;border-radius:9px;
+           padding:18px 22px;margin:32px 0;
+           -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.takeaways h3{color:#1c2438;margin:0 0 14px;font-size:15px;border:none;padding:0}
+.takeaway-group{margin-bottom:14px}
+.takeaway-group:last-child{margin-bottom:0}
+.tg-label{font-family:sans-serif;font-size:9.5px;font-weight:700;
+          text-transform:uppercase;letter-spacing:1px;color:#e3b341;margin-bottom:6px}
+.takeaway-group ul{margin-left:16px}
+.takeaway-group li{font-size:12.5px;margin-bottom:4px;color:#222}
+/* ── REVIEW QUESTIONS ── */
+.review-questions{margin-top:36px}
+.review-questions h3{font-size:16px;color:#1c2438;margin-bottom:16px;
+                     border-bottom:2px solid #e3b341;padding-bottom:5px}
+.rq-tier{border-radius:8px;padding:14px 18px;margin-bottom:14px;
+          -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rq-tier.foundational{background:#e8fff0;border-left:5px solid #27ae60}
+.rq-tier.intermediate{background:#fffbf0;border-left:5px solid #e3b341}
+.rq-tier.principal{background:#f0f0ff;border-left:5px solid #7b2d8b}
+.rq-tier-label{font-family:sans-serif;font-size:10px;color:#555;margin-bottom:10px;
+               display:flex;align-items:center;gap:8px}
+.rq-badge{font-weight:700;font-size:9px;padding:2px 9px;border-radius:10px;
+          text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.foundational .rq-badge{background:#27ae60;color:#fff}
+.intermediate .rq-badge{background:#e3b341;color:#1c2438}
+.principal .rq-badge{background:#7b2d8b;color:#fff}
+.rq-tier ol{margin-left:18px}
+.rq-tier li{margin-bottom:10px;font-size:12.5px;line-height:1.7;color:#222}
+.rq-tier li::marker{font-weight:700}
+/* ── MISC ── */
+code{background:#f0f2f5;padding:1px 4px;border-radius:3px;
+     font-family:'Courier New',monospace;font-size:11px;color:#1c2438}
+.sep{border:none;border-top:1px solid #e0d8c8;margin:28px 0}
+.ch-end{text-align:center;margin-top:40px;padding-top:16px;border-top:1px solid #e0d8c8;
+        font-family:sans-serif;font-size:10px;color:#bbb;letter-spacing:2px;
+        text-transform:uppercase}
+@media(max-width:860px){
+  #sidebar{display:none}
+  .page{margin:0 auto;padding:24px 20px 60px}
+}
+</style>
+</head>
+<body>
+
+<div id="nav">
+  <b>Silicon to Scale · Ch 16</b>
+  <a href="index.html">&#8962; Home</a>
+  <a href="ch15.html">&#8592; Ch 15: Storage</a>
+  <a class="active" href="#">Ch 16: Cluster Mgmt</a>
+  <a href="ch17.html">Ch 17: Telemetry &#8594;</a>
+  <a href="appendix_a.html">App A</a>
+  <a href="appendix_b.html">App B</a>
+  <a href="appendix_c.html">Glossary</a>
+</div>
+
+<div id="sidebar">
+  <div class="sb-title">Chapter 16</div>
+  <div class="sb-section">Sections</div>
+  <a href="#s1">16.1 The Scheduling Problem</a>
+  <a href="#s2">16.2 SLURM Architecture</a>
+  <a href="#s3">16.3 Job Scripting</a>
+  <a href="#s4">16.4 Topology &amp; Gang Scheduling</a>
+  <a href="#s5">16.5 QOS &amp; Fair-Share</a>
+  <a href="#s6">16.6 Kubernetes for AI</a>
+  <a href="#s7">16.7 Gang Sched on K8s</a>
+  <a href="#s8">16.8 Fault Tolerance &amp; SDC</a>
+  <a href="#s9">16.9 Multi-Tenant GPU Sharing</a>
+  <a href="#s10">16.10 SLURM vs K8s Framework</a>
+  <a href="#s11">16.11 Production Playbook</a>
+  <div class="sb-section">End Matter</div>
+  <a href="#worked">Worked Example</a>
+  <a href="#takeaways">Key Takeaways</a>
+  <a href="#review">Review Questions</a>
+</div>
+
+<div class="page">
+<!-- ═══════ CHAPTER HEADER ═══════ -->
+<div class="ch-label">AI/ML Infrastructure from Silicon to Scale · Part VIII — Cluster Operations</div>
+<h1 class="ch-title">Cluster Management &amp; Orchestration</h1>
+<div class="ch-subtitle">SLURM, Kubernetes, Gang Scheduling, and the Art of Operating 10,000-GPU Clusters</div>
+<div class="ch-meta">
+  <span><strong>Chapter 16</strong></span>
+  <span>~42 pages</span>
+  <span>Prerequisite: Ch 14 (Networking), Ch 15 (Storage)</span>
+  <span>Next: Ch 17 (Telemetry)</span>
+</div>
+<div class="ch-divider"></div>
+
+<blockquote>
+"A 10,000-GPU cluster running at 60% utilization costs the same as one running at 85% utilization. The difference is the scheduler. Getting scheduling right is worth more than the next GPU generation."
+<cite>— Production AI Infrastructure Maxim</cite>
+</blockquote>
+
+<p>A Principal Performance Architect who can design the perfect GPU kernel but cannot schedule, monitor, and operate a GPU cluster at scale is only half-equipped. The orchestration layer — the software that decides which workload runs on which GPU, when, and in what configuration — is where the economics of AI infrastructure are won or lost. A poorly-configured scheduler on a 1,000-GPU cluster at $3/GPU-hr wastes <strong>$12,600 per day</strong> for every 10% of avoidable idle time. This chapter provides a complete, hands-on guide to the two dominant cluster management systems in AI infrastructure: <strong>SLURM</strong> for large-scale HPC and training, and <strong>Kubernetes</strong> for cloud-native serving and multi-tenant platforms.</p>
+
+<div class="objectives">
+<h4>Learning Objectives by Level</h4>
+<ul>
+<li><strong>Foundational:</strong> Understand why cluster schedulers exist, what SLURM and Kubernetes do, and how distributed training jobs are different from normal batch jobs.</li>
+<li><strong>Intermediate:</strong> Write production SLURM job scripts, configure QOS/fair-share policies, deploy GPU workloads on Kubernetes, and diagnose pending-job failures.</li>
+<li><strong>Principal:</strong> Design multi-tenant scheduling architectures, reason about MTBF/cost tradeoffs, choose between SLURM and Kubernetes for any given workload, and build fault-tolerant 1,000+ GPU training pipelines with quantified failure-recovery economics.</li>
+</ul>
+</div>
+
+<!-- ═══════ SECTION 1 ═══════ -->
+<h2 id="s1">16.1 The Cluster Management Problem: Utilization, Fairness, and Efficiency</h2>
+
+<p>Why do we need specialized cluster schedulers at all? Consider a 512-GPU cluster with 20 teams submitting jobs. Without a scheduler, every team would SSH to nodes directly, GPU contention would be resolved by whoever got there first, and there would be no accounting of who used what. With a scheduler, the cluster becomes a <em>shared resource with policies</em>: fairness, priority, topology placement, accounting, and fault recovery are all encoded as configuration rather than convention.</p>
+
+<p>The economics are stark. An H100 SXM node with 8 GPUs costs approximately $300,000 capital. At $0.40/GPU-hr (amortized TCO for on-premise), a 512-GPU cluster costs $204 per hour to operate. Improving cluster utilization from 65% to 85% recovers <strong>$40.8/hr</strong> — over $357,000 per year from scheduling improvements alone, without purchasing a single additional GPU. (See Chapter 5 for full TCO derivations.)</p>
+
+<h3>16.1.1 The Three Scheduling Problems</h3>
+
+<p>Cluster management for AI workloads involves three distinct, sometimes conflicting, optimization problems:</p>
+
+<div class="callout green">
+<strong>Problem 1: Gang Scheduling (All-or-Nothing)</strong>
+A 512-GPU distributed training job requires ALL 512 GPUs to start simultaneously. If even one is unavailable, the entire job stalls at the NCCL initialization barrier. Unlike traditional HPC, where a job can start with partial resources and grow, LLM training requires perfect collective synchronization from step 0. The scheduler must either allocate all requested resources or allocate none — this is the "gang" constraint.
+</div>
+
+<div class="callout blue">
+<strong>Problem 2: Topology Awareness</strong>
+Not all GPUs are equal from a communication perspective. Two GPUs connected by NVLink (900 GB/s) can AllReduce a 1 GB gradient in 2.2 ms. Two GPUs communicating via InfiniBand NDR across two spine hops need ~0.8 ms per message, making large AllReduces 5–10× slower. The scheduler must place tensor-parallel groups within a single node (NVLink domain) and pipeline-parallel stages on the same ToR switch — or pay the bandwidth penalty in every training step for the entire run.
+</div>
+
+<div class="callout purple">
+<strong>Problem 3: Multi-Tenancy and Fairness</strong>
+A research cluster serves multiple teams with different workload types: a team running a 7-day 1,024-GPU pre-training job (high priority, needs guaranteed allocation), a team running hyperparameter search (medium priority, many small jobs, tolerates preemption), and a team running CI/CD evaluation (low priority, short jobs, needs fast queue turnaround). The scheduler must enforce fairness without creating priority inversions, and must preempt lower-priority jobs gracefully when higher-priority ones arrive.
+</div>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 740 200" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <marker id="arr1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0,8 3,0 6" fill="#1c2438"/>
+    </marker>
+  </defs>
+  <!-- Title -->
+  <text x="370" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#1c2438">Cluster Utilization Economics — 1,024 GPU Cluster at $3/GPU-hr</text>
+  <!-- Utilization bars -->
+  <rect x="60" y="40" width="620" height="34" rx="4" fill="#e8e0d0"/>
+  <!-- 65% util -->
+  <rect x="60" y="40" width="403" height="34" rx="4" fill="#c0392b"/>
+  <text x="270" y="61" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">65% Utilization (Typical untuned cluster)</text>
+  <!-- 85% bar -->
+  <rect x="60" y="88" width="527" height="34" rx="4" fill="#27ae60"/>
+  <text x="300" y="109" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">85% Utilization (Tuned scheduler + topology)</text>
+  <!-- 100% reference -->
+  <rect x="60" y="136" width="620" height="8" rx="2" fill="#1c2438" opacity=".2"/>
+  <text x="687" y="145" font-size="10" fill="#888">100%</text>
+  <!-- Savings annotation -->
+  <line x1="403" y1="74" x2="403" y2="130" stroke="#e3b341" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="527" y1="88" x2="527" y2="130" stroke="#e3b341" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <rect x="406" y="78" width="118" height="24" rx="4" fill="#fffbf0" stroke="#e3b341"/>
+  <text x="465" y="92" text-anchor="middle" font-size="10" font-weight="700" fill="#a55000">+20% = +$614/hr</text>
+  <text x="465" y="104" text-anchor="middle" font-size="9" fill="#888">$5.4M/yr recovered</text>
+  <!-- Labels -->
+  <text x="55" y="62" text-anchor="end" font-size="10" fill="#666">Base</text>
+  <text x="55" y="110" text-anchor="end" font-size="10" fill="#666">Tuned</text>
+  <!-- Cost labels -->
+  <text x="60" y="178" font-size="10" fill="#666">$0</text>
+  <text x="403" y="178" text-anchor="middle" font-size="10" fill="#c0392b">$1,996/hr</text>
+  <text x="527" y="178" text-anchor="middle" font-size="10" fill="#27ae60">$2,610/hr</text>
+  <text x="680" y="178" font-size="10" fill="#666">$3,072/hr</text>
+  <text x="370" y="196" text-anchor="middle" font-size="9" fill="#888">GPU-hrs billed per hour (1,024 GPUs × utilization × $3/GPU-hr)</text>
+</svg>
+<figcaption>Fig 16.1 — Utilization economics on a 1,024 GPU cluster. Each 1% of utilization improvement at $3/GPU-hr is worth $30.7/hr or $269K/yr. Scheduling improvements from 65%→85% recover $614/hr without any hardware investment.</figcaption>
+</div>
+
+<!-- ═══════ SECTION 2 ═══════ -->
+<h2 id="s2">16.2 SLURM Architecture Deep Dive</h2>
+
+<p>SLURM (Simple Linux Utility for Resource Management) is the dominant scheduler for HPC and large-scale AI training clusters. Understanding its internal architecture is prerequisite to tuning it — performance issues almost always trace back to a misconfigured daemon, plugin, or account hierarchy.</p>
+
+<h3>16.2.1 The Three Core Daemons</h3>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 720 320" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <marker id="a2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0,8 3,0 6" fill="#1c2438"/>
+    </marker>
+  </defs>
+  <text x="360" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#1c2438">SLURM Daemon Architecture</text>
+  <!-- Head Node -->
+  <rect x="30" y="35" width="300" height="120" rx="8" fill="#1c2438" opacity=".08" stroke="#1c2438" stroke-width="1.5"/>
+  <text x="180" y="52" text-anchor="middle" font-size="10" font-weight="700" fill="#1c2438" text-transform="uppercase">HEAD NODE (Control Plane)</text>
+  <!-- slurmctld -->
+  <rect x="42" y="60" width="130" height="80" rx="6" fill="#1c2438" stroke="#1c2438" stroke-width="1.5"/>
+  <text x="107" y="80" text-anchor="middle" font-size="11" font-weight="700" fill="#e3b341">slurmctld</text>
+  <text x="107" y="96" text-anchor="middle" font-size="9" fill="#aaa">Central controller</text>
+  <text x="107" y="110" text-anchor="middle" font-size="9" fill="#aaa">• Job queue mgmt</text>
+  <text x="107" y="122" text-anchor="middle" font-size="9" fill="#aaa">• Resource allocation</text>
+  <text x="107" y="134" text-anchor="middle" font-size="9" fill="#aaa">• Priority scheduling</text>
+  <!-- slurmdbd -->
+  <rect x="188" y="60" width="130" height="80" rx="6" fill="#2a6099" stroke="#2a6099" stroke-width="1.5"/>
+  <text x="253" y="80" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">slurmdbd</text>
+  <text x="253" y="96" text-anchor="middle" font-size="9" fill="#cde">Accounting daemon</text>
+  <text x="253" y="110" text-anchor="middle" font-size="9" fill="#cde">• Job accounting</text>
+  <text x="253" y="122" text-anchor="middle" font-size="9" fill="#cde">• Fair-share data</text>
+  <text x="253" y="134" text-anchor="middle" font-size="9" fill="#cde">• Usage history</text>
+  <!-- Compute Nodes -->
+  <rect x="30" y="185" width="660" height="110" rx="8" fill="#27ae60" opacity=".08" stroke="#27ae60" stroke-width="1.5"/>
+  <text x="360" y="202" text-anchor="middle" font-size="10" font-weight="700" fill="#1a5a30" text-transform="uppercase">COMPUTE NODES (Data Plane)</text>
+  <!-- slurmd nodes -->
+  <rect x="42" y="212" width="130" height="72" rx="6" fill="#27ae60" stroke="#27ae60" stroke-width="1"/>
+  <text x="107" y="230" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">slurmd</text>
+  <text x="107" y="246" text-anchor="middle" font-size="9" fill="#e8ffe8">gpu-node-001..008</text>
+  <text x="107" y="260" text-anchor="middle" font-size="9" fill="#e8ffe8">8× H100 SXM</text>
+  <text x="107" y="274" text-anchor="middle" font-size="9" fill="#e8ffe8">GRES: gpu:8</text>
+  <rect x="188" y="212" width="130" height="72" rx="6" fill="#27ae60" stroke="#27ae60" stroke-width="1"/>
+  <text x="253" y="230" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">slurmd</text>
+  <text x="253" y="246" text-anchor="middle" font-size="9" fill="#e8ffe8">gpu-node-009..016</text>
+  <text x="253" y="260" text-anchor="middle" font-size="9" fill="#e8ffe8">8× H100 SXM</text>
+  <text x="253" y="274" text-anchor="middle" font-size="9" fill="#e8ffe8">GRES: gpu:8</text>
+  <text x="370" y="256" text-anchor="middle" font-size="14" fill="#27ae60" opacity=".5">···</text>
+  <rect x="543" y="212" width="135" height="72" rx="6" fill="#27ae60" stroke="#27ae60" stroke-width="1"/>
+  <text x="611" y="230" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">slurmd</text>
+  <text x="611" y="246" text-anchor="middle" font-size="9" fill="#e8ffe8">gpu-node-N</text>
+  <text x="611" y="260" text-anchor="middle" font-size="9" fill="#e8ffe8">8× H100 SXM</text>
+  <text x="611" y="274" text-anchor="middle" font-size="9" fill="#e8ffe8">GRES: gpu:8</text>
+  <!-- Database -->
+  <rect x="390" y="55" width="130" height="72" rx="6" fill="#e3b341" opacity=".2" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="455" y="80" text-anchor="middle" font-size="11" font-weight="700" fill="#7a4a00">MySQL/MariaDB</text>
+  <text x="455" y="96" text-anchor="middle" font-size="9" fill="#7a4a00">Persistent store</text>
+  <text x="455" y="110" text-anchor="middle" font-size="9" fill="#7a4a00">for slurmdbd</text>
+  <!-- Arrows -->
+  <line x1="253" y1="140" x2="253" y2="185" stroke="#1c2438" stroke-width="1.5" marker-end="url(#a2)" stroke-dasharray="4,3"/>
+  <line x1="107" y1="140" x2="107" y2="185" stroke="#1c2438" stroke-width="1.5" marker-end="url(#a2)"/>
+  <line x1="107" y1="140" x2="253" y2="140" stroke="#888" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="253" y1="96" x2="390" y2="96" stroke="#e3b341" stroke-width="1.5" marker-end="url(#a2)"/>
+  <line x1="107" y1="140" x2="611" y2="185" stroke="#1c2438" stroke-width="1" stroke-dasharray="3,3" marker-end="url(#a2)"/>
+  <!-- Labels -->
+  <text x="560" y="152" font-size="9" fill="#888">heartbeat + resource updates</text>
+  <text x="295" y="93" font-size="9" fill="#888">accounting</text>
+</svg>
+<figcaption>Fig 16.2 — SLURM's three-daemon architecture. slurmctld is the central brain — if it fails, no new jobs start but running jobs continue. slurmdbd persists all accounting data for fair-share calculation. slurmd on each compute node manages local job execution and reports GPU health.</figcaption>
+</div>
+
+<h3>16.2.2 SLURM Configuration Essentials</h3>
+
+<p>The <code>/etc/slurm/slurm.conf</code> file controls all scheduling behavior. For AI workloads, three parameters dominate performance:</p>
+
+<div class="formula">
+<span class="cm"># /etc/slurm/slurm.conf — Critical AI cluster settings</span>
+
+<span class="hl">SchedulerType=sched/backfill</span>       <span class="cm"># REQUIRED: enables backfill for smaller jobs to fill gaps</span>
+<span class="hl">SchedulerParameters=bf_max_job_test=1000,bf_resolution=30,bf_continue=true</span>
+<span class="cm"># bf_max_job_test: check up to 1000 pending jobs for backfill opportunities</span>
+<span class="cm"># bf_resolution=30: evaluate in 30-second time windows</span>
+<span class="cm"># bf_continue: don't stop backfill when a reservation is encountered</span>
+
+<span class="hl">PriorityType=priority/multifactor</span>   <span class="cm"># Multi-factor priority (fair-share + QOS + age)</span>
+PriorityWeightAge=1000              <span class="cm"># Weight for job age (prevents starvation)</span>
+PriorityWeightFairshare=10000       <span class="cm"># Weight for fair-share (most important factor)</span>
+PriorityWeightJobSize=500           <span class="cm"># Slight bonus for larger jobs (fills cluster efficiently)</span>
+PriorityWeightQOS=5000              <span class="cm"># QOS priority override weight</span>
+PriorityDecayHalfLife=14-00:00:00   <span class="cm"># Fair-share usage decays over 14 days</span>
+
+<span class="hl">GresTypes=gpu</span>                       <span class="cm"># Register GPU as a generic resource</span>
+SelectType=select/cons_tres          <span class="cm"># Trackable resources (CPUs, mem, GPUs)</span>
+SelectTypeParameters=CR_Core_Memory  <span class="cm"># Allocate at core+memory granularity</span>
+
+<span class="hl">TaskPlugin=task/cgroup</span>             <span class="cm"># REQUIRED: isolate jobs via Linux cgroups</span>
+TaskPluginParam=Cores,Sockets,RAM    <span class="cm"># Enforce CPU affinity and memory isolation</span>
+
+PreemptType=preempt/qos             <span class="cm"># Enable QOS-based preemption</span>
+PreemptMode=REQUEUE                  <span class="cm"># Preempted jobs are requeued (not cancelled)</span>
+PreemptExemptTime=300               <span class="cm"># Grace period: 5 min before preemption kicks in</span>
+
+<span class="cm"># Node definition with GPU GRES</span>
+<span class="hl">NodeName=gpu[001-512] Gres=gpu:h100:8 CPUs=96 RealMemory=2048000 State=UNKNOWN</span>
+<span class="cm"># Gres=gpu:h100:8 → 8 H100 GPUs per node (type-qualified GRES)</span></div>
+
+<h3>16.2.3 GRES Configuration — The GPU Registration Chain</h3>
+
+<p>The GPU resource registration chain spans three files. Getting any one wrong causes GPUs to be invisible to SLURM. This is the #1 cause of "why can't I request more than X GPUs" support tickets.</p>
+
+<div class="formula">
+<span class="cm"># Step 1: /etc/slurm/gres.conf (on EACH compute node — must match NodeName Gres= in slurm.conf)</span>
+AutoDetect=nvml                    <span class="cm"># Auto-detect H100s via NVML (recommended)</span>
+Name=gpu Type=h100 File=/dev/nvidia0
+Name=gpu Type=h100 File=/dev/nvidia1
+Name=gpu Type=h100 File=/dev/nvidia2
+Name=gpu Type=h100 File=/dev/nvidia3
+Name=gpu Type=h100 File=/dev/nvidia4
+Name=gpu Type=h100 File=/dev/nvidia5
+Name=gpu Type=h100 File=/dev/nvidia6
+Name=gpu Type=h100 File=/dev/nvidia7
+
+<span class="cm"># Step 2: Verify GRES registration after slurmd restart</span>
+scontrol show node gpu001 | grep -E "Gres=|GresUsed="
+<span class="cm"># Expected: Gres=gpu:h100:8(IDX:0,1,2,3,4,5,6,7)</span>
+<span class="cm"># If Gres=gpu:0 → gres.conf mismatch or slurmd not restarted</span>
+
+<span class="cm"># Step 3: Test GPU allocation</span>
+srun --nodes=1 --gres=gpu:2 nvidia-smi
+<span class="cm"># Should show exactly 2 GPUs visible via CUDA_VISIBLE_DEVICES</span></div>
+
+<!-- ═══════ SECTION 3 ═══════ -->
+<h2 id="s3">16.3 SLURM Job Scripting for Multi-Node GPU Training</h2>
+
+<p>The job script is the contract between the researcher and the scheduler. A well-written script encodes resource requirements precisely, sets up the distributed environment correctly, handles signals for graceful preemption, and always exits with a meaningful code. A poorly written script wastes GPUs, causes NCCL hangs, and leaves zombie processes on nodes.</p>
+
+<h3>16.3.1 Production Job Script Anatomy</h3>
+
+<div class="formula">
+#!/bin/bash
+<span class="hl">#SBATCH --job-name=llama3-70b-pretrain</span>
+#SBATCH --nodes=64                  <span class="cm"># 64 nodes × 8 GPUs = 512 GPUs total</span>
+#SBATCH --ntasks-per-node=8         <span class="cm"># One rank per GPU (standard for PyTorch DDP)</span>
+#SBATCH --gres=gpu:h100:8           <span class="cm"># 8 H100s per node (type-qualified)</span>
+#SBATCH --cpus-per-task=12          <span class="cm"># 12 CPU cores per rank (96 CPUs / 8 GPUs)</span>
+#SBATCH --mem=240G                  <span class="cm"># 30 GB per rank (240 GB / 8 ranks per node)</span>
+#SBATCH --time=168:00:00            <span class="cm"># 7-day wall time limit</span>
+#SBATCH --partition=gpu-train       <span class="cm"># Training partition (not inference)</span>
+#SBATCH --qos=high-priority         <span class="cm"># QOS tier — affects scheduling priority</span>
+#SBATCH --account=team-research     <span class="cm"># Accounting account for fair-share</span>
+#SBATCH --output=/checkpoint/slurm/llama3-%j.out
+#SBATCH --error=/checkpoint/slurm/llama3-%j.err
+<span class="hl">#SBATCH --switches=8@00:30:00</span>       <span class="cm"># Prefer ≤8 ToR switches; relax after 30 min</span>
+#SBATCH --requeue                   <span class="cm"># Requeue on node failure or preemption</span>
+
+set -euo pipefail
+
+<span class="cm"># ── Distributed training environment ──────────────────</span>
+export MASTER_ADDR=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -1)
+export MASTER_PORT=29500
+export WORLD_SIZE=$SLURM_NTASKS
+export RANK=$SLURM_PROCID              <span class="cm"># Set by srun per rank</span>
+export LOCAL_RANK=$SLURM_LOCALID      <span class="cm"># GPU index within node</span>
+
+<span class="cm"># ── NCCL performance tuning ───────────────────────────</span>
+export NCCL_IB_DISABLE=0              <span class="cm"># Use InfiniBand (not TCP fallback)</span>
+export NCCL_IB_HCA="mlx5_0,mlx5_1"  <span class="cm"># Specific HCAs for IB (match topology)</span>
+export NCCL_SOCKET_IFNAME=eth0        <span class="cm"># Fallback interface</span>
+export NCCL_TREE_THRESHOLD=0          <span class="cm"># Force ring AllReduce for large messages</span>
+export NCCL_DEBUG=WARN                <span class="cm"># WARN in production; INFO for debugging</span>
+
+<span class="cm"># ── Prolog health check ───────────────────────────────</span>
+<span class="hl">srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 \
+     /opt/slurm/bin/gpu_health_check.sh || exit 1</span>
+<span class="cm"># Runs 1 health check per node: verifies ECC, fabric, DCGM diagnostics</span>
+
+<span class="cm"># ── Launch training ───────────────────────────────────</span>
+<span class="hl">srun --kill-on-bad-exit=1 \</span>          <span class="cm"># If ANY rank fails → kill all ranks</span>
+     python3 train.py \
+       --config llama3_70b.yaml \
+       --checkpoint-dir /checkpoint/llama3-70b/ \
+       --resume-from-checkpoint auto   <span class="cm"># Auto-detect latest checkpoint</span></div>
+
+<h3>16.3.2 SIGTERM Handler for Graceful Preemption</h3>
+
+<p>When SLURM preempts a job, it sends <code>SIGTERM</code> to all processes (followed by <code>SIGKILL</code> after the configured grace period). Without a signal handler, the job dies immediately, losing the current checkpoint. With a handler, the job checkpoints at the current step and exits cleanly — SLURM then requeues it to resume from the checkpoint. On a 7-day run, this difference is <strong>$4,608 of wasted compute vs. $0</strong> for each preemption event at $3/GPU-hr on 512 GPUs.</p>
+
+<div class="formula">
+<span class="cm"># In train.py — SIGTERM/SIGUSR1 handler for SLURM preemption</span>
+import signal, sys, torch.distributed as dist
+
+CHECKPOINT_DIR = "/checkpoint/llama3-70b/"
+
+def checkpoint_and_exit(signum, frame):
+    if dist.get_rank() == 0:
+        print(f"[RANK 0] Signal {signum} received — saving checkpoint...")
+        save_checkpoint(model, optimizer, global_step, CHECKPOINT_DIR)
+    dist.barrier()    <span class="cm"># All ranks wait for rank 0 to finish writing</span>
+    sys.exit(0)       <span class="cm"># Exit with code 0 → SLURM interprets as clean exit → requeue</span>
+
+signal.signal(signal.SIGTERM, checkpoint_and_exit)
+signal.signal(signal.SIGUSR1, checkpoint_and_exit)  <span class="cm"># SLURM sends SIGUSR1 before SIGTERM</span>
+
+<span class="cm"># SLURM requeue config in slurm.conf:</span>
+<span class="cm"># KillWait=120   → 120s between SIGTERM and SIGKILL (checkpoint window)</span>
+<span class="cm"># RequeueExit=0  → Requeue jobs that exit with code 0</span></div>
+
+<!-- ═══════ SECTION 4 ═══════ -->
+<h2 id="s4">16.4 Topology-Aware Scheduling and Gang Scheduling</h2>
+
+<p>Topology awareness is the scheduling feature with the highest direct impact on distributed training throughput. Without it, a 512-GPU job scattered across maximum fabric hops can spend 35% of step time in AllReduce instead of 8% — a 27-percentage-point MFU loss that persists for the entire run.</p>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 720 310" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <text x="360" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#1c2438">InfiniBand Fabric Topology — 512-GPU Cluster (64 Nodes)</text>
+  <!-- Spine switches -->
+  <rect x="200" y="35" width="120" height="36" rx="6" fill="#1c2438"/>
+  <text x="260" y="57" text-anchor="middle" font-size="11" font-weight="700" fill="#e3b341">Spine-01</text>
+  <rect x="400" y="35" width="120" height="36" rx="6" fill="#1c2438"/>
+  <text x="460" y="57" text-anchor="middle" font-size="11" font-weight="700" fill="#e3b341">Spine-02</text>
+  <!-- ToR switches row -->
+  <rect x="30" y="120" width="90" height="30" rx="5" fill="#2a6099"/>
+  <text x="75" y="139" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">ToR-01</text>
+  <text x="75" y="152" text-anchor="middle" font-size="9" fill="#aad">8 nodes</text>
+  <rect x="140" y="120" width="90" height="30" rx="5" fill="#2a6099"/>
+  <text x="185" y="139" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">ToR-02</text>
+  <text x="185" y="152" text-anchor="middle" font-size="9" fill="#aad">8 nodes</text>
+  <rect x="305" y="120" width="90" height="30" rx="5" fill="#2a6099"/>
+  <text x="350" y="139" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">ToR-04</text>
+  <text x="350" y="152" text-anchor="middle" font-size="9" fill="#aad">8 nodes</text>
+  <rect x="415" y="120" width="90" height="30" rx="5" fill="#2a6099"/>
+  <text x="460" y="139" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">ToR-05</text>
+  <text x="460" y="152" text-anchor="middle" font-size="9" fill="#aad">8 nodes</text>
+  <rect x="580" y="120" width="90" height="30" rx="5" fill="#2a6099"/>
+  <text x="625" y="139" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">ToR-08</text>
+  <text x="625" y="152" text-anchor="middle" font-size="9" fill="#aad">8 nodes</text>
+  <text x="255" y="142" text-anchor="middle" font-size="14" fill="#888">···</text>
+  <text x="510" y="142" text-anchor="middle" font-size="14" fill="#888">···</text>
+  <!-- GPU nodes -->
+  <rect x="30" y="195" width="85" height="48" rx="4" fill="#27ae60" opacity=".8"/>
+  <text x="73" y="213" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">node-001</text>
+  <text x="73" y="226" text-anchor="middle" font-size="9" fill="#e8ffe8">8× H100</text>
+  <text x="73" y="238" text-anchor="middle" font-size="8" fill="#c8f8c8">NVLink 900GB/s</text>
+  <rect x="127" y="195" width="85" height="48" rx="4" fill="#27ae60" opacity=".8"/>
+  <text x="170" y="213" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">node-002</text>
+  <text x="170" y="226" text-anchor="middle" font-size="9" fill="#e8ffe8">8× H100</text>
+  <text x="170" y="238" text-anchor="middle" font-size="8" fill="#c8f8c8">NVLink 900GB/s</text>
+  <!-- Comm cost table -->
+  <rect x="255" y="185" width="430" height="115" rx="6" fill="#f3f5f8" stroke="#d0d6e2" stroke-width="1"/>
+  <text x="470" y="205" text-anchor="middle" font-size="11" font-weight="700" fill="#1c2438">AllReduce Latency by Network Hops</text>
+  <line x1="255" y1="212" x2="685" y2="212" stroke="#d0d6e2"/>
+  <text x="275" y="228" font-size="10" fill="#444">Intra-node (NVLink)</text>
+  <text x="620" y="228" text-anchor="end" font-size="10" font-weight="700" fill="#27ae60">~0.05 ms</text>
+  <text x="275" y="244" font-size="10" fill="#444">Same ToR (1 IB hop)</text>
+  <text x="620" y="244" text-anchor="end" font-size="10" font-weight="700" fill="#e3b341">~0.15 ms</text>
+  <text x="275" y="260" font-size="10" fill="#444">Cross-ToR (2 hops)</text>
+  <text x="620" y="260" text-anchor="end" font-size="10" font-weight="700" fill="#a55000">~0.35 ms</text>
+  <text x="275" y="276" font-size="10" fill="#444">Cross-Spine (3 hops)</text>
+  <text x="620" y="276" text-anchor="end" font-size="10" font-weight="700" fill="#c0392b">~0.80 ms</text>
+  <text x="470" y="292" text-anchor="middle" font-size="9" fill="#888">Rule: TP groups must be intra-node · PP groups same-ToR · DP groups cross-rack OK</text>
+  <!-- Spine-ToR connections -->
+  <line x1="260" y1="71" x2="75" y2="120" stroke="#1c2438" stroke-width="1" opacity=".5"/>
+  <line x1="260" y1="71" x2="185" y2="120" stroke="#1c2438" stroke-width="1" opacity=".5"/>
+  <line x1="260" y1="71" x2="350" y2="120" stroke="#1c2438" stroke-width="1" opacity=".5"/>
+  <line x1="460" y1="71" x2="460" y2="120" stroke="#1c2438" stroke-width="1" opacity=".5"/>
+  <line x1="460" y1="71" x2="625" y2="120" stroke="#1c2438" stroke-width="1" opacity=".5"/>
+  <!-- ToR-Node connections -->
+  <line x1="75" y1="150" x2="73" y2="195" stroke="#27ae60" stroke-width="1"/>
+  <line x1="75" y1="150" x2="170" y2="195" stroke="#27ae60" stroke-width="1"/>
+</svg>
+<figcaption>Fig 16.3 — InfiniBand fabric topology for a 512-GPU cluster. Communication cost increases 16× from intra-node (NVLink, 0.05 ms) to cross-spine (3 hops, 0.80 ms). Tensor-parallel groups must stay within the 900 GB/s NVLink domain; only data-parallel gradient syncs can tolerate cross-rack placement.</figcaption>
+</div>
+
+<h3>16.4.1 Gang Scheduling for Distributed Training</h3>
+
+<p>Gang scheduling ensures all tasks of a distributed job start simultaneously. Without it, Rank 0 might launch and begin NCCL initialization while Rank 127 is still waiting for its allocation — causing a timeout that kills the entire job. SLURM implements gang scheduling natively through <code>srun</code>: it launches all tasks but holds them at a synchronization barrier until all are ready, then releases the entire cohort simultaneously.</p>
+
+<div class="callout green">
+<strong>SLURM Gang Scheduling — Why the Default Works</strong>
+SLURM's <code>srun</code> command implements all-or-nothing launch semantics: all task slots are allocated before any task receives CPU time. The scheduler won't start a job until ALL nodes in the allocation are available (no partial start). This is different from MPI's non-gang-safe mode where processes can start individually. For NCCL-based training, this is the correct behavior — never configure <code>--ntasks-per-node</code> less than the number of GPUs you intend to use, or you will lose gang semantics.
+</div>
+
+<div class="formula">
+<span class="cm"># Verifying gang start — all ranks should show identical start timestamps</span>
+sacct -j ${SLURM_JOB_ID} --format=JobID,Start,Elapsed --parsable2
+<span class="cm"># Example output (correct gang start):</span>
+<span class="cm"># JobID|Start|Elapsed</span>
+<span class="cm"># 12345.0|2024-11-15T14:30:00|00:00:01</span>
+<span class="cm"># 12345.1|2024-11-15T14:30:00|00:00:01  ← same second as .0</span>
+<span class="cm"># 12345.2|2024-11-15T14:30:00|00:00:01  ← correct</span>
+
+<span class="cm"># topology.conf for SLURM topological scheduling</span>
+SwitchName=spine01 Switches=tor[01-16]
+SwitchName=spine02 Switches=tor[17-32]
+SwitchName=tor01   Nodes=gpu[001-016]
+SwitchName=tor02   Nodes=gpu[017-032]
+<span class="cm"># ... define all switches</span>
+
+<span class="cm"># Job script: request topology constraint</span>
+<span class="hl">#SBATCH --switches=8@00:30:00</span>   <span class="cm"># Up to 8 ToR switches, wait up to 30 min for better placement</span>
+<span class="cm"># For a 64-node job on 8-node ToRs: 8 switches = all nodes within 8 racks</span>
+<span class="cm"># This guarantees max 2-hop IB communication (intra-rail)</span></div>
+
+<!-- ═══════ SECTION 5 ═══════ -->
+<h2 id="s5">16.5 QOS, Fair-Share, and Multi-Tenant Policies</h2>
+
+<p>Fair-share scheduling solves the problem of preventing any single team from monopolizing a shared cluster. The algorithm is conceptually simple: track how much each account <em>should</em> have received (normalized share) vs. how much it <em>did</em> receive (usage over a decay window). Accounts that have used less than their share get priority; accounts that have over-consumed get deprioritized. This automatically corrects for bursty usage patterns without requiring manual intervention.</p>
+
+<div class="formula">
+<span class="cm"># Fair-share priority formula (SLURM multifactor plugin):</span>
+<span class="hl">Priority = PriorityWeightAge × age_factor
+          + PriorityWeightFairshare × fairshare_factor
+          + PriorityWeightQOS × qos_factor
+          + PriorityWeightJobSize × jobsize_factor</span>
+
+<span class="cm"># fairshare_factor = 2^(-effective_usage / normalized_share)</span>
+<span class="cm"># If team used 0% of their share → factor = 1.0 (max priority)</span>
+<span class="cm"># If team used 100% of share  → factor = 0.5</span>
+<span class="cm"># If team used 200% of share  → factor = 0.25</span>
+<span class="cm"># Decay half-life (14 days) means old usage counts less over time</span>
+
+<span class="cm"># ── Setting up a 5-team multi-tenant cluster ──────────────────</span>
+<span class="hl">sacctmgr add cluster gpu-cluster</span>
+
+<span class="cm"># Create top-level accounts with share allocations</span>
+sacctmgr add account research    Share=40 Description="Research Division"
+sacctmgr add account inference   Share=30 Description="Inference Serving"
+sacctmgr add account evaluation  Share=20 Description="Model Evaluation"
+sacctmgr add account dev         Share=10 Description="Development/CI"
+
+<span class="cm"># Create users under accounts</span>
+sacctmgr add user alice  Account=research   Partition=gpu-train
+sacctmgr add user bob    Account=inference  Partition=gpu-infer
+sacctmgr add user ci_bot Account=evaluation Partition=gpu-eval DefaultQOS=ci
+
+<span class="cm"># Create QOS tiers with resource limits</span>
+<span class="hl">sacctmgr add qos high-priority MaxWall=336:00:00 Priority=1000 GrpTRES=gpu=512</span>
+sacctmgr add qos standard      MaxWall=168:00:00 Priority=500  GrpTRES=gpu=256
+sacctmgr add qos batch         MaxWall=72:00:00  Priority=100  GrpTRES=gpu=64
+sacctmgr add qos ci            MaxWall=4:00:00   Priority=200  GrpTRES=gpu=16 \
+    MaxJobsPerUser=5 MaxSubmitJobsPerUser=20
+
+<span class="cm"># View fair-share status (sshare shows actual vs. effective usage)</span>
+sshare -l -u alice,bob
+<span class="cm"># Account   User   RawShares RawUsage NormShares NormUsage FairShare</span>
+<span class="cm"># research  alice  40        2847.2   0.40       0.12      0.97  ← under-utilized, gets boost</span>
+<span class="cm"># inference bob    30        8432.1   0.30       0.52      0.71  ← over-utilized, deprioritized</span></div>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <text x="340" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#1c2438">SLURM Scheduler Priority Tree</text>
+  <!-- Root -->
+  <rect x="280" y="30" width="120" height="40" rx="6" fill="#1c2438"/>
+  <text x="340" y="52" text-anchor="middle" font-size="11" font-weight="700" fill="#e3b341">All Jobs Queue</text>
+  <text x="340" y="65" text-anchor="middle" font-size="9" fill="#aaa">Priority ranking</text>
+  <!-- First level: QOS sort -->
+  <rect x="60" y="110" width="140" height="50" rx="6" fill="#7b2d8b" opacity=".85"/>
+  <text x="130" y="128" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">QOS: high-priority</text>
+  <text x="130" y="141" text-anchor="middle" font-size="9" fill="#ddd">Priority=1000</text>
+  <text x="130" y="153" text-anchor="middle" font-size="8" fill="#ccc">research / inference</text>
+  <rect x="270" y="110" width="140" height="50" rx="6" fill="#2a6099" opacity=".85"/>
+  <text x="340" y="128" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">QOS: standard</text>
+  <text x="340" y="141" text-anchor="middle" font-size="9" fill="#ddd">Priority=500</text>
+  <text x="340" y="153" text-anchor="middle" font-size="8" fill="#ccc">evaluation</text>
+  <rect x="480" y="110" width="140" height="50" rx="6" fill="#27ae60" opacity=".85"/>
+  <text x="550" y="128" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">QOS: batch/ci</text>
+  <text x="550" y="141" text-anchor="middle" font-size="9" fill="#ddd">Priority=100–200</text>
+  <text x="550" y="153" text-anchor="middle" font-size="8" fill="#ccc">dev / CI jobs</text>
+  <!-- Second level: Fair-share within QOS -->
+  <rect x="30" y="200" width="115" height="46" rx="5" fill="#fffbf0" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="88" y="218" text-anchor="middle" font-size="10" font-weight="700" fill="#7a4a00">research</text>
+  <text x="88" y="231" text-anchor="middle" font-size="9" fill="#888">Share=40%</text>
+  <text x="88" y="243" text-anchor="middle" font-size="9" fill="#27ae60">FS=0.97 ↑ boost</text>
+  <rect x="155" y="200" width="115" height="46" rx="5" fill="#fffbf0" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="213" y="218" text-anchor="middle" font-size="10" font-weight="700" fill="#7a4a00">inference</text>
+  <text x="213" y="231" text-anchor="middle" font-size="9" fill="#888">Share=30%</text>
+  <text x="213" y="243" text-anchor="middle" font-size="9" fill="#c0392b">FS=0.71 ↓ used more</text>
+  <rect x="308" y="200" width="115" height="46" rx="5" fill="#f0f6ff" stroke="#2a6099" stroke-width="1.5"/>
+  <text x="366" y="218" text-anchor="middle" font-size="10" font-weight="700" fill="#1a3060">evaluation</text>
+  <text x="366" y="231" text-anchor="middle" font-size="9" fill="#888">Share=20%</text>
+  <text x="366" y="243" text-anchor="middle" font-size="9" fill="#555">FS=0.85 normal</text>
+  <!-- Job age + size at bottom -->
+  <rect x="450" y="200" width="210" height="46" rx="5" fill="#f0fff5" stroke="#27ae60" stroke-width="1.5"/>
+  <text x="555" y="218" text-anchor="middle" font-size="10" font-weight="700" fill="#1a5a30">Within-account tie-break</text>
+  <text x="555" y="231" text-anchor="middle" font-size="9" fill="#555">Job Age (prevents starvation)</text>
+  <text x="555" y="243" text-anchor="middle" font-size="9" fill="#555">Job Size (larger = slight boost)</text>
+  <!-- Arrows -->
+  <line x1="340" y1="70" x2="130" y2="110" stroke="#888" stroke-width="1.5"/>
+  <line x1="340" y1="70" x2="340" y2="110" stroke="#888" stroke-width="1.5"/>
+  <line x1="340" y1="70" x2="550" y2="110" stroke="#888" stroke-width="1.5"/>
+  <line x1="130" y1="160" x2="88" y2="200" stroke="#e3b341" stroke-width="1"/>
+  <line x1="130" y1="160" x2="213" y2="200" stroke="#e3b341" stroke-width="1"/>
+  <line x1="340" y1="160" x2="366" y2="200" stroke="#2a6099" stroke-width="1"/>
+  <line x1="550" y1="160" x2="555" y2="200" stroke="#27ae60" stroke-width="1"/>
+</svg>
+<figcaption>Fig 16.4 — SLURM scheduler priority tree. Jobs compete first by QOS tier (1000 vs. 500 vs. 100), then by fair-share within their QOS tier, then by age. The research team (fair-share=0.97) wins over inference (0.71) at the same QOS level because it has used less of its allocated share.</figcaption>
+</div>
+
+
+<!-- ═══════ SECTION 6 ═══════ -->
+<h2 id="s6">16.6 Kubernetes for AI — Architecture and GPU Scheduling</h2>
+
+<p>Kubernetes has become the dominant platform for AI inference serving, multi-tenant research platforms, and increasingly, large-scale training. Its containerized resource model, rich RBAC, and native integration with cloud auto-scaling make it the right choice wherever workloads look more like microservices than batch HPC jobs.</p>
+
+<p>GPUs enter Kubernetes through the <strong>NVIDIA device plugin</strong>, which runs as a DaemonSet and advertises GPU resources to the Kubernetes API server. From the scheduler's perspective, GPUs are just another extended resource: <code>nvidia.com/gpu: 8</code> in a pod spec is equivalent to requesting 8 CPU cores — the scheduler finds a node with 8 available GPUs and places the pod there.</p>
+
+<div class="formula">
+<span class="cm"># GPU deployment: PyTorch training pod with resource requests</span>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: llama-finetune-worker
+  labels:
+    app: llama-finetune
+    task-type: training
+spec:
+  containers:
+  - name: trainer
+    image: nvcr.io/nvidia/pytorch:24.05-py3
+    resources:
+      <span class="hl">requests:</span>
+        <span class="hl">nvidia.com/gpu: "8"</span>        <span class="cm"># Request 8 GPUs</span>
+        cpu: "96"                    <span class="cm"># Match CPU count to GPUs</span>
+        memory: "512Gi"
+      <span class="hl">limits:</span>
+        <span class="hl">nvidia.com/gpu: "8"</span>        <span class="cm"># Limits must equal requests for GPUs</span>
+        cpu: "96"
+        memory: "512Gi"
+    env:
+    - name: NCCL_IB_DISABLE
+      value: "0"
+    - name: NVIDIA_VISIBLE_DEVICES
+      value: all                     <span class="cm"># Device plugin sets CUDA_VISIBLE_DEVICES</span>
+  <span class="hl">tolerations:</span>
+  - key: nvidia.com/gpu
+    operator: Exists
+    effect: NoSchedule               <span class="cm"># Required: GPU nodes tainted to prevent CPU-only workloads</span>
+  nodeSelector:
+    <span class="hl">nvidia.com/gpu.product: "NVIDIA-H100-80GB-HBM3"</span>   <span class="cm"># Match specific GPU model</span>
+
+---
+<span class="cm"># Multi-tenant namespace isolation with ResourceQuota</span>
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: research-team-quota
+  namespace: research
+spec:
+  hard:
+    <span class="hl">requests.nvidia.com/gpu: "256"</span>  <span class="cm"># Max 256 GPUs for research namespace</span>
+    limits.nvidia.com/gpu: "256"
+    requests.cpu: "3072"
+    requests.memory: "12Ti"
+    pods: "500"
+    count/deployments.apps: "50"</div>
+
+<h3>16.6.1 Diagnosing Pending GPU Pods</h3>
+
+<p>The most common Kubernetes support request is "my GPU pod is stuck in Pending." There are exactly five root causes, and they can be diagnosed in under two minutes with the right command sequence:</p>
+
+<div class="formula">
+<span class="cm"># Step 1: Get the exact scheduling failure reason</span>
+<span class="hl">kubectl describe pod &lt;pod-name&gt; -n &lt;namespace&gt;</span>
+<span class="cm"># Look for Events section at the bottom — this is the diagnosis:</span>
+
+<span class="cm"># Cause 1: Insufficient GPU resources</span>
+<span class="cm"># Events: 0/8 nodes are available: 8 Insufficient nvidia.com/gpu</span>
+<span class="cm"># Fix: Check GPU availability (kubectl describe nodes | grep nvidia.com/gpu)</span>
+<span class="cm">#      or reduce request</span>
+
+<span class="cm"># Cause 2: ResourceQuota exceeded</span>
+<span class="cm"># Events: exceeded quota: research, requested: requests.nvidia.com/gpu=8,</span>
+<span class="cm">#         used: requests.nvidia.com/gpu=252, limited: requests.nvidia.com/gpu=256</span>
+<span class="cm"># Fix: Delete idle pods or increase quota</span>
+
+<span class="cm"># Cause 3: Affinity/taint mismatch</span>
+<span class="cm"># Events: 0/8 nodes are available: 8 node(s) had untolerated taint</span>
+<span class="cm"># Fix: Add toleration for nvidia.com/gpu NoSchedule</span>
+
+<span class="cm"># Cause 4: Node selector mismatch</span>
+<span class="cm"># Events: 0/8 nodes are available: 8 node(s) didn't match Pod's node affinity</span>
+<span class="cm"># Fix: kubectl get nodes --show-labels | grep gpu.product</span>
+
+<span class="cm"># Cause 5: Device plugin not running</span>
+<span class="hl">kubectl get pods -n kube-system | grep device-plugin</span>
+<span class="cm"># If no nvidia-device-plugin DaemonSet pods → GPUs not registered with k8s</span>
+<span class="cm"># Fix: Helm install nvidia-device-plugin or re-register</span></div>
+
+<!-- ═══════ SECTION 7 ═══════ -->
+<h2 id="s7">16.7 Gang Scheduling on Kubernetes: Volcano and Kueue</h2>
+
+<p>Kubernetes' default scheduler is not gang-scheduler aware. Without a gang scheduling plugin, a 512-GPU distributed training job (512 pods) can partially start: pods 1–400 might acquire their GPUs while pods 401–512 wait in a resource contention queue. The running pods spin at the NCCL barrier, burning 400 GPUs worth of cost ($1,200/hr) producing zero useful work until the remaining pods are scheduled — or a 10-minute NCCL timeout kills everything. This is why Volcano and Kueue exist.</p>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 720 290" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <marker id="a3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0,8 3,0 6" fill="#1c2438"/>
+    </marker>
+    <marker id="a3g" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0,8 3,0 6" fill="#27ae60"/>
+    </marker>
+    <marker id="a3r" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0,8 3,0 6" fill="#c0392b"/>
+    </marker>
+  </defs>
+  <text x="360" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#1c2438">Volcano Gang Scheduling — PodGroup Lifecycle</text>
+  <!-- Phase boxes -->
+  <!-- 1. Submit -->
+  <rect x="20" y="38" width="100" height="60" rx="6" fill="#1c2438"/>
+  <text x="70" y="62" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">1. Submit</text>
+  <text x="70" y="76" text-anchor="middle" font-size="9" fill="#aaa">Volcano Job</text>
+  <text x="70" y="89" text-anchor="middle" font-size="9" fill="#aaa">+PodGroup</text>
+  <!-- 2. Queue -->
+  <rect x="145" y="38" width="100" height="60" rx="6" fill="#2a6099"/>
+  <text x="195" y="62" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">2. Enqueue</text>
+  <text x="195" y="76" text-anchor="middle" font-size="9" fill="#aad">Wait in Queue</text>
+  <text x="195" y="89" text-anchor="middle" font-size="9" fill="#aad">Priority sorted</text>
+  <!-- 3. Pending -->
+  <rect x="270" y="38" width="100" height="60" rx="6" fill="#e3b341"/>
+  <text x="320" y="62" text-anchor="middle" font-size="10" font-weight="700" fill="#1c2438">3. Pending</text>
+  <text x="320" y="76" text-anchor="middle" font-size="9" fill="#7a4a00">Gang check:</text>
+  <text x="320" y="89" text-anchor="middle" font-size="9" fill="#7a4a00">ALL pods placeable?</text>
+  <!-- 4a. Yes -->
+  <rect x="395" y="20" width="100" height="42" rx="6" fill="#27ae60"/>
+  <text x="445" y="38" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">4a. Running</text>
+  <text x="445" y="54" text-anchor="middle" font-size="9" fill="#e8ffe8">All 512 pods start</text>
+  <!-- 4b. No -->
+  <rect x="395" y="76" width="100" height="42" rx="6" fill="#c0392b"/>
+  <text x="445" y="94" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">4b. Hold</text>
+  <text x="445" y="108" text-anchor="middle" font-size="9" fill="#fdd">Wait for capacity</text>
+  <!-- 5. Complete -->
+  <rect x="520" y="38" width="100" height="42" rx="6" fill="#27ae60" opacity=".7"/>
+  <text x="570" y="58" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">5. Succeeded</text>
+  <text x="570" y="73" text-anchor="middle" font-size="9" fill="#e8ffe8">GPU freed</text>
+  <!-- 5b. Failed -->
+  <rect x="520" y="96" width="100" height="42" rx="6" fill="#888" opacity=".7"/>
+  <text x="570" y="115" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">5b. Failed</text>
+  <text x="570" y="129" text-anchor="middle" font-size="9" fill="#eee">→ retry/requeue</text>
+  <!-- Arrows -->
+  <line x1="120" y1="68" x2="145" y2="68" stroke="#1c2438" stroke-width="1.5" marker-end="url(#a3)"/>
+  <line x1="245" y1="68" x2="270" y2="68" stroke="#1c2438" stroke-width="1.5" marker-end="url(#a3)"/>
+  <line x1="370" y1="55" x2="395" y2="42" stroke="#27ae60" stroke-width="1.5" marker-end="url(#a3g)"/>
+  <line x1="370" y1="81" x2="395" y2="88" stroke="#c0392b" stroke-width="1.5" marker-end="url(#a3r)"/>
+  <line x1="495" y1="41" x2="520" y2="52" stroke="#27ae60" stroke-width="1" marker-end="url(#a3g)"/>
+  <line x1="495" y1="97" x2="520" y2="108" stroke="#888" stroke-width="1" marker-end="url(#a3)"/>
+  <text x="372" y="37" font-size="9" fill="#27ae60">YES</text>
+  <text x="372" y="91" font-size="9" fill="#c0392b">NO</text>
+  <!-- Volcano config box -->
+  <rect x="20" y="165" width="680" height="112" rx="6" fill="#f3f5f8" stroke="#d0d6e2"/>
+  <text x="360" y="185" text-anchor="middle" font-size="11" font-weight="700" fill="#1c2438">Volcano Job YAML — 512-GPU Training with PodGroup</text>
+  <text x="30" y="202" font-size="9.5" font-family="'Courier New',monospace" fill="#1c2438">apiVersion: batch.volcano.sh/v1alpha1</text>
+  <text x="30" y="216" font-size="9.5" font-family="'Courier New',monospace" fill="#1c2438">kind: Job</text>
+  <text x="30" y="230" font-size="9.5" font-family="'Courier New',monospace" fill="#2a6099">  minAvailable: 512          # Gang constraint: ALL 512 or NONE</text>
+  <text x="30" y="244" font-size="9.5" font-family="'Courier New',monospace" fill="#2a6099">  policies:                  # Restart policy</text>
+  <text x="30" y="258" font-size="9.5" font-family="'Courier New',monospace" fill="#2a6099">    - event: PodFailed        action: RestartJob   # Whole job restart on failure</text>
+  <text x="380" y="202" font-size="9.5" font-family="'Courier New',monospace" fill="#27ae60">  queue: research-high-pri    # Volcano queue</text>
+  <text x="380" y="216" font-size="9.5" font-family="'Courier New',monospace" fill="#27ae60">  priorityClassName: high     # K8s PriorityClass</text>
+  <text x="380" y="230" font-size="9.5" font-family="'Courier New',monospace" fill="#1c2438">  plugins:</text>
+  <text x="380" y="244" font-size="9.5" font-family="'Courier New',monospace" fill="#1c2438">    pytorch: []               # PyTorch plugin: sets MASTER_ADDR etc.</text>
+  <text x="380" y="258" font-size="9.5" font-family="'Courier New',monospace" fill="#1c2438">    svc: []                   # Service discovery for ranks</text>
+</svg>
+<figcaption>Fig 16.5 — Volcano gang scheduling lifecycle. The critical difference from default K8s: pods are held in "Pending" until ALL minAvailable=512 pods can be simultaneously placed. Without this, partial starts waste GPU-hours at the NCCL synchronization barrier.</figcaption>
+</div>
+
+<!-- ═══════ SECTION 8 ═══════ -->
+<h2 id="s8">16.8 Fault Tolerance: MTBF, SDC, and Node Quarantine</h2>
+
+<p>At scale, hardware failure is not an exception — it is the steady state. A cluster of 1,024 H100 GPUs has approximately 8,192 individual components (GPU dies, NVLink connections, memory stacks, PCIe lanes). With a mean time between failures (MTBF) of ~100,000 hours per component, the expected time to the <em>first</em> failure across the cluster is just 12 hours. Meta's production Llama 3 training runs on 24,000 GPUs experienced ~50% fewer cluster interruptions after systematically investing in automated failure detection and recovery — demonstrating that engineering the recovery path is as important as engineering the training algorithm.</p>
+
+<h3>16.8.1 The Three-Layer Fault Detection Hierarchy</h3>
+
+<div class="callout">
+<strong>Layer 1: Hardware Telemetry (DCGM)</strong>
+NVIDIA DCGM runs as a service on every GPU node and exposes hardware health metrics at 10-second intervals. Key metrics to monitor: GPU ECC single-bit errors (DCGM_FI_DEV_ECC_SBE_AGG_TOTAL — more than 10/hour predicts imminent failure), temperature (throttle at 83°C, thermal runaway above 87°C), PCIe replay counter (non-zero = signal integrity issue), and NVLink error counter (any errors = degraded bandwidth). See Chapter 17 for complete DCGM metric catalog.
+</div>
+
+<div class="callout blue">
+<strong>Layer 2: SLURM Prolog/Epilog Health Checks</strong>
+Prolog scripts run on every node before a job starts; epilog scripts run after it ends. A prolog that exits non-zero causes SLURM to mark the node as drained and move the job to the next available set of nodes. This is the first line of defense against placing a training job on a degraded node.
+</div>
+
+<div class="callout purple">
+<strong>Layer 3: Silent Data Corruption (SDC) Detection</strong>
+SDC is the worst failure mode: the GPU appears healthy (no ECC errors), but produces wrong computation results. SDC manifests as training loss divergence or incorrect model outputs and is notoriously hard to detect. The state-of-the-art approach is to run "golden inputs" tests — pre-computed tensors with known correct outputs — and verify exact match. Meta, Google, and NVIDIA all run SDC screening tests before assigning nodes to production training jobs.
+</div>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 720 270" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <marker id="a4" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0,8 3,0 6" fill="#1c2438"/>
+    </marker>
+    <marker id="a4r" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0,8 3,0 6" fill="#c0392b"/>
+    </marker>
+    <marker id="a4g" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0,8 3,0 6" fill="#27ae60"/>
+    </marker>
+  </defs>
+  <text x="360" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#1c2438">Node Drain &amp; Quarantine Flow</text>
+  <!-- Steps -->
+  <rect x="10" y="38" width="95" height="52" rx="6" fill="#27ae60"/>
+  <text x="58" y="60" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Node</text>
+  <text x="58" y="74" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Healthy</text>
+  <text x="58" y="87" text-anchor="middle" font-size="9" fill="#e8ffe8">ALLOC/IDLE</text>
+
+  <rect x="130" y="38" width="110" height="52" rx="6" fill="#e3b341"/>
+  <text x="185" y="60" text-anchor="middle" font-size="10" font-weight="700" fill="#1c2438">Anomaly</text>
+  <text x="185" y="74" text-anchor="middle" font-size="10" font-weight="700" fill="#1c2438">Detected</text>
+  <text x="185" y="87" text-anchor="middle" font-size="9" fill="#7a4a00">DCGM alert / job fail</text>
+
+  <rect x="265" y="38" width="110" height="52" rx="6" fill="#a55000"/>
+  <text x="320" y="58" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Auto-Drain</text>
+  <text x="320" y="72" text-anchor="middle" font-size="9" fill="#fdd">scontrol update</text>
+  <text x="320" y="85" text-anchor="middle" font-size="9" fill="#fdd">State=DRAIN</text>
+
+  <rect x="400" y="38" width="115" height="52" rx="6" fill="#c0392b"/>
+  <text x="458" y="58" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Quarantine</text>
+  <text x="458" y="72" text-anchor="middle" font-size="9" fill="#fdd">State=DOWN</text>
+  <text x="458" y="85" text-anchor="middle" font-size="9" fill="#fdd">No new jobs placed</text>
+
+  <rect x="540" y="38" width="110" height="52" rx="6" fill="#7b2d8b"/>
+  <text x="595" y="58" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Investigate</text>
+  <text x="595" y="72" text-anchor="middle" font-size="9" fill="#ddd">Run diagnostics</text>
+  <text x="595" y="85" text-anchor="middle" font-size="9" fill="#ddd">dcgmi diag -r 3</text>
+
+  <!-- Outcome boxes -->
+  <rect x="455" y="150" width="125" height="46" rx="5" fill="#27ae60" opacity=".8"/>
+  <text x="518" y="170" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">RESUME</text>
+  <text x="518" y="185" text-anchor="middle" font-size="9" fill="#e8ffe8">scontrol update State=RESUME</text>
+
+  <rect x="585" y="150" width="125" height="46" rx="5" fill="#c0392b" opacity=".8"/>
+  <text x="648" y="170" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">RMA / REPLACE</text>
+  <text x="648" y="185" text-anchor="middle" font-size="9" fill="#fdd">Field replacement ticket</text>
+
+  <!-- SDC detection box -->
+  <rect x="30" y="148" width="400" height="106" rx="6" fill="#fdf5ff" stroke="#7b2d8b" stroke-width="1.5"/>
+  <text x="230" y="168" text-anchor="middle" font-size="11" font-weight="700" fill="#7b2d8b">SDC Detection Script (run in prolog)</text>
+  <text x="40" y="185" font-size="9" font-family="'Courier New',monospace" fill="#444">dcgmi diag -r 1      # Quick: 30 sec ECC + thermal</text>
+  <text x="40" y="199" font-size="9" font-family="'Courier New',monospace" fill="#444">dcgmi diag -r 2      # Medium: 90 sec memory tests</text>
+  <text x="40" y="213" font-size="9" font-family="'Courier New',monospace" fill="#7b2d8b">dcgmi diag -r 3      # Full: 6 min — REQUIRED for SDC</text>
+  <text x="40" y="227" font-size="9" font-family="'Courier New',monospace" fill="#444">python3 golden_input_test.py  # SDC: verify known-correct outputs</text>
+  <text x="40" y="241" font-size="9" font-family="'Courier New',monospace" fill="#c0392b">if [ $? -ne 0 ]; then scontrol update NodeName=$NODE State=DRAIN Reason="SDC"; fi</text>
+
+  <!-- Arrows -->
+  <line x1="105" y1="64" x2="130" y2="64" stroke="#1c2438" stroke-width="1.5" marker-end="url(#a4)"/>
+  <line x1="240" y1="64" x2="265" y2="64" stroke="#a55000" stroke-width="1.5" marker-end="url(#a4)"/>
+  <line x1="375" y1="64" x2="400" y2="64" stroke="#c0392b" stroke-width="1.5" marker-end="url(#a4r)"/>
+  <line x1="515" y1="64" x2="540" y2="64" stroke="#7b2d8b" stroke-width="1.5" marker-end="url(#a4)"/>
+  <line x1="595" y1="90" x2="518" y2="150" stroke="#27ae60" stroke-width="1" marker-end="url(#a4g)"/>
+  <line x1="650" y1="90" x2="648" y2="150" stroke="#c0392b" stroke-width="1" marker-end="url(#a4r)"/>
+  <text x="510" y="130" font-size="9" fill="#27ae60">Pass diag</text>
+  <text x="618" y="130" font-size="9" fill="#c0392b">Fail diag</text>
+</svg>
+<figcaption>Fig 16.6 — Node drain and quarantine flow. Automated drain on anomaly detection prevents a degraded node from silently corrupting a multi-week training run. The SDC prolog test (dcgmi diag -r 3) takes 6 minutes but saves days of lost training on a node with a defective GPU that appears ECC-clean.</figcaption>
+</div>
+
+<div class="formula">
+<span class="cm"># ── SLURM prolog: node health check (runs before each job) ────────────────</span>
+#!/bin/bash
+# /opt/slurm/prolog.d/01-gpu-health.sh
+
+NODE_PASS=1
+
+<span class="cm"># Check 1: GPU count (should be 8 on all nodes)</span>
+GPU_COUNT=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
+if [ "$GPU_COUNT" -ne 8 ]; then
+    scontrol update NodeName=${SLURM_JOB_NODELIST} State=DRAIN \
+        Reason="GPU count mismatch: expected 8, got ${GPU_COUNT}"
+    exit 1
+fi
+
+<span class="cm"># Check 2: ECC error rate (accumulated since last reset)</span>
+ECC_ERRORS=$(dcgmi dmon -e 160 -c 1 | awk 'NR>1{sum+=$2}END{print sum+0}')
+if [ "$ECC_ERRORS" -gt 100 ]; then
+    scontrol update NodeName=${SLURM_JOB_NODELIST} State=DRAIN \
+        Reason="ECC errors exceed threshold: ${ECC_ERRORS} SBE"
+    exit 1
+fi
+
+<span class="cm"># Check 3: NVLink errors (any = fabric degradation)</span>
+NVLINK_ERR=$(nvidia-smi nvlink -e -i 0 | grep -c "Error Count" || true)
+if [ "$NVLINK_ERR" -gt 0 ]; then
+    scontrol update NodeName=${SLURM_JOB_NODELIST} State=DRAIN \
+        Reason="NVLink errors detected"
+    exit 1
+fi
+
+echo "[PROLOG] GPU health check PASSED on ${SLURM_JOB_NODELIST}"
+exit 0</div>
+
+<!-- ═══════ SECTION 9 ═══════ -->
+<h2 id="s9">16.9 Multi-Tenant GPU Sharing: MIG, MPS, and Time-Slicing</h2>
+
+<p>Not every workload needs a full GPU. A CI/CD model evaluation job that runs 1,000 forward passes needs perhaps 2 GB of VRAM and 20% of SM utilization — assigning it a whole H100 wastes 80 GB of HBM and 80% of compute. The three GPU sharing mechanisms — MIG, MPS, and time-slicing — address this at different granularities, with different isolation and performance guarantees.</p>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <text x="350" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#1c2438">GPU Sharing Mechanisms: MIG vs MPS vs Time-Slicing</text>
+  <!-- Column headers -->
+  <text x="120" y="44" text-anchor="middle" font-size="11" font-weight="700" fill="#7b2d8b">MIG</text>
+  <text x="120" y="57" text-anchor="middle" font-size="9" fill="#888">Multi-Instance GPU</text>
+  <text x="350" y="44" text-anchor="middle" font-size="11" font-weight="700" fill="#2a6099">MPS</text>
+  <text x="350" y="57" text-anchor="middle" font-size="9" fill="#888">Multi-Process Service</text>
+  <text x="580" y="44" text-anchor="middle" font-size="11" font-weight="700" fill="#27ae60">Time-Slicing</text>
+  <text x="580" y="57" text-anchor="middle" font-size="9" fill="#888">Temporal Sharing</text>
+
+  <!-- MIG column: hardware partitions -->
+  <rect x="30" y="66" width="180" height="36" rx="4" fill="#7b2d8b" opacity=".8"/>
+  <text x="120" y="84" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">H100: 7× MIG instances</text>
+  <text x="120" y="97" text-anchor="middle" font-size="9" fill="#ddd">10 GB HBM each, isolated SMs</text>
+  <text x="120" y="124" text-anchor="middle" font-size="10" fill="#444">Hardware isolation</text>
+  <text x="120" y="140" text-anchor="middle" font-size="9" fill="#555">Memory fully partitioned</text>
+  <text x="120" y="155" text-anchor="middle" font-size="9" fill="#555">SMs fully partitioned</text>
+  <text x="120" y="170" text-anchor="middle" font-size="9" fill="#27ae60">✓ Perfect fault isolation</text>
+  <text x="120" y="185" text-anchor="middle" font-size="9" fill="#27ae60">✓ Consistent performance</text>
+  <text x="120" y="200" text-anchor="middle" font-size="9" fill="#c0392b">✗ Fixed sizes (no flexibility)</text>
+  <text x="120" y="215" text-anchor="middle" font-size="9" fill="#c0392b">✗ H100/A100 only</text>
+  <text x="120" y="235" text-anchor="middle" font-size="10" font-weight="700" fill="#7b2d8b">Best for: inference serving</text>
+  <text x="120" y="249" text-anchor="middle" font-size="9" fill="#888">multi-tenant, latency SLA</text>
+
+  <!-- MPS column -->
+  <rect x="260" y="66" width="180" height="36" rx="4" fill="#2a6099" opacity=".8"/>
+  <text x="350" y="84" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Shared SM pool</text>
+  <text x="350" y="97" text-anchor="middle" font-size="9" fill="#ddd">Multiple CUDA contexts merged</text>
+  <text x="350" y="124" text-anchor="middle" font-size="10" fill="#444">Software isolation</text>
+  <text x="350" y="140" text-anchor="middle" font-size="9" fill="#555">SM time-shared (concurrent)</text>
+  <text x="350" y="155" text-anchor="middle" font-size="9" fill="#555">Memory address-space separated</text>
+  <text x="350" y="170" text-anchor="middle" font-size="9" fill="#27ae60">✓ High SM utilization</text>
+  <text x="350" y="185" text-anchor="middle" font-size="9" fill="#27ae60">✓ Low overhead (~1-2%)</text>
+  <text x="350" y="200" text-anchor="middle" font-size="9" fill="#c0392b">✗ One process crash = all crash</text>
+  <text x="350" y="215" text-anchor="middle" font-size="9" fill="#c0392b">✗ No memory bandwidth isolation</text>
+  <text x="350" y="235" text-anchor="middle" font-size="10" font-weight="700" fill="#2a6099">Best for: homogeneous small</text>
+  <text x="350" y="249" text-anchor="middle" font-size="9" fill="#888">batches, same-trust tenants</text>
+
+  <!-- Time-slicing column -->
+  <rect x="490" y="66" width="180" height="36" rx="4" fill="#27ae60" opacity=".8"/>
+  <text x="580" y="84" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Context-switch round-robin</text>
+  <text x="580" y="97" text-anchor="middle" font-size="9" fill="#ddd">GPU switches between jobs</text>
+  <text x="580" y="124" text-anchor="middle" font-size="10" fill="#444">OS-level scheduling</text>
+  <text x="580" y="140" text-anchor="middle" font-size="9" fill="#555">Context switch = full preempt</text>
+  <text x="580" y="155" text-anchor="middle" font-size="9" fill="#555">Memory evict/restore on switch</text>
+  <text x="580" y="170" text-anchor="middle" font-size="9" fill="#27ae60">✓ Works on any GPU</text>
+  <text x="580" y="185" text-anchor="middle" font-size="9" fill="#27ae60">✓ Easy K8s integration</text>
+  <text x="580" y="200" text-anchor="middle" font-size="9" fill="#c0392b">✗ Context switch overhead 5-15%</text>
+  <text x="580" y="215" text-anchor="middle" font-size="9" fill="#c0392b">✗ Unpredictable tail latency</text>
+  <text x="580" y="235" text-anchor="middle" font-size="10" font-weight="700" fill="#1a5a30">Best for: dev/CI, batch evals</text>
+  <text x="580" y="249" text-anchor="middle" font-size="9" fill="#888">tolerates latency variance</text>
+  <!-- dividers -->
+  <line x1="236" y1="66" x2="236" y2="260" stroke="#e0d8c8" stroke-width="1"/>
+  <line x1="466" y1="66" x2="466" y2="260" stroke="#e0d8c8" stroke-width="1"/>
+  <line x1="30" y1="112" x2="690" y2="112" stroke="#e0d8c8" stroke-width="1"/>
+  <line x1="30" y1="228" x2="690" y2="228" stroke="#e0d8c8" stroke-width="1"/>
+</svg>
+<figcaption>Fig 16.7 — GPU sharing mechanisms compared. MIG is the only approach with hardware-level memory isolation — required for strict multi-tenant SLAs. MPS maximizes SM utilization for trusted same-team workloads. Time-slicing is the fallback for any GPU but adds 5–15% overhead from context switching.</figcaption>
+</div>
+
+<div class="formula">
+<span class="cm"># MIG configuration on H100 (7× 1g.10gb instances)</span>
+nvidia-smi mig -cgi 1g.10gb,1g.10gb,1g.10gb,1g.10gb,1g.10gb,1g.10gb,1g.10gb -C
+
+<span class="cm"># Verify MIG instances</span>
+nvidia-smi mig -lgi
+<span class="cm"># Expected: 7 GPU instances, each with 1 GPC, 10 GB memory</span>
+
+<span class="cm"># Kubernetes: expose MIG instances to pods</span>
+<span class="cm"># With MIG strategy="mixed" in device plugin config:</span>
+resources:
+  limits:
+    <span class="hl">nvidia.com/mig-1g.10gb: "1"</span>  <span class="cm"># Request one 10GB MIG slice</span>
+
+<span class="cm"># MPS: enable for all processes on GPU 0</span>
+export CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps
+export CUDA_MPS_LOG_DIRECTORY=/tmp/nvidia-log
+nvidia-cuda-mps-control -d          <span class="cm"># Start MPS daemon</span>
+echo "set_active_thread_percentage 50" | nvidia-cuda-mps-control
+<span class="cm"># Limits each MPS client to 50% of SMs (prevents one job starving others)</span>
+
+<span class="cm"># K8s time-slicing config (device plugin configmap)</span>
+version: v1
+flags:
+  migStrategy: none
+sharing:
+  <span class="hl">timeSlicing:</span>
+    <span class="hl">replicas: 4</span>         <span class="cm"># Present each physical GPU as 4 virtual GPUs</span>
+<span class="cm"># Pods can now request nvidia.com/gpu: 1 and share a physical GPU</span>
+<span class="cm"># WARNING: No memory isolation — use only for trusted workloads</span></div>
+
+<!-- ═══════ SECTION 10 ═══════ -->
+<h2 id="s10">16.10 SLURM vs. Kubernetes — Decision Framework</h2>
+
+<p>The choice between SLURM and Kubernetes is not a matter of one being better — it's a matter of fit to workload characteristics. The correct answer for most large organizations is both: SLURM for training, Kubernetes for inference, with a lightweight bridge (MLFlow, Kubeflow, Weights &amp; Biases) for experiment tracking across both. Meta's production architecture is precisely this: SLURM-like gang scheduling semantics for physical training clusters, Kubernetes-style container management for the inference serving layer.</p>
+
+<div class="callout">
+<strong>Decision Rule for New Clusters</strong>
+If your primary workload is multi-node distributed training (&gt;16 nodes) and you have InfiniBand fabric and a dedicated HPC team: use SLURM. If your primary workload is inference serving, multi-tenant research with container images, or you're deploying on cloud (EKS/GKE/AKS): use Kubernetes. If you have both: use both, with SLURM for training and K8s for serving.
+</div>
+
+<table>
+<tr><th>Dimension</th><th>SLURM</th><th>Kubernetes</th><th>Winner</th></tr>
+<tr><td>Gang scheduling</td><td>Native (built-in)</td><td>Requires Volcano/Kueue</td><td class="good">SLURM</td></tr>
+<tr><td>Multi-node training</td><td>Excellent (native MPI/srun)</td><td>Good (with PyTorch operator)</td><td class="good">SLURM</td></tr>
+<tr><td>Topology awareness</td><td>Native (topology.conf)</td><td>Limited (topology manager)</td><td class="good">SLURM</td></tr>
+<tr><td>Inference serving</td><td>Not designed for it</td><td>Excellent (native autoscale)</td><td class="good">Kubernetes</td></tr>
+<tr><td>Container support</td><td>Singularity/Apptainer</td><td>Docker/containerd (native)</td><td class="good">Kubernetes</td></tr>
+<tr><td>Auto-scaling nodes</td><td>Manual add</td><td>Cluster autoscaler (native)</td><td class="good">Kubernetes</td></tr>
+<tr><td>Multi-tenancy</td><td>Accounts + QOS</td><td>Namespaces + RBAC + quotas</td><td class="inf">Tie</td></tr>
+<tr><td>Fair-share accounting</td><td>Native (sacctmgr)</td><td>Requires Kueue/custom</td><td class="good">SLURM</td></tr>
+<tr><td>Job preemption</td><td>Mature (QOS-based)</td><td>PriorityClasses (works well)</td><td class="good">SLURM</td></tr>
+<tr><td>Monitoring</td><td>sacct + DCGM</td><td>Prometheus/Grafana (native)</td><td class="good">Kubernetes</td></tr>
+<tr><td>Rolling updates</td><td>Not applicable</td><td>Native deployment strategy</td><td class="good">Kubernetes</td></tr>
+<tr><td>Production examples</td><td>Meta training, NERSC, NVIDIA</td><td>Google serving, OpenAI, AWS</td><td class="inf">Both</td></tr>
+</table>
+
+<!-- ═══════ SECTION 11 ═══════ -->
+<h2 id="s11">16.11 Production Operations Playbook</h2>
+
+<h3>16.11.1 Daily Cluster Health Checks</h3>
+
+<div class="formula">
+#!/bin/bash
+<span class="cm"># cluster_health_check.sh — Run daily via cron</span>
+echo "=== SLURM CLUSTER HEALTH REPORT $(date) ==="
+
+<span class="cm"># Node state summary</span>
+sinfo --format="%P %n %T %C %G" | column -t
+echo ""
+
+<span class="cm"># Drained nodes (require investigation)</span>
+echo "DRAINED NODES:"
+sinfo --states=drained,down --format="%n %T %E" | column -t
+
+<span class="cm"># GPU utilization (DCGM)</span>
+echo "CLUSTER GPU UTILIZATION:"
+dcgmi dmon -e 203,1001,1002 -c 1 | \
+    awk 'NR>1{util+=$2;mem+=$3;count++} END \
+    {printf "Avg GPU: %.1f%%  Avg HBM: %.1f%%\n", util/count, mem/count}'
+
+<span class="cm"># Long-pending job alert (pending > 60 min → possible gang deadlock)</span>
+echo "LONG-PENDING JOBS (&gt;60 min):"
+squeue -t PENDING --format="%i %u %D %G %V" | \
+    awk -v now="$(date +%s)" '{
+      cmd="date -d "$5" +%s"; cmd | getline sub; close(cmd);
+      if(now - sub &gt; 3600) print $0, "("int((now-sub)/60)"min)"
+    }'</div>
+
+<h3>16.11.2 Capacity Planning Formula</h3>
+
+<p>Capacity planning for AI clusters requires reasoning from the training roadmap backward to GPU-hours, then forward to fleet size. The key insight: you need to provision for <em>peak demand with N+1 fault tolerance</em>, not average utilization.</p>
+
+<div class="formula">
+<span class="cm"># Capacity planning: GPU-hours → fleet size</span>
+
+<span class="hl">Fleet_GPUs = (Weekly_GPU_Hours_Demand × Safety_Factor) / (168 hrs × Target_Utilization)</span>
+
+<span class="cm">Example: Team trains 3 models/week, each needing 1M GPU-hours</span>
+Weekly_demand = 3 × 1,000,000 = 3,000,000 GPU-hours/week
+Safety_factor = 1.3  <span class="cm"># 30% headroom for failures, reruns, experiments</span>
+Target_util   = 0.80  <span class="cm"># 80% realistic sustained utilization</span>
+Hours_per_week = 168
+
+<span class="res">Fleet_GPUs = (3,000,000 × 1.3) / (168 × 0.80) = 29,018 GPUs ≈ 30,000 GPUs</span>
+
+<span class="cm"># Annual cost at $3/GPU-hr (amortized TCO):</span>
+<span class="res">Annual_cost = 30,000 × $3 × 8,760 = $789M/year</span>
+
+<span class="cm"># Impact of utilization improvement (80% → 85%): same output, fewer GPUs</span>
+<span class="res">Fleet_at_85% = 30,000 × (0.80/0.85) = 28,235 GPUs</span>
+<span class="res">GPUs_freed = 1,765  →  Savings = 1,765 × $3 × 8,760 = $46.4M/year</span></div>
+
+
+<!-- ═══════ WORKED EXAMPLE ═══════ -->
+<hr class="sep">
+<div class="worked" id="worked">
+<div class="worked-label">Worked Example — Fault Tolerance Cost Analysis: 1,024-GPU LLM Pre-Training</div>
+
+<p><strong>Scenario:</strong> You're planning a 7-day, 1,024-GPU LLM pre-training job on H100s at $3/GPU-hr. Cluster MTBF is 50 hours per node (8 GPUs per node). Assume no fault tolerance vs. a well-engineered checkpoint/requeue pipeline. Quantify the GPU-hour cost of each approach.</p>
+
+<p><strong>Given:</strong></p>
+<ul>
+<li>Duration: 7 days = 168 hours</li>
+<li>GPUs: 1,024 (128 nodes × 8 GPUs)</li>
+<li>Node MTBF: 50 hours</li>
+<li>Cost: $3/GPU-hr</li>
+<li>Checkpoint time: 3 minutes</li>
+<li>Recovery time (no fault tolerance): full restart from hour 0</li>
+<li>Recovery time (with fault tolerance): resume from last checkpoint (every 30 min)</li>
+</ul>
+
+<p><strong>Step 1: Expected number of failures</strong></p>
+<div class="formula">
+Nodes = 128
+Run_duration = 168 hours
+Expected_failures = Nodes × (Run_duration / MTBF)
+                  = 128 × (168 / 50)
+<span class="res">                  = 128 × 3.36 = 430 expected failures over the run</span>
+
+<span class="cm"># But failures follow Poisson: time to FIRST failure is the critical metric</span>
+Time_to_first_failure = MTBF / Nodes = 50 / 128 = <span class="res">0.39 hours ≈ 23 minutes</span>
+<span class="cm"># A 1,024-GPU cluster will see its first failure within 23 minutes on average.</span>
+<span class="cm"># Without fault tolerance, a job that restarts from scratch loses ALL prior work.</span></div>
+
+<p><strong>Step 2: GPU-hours wasted without fault tolerance</strong></p>
+<div class="formula">
+<span class="cm"># Assume failures are detected and job restarts from hour 0 each time</span>
+<span class="cm"># Poisson process: Nth failure follows Gamma distribution</span>
+<span class="cm"># Simplified: model as sequential → each failure wastes hours since last successful start</span>
+
+<span class="cm"># In practice, at 0.39 hr between failures, the job can never complete</span>
+<span class="cm"># Without checkpointing: infinite loop (job never reaches hour 168)</span>
+
+<span class="cm"># Conservative model: assume 1 failure per run at random point (expected: hour 84)</span>
+<span class="cm"># Wasted GPU-hours (without FT) = GPUs × hours_worked_before_failure</span>
+Wasted_GPU_hours = 1024 × 84 = <span class="warn">86,016 GPU-hours wasted per failure</span>
+Wasted_cost = 86,016 × $3 = <span class="warn">$258,048 wasted per failure</span>
+
+<span class="cm"># With 430 failures expected: effectively the job never completes</span></div>
+
+<p><strong>Step 3: GPU-hours wasted WITH fault tolerance (30-min checkpoints)</strong></p>
+<div class="formula">
+<span class="cm"># Maximum work lost = work since last checkpoint = 30 minutes</span>
+Checkpoint_interval = 0.5 hours
+Checkpoint_time = 0.05 hours (3 min)
+
+<span class="cm"># Per failure: wasted compute = replay from checkpoint + checkpoint overhead</span>
+<span class="res">Wasted_per_failure = 1024 GPUs × (0.5 + 0.05) hrs = 563 GPU-hours</span>
+<span class="res">Cost_per_failure = 563 × $3 = $1,690</span>
+
+<span class="cm"># Over full 168-hour run with 430 expected failures:</span>
+Total_wasted = 430 × 563 = <span class="res">242,090 GPU-hours wasted</span>
+Total_wasted_cost = 430 × $1,690 = <span class="res">$726,700 over the 7-day run</span>
+
+<span class="cm"># vs. without FT: job never completes — effectively infinite cost</span>
+<span class="cm"># Checkpoint overhead (writing 30-min interval): 3 min / 30 min = <span class="res">10% overhead</span></span>
+<span class="cm"># Tuning: use async checkpointing → reduce to &lt;2% overhead</span>
+<span class="cm"># See Chapter 15 for checkpoint I/O optimization (async, distributed, incremental)</span></div>
+
+<p><strong>Conclusion:</strong> Without fault tolerance, a 1,024-GPU training job on a realistic cluster <em>cannot complete</em> a 7-day run — it will fail before reaching the end. With a checkpoint-requeue pipeline, the run completes with ~10% overhead from checkpoint writes and failure recovery, costing $726K in wasted GPU-hours over the full run. The engineering investment to build this pipeline (typically 1–2 weeks for a production-grade implementation) pays back in the first training run alone.</p>
+</div>
+
+<!-- ═══════ PROFILING COOKBOOK ═══════ -->
+<h2>16.12 Profiling &amp; Diagnostic Cookbook</h2>
+
+<h3>When a 512-GPU Training Job is Slow — Systematic Diagnosis</h3>
+
+<div class="callout gray">
+<strong>Diagnostic Decision Tree</strong>
+<br><br>
+<strong>Step 1: Check MFU</strong> — compute <code>achieved_TFLOPS / peak_TFLOPS</code>. If &lt;40%: scheduling or network issue. If 40–70%: likely communication overhead. If &gt;70%: GPU-side issue (memory, kernel).
+<br><br>
+<strong>Step 2: Check AllReduce time</strong> — add NCCL timing: <code>NCCL_TIMING=1</code>. If AllReduce &gt;15% of step time: topology placement issue or fabric congestion. Check <code>sinfo --format=%f %n</code> to verify nodes are on same ToR switches.
+<br><br>
+<strong>Step 3: Check stragglers</strong> — if AllReduce time is normal but throughput varies, one rank is slow. Use <code>torch.distributed.monitored_barrier()</code> to identify slow ranks. Check DCGM for thermal throttling on that node's GPUs.
+<br><br>
+<strong>Step 4: Check checkpoint I/O</strong> — if training pauses periodically, checkpoint writes are synchronous and blocking. Switch to async checkpointing (Torch Distributed Checkpoint) or reduce checkpoint frequency. See Chapter 15.
+<br><br>
+<strong>Step 5: Check gang start</strong> — run <code>sacct -j $JOBID --format=JobID,Start --parsable2</code>. If any rank started more than 5 seconds after the first: partial gang start, scheduler configuration issue.
+</div>
+
+<div class="formula">
+<span class="cm"># SLURM job diagnostic commands</span>
+<span class="hl">squeue -j $JOBID -o "%i %T %D %l %S %V %P %q %u"</span>
+<span class="cm"># Shows: job state, nodes, time limit, start time, submit time, partition, QOS, user</span>
+
+<span class="hl">sacct -j $JOBID --format=JobID,State,ExitCode,CPUTimeRAW,MaxRSS --parsable2</span>
+<span class="cm"># Post-mortem: exit code, CPU time consumed, max memory used</span>
+
+<span class="cm"># Check fair-share balance (why is a job low priority?)</span>
+<span class="hl">sprio -l -j $JOBID</span>
+<span class="cm"># Shows: priority breakdown by component (age, fairshare, QOS, jobsize)</span>
+
+<span class="cm"># Check node topology placement</span>
+<span class="hl">scontrol show job $JOBID | grep NodeList</span>
+srun --ntasks=1 bash -c "hostname; ibnetdiscover 2>/dev/null | grep $(hostname) | head -5"
+<span class="cm"># Verify nodes are within expected switch domain</span>
+
+<span class="cm"># Kubernetes: GPU utilization across all pods in namespace</span>
+kubectl top pods -n research --sort-by=cpu
+kubectl describe nodes | grep -A5 "Allocated resources"</div>
+
+<!-- ═══════ KEY TAKEAWAYS ═══════ -->
+<div class="takeaways" id="takeaways">
+  <h3>Key Takeaways</h3>
+
+  <div class="takeaway-group">
+    <div class="tg-label">Core Concepts</div>
+    <ul>
+      <li>SLURM and Kubernetes solve different problems: SLURM excels at gang-scheduled, topology-aware HPC training; Kubernetes excels at containerized, auto-scaling inference serving. Most large organizations need both.</li>
+      <li>Gang scheduling is the non-negotiable constraint for distributed training: all ranks must start simultaneously, or NCCL initialization hangs and GPUs burn money doing nothing. SLURM provides this natively; Kubernetes requires Volcano or Kueue.</li>
+      <li>Topology-aware scheduling can recover 5–27 percentage points of MFU by ensuring TP groups stay within the NVLink domain (0.05 ms) and PP groups stay within the same ToR switch (0.15 ms), not scattered across spine switches (0.80 ms).</li>
+      <li>Fair-share scheduling automatically corrects cluster equity: teams that have used less of their allocation get boosted priority; over-consumers are deprioritized. The 14-day decay half-life means even heavy users return to fair standing over time.</li>
+    </ul>
+  </div>
+
+  <div class="takeaway-group">
+    <div class="tg-label">Cost &amp; Productivity Impact</div>
+    <ul>
+      <li>Improving cluster utilization from 65%→85% on a 1,024-GPU cluster at $3/GPU-hr saves $614/hr = $5.4M/year — entirely from scheduling improvements, zero additional hardware.</li>
+      <li>A fault-tolerant checkpoint-requeue pipeline is mandatory at scale: on a 1,024-GPU cluster with 50-hour node MTBF, the first failure arrives within 23 minutes on average. Without checkpointing, a 7-day training run cannot complete. With 30-minute checkpointing, recovery cost per failure drops from hundreds of thousands to $1,690.</li>
+      <li>Multi-tenant GPU sharing via MIG on H100s allows 7 independent CI/CD evaluation jobs to run concurrently on a single GPU, recovering $0.43/hr from GPUs that would otherwise sit idle between training runs.</li>
+    </ul>
+  </div>
+
+  <div class="takeaway-group">
+    <div class="tg-label">Principal-Level Insight</div>
+    <ul>
+      <li>Silent Data Corruption (SDC) is the most dangerous failure mode: the GPU appears healthy by all hardware metrics (no ECC errors, nominal temperature) but produces wrong computation results. The only reliable detection is running known-correct "golden input" validation tests in the prolog before every large training job. No amount of post-hoc analysis recovers a multi-week training run corrupted by SDC.</li>
+      <li>The SLURM <code>--switches</code> constraint is the highest-ROI single configuration change for multi-node training: it prevents the scheduler from scattering a 512-GPU job across maximum fabric hops. The tradeoff — up to 30 minutes additional queue wait for better placement — pays back in reduced AllReduce latency for the entire multi-day run. At a step time of 1 second, 10% latency improvement = 0.1 GPU-seconds saved per step = hours of compute recovered on million-step runs.</li>
+      <li>Kubernetes PriorityClasses and SLURM QOS tiers solve different parts of the same problem: K8s priorities are about preemption order within a namespace; SLURM QOS is about preemption, resource caps, and scheduling boosters simultaneously. For a hybrid cluster, the policy must be consistent across both systems or teams will route jobs to whichever system gives them an advantage.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════ REVIEW QUESTIONS ═══════ -->
+<div class="review-questions" id="review">
+  <h3>Review Questions</h3>
+
+  <div class="rq-tier foundational">
+    <div class="rq-tier-label">
+      <span class="rq-badge">Foundational</span>
+      Build the mental model — no math required
+    </div>
+    <ol>
+      <li>Explain why a distributed training job requires gang scheduling. What happens if Rank 0 starts on GPU-A while Rank 127 is still waiting for its allocation? Why is this worse than simply being slow?</li>
+      <li>What are the three SLURM daemons and what does each one do? If <code>slurmctld</code> crashes on the head node, what happens to jobs that are currently running on compute nodes? What happens to new job submissions?</li>
+      <li>A researcher on your team says "just use MPS everywhere — it maximizes GPU utilization." What is the key failure-isolation risk they are ignoring, and when would MIG be the right choice instead?</li>
+    </ol>
+  </div>
+
+  <div class="rq-tier intermediate">
+    <div class="rq-tier-label">
+      <span class="rq-badge">Intermediate</span>
+      Apply and calculate — production context
+    </div>
+    <ol>
+      <li>Your 256-GPU SLURM cluster has 32 nodes (8 GPUs each) on 4 ToR switches (8 nodes per ToR). A team submits a training job requesting all 256 GPUs without a <code>--switches</code> constraint. The scheduler places 64 nodes across all 4 switches. Calculate the AllReduce latency for the tensor-parallel group (8 GPUs on the same node) vs. the data-parallel gradient sync (64 nodes across 4 ToRs, 3-hop worst case). Using the latency values from §16.4, what is the additional time spent in cross-spine AllReduce per step if gradient sync takes 20% of step time at optimal placement?</li>
+      <li>You are configuring fair-share for 4 teams: research (Share=40), inference (Share=30), evaluation (Share=20), dev (Share=10). After one week, the raw usage is: research=1,200 GPU-hrs, inference=3,600 GPU-hrs, evaluation=800 GPU-hrs, dev=200 GPU-hrs (total=5,800). Calculate the normalized share and normalized usage for each team. Which team gets the highest fair-share factor (is most under-utilized relative to their allocation)? Write the <code>sacctmgr</code> command to create the account hierarchy.</li>
+      <li>A Kubernetes GPU pod for a batch inference job is stuck in Pending. The describe output shows: "0/12 nodes are available: 12 node(s) had untolerated taint {nvidia.com/gpu: NoSchedule}." Write the YAML stanza to fix this pod spec. Then explain: why is this taint applied to GPU nodes, and what would happen if you removed the taint entirely instead of adding the toleration?</li>
+    </ol>
+  </div>
+
+  <div class="rq-tier principal">
+    <div class="rq-tier-label">
+      <span class="rq-badge">Principal Level</span>
+      Design, decide, and defend — architecture reviews
+    </div>
+    <ol>
+      <li>Design a multi-tenant GPU cluster for 5 ML teams with 1,024 H100 GPUs. Team A runs large-scale pre-training (1–2 jobs, 512–1,024 GPUs each, 7-day walls, can tolerate preemption with checkpointing). Team B runs production inference serving (SLA: &lt;50ms p99, 24/7, never preemptible, needs 64 GPUs). Team C runs hyperparameter search (200 concurrent 8-GPU jobs, each 4 hours, tolerates preemption). Teams D and E do development (small jobs, 1–8 GPUs, low priority). Design: SLURM QOS tiers, fair-share allocations, partition layout, and the MIG/MPS/full-GPU assignment policy. Justify every decision quantitatively. What is the expected overall cluster utilization?</li>
+      <li>A 7-day, 512-GPU LLM training run is failing due to node failures at a rate of 1 failure per 8 hours. Current setup: no checkpointing, manual restart from epoch 0. Design a complete fault-tolerant pipeline. Specify: checkpoint interval (justify the math, considering both checkpoint I/O overhead and expected work lost per failure), SLURM requeue configuration, SIGTERM handler code pattern, prolog health check contents, and async vs. synchronous checkpoint strategy. Quantify GPU-hours wasted and money saved versus the current approach at $3/GPU-hr.</li>
+      <li>Your organization is evaluating whether to use SLURM, Kubernetes, or a hybrid for a new 4,000-GPU cluster that will run: (a) 2,000 GPUs dedicated to LLM pre-training jobs (128–512 GPUs each), (b) 1,500 GPUs for 24/7 inference serving with auto-scaling, (c) 500 GPUs for research experiments (mixed sizes, frequent iteration). Design the cluster architecture, justifying the orchestration system choice for each workload segment. Describe the "bridge" layer between systems. What are the three biggest operational risks of a hybrid architecture, and how do you mitigate each?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="ch-end">
+  Chapter 16 — Cluster Management &amp; Orchestration<br>
+  AI/ML Infrastructure from Silicon to Scale · Venkat Vinjam · 2026<br>
+  Next: Chapter 17 — Telemetry, Profiling Tools, and Observability
+</div>
+
+</div><!-- .page -->
+</body>
+</html>

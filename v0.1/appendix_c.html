@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Appendix C — Glossary of Key Terms | AI/ML Infrastructure from Silicon to Scale</title>
+<style>
+/* ── PRINT CSS ────────────────────────────────────────── */
+
+/* ── TOP NAV ──────────────────────────────────────────── */
+
+/* ── LEFT SIDEBAR ─────────────────────────────────────── */
+.sidebar-letters{
+  display:flex;flex-wrap:wrap;gap:2px;padding:6px 10px 10px;
+  border-bottom:1px solid #d8d0c4;margin-bottom:6px
+}
+.sidebar-letters a{
+  display:inline-block;width:22px;height:22px;line-height:22px;
+  text-align:center;font-family:sans-serif;font-size:11px;font-weight:700;
+  color:#1c2438;border:1px solid #c8c0b8;border-radius:3px;
+  text-decoration:none;transition:all .15s;padding:0
+}
+.sidebar-letters a:hover{background:#1c2438;color:#e3b341;border-color:#1c2438}
+
+/* ── MAIN CONTENT ─────────────────────────────────────── */
+.page{
+  max-width:860px;
+  margin:0 auto 0 216px;
+  padding:36px 48px 80px
+}
+
+/* ── APPENDIX HEADER ──────────────────────────────────── */
+.app-hdr{margin-bottom:32px;padding-bottom:18px;border-bottom:2px solid #e3b341}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:6px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.18;margin-bottom:8px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.6}
+.ch-divider{width:60px;height:3px;background:#e3b341;margin-bottom:14px}
+.ch-meta{font-family:sans-serif;font-size:11px;color:#888;display:flex;gap:18px;flex-wrap:wrap}
+.ch-meta span strong{color:#1c2438}
+
+/* ── OPENING QUOTE ────────────────────────────────────── */
+blockquote.pullquote{
+  border-left:4px solid #e3b341;background:#fffbf0;
+  padding:11px 18px;margin:18px 0 28px;
+  border-radius:0 6px 6px 0;font-style:italic;
+  font-size:13px;color:#555;line-height:1.7;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact
+}
+
+/* ── ALPHABET SECTION HEADERS ─────────────────────────── */
+.alpha-section{scroll-margin-top:64px;margin-top:36px}
+.alpha-header{
+  display:flex;align-items:center;gap:12px;margin-bottom:16px;
+  padding-bottom:6px;border-bottom:2px solid #e3b341
+}
+.alpha-letter{
+  font-size:28px;font-weight:900;color:#1c2438;
+  background:#e3b341;width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:6px;flex-shrink:0;line-height:1;font-family:sans-serif
+}
+.alpha-count{
+  font-family:sans-serif;font-size:10px;color:#888;
+  letter-spacing:1px;text-transform:uppercase
+}
+
+/* ── TERM BLOCKS ──────────────────────────────────────── */
+.term-block{
+  padding:12px 0 12px 0;
+  border-bottom:1px solid #ede8e0;
+}
+.term-block:last-child{border-bottom:none}
+.term-name{
+  font-size:14px;font-weight:700;color:#1c2438;
+  margin-bottom:4px;line-height:1.3
+}
+.term-abbr{
+  font-family:sans-serif;font-size:10px;background:#e3b341;color:#1c2438;
+  padding:1px 7px;border-radius:10px;margin-left:6px;font-weight:700;
+  letter-spacing:.5px;vertical-align:middle
+}
+.term-def{
+  font-size:12.5px;color:#333;line-height:1.75;margin-bottom:5px
+}
+.term-def em{color:#1c2438;font-style:normal;font-weight:700;border-bottom:1px dotted #888}
+.term-refs{
+  font-family:sans-serif;font-size:10px;color:#888;
+  display:flex;flex-wrap:wrap;gap:5px;margin-top:5px
+}
+.ch-ref{
+  background:#f0f2f7;border:1px solid #c8ccd8;color:#2a4a8a;
+  padding:1px 7px;border-radius:8px;font-size:10px;font-weight:600;
+  text-decoration:none;font-family:sans-serif
+}
+code.inline{
+  background:#0d1117;color:#b8ddf0;padding:1px 5px;
+  border-radius:3px;font-family:'Courier New',monospace;
+  font-size:10.5px
+}
+
+/* ── SECTION HEADINGS ─────────────────────────────────── */
+h2{font-size:18px;color:#1c2438;margin:32px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:14.5px;color:#1a3060;margin:20px 0 7px}
+
+/* ── CALLOUT ──────────────────────────────────────────── */
+.callout{
+  border-left:4px solid #e3b341;background:#fffbf0;
+  padding:11px 16px;margin:18px 0;border-radius:0 6px 6px 0;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact
+}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout strong{display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#1c2438}
+
+/* ── ACRONYM TABLE ────────────────────────────────────── */
+.acronym-table{
+  width:100%;border-collapse:collapse;margin:14px 0;
+  font-size:11.5px;font-family:sans-serif
+}
+.acronym-table th{
+  background:#1c2438;color:#fff;padding:7px 10px;
+  text-align:left;font-size:10px;letter-spacing:1px;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact
+}
+.acronym-table td{
+  padding:5px 10px;border-bottom:1px solid #ede8e0;
+  vertical-align:top
+}
+.acronym-table tr:nth-child(even) td{
+  background:#f8f6f0;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact
+}
+.acronym-table td:first-child{font-weight:700;color:#1c2438;white-space:nowrap}
+.acronym-table td:last-child{color:#555}
+
+/* ── END MARK ─────────────────────────────────────────── */
+.ch-end{
+  text-align:center;margin-top:40px;padding-top:16px;
+  border-top:1px solid #e0d8c8;font-family:sans-serif;
+  font-size:10px;color:#bbb;letter-spacing:2px;text-transform:uppercase
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
+.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
+.mem-tier-body{flex:1}
+.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
+.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+.fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+
+</style>
+</head>
+<body>
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="appendix_b.html">&#8592; App B</a>
+  <a href="appendix_d.html">App D &#8594;</a>
+  <a href="ch01.html">Ch 1</a>
+  <a href="ch02.html">Ch 2</a>
+</div>
+<div id="sidebar">
+  <h4>Appendix C — Glossary</h4>
+  <a href="#top">Glossary Overview</a>
+</div>
+<div class="page">
+<div class="ch-label">Appendix C · Back Matter</div>
+<h1 class="ch-title">Glossary of Key Terms</h1>
+<div class="ch-subtitle">Production-precision definitions for every term a Principal Performance Architect must know — organized alphabetically with chapter cross-references</div>
+  <div class="ch-divider"></div>
+  <div class="ch-meta">
+    <span><strong>Coverage:</strong> 65+ terms, A–Z</span>
+    <span><strong>Scope:</strong> GPU architecture · Training · Inference · Networking · Cluster ops</span>
+    <span><strong>Cross-refs:</strong> Chapters 1–18</span>
+  </div>
+<div class="ch-divider"></div>
+
+<blockquote class="pullquote">
+  "A precise vocabulary is not pedantry — it is the prerequisite for precise reasoning. An engineer who confuses 'bandwidth-bound' with 'memory-bound' cannot correctly diagnose a production performance regression, no matter how talented they are."
+</blockquote>
+
+<div class="callout">
+  <strong>How to Use This Glossary</strong>
+  Terms are defined at the precision required for production use, not introductory accuracy. Cross-reference tags (→ Ch N) point to the chapter where the concept is developed in full with worked examples and profiling recipes. Terms in <em>italic style</em> within a definition are themselves defined elsewhere in this glossary. For interview prep, prioritize terms marked with chapter references spanning multiple chapters — those concepts appear at the architectural intersection of the book.
+</div>
+
+<!-- ═══════════════════ A ═══════════════════ -->
+<div class="alpha-section" id="A">
+  <div class="alpha-header">
+    <div class="alpha-letter">A</div>
+    <div class="alpha-count">5 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">AllGather</div>
+    <div class="term-def">A collective communication operation where each process contributes a shard, and after the operation every process holds all shards concatenated. Used in <em>ZeRO</em>/<em>FSDP</em> to reconstitute full parameter tensors before the forward pass. Opposite of <em>ReduceScatter</em>. In ZeRO-3, AllGather runs before each forward and backward layer, and the gathered parameters are freed immediately after to maintain the sharded memory footprint.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">AllReduce</div>
+    <div class="term-def">A collective communication operation that reduces (e.g., sums) tensors across all processes and gives every process the result. The backbone of <em>Data Parallelism</em> gradient synchronization. Implemented in <em>NCCL</em> using Ring or Tree algorithms, or via <em>NVLS</em>/<em>SHARP</em> for in-network aggregation. Communication volume: 2 × (N-1)/N × message_size per rank (Ring). On H100 NVLink clusters, NVLS reduces this to a single pass through NVSwitch hardware, achieving ~2× lower latency than Ring for large messages.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Arithmetic Intensity <span class="term-abbr">AI</span></div>
+    <div class="term-def">FLOPs performed per byte of memory traffic. <code class="inline">AI = FLOPs / bytes_transferred</code>. The key axis in the <em>Roofline</em> model. Operations with AI below the <em>ridge point</em> are memory-bandwidth-bound; above are compute-bound. Example: a decode GEMV at batch=1 has AI ≈ 1 FLOP/byte — deep in memory-bound territory on any GPU. A training GEMM at M=N=K=4096 has AI ≈ 1,365 FLOP/byte — solidly compute-bound on H100.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch01.html">→ Ch 1 Mindset</a>
+      <a class="ch-ref" href="ch07.html">→ Ch 7 Kernels</a>
+      <a class="ch-ref" href="ch12.html">→ Ch 12 Benchmarking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Autoregressive Decoding</div>
+    <div class="term-def">The standard token generation algorithm: generate one token at a time, each conditioned on all prior tokens. Requires loading all model weights each step — inherently <em>memory-bandwidth-bound</em> at small batch sizes. The fundamental reason decode throughput is limited by HBM bandwidth, not compute. For a 70B BF16 model (140 GB) on H100 (3.35 TB/s), minimum token time = 140 GB / 3,350 GB/s ≈ 42ms, regardless of sequence length.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch06.html">→ Ch 6 Inference</a>
+      <a class="ch-ref" href="ch11.html">→ Ch 11 KV Cache</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">AWQ <span class="term-abbr">Activation-Aware Weight Quantization</span></div>
+    <div class="term-def">A <em>PTQ</em> method that identifies "salient" weight channels — those corresponding to large-magnitude activations — and scales them before quantization to protect them from quantization error. Typically outperforms <em>GPTQ</em> for knowledge-intensive tasks. Uses per-group-128 granularity. Does not require Hessian computation, making it faster to apply than GPTQ on large models. Widely deployed for INT4 weight-only quantization of 7B–70B models.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch08.html">→ Ch 8 Quantization</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ B ═══════════════════ -->
+<div class="alpha-section" id="B">
+  <div class="alpha-header">
+    <div class="alpha-letter">B</div>
+    <div class="alpha-count">3 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">BF16 <span class="term-abbr">BrainFloat16</span></div>
+    <div class="term-def">A 16-bit floating point format with 8 exponent bits and 7 mantissa bits. Same dynamic range as FP32 (±3.4×10³⁸) but lower precision per bit. The standard training format for LLMs since GPT-3. Replaced <em>FP16</em> for training because its wider exponent range eliminates gradient overflow — the primary failure mode of FP16 mixed-precision training at scale. H100 SXM: 989 TFLOPS BF16 Tensor Core throughput. All serious LLM training since 2021 uses BF16 as the primary compute dtype.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch08.html">→ Ch 8 Quantization</a>
+      <a class="ch-ref" href="ch03.html">→ Ch 3 GPU Architecture</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Blocked Roofline</div>
+    <div class="term-def">See <em>Roofline Model</em>. A variant that accounts for cache hierarchy: instead of using peak HBM bandwidth as the roof slope, it uses the effective bandwidth achieved after accounting for L2 and SRAM reuse. FlashAttention's performance advantage is best explained by the blocked roofline — its SRAM tiling dramatically increases the effective arithmetic intensity by eliminating HBM trips for intermediate attention scores.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch07.html">→ Ch 7 Kernels</a>
+      <a class="ch-ref" href="ch04.html">→ Ch 4 Memory</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Bubble Fraction</div>
+    <div class="term-def">The fraction of pipeline parallel compute time wasted on idle pipeline stages. Formula: <code class="inline">(PP-1) / (PP-1+M)</code> where PP = pipeline stages and M = microbatches. Target: &lt;10%. At PP=8 and M=16: bubble = 7/23 = 30.4% — unacceptably high. At M=64: bubble = 7/71 = 9.9% — acceptable. The fundamental reason pipeline parallelism requires large batch sizes to achieve reasonable efficiency.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ C ═══════════════════ -->
+<div class="alpha-section" id="C">
+  <div class="alpha-header">
+    <div class="alpha-letter">C</div>
+    <div class="alpha-count">5 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Chunked Prefill</div>
+    <div class="term-def">An inference optimization that splits long prompts into fixed-size chunks and interleaves prefill and decode steps within a single scheduler iteration. Reduces <em>TTFT</em> variance by sharing GPU time between prefill and decode rather than blocking all decode requests during long prefill. Chunk sizes of 512–2048 tokens are typical. When a 64K-token prompt would otherwise monopolize the GPU for 8+ seconds, chunking it into 512-token pieces allows ongoing decode requests to make forward progress, keeping P99 TTFT within SLA.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch06.html">→ Ch 6 Inference</a>
+      <a class="ch-ref" href="ch11.html">→ Ch 11 KV Cache</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Collective Operation</div>
+    <div class="term-def">A communication primitive that involves all processes in a group simultaneously: <em>AllReduce</em>, <em>AllGather</em>, <em>ReduceScatter</em>, Broadcast, All-to-All. Contrast with point-to-point operations (send/recv). Collectives are the dominant communication pattern in distributed training and must be overlapped with compute to avoid degrading GPU utilization. The choice of collective algorithm (Ring vs Tree vs NVLS) significantly affects performance depending on message size and topology.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Compute-Bound</div>
+    <div class="term-def">A workload regime where the GPU's arithmetic units (Tensor Cores) are the bottleneck. Characterized by arithmetic intensity above the <em>roofline ridge point</em>. Optimization targets: increase precision utilization (<em>FP8</em>), improve tile alignment (multiples of 16/128), reduce kernel launch overhead, maximize warp occupancy. Compute-bound operations include: large GEMM (training, large-batch prefill), dense convolutions. Cannot be accelerated by faster HBM — the bottleneck is Tensor Core throughput.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch01.html">→ Ch 1 Mindset</a>
+      <a class="ch-ref" href="ch07.html">→ Ch 7 Kernels</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Continuous Batching</div>
+    <div class="term-def">An inference scheduling strategy that adds new requests to the active batch as soon as existing requests finish individual decode steps, rather than waiting for the entire batch to complete. Achieves near-100% GPU utilization without increasing <em>TTFT</em>. Industry standard in <em>vLLM</em>, TRT-LLM, SGLang. Before continuous batching, servers had to wait for the slowest request in a batch to finish — a sequence generating 1000 tokens would block all others until complete. With continuous batching, that slot is reclaimed token-by-token.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch06.html">→ Ch 6 Inference</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Context Parallelism <span class="term-abbr">CP</span></div>
+    <div class="term-def">A parallelism strategy that splits the sequence dimension across GPUs for long-context training. Each GPU holds S/CP query positions and attends over the full key-value set via All-to-All communication. Activates at S &gt; 32K tokens where sequence-length-proportional activation memory exceeds single-GPU HBM capacity. CP=4 reduces per-GPU activation memory from S×d to S/4×d at the cost of an All-to-All per attention layer. Used at Meta for Llama-3 128K context training.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ D ═══════════════════ -->
+<div class="alpha-section" id="D">
+  <div class="alpha-header">
+    <div class="alpha-letter">D</div>
+    <div class="alpha-count">4 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Data Parallelism <span class="term-abbr">DP</span></div>
+    <div class="term-def">A distributed training strategy where each worker holds a full model replica and processes different data shards. Gradients are synchronized across workers via <em>AllReduce</em> after each backward pass. Simplest parallelism form — no model changes required. Scales linearly until the AllReduce communication time approaches the compute time. Pure DP is not viable for models larger than a single GPU's memory; see <em>FSDP</em>/<em>ZeRO</em> for sharded variants.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">DCGM <span class="term-abbr">Data Center GPU Manager</span></div>
+    <div class="term-def">NVIDIA's hardware telemetry daemon. Reads GPU silicon counters (SM utilization, temperature, ECC errors, power, NVLink bandwidth) at 1-second resolution. Exposes metrics to <em>Prometheus</em> via <code class="inline">dcgm-exporter</code>. The authoritative source for GPU health data in production clusters. Key metrics: <code class="inline">DCGM_FI_DEV_GPU_UTIL</code> (SM utilization), <code class="inline">DCGM_FI_DEV_MEM_COPY_UTIL</code> (memory bandwidth utilization), <code class="inline">DCGM_FI_DEV_ECC_SBE_VOL_TOTAL</code> (soft ECC errors — leading indicator of GPU failure).</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch17.html">→ Ch 17 Telemetry</a>
+      <a class="ch-ref" href="ch12.html">→ Ch 12 Benchmarking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Decode</div>
+    <div class="term-def">The autoregressive token generation phase of inference. Memory-bandwidth-bound at small batch sizes because the full model must be loaded from <em>HBM</em> for each generated token. Distinguished from <em>Prefill</em>. Decode throughput is limited by HBM bandwidth: <code class="inline">tokens/sec = HBM_bandwidth / model_bytes_per_token</code>. For 70B BF16 on H100: 3.35 TB/s / 140 GB ≈ 23.9 tokens/sec per GPU at batch=1. Increasing batch size improves arithmetic intensity until the GEMM becomes compute-bound, typically at batch 32–128 depending on model size.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch06.html">→ Ch 6 Inference</a>
+      <a class="ch-ref" href="ch11.html">→ Ch 11 KV Cache</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">DPO <span class="term-abbr">Direct Preference Optimization</span></div>
+    <div class="term-def">A post-training alignment method that trains the policy model using a pair of chosen/rejected responses, without requiring a separate reward model. Simpler infrastructure than <em>PPO</em>: requires only policy + reference model (2× model memory vs PPO's 3–4×). Mathematically equivalent to optimizing a reward signal implicit in the preference data. Widely used for instruction-following alignment. The primary alternative to PPO for teams without large RL infrastructure budgets.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ E ═══════════════════ -->
+<div class="alpha-section" id="E">
+  <div class="alpha-header">
+    <div class="alpha-letter">E</div>
+    <div class="alpha-count">2 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">ECC <span class="term-abbr">Error Correction Code</span></div>
+    <div class="term-def">A hardware mechanism in GPU <em>HBM</em> that detects and corrects memory bit errors. Single-bit errors (SBE / correctable) are fixed silently but logged via <em>DCGM</em> — high SBE rates are a leading indicator of HBM failure. Double-bit errors (DBE / uncorrectable) cause a <em>XID</em> error and require immediate GPU replacement. Enabling ECC reduces effective HBM bandwidth by ~6% on H100 due to additional data encoding overhead. Production clusters always enable ECC despite the bandwidth cost — the alternative is silent data corruption.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch17.html">→ Ch 17 Telemetry</a>
+      <a class="ch-ref" href="ch03.html">→ Ch 3 GPU Architecture</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Expert Parallelism <span class="term-abbr">EP</span></div>
+    <div class="term-def">A parallelism strategy for <em>MoE</em> models that distributes different experts across GPUs. Each GPU hosts a subset of experts and processes only tokens routed to those experts. Requires All-to-All communication to route tokens to the correct expert GPU. Typically deployed within the <em>NVLink</em> domain (EP ≤ 8) to minimize latency — InfiniBand All-to-All latency is prohibitive for per-layer expert routing. DeepSeek-V3 uses EP=64 within a single node via NVLink-C2C, achieving sub-μs expert routing.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch13.html">→ Ch 13 MoE</a>
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ F ═══════════════════ -->
+<div class="alpha-section" id="F">
+  <div class="alpha-header">
+    <div class="alpha-letter">F</div>
+    <div class="alpha-count">6 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Fair-Share Scheduling</div>
+    <div class="term-def">A <em>SLURM</em> scheduling policy where job priority decreases as a user's historical resource consumption exceeds their allocated share. The fair-share score approaches 1.0 for under-utilizing users (high priority) and 0.0 for over-utilizing users (low priority). Prevents any team from monopolizing the cluster over time. Configured via <code class="inline">PriorityWeightFairshare</code> in SLURM. Essential for large multi-tenant training clusters shared across research teams with competing priorities.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch16.html">→ Ch 16 Cluster Mgmt</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">FLOP <span class="term-abbr">Floating Point Operation</span></div>
+    <div class="term-def">One multiply or add operation. A multiply-accumulate (MAC) counts as 2 FLOPs. Used to measure compute requirements of neural network forward passes. Key formula: Total training FLOPs ≈ 6 × N_params × N_tokens (the "6" accounts for forward pass, backward pass, and gradient accumulation). For Llama-3 70B trained on 15T tokens: 6 × 70B × 15T = 6.3×10²⁴ FLOPs. At 989 TFLOPS per H100 and 40% MFU: ~50,000 H100-hours required.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch01.html">→ Ch 1 Mindset</a>
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">FlashAttention</div>
+    <div class="term-def">A fused attention kernel (Dao et al. 2022) that implements attention in tiles, keeping intermediate K,V tiles in on-chip SRAM rather than materializing the full O(S²) attention score matrix in HBM. Reduces attention HBM traffic from O(S²) to O(S). At S=8192 tokens, standard attention materializes a 10.7 GB score matrix per layer — FlashAttention eliminates this entirely. v3 (H100) achieves 585 TFLOPS — 58% of H100 theoretical peak — by exploiting Hopper's asynchronous WGMMA instructions and TMA memory access engine.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch04.html">→ Ch 4 Memory</a>
+      <a class="ch-ref" href="ch07.html">→ Ch 7 Kernels</a>
+      <a class="ch-ref" href="ch11.html">→ Ch 11 KV Cache</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">FP8</div>
+    <div class="term-def">An 8-bit floating point format with two variants: E4M3 (4 exponent, 3 mantissa bits, range ±448, used for weights and activations) and E5M2 (5 exponent, 2 mantissa bits, range ±57K, used for gradients). Supported natively on H100/H200/B200 via <em>Transformer Engine</em>. Delivers ~2× throughput vs BF16 for GEMM: H100 FP8 peak = 1,978 TFLOPS vs 989 TFLOPS BF16. Requires careful scaling to prevent overflow/underflow — TE manages this automatically via per-tensor <code class="inline">amax_history</code> tracking.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch08.html">→ Ch 8 Quantization</a>
+      <a class="ch-ref" href="ch03.html">→ Ch 3 GPU Architecture</a>
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">FSDP <span class="term-abbr">Fully Sharded Data Parallel</span></div>
+    <div class="term-def">PyTorch's native implementation of <em>ZeRO Stage 3</em>. Shards model parameters, gradients, and optimizer state across all DP workers. Equivalent to <code class="inline">ShardingStrategy.FULL_SHARD</code>. Requires 3× AllReduce bandwidth vs naive DP but enables training models of arbitrary size — the parameter shard per GPU shrinks linearly with DP degree. At DP=8: each GPU holds 1/8th of parameters at rest, AllGather-ing each layer's weights during computation and discarding them immediately after.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Fusion / Operator Fusion</div>
+    <div class="term-def">Merging multiple GPU operations into a single kernel to eliminate intermediate <em>HBM</em> round-trips. Two types: Vertical fusion (chain of sequential ops, e.g., RMSNorm + GEMM → one kernel, 2× fewer HBM reads); Horizontal fusion (parallel ops, e.g., Q+K+V projections → single QKV GEMM, 1 launch vs 3). Key optimization in <em>TorchInductor</em>, <em>TensorRT</em>, <em>NVFuser</em>. A fused RMSNorm+GEMM saves ~1.2 GB/layer of HBM traffic on a 70B model — recovering 15–20% of HBM bandwidth otherwise spent on normalization pass.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch07.html">→ Ch 7 Kernels</a>
+      <a class="ch-ref" href="ch09.html">→ Ch 9 Compilers</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ G ═══════════════════ -->
+<div class="alpha-section" id="G">
+  <div class="alpha-header">
+    <div class="alpha-letter">G</div>
+    <div class="alpha-count">6 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">GEMM <span class="term-abbr">General Matrix Multiplication</span></div>
+    <div class="term-def">The core compute primitive of neural network layers. C = A × B, where A ∈ ℝ^{M×K}, B ∈ ℝ^{K×N}, C ∈ ℝ^{M×N}. FLOPs = 2×M×K×N. The dominant operation in <em>prefill</em> and training — 80–95% of total FLOPs. Compute-bound at large batch sizes (M large); memory-bandwidth-bound at small batch sizes (<em>decode</em>). H100 peak: 989 TFLOPS BF16, 1,978 TFLOPS FP8. Dimension alignment to multiples of 128 (BF16) or 64 (FP8) is required for peak Tensor Core utilization.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch07.html">→ Ch 7 Kernels</a>
+      <a class="ch-ref" href="ch06.html">→ Ch 6 Inference</a>
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">GPUDirect RDMA</div>
+    <div class="term-def">An NVIDIA technology that allows the NIC to read from and write to GPU <em>HBM</em> directly via PCIe P2P, bypassing CPU stage buffers. Reduces communication latency by ~2 μs per message and frees ~12 CPU cores per DGX node that would otherwise serve as data proxy threads. Required for high-throughput inference disaggregation (prefill-decode disaggregation) where KV cache transfers between nodes must complete in &lt;1ms to maintain SLAs. Works with both InfiniBand and RoCEv2 NICs.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">GQA <span class="term-abbr">Grouped Query Attention</span></div>
+    <div class="term-def">An attention variant where multiple query heads share a single key-value head group. Reduces <em>KV cache</em> size by H_q/H_kv (e.g., 8× reduction for GQA-8 with 64 query heads). Standard in LLaMA-3, Mistral, Qwen. Enables much higher concurrent serving capacity vs <em>MHA</em> at minimal quality cost. Memory formula: KV_cache_bytes = 2 × L × H_kv × D_head × S × dtype_bytes. For Llama-3 70B (GQA-8, L=80, H_kv=8, D_head=128): 2×80×8×128×S×2 = 327,680×S bytes per sequence.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch02.html">→ Ch 2 Transformer</a>
+      <a class="ch-ref" href="ch11.html">→ Ch 11 KV Cache</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">GPTQ</div>
+    <div class="term-def">A <em>PTQ</em> method that applies second-order (Hessian-based) error correction during weight quantization. Processes weight matrices column by column, propagating quantization error to remaining columns to minimize output error. Achieves approximately -1.3% MMLU delta for INT4 quantization of LLaMA-3 70B — the current state of the art for static quantization accuracy. Slower to apply than <em>AWQ</em> (requires Hessian computation) but often superior on reasoning tasks. The default quantization baseline for production INT4 deployments.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch08.html">→ Ch 8 Quantization</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Gradient Clipping</div>
+    <div class="term-def">Rescaling the gradient vector when its L2 norm exceeds a threshold (typically 1.0). Prevents gradient explosion during training — a divergent backward pass that would corrupt model weights. Applied before the optimizer step: <code class="inline">torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)</code>. A clipping event is a diagnostic signal: if clipping fires on &gt;5% of steps, the learning rate may be too high or the model architecture has numerical instabilities. Log clip fraction as a training health metric.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">GRES <span class="term-abbr">Generic Resources</span></div>
+    <div class="term-def"><em>SLURM</em>'s mechanism for tracking non-CPU/memory resources like GPUs. Specified in job scripts with <code class="inline">--gres=gpu:h100:8</code> to request 8 H100 GPUs. Configured per-node in <code class="inline">gres.conf</code> with explicit GPU topology and binding. Used with <code class="inline">--gpu-bind=closest</code> to ensure NIC-GPU affinity for optimal <em>RDMA</em> throughput. Without proper GRES configuration, multi-tenant GPU clusters allocate GPUs without NIC affinity awareness — degrading collective communication performance by 30–50%.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch16.html">→ Ch 16 Cluster Mgmt</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ H ═══════════════════ -->
+<div class="alpha-section" id="H">
+  <div class="alpha-header">
+    <div class="alpha-letter">H</div>
+    <div class="alpha-count">2 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">HBM <span class="term-abbr">High-Bandwidth Memory</span></div>
+    <div class="term-def">3D-stacked DRAM attached directly to the GPU die via a wide silicon interposer bus (1024–2048 bit). Provides dramatically higher bandwidth than GDDR at the cost of lower capacity per module and higher cost per GB. The most critical performance resource for memory-bandwidth-bound AI workloads. Current standards: HBM3e (H200, B200) at 4.8–8.0 TB/s. HBM2e (A100): 2.0 TB/s. HBM3 (H100 SXM): 3.35 TB/s. The bandwidth difference between A100 and H100 (2.0 vs 3.35 TB/s) translates directly to 1.68× faster decode throughput for any memory-bound workload.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch03.html">→ Ch 3 GPU Architecture</a>
+      <a class="ch-ref" href="ch04.html">→ Ch 4 Memory</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">HFU <span class="term-abbr">Hardware FLOP Utilization</span></div>
+    <div class="term-def">Like <em>MFU</em> but accounts for recomputed activations. <code class="inline">HFU = (forward_FLOPs + recompute_FLOPs) / (peak_FLOPs × time)</code>. HFU ≥ MFU always. The difference between HFU and MFU reveals the overhead of activation checkpointing: if HFU = 55% and MFU = 40%, the recompute overhead is (55-40)/55 = 27% of actual compute — an unusually high recompute fraction that suggests the checkpointing granularity should be reduced. Use both metrics together when analyzing training efficiency.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+      <a class="ch-ref" href="ch12.html">→ Ch 12 Benchmarking</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ I ═══════════════════ -->
+<div class="alpha-section" id="I">
+  <div class="alpha-header">
+    <div class="alpha-letter">I</div>
+    <div class="alpha-count">1 term</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Inference</div>
+    <div class="term-def">Running a trained model to generate outputs. Divided into two phases: <em>Prefill</em> (process the input prompt, compute and cache KV projections for all tokens simultaneously — compute-bound) and <em>Decode</em> (generate output tokens autoregressively, one token per step — memory-bandwidth-bound). The distinction matters architecturally: prefill and decode have fundamentally different optimization targets, hardware efficiency characteristics, and SLA metrics (TTFT vs TPOT). Disaggregated inference systems assign them to separate hardware pools to optimize each independently.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch06.html">→ Ch 6 Inference</a>
+      <a class="ch-ref" href="ch11.html">→ Ch 11 KV Cache</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ K ═══════════════════ -->
+<div class="alpha-section" id="K">
+  <div class="alpha-header">
+    <div class="alpha-letter">K</div>
+    <div class="alpha-count">2 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">KV Cache <span class="term-abbr">Key-Value Cache</span></div>
+    <div class="term-def">The cached tensor of Key and Value projections for all prior tokens in an autoregressive sequence. Stored in <em>HBM</em>. Enables O(N) instead of O(N²) decode compute per step by reusing previously computed KV projections. The single most critical memory resource in inference systems — KV cache capacity directly determines how many concurrent sequences the system can serve. KV memory per token: <code class="inline">2 × L × (H_kv/H_q) × D_head × dtype_bytes</code>. At Llama-3 70B BF16: ~327KB per token. At 128K context: 41.9 GB of KV per sequence — exceeding the H100's 80 GB capacity with only 2 sequences.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch11.html">→ Ch 11 KV Cache</a>
+      <a class="ch-ref" href="ch06.html">→ Ch 6 Inference</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">KV Cache Cascade</div>
+    <div class="term-def">A failure mode where high <em>KV cache</em> utilization (&gt;~88%) causes each new request to evict an existing sequence, which triggers eviction of another, exponentially growing the overhead. P99 <em>TTFT</em> can spike 10–50× in seconds — a production incident pattern. Prevention: implement admission control that stops accepting new requests at 82% KV utilization, not 95% or 100%. Monitor via <code class="inline">vllm:gpu_cache_usage_perc</code> Prometheus metric with alerting at 80% to provide 10 minutes of warning before cascade onset.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch11.html">→ Ch 11 KV Cache</a>
+      <a class="ch-ref" href="ch17.html">→ Ch 17 Telemetry</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ L ═══════════════════ -->
+<div class="alpha-section" id="L">
+  <div class="alpha-header">
+    <div class="alpha-letter">L</div>
+    <div class="alpha-count">2 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">LoRA <span class="term-abbr">Low-Rank Adaptation</span></div>
+    <div class="term-def">A parameter-efficient fine-tuning method that adds trainable low-rank matrices (A ∈ ℝ^{d×r}, B ∈ ℝ^{r×d}) alongside frozen base model weights. Only A and B are updated during fine-tuning. Memory cost: proportional to r × d per layer, not d × d. For Llama-3 70B with r=16, fine-tuning adds ~500M trainable parameters vs 70B for full fine-tune — a 140× memory reduction. During inference, LoRA adapters can be merged: W_merged = W_base + (α/r) × BA, with zero inference overhead. Multiple adapters can be hot-swapped for multi-task serving.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+      <a class="ch-ref" href="ch08.html">→ Ch 8 Quantization</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Lustre</div>
+    <div class="term-def">A widely-deployed parallel distributed filesystem for HPC and AI training clusters. Decouples metadata (MDT — Metadata Target) from data (OST — Object Storage Target), enabling thousands of clients to access the same filesystem concurrently. Key optimization: <code class="inline">lfs setstripe -c -1 /path/to/checkpoint/</code> to stripe checkpoint files across all OSTs for maximum write bandwidth — this must be set before data is written; it cannot be changed retroactively. Production AI clusters typically achieve 200–500 GB/s aggregate Lustre bandwidth for checkpoint I/O, vs 3–4 TB/s for HBM — making I/O the bottleneck for frequent checkpointing.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch15.html">→ Ch 15 Storage I/O</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ M ═══════════════════ -->
+<div class="alpha-section" id="M">
+  <div class="alpha-header">
+    <div class="alpha-letter">M</div>
+    <div class="alpha-count">7 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">MFU <span class="term-abbr">Model FLOP Utilization</span></div>
+    <div class="term-def">The fraction of theoretical GPU FLOPS actually used by the model. <code class="inline">MFU = (6 × N_params × tokens_per_sec) / (N_GPUs × peak_FLOPS)</code>. The primary efficiency metric for distributed training. Target: 45–60% on H100 clusters. Below 40%: significant bottleneck present — diagnose with pipeline bubble analysis, communication profiling, and data loading checks. Above 60% sustained: excellent system-level optimization. MFU of 50% on a 1,024 H100 cluster = 506 PFLOPS effective — 50× the compute of a single H100.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+      <a class="ch-ref" href="ch12.html">→ Ch 12 Benchmarking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">MHA <span class="term-abbr">Multi-Head Attention</span></div>
+    <div class="term-def">Standard attention with H_q = H_kv query/key/value heads. Maximum quality, maximum <em>KV cache</em> memory footprint. The original attention formulation from Vaswani et al. (2017). For a model with 64 attention heads at D_head=128, each token requires 2 × L × 64 × 128 = 16,384×L bytes of KV cache in BF16. Largely replaced by <em>GQA</em> in modern LLMs for serving efficiency — GPT-4 is one of the last large production models to use full MHA at scale.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch02.html">→ Ch 2 Transformer</a>
+      <a class="ch-ref" href="ch11.html">→ Ch 11 KV Cache</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">MIG <span class="term-abbr">Multi-Instance GPU</span></div>
+    <div class="term-def">NVIDIA H100+ feature that partitions a single GPU into up to 7 isolated instances, each with dedicated SM slices, L2 cache partitions, and HBM bandwidth. Enables safe multi-tenant GPU sharing for inference of smaller models (7B–13B) that don't saturate a full H100. Each MIG instance has hardware-enforced memory protection — one tenant's workload cannot read or corrupt another's HBM. MIG instance sizes: 1g.10gb (10GB, 1/7 GPU) to 7g.80gb (80GB, full GPU). Primary use case: serving many small models on expensive GPUs to maximize utilization and amortize cost.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch03.html">→ Ch 3 GPU Architecture</a>
+      <a class="ch-ref" href="ch06.html">→ Ch 6 Inference</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">MLA <span class="term-abbr">Multi-Head Latent Attention</span></div>
+    <div class="term-def">DeepSeek's architecture innovation that caches a compressed low-rank latent vector (d_c = 512) instead of full K,V heads. Reconstructs K,V at attention time from the latent via learned up-projection matrices. Achieves ~57× <em>KV cache</em> memory reduction vs standard MHA with near-zero quality loss. The KV cache per token: 2 × L × 512 bytes vs 2 × L × H × D_head bytes for MHA. Enables 128K+ context serving at a fraction of the memory cost. Standard in DeepSeek-V2/V3/R1.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch02.html">→ Ch 2 Transformer</a>
+      <a class="ch-ref" href="ch11.html">→ Ch 11 KV Cache</a>
+      <a class="ch-ref" href="ch13.html">→ Ch 13 MoE</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">MoE <span class="term-abbr">Mixture of Experts</span></div>
+    <div class="term-def">An architecture that replaces each dense FFN layer with N expert FFNs, routing each token to K active experts (K &lt;&lt; N). Compute ∝ active parameters; quality ∝ total parameters — the key insight that enables scaling model capacity without proportionally scaling compute. DeepSeek-V3: 671B total parameters, 37B active per token at K=8, N=256. Training FLOPs match a 37B dense model while achieving quality superior to many 70B dense models. Requires <em>Expert Parallelism</em> and All-to-All communication for distributed deployment.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch13.html">→ Ch 13 MoE</a>
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">MQA <span class="term-abbr">Multi-Query Attention</span></div>
+    <div class="term-def">Extreme version of <em>GQA</em> with H_kv = 1: all query heads share a single K,V head. Maximum KV compression (~H_q× reduction vs <em>MHA</em>) but noticeable quality degradation on complex reasoning tasks. Used in early Falcon and PaLM models. Largely superseded by <em>GQA</em> which achieves most of the memory savings with minimal quality loss via 4–8 KV groups rather than a single group. Still used in specialized deployments where KV memory is the hard constraint and quality can be sacrificed.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch02.html">→ Ch 2 Transformer</a>
+      <a class="ch-ref" href="ch11.html">→ Ch 11 KV Cache</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ N ═══════════════════ -->
+<div class="alpha-section" id="N">
+  <div class="alpha-header">
+    <div class="alpha-letter">N</div>
+    <div class="alpha-count">5 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">NCCL <span class="term-abbr">NVIDIA Collective Communications Library</span></div>
+    <div class="term-def">NVIDIA's library for GPU collective operations. Implements <em>AllReduce</em>, <em>AllGather</em>, <em>ReduceScatter</em>, All-to-All. Automatically selects Ring, Tree, or NVLS algorithms based on topology and message size. Critical NCCL environment variables: <code class="inline">NCCL_DEBUG=INFO</code> for logging, <code class="inline">NCCL_IB_DISABLE=0</code> to enable InfiniBand, <code class="inline">NCCL_NET_GDR_LEVEL=5</code> for GPUDirect. NCCL 2.21+ includes automatic topology detection; older versions require explicit topology files for optimal rail-optimized routing in fat-tree fabrics.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">NF4 <span class="term-abbr">NormalFloat 4-bit</span></div>
+    <div class="term-def">A 4-bit quantization format (Dettmers et al.) optimized for normally-distributed weights. Uses a non-uniform quantization grid with more levels near zero, matching the approximate normal distribution of transformer weights. Achieves lower quantization error than INT4 for the same bit width. Used in <em>QLoRA</em>: the base model is stored in NF4 (1/4 original size) while LoRA adapters are trained in BF16. A 70B model in NF4 requires ~35 GB — fitting in a single H100 — enabling fine-tuning that would otherwise require multi-node infrastructure.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch08.html">→ Ch 8 Quantization</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">NVFP4</div>
+    <div class="term-def">NVIDIA's 4-bit floating-point format for Blackwell (B200). Format: 1-bit sign + 2-bit exponent + 1-bit mantissa with per-group (16 elements) FP8 scale factor. Peak throughput: ~18 PFLOPS on B200, vs 9 PFLOPS BF16 — approximately 2× vs FP8. Enables ~8× throughput vs BF16 for weight-only inference. The per-group scaling maintains sufficient accuracy for serving (vs the potential overflow of naive 4-bit float formats). Production deployments report &lt;1% quality degradation on MMLU vs BF16 baseline with NVFP4 activation quantization.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch03.html">→ Ch 3 GPU Architecture</a>
+      <a class="ch-ref" href="ch08.html">→ Ch 8 Quantization</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">NVLink</div>
+    <div class="term-def">NVIDIA's high-bandwidth GPU-to-GPU interconnect implemented via NVSwitch chips on DGX nodes. Provides non-blocking all-to-all connectivity within an 8-GPU node without PCIe bottleneck. Bandwidth: 900 GB/s bidirectional per GPU (NVLink 4.0, H100), 1.8 TB/s (NVLink 5.0, B200). The reason <em>Tensor Parallelism</em> must be confined within a node (TP ≤ 8): NVLink all-reduce takes ~1μs vs IB all-reduce at ~5–10μs — the 5–10× latency difference makes cross-node TP impractical for per-layer operations.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch03.html">→ Ch 3 GPU Architecture</a>
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">NVLS <span class="term-abbr">NVLink SHARP</span></div>
+    <div class="term-def">In-network aggregation using compute units inside NVSwitch chips. Performs <em>AllReduce</em> summation in hardware as data flows through the switch fabric, freeing GPU SMs from aggregation work. Approximately 2× faster than Ring AllReduce for large messages (&gt;1 MB). Auto-enabled on H100+ via NCCL ≥ 2.16 when NVSwitch hardware is present. NVLS reduces the AllReduce bandwidth burden from 2×(N-1)/N × msg to a single pass through the switch — at DP=8, this reduces AllReduce time by ~87% for large gradient tensors.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ O ═══════════════════ -->
+<div class="alpha-section" id="O">
+  <div class="alpha-header">
+    <div class="alpha-letter">O</div>
+    <div class="alpha-count">2 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Occupancy</div>
+    <div class="term-def">The ratio of active warps to maximum possible warps per SM. High occupancy allows the warp scheduler to hide memory latency by switching to ready warps during HBM stalls. Low occupancy (caused by too many registers per thread, or large shared memory allocation per block) can reduce effective throughput. Measured with <code class="inline">ncu --metrics sm__warps_active.avg.pct_of_peak_sustained_active</code>. Note: high occupancy is not sufficient for performance — a compute-bound kernel with 50% occupancy may outperform a memory-bound kernel with 100% occupancy if the bottleneck is Tensor Cores, not warp scheduling.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch07.html">→ Ch 7 Kernels</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">OST <span class="term-abbr">Object Storage Target</span></div>
+    <div class="term-def">An individual storage server in a <em>Lustre</em> filesystem, each contributing a fraction of total aggregate bandwidth. Typical AI cluster OST count: 40–200 per filesystem. Each OST serves a subset of stripes; distributing a file across more OSTs (via <code class="inline">lfs setstripe -c N</code>) increases I/O parallelism proportionally. A 128-OST Lustre filesystem with 4 GB/s per OST provides 512 GB/s aggregate — sufficient to checkpoint a 70B model in ~0.5 seconds vs 140 seconds if writing to a single OST.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch15.html">→ Ch 15 Storage I/O</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ P ═══════════════════ -->
+<div class="alpha-section" id="P">
+  <div class="alpha-header">
+    <div class="alpha-letter">P</div>
+    <div class="alpha-count">7 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">PagedAttention</div>
+    <div class="term-def">A <em>KV cache</em> memory management system (vLLM, 2023) that stores KV in fixed-size non-contiguous physical blocks with a per-sequence page table — analogous to virtual memory paging in OS design. Eliminates internal fragmentation (reduces memory waste from ~80% to ~1% by not pre-allocating maximum-length contiguous KV buffers). Enables <em>Copy-on-Write</em> prefix sharing. Industry standard in vLLM, TRT-LLM, SGLang. The key insight: KV blocks need not be contiguous in physical memory — a page table indirection enables arbitrary allocation while maintaining logical sequence continuity.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch11.html">→ Ch 11 KV Cache</a>
+      <a class="ch-ref" href="ch06.html">→ Ch 6 Inference</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">PFC <span class="term-abbr">Priority Flow Control</span></div>
+    <div class="term-def">IEEE 802.1Qbb Ethernet feature that enables lossless delivery for specific traffic classes by sending PAUSE frames upstream when switch buffers fill. Required for <em>RoCEv2</em> to provide RDMA semantics (which require zero packet loss for correct operation). PFC must be carefully tuned: too aggressive causes PAUSE storms that halt all traffic; too lenient causes packet loss that forces RDMA retransmits. Use with Active Congestion Control (<em>DCQCN</em>) to prevent incast events at AI training scales. InfiniBand is inherently lossless and does not require PFC.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Pipeline Parallelism <span class="term-abbr">PP</span></div>
+    <div class="term-def">A distributed training strategy that assigns different layers to different GPUs and pipelines microbatches through the stages. Enables training models with far more layers than fit on a single GPU's HBM. Communication: point-to-point activation tensors between adjacent pipeline stages (much lower bandwidth than all-reduce — enables cross-node PP over InfiniBand). Efficiency cost: see <em>Bubble Fraction</em>. 1F1B (interleaved 1-forward-1-backward) scheduling reduces bubble vs naive GPipe. Must pair with large microbatch counts (M ≥ 4×PP) to achieve acceptable efficiency.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">PPO <span class="term-abbr">Proximal Policy Optimization</span></div>
+    <div class="term-def">The RL algorithm most commonly used for <em>RLHF</em>. Requires 4 concurrent model instances: rollout workers (inference via actor model), reward scorer, reference model (frozen SFT baseline), and policy updater. Infrastructure complexity: 3–4× model memory, coordinated inference+training serving, reward model inference pipeline. More powerful than <em>DPO</em> for complex reasoning tasks (e.g., math, code) but significantly higher infrastructure cost. OpenAI GPT-4 and Anthropic Claude use PPO-based RLHF; many open-source models use DPO as a simpler alternative.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Prefill</div>
+    <div class="term-def">The phase of <em>inference</em> that processes the input prompt. Runs as a large batch GEMM on all prompt tokens simultaneously (the full S×d_model computation in one forward pass). Compute-bound at large batch/sequence sizes — the GEMM is large enough to saturate Tensor Cores. Duration determines <em>TTFT</em>: TTFT ≈ prefill_time + scheduling_queue_time. A 1,000-token prompt on H100 with Llama-3 70B takes ~150ms — much of TTFT in production comes from batching and queuing, not the compute itself.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch06.html">→ Ch 6 Inference</a>
+      <a class="ch-ref" href="ch11.html">→ Ch 11 KV Cache</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Prefix Caching</div>
+    <div class="term-def">An inference optimization that stores KV cache blocks for common prefixes (system prompts, RAG documents) and reuses them across requests without recomputation. Reduces TTFT by 60–89% for workloads with fixed prefixes — the KV computation for the system prompt is done once and shared across all requests. Reduces KV memory by up to 91% for chatbot applications where a 2,000-token system prompt dominates sequence length. Implemented in vLLM via <em>RadixAttention</em> (tree-structured prefix sharing), TRT-LLM, and SGLang.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch11.html">→ Ch 11 KV Cache</a>
+      <a class="ch-ref" href="ch06.html">→ Ch 6 Inference</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">PTQ <span class="term-abbr">Post-Training Quantization</span></div>
+    <div class="term-def">Quantization applied after training is complete, using only a calibration dataset (128–512 samples). No retraining or fine-tuning required. <em>GPTQ</em> and <em>AWQ</em> are PTQ methods. Can be applied in minutes to hours vs days for <em>QAT</em>. Quality: generally &lt;2% accuracy delta for INT4 on benchmarks like MMLU, Hellaswag. PTQ is the default production choice for quantization — the minimal quality delta vs significant inference cost reduction (2× throughput, 2× capacity) makes it economically dominant for most serving use cases.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch08.html">→ Ch 8 Quantization</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ Q ═══════════════════ -->
+<div class="alpha-section" id="Q">
+  <div class="alpha-header">
+    <div class="alpha-letter">Q</div>
+    <div class="alpha-count">3 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">QAT <span class="term-abbr">Quantization-Aware Training</span></div>
+    <div class="term-def">Quantization that simulates quantization error during training via "fake quantization" operators (quantize to INT4/FP8, dequantize back to BF16, continue computation in BF16). Allows the model to adapt its weights to minimize quality loss under quantization. Produces consistently higher quality than <em>PTQ</em> — typically &lt;0.5% MMLU delta for INT4 vs &lt;1.5% for PTQ — at the cost of significant training compute (~10–20% of pretraining cost). Used by NVIDIA for TensorRT-LLM FP8 quantization of GPT-4 class models, where every tenth of a percent of quality matters at scale.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch08.html">→ Ch 8 Quantization</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">QLoRA</div>
+    <div class="term-def">A parameter-efficient fine-tuning method combining <em>NF4</em> quantized base model with <em>LoRA</em> adapters. Enables fine-tuning 70B+ models on a single 48 GB GPU. Quality: ~93–94% of full fine-tune on instruction following benchmarks. Infrastructure: bitsandbytes library + PEFT. The key innovation: gradients pass through the NF4 base model weights (which remain frozen) to the BF16 LoRA adapters — the base model does not need to be dequantized, only its forward activations need to be in BF16 precision.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch08.html">→ Ch 8 Quantization</a>
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">QoS <span class="term-abbr">Quality of Service</span></div>
+    <div class="term-def"><em>SLURM</em> scheduling tier configuration that sets resource limits, priority levels, and preemption rules per user class. Three standard tiers: high-priority (production, preempts research), normal (standard research), low-priority (exploratory, can be preempted). Used to guarantee production training jobs always have access to GPU allocation while allowing research jobs to fill remaining capacity via backfill scheduling. Configured via <code class="inline">sacctmgr add qos</code> with <code class="inline">Priority</code>, <code class="inline">MaxTRES</code>, and <code class="inline">Preempt</code> parameters.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch16.html">→ Ch 16 Cluster Mgmt</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ R ═══════════════════ -->
+<div class="alpha-section" id="R">
+  <div class="alpha-header">
+    <div class="alpha-letter">R</div>
+    <div class="alpha-count">9 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">RadixAttention</div>
+    <div class="term-def"><em>SGLang</em>'s tree-structured prefix caching system. Stores KV cache blocks in a radix tree (trie), enabling physical block sharing for any shared prefix, not just fixed system prompts. Shared blocks have a single physical copy with reference counting — a block is freed only when its reference count reaches zero. Eviction policy: leaves first (most recently used shared prefixes retained longest, like an LRU cache). Achieves 91% KV cache hit rate on chatbot workloads with diverse conversation histories. Generalizes prefix caching to arbitrary prefix trees without manual prefix configuration.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch11.html">→ Ch 11 KV Cache</a>
+      <a class="ch-ref" href="ch06.html">→ Ch 6 Inference</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">RDMA <span class="term-abbr">Remote Direct Memory Access</span></div>
+    <div class="term-def">A network transfer mechanism that allows a NIC to read from or write to remote GPU or CPU memory without involving the remote CPU — the NIC handles the transfer autonomously. Provides low latency (~1–2 μs one-way for IB HDR) and low CPU overhead (near zero CPU cycles for in-flight transfers). Used in InfiniBand and <em>RoCEv2</em>. Critical for collective operations in distributed training: RDMA enables the NIC to directly DMA from GPU <em>HBM</em> to remote GPU HBM, bypassing CPU memory entirely via <em>GPUDirect RDMA</em>.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">ReduceScatter</div>
+    <div class="term-def">A collective that reduces (sums) tensors and scatters the result: each process ends up with a disjoint shard of the reduced total. Used in <em>ZeRO</em>/<em>FSDP</em> for gradient synchronization. Lower bandwidth cost than <em>AllReduce</em> for large models (each rank only receives its own gradient shard, vs AllReduce where each rank receives the full reduced gradient). The AllReduce can be decomposed as ReduceScatter + AllGather — this decomposition is what enables Ring-AllReduce and is the foundation of ZeRO Stage 2/3 memory reduction.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Ridge Point</div>
+    <div class="term-def">The <em>Arithmetic Intensity</em> at which the <em>Roofline</em> peak compute line meets the peak bandwidth line: <code class="inline">ridge = peak_FLOPS / peak_BW</code>. H100 SXM: 989 TFLOPS / 3.35 TB/s ≈ 295 FLOP/byte. Operations with AI &lt; 295 on H100 are bandwidth-bound; AI &gt; 295 are compute-bound. The ridge point shifts with quantization: H100 FP8 ridge = 1,978 TFLOPS / 3.35 TB/s ≈ 590 FLOP/byte — a GEMM compute-bound at BF16 may become bandwidth-bound if migrated to FP8 without increasing batch size proportionally.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch01.html">→ Ch 1 Mindset</a>
+      <a class="ch-ref" href="ch07.html">→ Ch 7 Kernels</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">RLHF <span class="term-abbr">Reinforcement Learning from Human Feedback</span></div>
+    <div class="term-def">The process of fine-tuning a pretrained LLM using human preference data to align outputs with human values. Standard pipeline: (1) SFT — supervised fine-tune on curated demonstrations; (2) Reward Model — train a classifier on chosen/rejected pairs; (3) RL — optimize policy against reward model via <em>PPO</em> or <em>DPO</em>. The reward model must be the same size as the policy (or larger) for reliable signal. Infrastructure cost of full RLHF with PPO: 3–4× the serving cost of the base model due to simultaneous reference model inference.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">RMSNorm</div>
+    <div class="term-def">A normalization layer that divides activations by their root-mean-square: <code class="inline">RMSNorm(x) = x / RMS(x) * γ</code> where <code class="inline">RMS(x) = sqrt(mean(x²))</code>. Faster than LayerNorm (one HBM pass vs two) because it skips mean subtraction. Standard in LLaMA-3, Mistral, Qwen. The primary fusion opportunity in transformer FFN layers: RMSNorm + GEMM can be fused into a single kernel, eliminating one full HBM read/write of the activation tensor. At 4K sequence length, 80 layers: fusion saves ~1.6 GB of HBM traffic per forward pass.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch07.html">→ Ch 7 Kernels</a>
+      <a class="ch-ref" href="ch09.html">→ Ch 9 Compilers</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">RoCEv2 <span class="term-abbr">RDMA over Converged Ethernet v2</span></div>
+    <div class="term-def"><em>RDMA</em> over standard Ethernet fabric. Lower cost than InfiniBand at equivalent bandwidth (400 GbE NICs at ~1/3 the cost of HDR IB). Requires <em>PFC</em> for lossless delivery and active congestion control (<em>DCQCN</em>) to prevent incast collapse in fat-tree topologies. Used by Meta for Llama-3 training at 24,576 H100 scale, and by most hyperscalers building proprietary AI training fabrics. The operational complexity of PFC/DCQCN tuning is the primary downside vs IB's simpler lossless architecture.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Roofline Model</div>
+    <div class="term-def">A performance model that characterizes kernel performance by plotting achievable FLOPS/s vs arithmetic intensity on log-log axes. The "roof" has two segments: bandwidth-bound slope (slope = HBM_BW, units FLOPS/s per FLOP/byte = bytes/s) and compute-bound flat ceiling (= peak_FLOPS). The key principle: performance is limited by the minimum of what bandwidth can feed and what compute can process. Used to classify every operation as bandwidth- or compute-bound, identify the correct optimization lever, and set theoretical performance targets. The central analytical framework of this book.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch01.html">→ Ch 1 Mindset</a>
+      <a class="ch-ref" href="ch07.html">→ Ch 7 Kernels</a>
+      <a class="ch-ref" href="ch12.html">→ Ch 12 Benchmarking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">RoPE <span class="term-abbr">Rotary Positional Embedding</span></div>
+    <div class="term-def">A position encoding method that rotates query and key vectors by a complex rotation corresponding to their position: <code class="inline">q_m = q * e^(imθ)</code>, <code class="inline">k_n = k * e^(inθ)</code>. The dot product q_m · k_n naturally encodes relative position (m-n) because the rotation cancels in the dot product. Enables relative position encoding that generalizes better to longer sequences than learned absolute positions. Standard in LLaMA-3, Mistral, Qwen. YaRN and LongRoPE extend context length by modifying the θ base — enabling 128K–1M+ context without full retraining.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch02.html">→ Ch 2 Transformer</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ S ═══════════════════ -->
+<div class="alpha-section" id="S">
+  <div class="alpha-header">
+    <div class="alpha-letter">S</div>
+    <div class="alpha-count">5 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Scaling Efficiency</div>
+    <div class="term-def">The ratio of multi-GPU throughput to ideal linear scaling: <code class="inline">η(N) = throughput(N GPUs) / (N × throughput(1 GPU))</code>. Target: 85%+ at 64 GPUs, 74%+ at 1,024 GPUs on H100 clusters. Below 80% at 64 GPUs: almost always a configuration problem (NIC affinity, NCCL topology, gradient accumulation frequency). At 1,024 GPUs, scaling efficiency of 74% means 260 GPUs worth of compute is lost to communication and synchronization overhead — worth ~$780K/month at $3/GPU-hr. Every 1% efficiency improvement = ~$1M/year at that scale.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+      <a class="ch-ref" href="ch12.html">→ Ch 12 Benchmarking</a>
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">SHARP <span class="term-abbr">Scalable Hierarchical Aggregation and Reduction Protocol</span></div>
+    <div class="term-def">InfiniBand switch in-network AllReduce. Aggregation compute units inside Quantum2 switches perform gradient summation as packets flow through the fabric, without returning to GPU SMs. Reduces AllReduce traffic by ~50%, latency by ~30–40% for large messages. Available on IB only (not RoCEv2). At 1,024 GPU scale with SHARP, the AllReduce wall-time for a 1 GB gradient tensor drops from ~100ms (Ring) to ~60ms — recovering ~3% of compute time that would otherwise be idle during synchronization.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">SLURM</div>
+    <div class="term-def">Simple Linux Utility for Resource Management. The dominant job scheduler for HPC and large-scale AI training. Three core daemons: <code class="inline">slurmctld</code> (controller — job queue and scheduling decisions), <code class="inline">slurmdbd</code> (accounting database — usage tracking for fair-share), <code class="inline">slurmd</code> (per-node agent — job launch and monitoring). Plugins for GPUs, InfiniBand topology, Lustre burst buffer, and cloud burst. At 1,000+ GPU scale, SLURM's controller can become a performance bottleneck — tune with <code class="inline">SchedulerParameters=sched_min_interval=2000</code> to reduce scheduling overhead.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch16.html">→ Ch 16 Cluster Mgmt</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Speculative Decoding</div>
+    <div class="term-def">An inference optimization that uses a cheap <em>draft model</em> to propose K candidate tokens, then verifies them all with one target model forward pass in parallel. Acceptance criterion: <code class="inline">min(1, p_target/p_draft)</code>. Mathematically exact: output distribution is identical to the target model (no quality degradation). Speedup: 2–3.5× for code and SQL workloads where the draft model (e.g., a 7B version of the 70B target) has high acceptance rate. Near-zero speedup for creative writing where token predictability is low. Requires maintaining two models in HBM simultaneously.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch13.html">→ Ch 13 Speculative Decoding</a>
+      <a class="ch-ref" href="ch06.html">→ Ch 6 Inference</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">SwiGLU</div>
+    <div class="term-def">A gated linear unit activation function: <code class="inline">SwiGLU(x) = SiLU(W₁x) ⊙ (W₃x)</code>. Used in LLaMA FFN layers. Requires two GEMMs (W₁ for the gate, W₃ for the linear path) followed by elementwise multiply, then one more GEMM (W₂) for the down-projection. W₁ and W₃ can be fused into a single wider GEMM (concatenate along output dimension). Standard in LLaMA-3, Mistral, Qwen. FFN dimension is typically 8/3 × d_model rather than 4× to maintain parameter count equivalent to a dense FFN layer.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch02.html">→ Ch 2 Transformer</a>
+      <a class="ch-ref" href="ch07.html">→ Ch 7 Kernels</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ T ═══════════════════ -->
+<div class="alpha-section" id="T">
+  <div class="alpha-header">
+    <div class="alpha-letter">T</div>
+    <div class="alpha-count">8 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Tensor Core</div>
+    <div class="term-def">Dedicated hardware units on NVIDIA GPUs that perform matrix multiply-accumulate in a single clock cycle: D = A × B + C where A, B, C, D are small matrix tiles. H100 achieves 989 TFLOPS BF16 using Tensor Cores vs ~20 TFLOPS for FP32 scalar units — a 50× compute density difference. Tensor Core utilization requires: (1) matrix dimensions aligned to multiples of 16 (BF16) or 8 (FP8); (2) correct memory layout (row-major for A, column-major for B); (3) warp groups configured for WGMMA (Hopper). Unaligned dimensions cause the compiler to pad with zeros, reducing effective FLOP utilization.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch03.html">→ Ch 3 GPU Architecture</a>
+      <a class="ch-ref" href="ch07.html">→ Ch 7 Kernels</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Tensor Parallelism <span class="term-abbr">TP</span></div>
+    <div class="term-def">A parallelism strategy that splits individual weight matrices across GPUs: column-parallel for FFN gate/up projections (split output dimension), row-parallel for FFN down and attention output projections (split input dimension). Requires one AllReduce per transformer layer. Must be confined within the <em>NVLink</em> domain (TP ≤ 8) to avoid InfiniBand latency bottleneck: per-layer AllReduce at TP=8 takes ~1μs via NVLink vs ~5–10μs via IB — the difference compounds to &gt;10% throughput loss at TP=8 cross-node. Megatron-style TP is the standard reference implementation.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">TF32 <span class="term-abbr">TensorFloat 32</span></div>
+    <div class="term-def">A 19-bit compute format (8 exponent + 10 mantissa, stored in 32-bit registers) used transparently by A100+ Tensor Cores when FP32 input is provided. Delivers ~16× FP32 throughput with ~1% accuracy loss on typical ML workloads — the truncated mantissa rarely matters because weight gradients are far noisier than the precision reduction. Enabled by default in PyTorch 1.7+ via <code class="inline">torch.backends.cudnn.allow_tf32 = True</code>. Not a user-visible format — it's an internal Tensor Core optimization that happens automatically without code changes.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch08.html">→ Ch 8 Quantization</a>
+      <a class="ch-ref" href="ch03.html">→ Ch 3 GPU Architecture</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">TorchInductor</div>
+    <div class="term-def">The backend compiler in PyTorch 2.x (<code class="inline">torch.compile</code>) that converts traced FX computation graphs into optimized Triton kernels. Performs operator fusion, layout optimization (NCHW vs NHWC), and tile size autotuning. Targets NVIDIA (via Triton → PTX), AMD (via Triton → HSACO), and CPU. Typical speedup vs eager mode: 20–40% for transformer inference, 10–20% for training. The compilation overhead (first-run JIT) is amortized over subsequent calls. <code class="inline">torch.compile(model, mode="max-autotune")</code> exhaustively searches tile sizes — adds 10 min compilation for 10–15% additional improvement.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch09.html">→ Ch 9 Compilers</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">TPOT <span class="term-abbr">Time Per Output Token</span></div>
+    <div class="term-def">The time between consecutive tokens during the <em>decode</em> phase. Primary latency metric for users during streaming generation — directly determines the perceived "typing speed" of the model. Formula at small batch: <code class="inline">TPOT ≈ model_bytes / HBM_bandwidth</code>. H100 with 70B BF16: 140 GB / 3,350 GB/s ≈ 42ms/token = 24 tokens/sec. Target SLA: &lt;50ms/token for natural reading pace, &lt;33ms/token for fast reading. TPOT scales linearly with model size and inversely with HBM bandwidth — the direct case for quantization ROI.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch06.html">→ Ch 6 Inference</a>
+      <a class="ch-ref" href="ch12.html">→ Ch 12 Benchmarking</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Transformer Engine <span class="term-abbr">TE</span></div>
+    <div class="term-def">NVIDIA's library implementing automatic <em>FP8</em> precision management for transformer layers. Maintains per-tensor rolling activation maximums (<code class="inline">amax_history</code> over last 16 steps), computes dynamic per-tensor scaling factors, performs FP8 GEMM on Tensor Cores, and descales outputs back to BF16/FP32 for accumulation. Enables FP8 training and inference with a single API wrapper change: <code class="inline">te.Linear</code> instead of <code class="inline">nn.Linear</code>. Used by NVIDIA Megatron-LM, Llama implementations, and most major training frameworks as of 2024.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch08.html">→ Ch 8 Quantization</a>
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Triton</div>
+    <div class="term-def">An open-source Python-level GPU programming language (OpenAI, 2021). Abstracts shared memory management, warp scheduling, and autotuning behind a Python API. A Triton kernel expresses computation in terms of tiles and memory access patterns; the compiler handles bank conflict avoidance, register allocation, and instruction scheduling. Used by TorchInductor for code generation and by engineers for custom GPU kernels without full CUDA C++ expertise. Triton kernels are typically 80–95% of the performance of hand-tuned CUDA for memory-bandwidth-bound operations; competitive for compute-bound operations at standard tile sizes.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch07.html">→ Ch 7 Kernels</a>
+      <a class="ch-ref" href="ch09.html">→ Ch 9 Compilers</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">TTFT <span class="term-abbr">Time to First Token</span></div>
+    <div class="term-def">The latency from request submission to generation of the first output token. Dominated by <em>prefill</em> computation time plus queuing latency. The primary user-perceived latency for interactive LLM services — users notice TTFT &gt;500ms as "slow." Production target: P50 &lt;300ms, P99 &lt;800ms for chatbot applications. P99 TTFT is the most important SLO metric to monitor — P50 can be acceptable while P99 spikes indicate queue backup or <em>KV cache cascade</em>. Diagnose P99 TTFT spikes via request queue depth and KV cache utilization correlation.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch06.html">→ Ch 6 Inference</a>
+      <a class="ch-ref" href="ch12.html">→ Ch 12 Benchmarking</a>
+      <a class="ch-ref" href="ch17.html">→ Ch 17 Telemetry</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ V ═══════════════════ -->
+<div class="alpha-section" id="V">
+  <div class="alpha-header">
+    <div class="alpha-letter">V</div>
+    <div class="alpha-count">2 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">vLLM</div>
+    <div class="term-def">An open-source high-performance LLM serving library (UC Berkeley, 2023). Pioneered <em>PagedAttention</em>, which eliminated KV cache memory fragmentation and became the industry standard for production inference. Current features (2024–2025): continuous batching, prefix caching, speculative decoding, FP8 KV cache quantization, disaggregated prefill-decode. The de facto reference implementation for production LLM serving — used by most teams as the baseline before profiling and customizing. Integrates with Ray for multi-node distributed serving.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch06.html">→ Ch 6 Inference</a>
+      <a class="ch-ref" href="ch11.html">→ Ch 11 KV Cache</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Volcano</div>
+    <div class="term-def">A Kubernetes batch scheduling framework that adds gang scheduling (all pods in a job start together or none start), queue management, and priority preemption for distributed ML training jobs. Prevents GPU deadlocks from partial rank allocation — without gang scheduling, a 256-GPU training job might start with 200 GPUs allocated, hold those GPUs while waiting for the remaining 56, and deadlock with other jobs doing the same. Required for any Kubernetes-based ML platform running large training jobs. Used by Alibaba, ByteDance, and Huawei for large-scale training cluster orchestration.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch16.html">→ Ch 16 Cluster Mgmt</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ W ═══════════════════ -->
+<div class="alpha-section" id="W">
+  <div class="alpha-header">
+    <div class="alpha-letter">W</div>
+    <div class="alpha-count">2 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Warp</div>
+    <div class="term-def">The fundamental CUDA execution unit: 32 threads that execute the same instruction simultaneously on an SM via the SIMT (Single Instruction, Multiple Thread) model. All 32 threads in a warp must execute the same instruction at each clock cycle. Control flow divergence (if-else with different paths per thread) causes serialization: both branches execute, with inactive threads masked — cutting effective throughput by 2× or more. Warps are the scheduling unit for the SM warp scheduler: 4 warp schedulers per SM on H100, each dispatching up to 2 independent warps per cycle for latency hiding.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch03.html">→ Ch 3 GPU Architecture</a>
+      <a class="ch-ref" href="ch07.html">→ Ch 7 Kernels</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">Wavefront</div>
+    <div class="term-def">AMD's equivalent of a CUDA warp, but with 64 threads (2× NVIDIA). Executes as a single logical instruction stream across 64 SIMD lanes. The 2× width affects kernel design: tile sizes that are optimal on NVIDIA (multiples of 32) may not be optimal on AMD (multiples of 64). Reduction loop depths must account for wavefront width: a warp-level reduction over 32 threads takes log₂(32)=5 stages; over 64 threads takes 6 stages. MI300X uses 4 SIMD-16 units per CU, each processing 16 lanes of a 64-thread wavefront per cycle.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch03.html">→ Ch 3 GPU Architecture</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ X ═══════════════════ -->
+<div class="alpha-section" id="X">
+  <div class="alpha-header">
+    <div class="alpha-letter">X</div>
+    <div class="alpha-count">2 terms</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">XID Error</div>
+    <div class="term-def">NVIDIA GPU error code logged to the kernel message buffer (<code class="inline">dmesg | grep XID</code>). Critical production codes: XID 48 (uncorrectable double-bit ECC error — replace GPU immediately); XID 95 (uncontained error / engine reset failure — take node offline); XID 74 (NVLink error — investigate cable/connector). Non-critical: XID 63 (row remap — normal aging, monitor for acceleration). Monitoring pipeline: DCGM → Prometheus → alert at first XID 48/95. Build automated node eviction triggered by XID 95 to prevent corrupted training runs from continuing on a dying GPU.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch17.html">→ Ch 17 Telemetry</a>
+    </div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">XLA <span class="term-abbr">Accelerated Linear Algebra</span></div>
+    <div class="term-def">Google's ahead-of-time compiler for JAX/TensorFlow models. Compiles from HLO (High-Level Operations) IR to PTX (NVIDIA), HLO-lowered assembly (AMD), or TPU assembly. All tensor shapes must be statically known at compile time — dynamic shapes require recompilation or padding to fixed buckets. The only compiler supported on Google TPUs. XLA's ahead-of-time compilation produces higher-quality kernel code than JIT compilers for stable workloads, at the cost of long compilation times (minutes to hours for large models) and rigid shape requirements.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch09.html">→ Ch 9 Compilers</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ Z ═══════════════════ -->
+<div class="alpha-section" id="Z">
+  <div class="alpha-header">
+    <div class="alpha-letter">Z</div>
+    <div class="alpha-count">1 term</div>
+  </div>
+
+  <div class="term-block">
+    <div class="term-name">ZeRO <span class="term-abbr">Zero Redundancy Optimizer</span></div>
+    <div class="term-def">DeepSpeed's memory sharding framework with three stages. Stage 1: shard optimizer state (8× AdamW: 4× param + 2× momentum + 2× variance) across DP ranks. Stage 2: + shard gradients. Stage 3: + shard model parameters. Stage 3 (= <em>FSDP</em>) enables models of arbitrary size across any number of GPUs. Memory per GPU: model_params × 16 bytes / (DP_degree) for parameters alone. Communication cost: ZeRO-3 requires 3× the AllReduce bandwidth of naive DP (AllGather for params before forward, ReduceScatter for gradients after backward, AllGather for params again for optimizer step) — plan network bandwidth accordingly.</div>
+    <div class="term-refs">
+      <a class="ch-ref" href="ch10.html">→ Ch 10 Training</a>
+      <a class="ch-ref" href="ch14.html">→ Ch 14 Networking</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ ACRONYM INDEX ═══════════════════ -->
+<div id="acronym-index" style="scroll-margin-top:64px;margin-top:44px">
+  <h2>Quick Acronym Index</h2>
+  <p style="font-size:12px;color:#666;margin-bottom:14px;font-style:italic">All abbreviations used in this book, with full expansion. Terms with dedicated glossary entries are in bold.</p>
+
+  <table class="acronym-table">
+    <tr><th>Acronym</th><th>Full Name</th><th>Primary Chapter</th></tr>
+    <tr><td><strong>AI</strong></td><td>Arithmetic Intensity (FLOPs/byte)</td><td>Ch 1, 7, 12</td></tr>
+    <tr><td><strong>AWQ</strong></td><td>Activation-Aware Weight Quantization</td><td>Ch 8</td></tr>
+    <tr><td><strong>BF16</strong></td><td>BrainFloat16</td><td>Ch 3, 8</td></tr>
+    <tr><td><strong>CP</strong></td><td>Context Parallelism</td><td>Ch 10, 14</td></tr>
+    <tr><td>CTE</td><td>Correctable Threshold Exceeded (ECC)</td><td>Ch 17</td></tr>
+    <tr><td><strong>DCGM</strong></td><td>Data Center GPU Manager</td><td>Ch 17</td></tr>
+    <tr><td>DCQCN</td><td>Data Center Quantized Congestion Notification</td><td>Ch 14</td></tr>
+    <tr><td>DCE</td><td>Dead Code Elimination (compiler)</td><td>Ch 9</td></tr>
+    <tr><td>DCP</td><td>Distributed CheckPoint (PyTorch)</td><td>Ch 10</td></tr>
+    <tr><td><strong>DP</strong></td><td>Data Parallelism</td><td>Ch 10</td></tr>
+    <tr><td><strong>DPO</strong></td><td>Direct Preference Optimization</td><td>Ch 10</td></tr>
+    <tr><td><strong>ECC</strong></td><td>Error Correction Code</td><td>Ch 3, 17</td></tr>
+    <tr><td><strong>EP</strong></td><td>Expert Parallelism</td><td>Ch 13, 14</td></tr>
+    <tr><td><strong>FP8</strong></td><td>8-bit Floating Point (E4M3 / E5M2)</td><td>Ch 8, 10</td></tr>
+    <tr><td><strong>FSDP</strong></td><td>Fully Sharded Data Parallel</td><td>Ch 10</td></tr>
+    <tr><td><strong>GEMM</strong></td><td>General Matrix Multiplication</td><td>Ch 7</td></tr>
+    <tr><td><strong>GQA</strong></td><td>Grouped Query Attention</td><td>Ch 2, 11</td></tr>
+    <tr><td><strong>GPTQ</strong></td><td>Second-order PTQ quantization method</td><td>Ch 8</td></tr>
+    <tr><td><strong>HBM</strong></td><td>High-Bandwidth Memory</td><td>Ch 3, 4</td></tr>
+    <tr><td><strong>HFU</strong></td><td>Hardware FLOP Utilization</td><td>Ch 10, 12</td></tr>
+    <tr><td>IB</td><td>InfiniBand</td><td>Ch 14</td></tr>
+    <tr><td><strong>KV</strong></td><td>Key-Value (cache)</td><td>Ch 11</td></tr>
+    <tr><td><strong>LoRA</strong></td><td>Low-Rank Adaptation</td><td>Ch 10</td></tr>
+    <tr><td><strong>MFU</strong></td><td>Model FLOP Utilization</td><td>Ch 10, 12</td></tr>
+    <tr><td><strong>MHA</strong></td><td>Multi-Head Attention</td><td>Ch 2, 11</td></tr>
+    <tr><td><strong>MIG</strong></td><td>Multi-Instance GPU</td><td>Ch 3, 6</td></tr>
+    <tr><td><strong>MLA</strong></td><td>Multi-Head Latent Attention</td><td>Ch 2, 11, 13</td></tr>
+    <tr><td><strong>MoE</strong></td><td>Mixture of Experts</td><td>Ch 13</td></tr>
+    <tr><td><strong>MQA</strong></td><td>Multi-Query Attention</td><td>Ch 2, 11</td></tr>
+    <tr><td><strong>NCCL</strong></td><td>NVIDIA Collective Communications Library</td><td>Ch 14</td></tr>
+    <tr><td><strong>NF4</strong></td><td>NormalFloat 4-bit</td><td>Ch 8</td></tr>
+    <tr><td>NVFP4</td><td>NVIDIA FP4 (Blackwell)</td><td>Ch 3, 8</td></tr>
+    <tr><td><strong>NVLS</strong></td><td>NVLink SHARP (in-network aggregation)</td><td>Ch 14</td></tr>
+    <tr><td>OST</td><td>Object Storage Target (Lustre)</td><td>Ch 15</td></tr>
+    <tr><td><strong>PFC</strong></td><td>Priority Flow Control</td><td>Ch 14</td></tr>
+    <tr><td><strong>PP</strong></td><td>Pipeline Parallelism</td><td>Ch 10</td></tr>
+    <tr><td><strong>PPO</strong></td><td>Proximal Policy Optimization</td><td>Ch 10</td></tr>
+    <tr><td><strong>PTQ</strong></td><td>Post-Training Quantization</td><td>Ch 8</td></tr>
+    <tr><td><strong>QAT</strong></td><td>Quantization-Aware Training</td><td>Ch 8</td></tr>
+    <tr><td><strong>RDMA</strong></td><td>Remote Direct Memory Access</td><td>Ch 14</td></tr>
+    <tr><td><strong>RLHF</strong></td><td>Reinforcement Learning from Human Feedback</td><td>Ch 10</td></tr>
+    <tr><td><strong>RMSNorm</strong></td><td>Root Mean Square Normalization</td><td>Ch 2, 7</td></tr>
+    <tr><td><strong>RoPE</strong></td><td>Rotary Positional Embedding</td><td>Ch 2</td></tr>
+    <tr><td>SDC</td><td>Silent Data Corruption</td><td>Ch 17</td></tr>
+    <tr><td>SLA</td><td>Service Level Agreement</td><td>Ch 6, 12</td></tr>
+    <tr><td>SM</td><td>Streaming Multiprocessor</td><td>Ch 3</td></tr>
+    <tr><td>SMEM</td><td>Shared Memory (on-chip SRAM per SM)</td><td>Ch 3, 7</td></tr>
+    <tr><td>SWA</td><td>Sliding Window Attention</td><td>Ch 2</td></tr>
+    <tr><td><strong>TE</strong></td><td>Transformer Engine (NVIDIA FP8 library)</td><td>Ch 8, 10</td></tr>
+    <tr><td><strong>TF32</strong></td><td>TensorFloat 32</td><td>Ch 8</td></tr>
+    <tr><td><strong>TP</strong></td><td>Tensor Parallelism</td><td>Ch 10, 14</td></tr>
+    <tr><td><strong>TPOT</strong></td><td>Time Per Output Token</td><td>Ch 6, 12</td></tr>
+    <tr><td>TRT</td><td>TensorRT (NVIDIA inference optimizer)</td><td>Ch 9</td></tr>
+    <tr><td><strong>TTFT</strong></td><td>Time to First Token</td><td>Ch 6, 12, 17</td></tr>
+    <tr><td><strong>XID</strong></td><td>NVIDIA GPU Error Code</td><td>Ch 17</td></tr>
+    <tr><td><strong>XLA</strong></td><td>Accelerated Linear Algebra (Google)</td><td>Ch 9</td></tr>
+    <tr><td><strong>ZeRO</strong></td><td>Zero Redundancy Optimizer (DeepSpeed)</td><td>Ch 10</td></tr>
+  </table>
+</div>
+
+<div class="ch-end">— End of Appendix C · Glossary of Key Terms —<br>
+AI/ML Infrastructure from Silicon to Scale · Venkat Vinjam · © 2026</div>
+
+</div><!-- /.page -->
+</body>
+</html>
+</div>
+</body>
+</html>

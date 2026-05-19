@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI/ML Infrastructure from Silicon to Scale — Venkat Vinjam</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:Georgia,'Times New Roman',serif;background:#fdfcf7;color:#1a1a1a;min-height:100vh;display:flex;flex-direction:column}
+
+/* HERO */
+.hero{background:linear-gradient(145deg,#1c2438 0%,#2a4070 55%,#1a3060 100%);padding:60px 40px 52px;text-align:center;-webkit-print-color-adjust:exact}
+.hero-eye{font-family:sans-serif;font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#e3b341;margin-bottom:16px}
+.hero-title{font-size:clamp(26px,4.5vw,46px);font-weight:900;color:#fff;line-height:1.1;margin-bottom:12px}
+.hero-title em{color:#e3b341;font-style:normal}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.62);font-style:italic;max-width:560px;margin:0 auto 20px;line-height:1.7}
+.hero-rule{width:52px;height:3px;background:#e3b341;margin:0 auto 16px;border-radius:2px}
+.hero-author{font-size:15px;font-weight:700;color:#fff;margin-bottom:3px}
+.hero-role{font-family:sans-serif;font-size:10px;color:rgba(255,255,255,.48)}
+
+/* MAIN */
+.main{flex:1;max-width:960px;width:100%;margin:0 auto;padding:52px 32px 56px}
+.pick-eye{text-align:center;font-family:sans-serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#999;margin-bottom:8px}
+.pick-h{text-align:center;font-size:21px;font-weight:800;color:#1c2438;margin-bottom:6px}
+.pick-sub{text-align:center;font-size:13px;color:#666;font-style:italic;margin-bottom:40px;line-height:1.65}
+
+/* CARDS */
+.versions{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-bottom:36px}
+.v-card{border-radius:12px;overflow:hidden;text-decoration:none;color:inherit;display:flex;flex-direction:column;border:2px solid transparent;transition:border-color .2s,transform .15s,box-shadow .2s;position:relative}
+.v-card:hover{transform:translateY(-4px);box-shadow:0 12px 36px rgba(0,0,0,.13);text-decoration:none}
+.v-card.dark:hover{border-color:#58a6ff}
+.v-card.light:hover{border-color:#e3b341}
+
+/* recommended ribbon */
+.ribbon{position:absolute;top:16px;right:-1px;background:#e3b341;color:#1c2438;font-family:sans-serif;font-size:8px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;padding:4px 12px 4px 10px;border-radius:3px 0 0 3px;box-shadow:-2px 2px 8px rgba(0,0,0,.25)}
+
+/* V0.0 dark */
+.d-hdr{background:#080c10;padding:22px 22px 18px;position:relative}
+.d-hdr::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(88,166,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(88,166,255,.04) 1px,transparent 1px);background-size:26px 26px;pointer-events:none}
+.d-badge{display:inline-flex;align-items:center;gap:5px;background:#0d1117;border:1px solid #30363d;border-radius:20px;padding:3px 9px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#58a6ff;margin-bottom:10px;position:relative}
+.d-dot{width:5px;height:5px;border-radius:50%;background:#3fb950;box-shadow:0 0 4px #3fb950}
+.d-ver{font-family:'Courier New',monospace;font-size:30px;font-weight:700;color:#e6edf3;line-height:1;margin-bottom:2px;position:relative}
+.d-name{font-family:sans-serif;font-size:10px;color:#8b949e;position:relative}
+
+.d-body{background:#0d1117;border-top:1px solid #21262d;padding:18px 22px 22px;flex:1;display:flex;flex-direction:column}
+.d-desc{font-family:sans-serif;font-size:12.5px;color:#8b949e;line-height:1.7;margin-bottom:16px;flex:1}
+.d-stats{display:flex;gap:0;border:1px solid #21262d;border-radius:7px;overflow:hidden;margin-bottom:14px}
+.d-stat{flex:1;text-align:center;padding:9px 4px;border-right:1px solid #21262d;background:#161b22}
+.d-stat:last-child{border-right:none}
+.d-stat-n{font-family:'Courier New',monospace;font-size:16px;font-weight:700;color:#58a6ff;line-height:1}
+.d-stat-l{font-family:sans-serif;font-size:7.5px;color:#6e7681;text-transform:uppercase;letter-spacing:.6px;margin-top:2px}
+.d-chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:16px}
+.d-chip{font-family:'Courier New',monospace;font-size:9px;padding:2px 7px;border-radius:3px;border:1px solid #21262d;color:#8b949e;background:#161b22}
+.d-btn{display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 14px;border-radius:6px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:.5px;background:#58a6ff;color:#000;font-weight:700;transition:background .15s}
+.d-btn:hover{background:#79baff}
+
+/* V0.1 light */
+.l-hdr{background:linear-gradient(130deg,#1c2438 0%,#2a4070 100%);padding:22px 22px 18px}
+.l-badge{display:inline-block;font-family:sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:3px 10px;color:#e3b341;margin-bottom:10px}
+.l-ver{font-size:30px;font-weight:900;color:#fff;line-height:1;margin-bottom:2px}
+.l-name{font-family:sans-serif;font-size:10px;color:rgba(255,255,255,.52)}
+
+.l-body{background:#fff;border-top:3px solid #e3b341;padding:18px 22px 22px;flex:1;display:flex;flex-direction:column}
+.l-desc{font-size:12.5px;color:#444;line-height:1.7;margin-bottom:16px;flex:1}
+.l-stats{display:flex;gap:0;border:1px solid #d8d4c8;border-radius:7px;overflow:hidden;margin-bottom:14px}
+.l-stat{flex:1;text-align:center;padding:9px 4px;border-right:1px solid #d8d4c8;background:#f5f3ec}
+.l-stat:last-child{border-right:none}
+.l-stat-n{font-family:sans-serif;font-size:16px;font-weight:900;color:#1c2438;line-height:1}
+.l-stat-l{font-family:sans-serif;font-size:7.5px;color:#999;text-transform:uppercase;letter-spacing:.6px;margin-top:2px}
+.l-chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:16px}
+.l-chip{font-family:sans-serif;font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px;border:1px solid #d8d4c8;color:#555;background:#f5f3ec}
+.l-chip.new{background:#e8fff0;border-color:#27ae60;color:#155724}
+.l-btn{display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 14px;border-radius:6px;font-family:sans-serif;font-size:12px;font-weight:700;background:#e3b341;color:#1c2438;transition:background .15s}
+.l-btn:hover{background:#f0c040}
+
+/* COMPARISON TABLE */
+.cmp{background:#fff;border:1px solid #d8d4c8;border-radius:10px;overflow:hidden;margin-bottom:30px}
+.cmp-hdr{background:#1c2438;padding:11px 20px;font-family:sans-serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;-webkit-print-color-adjust:exact}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{background:#f5f3ec;padding:8px 16px;text-align:left;font-family:sans-serif;font-size:9px;color:#888;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #d8d4c8}
+td{padding:9px 16px;border-bottom:1px solid #ece9e0;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.feat{color:#555;font-size:11.5px;font-family:sans-serif;width:27%}
+.dv{font-family:'Courier New',monospace;color:#58a6ff;font-size:11px}
+.lv{color:#27ae60;font-weight:600;font-size:11.5px}
+.no{color:#bbb}
+
+/* NOTICE */
+.notice{border:1px solid #e3b341;border-left:4px solid #e3b341;border-radius:0 7px 7px 0;background:#fffbf0;padding:11px 17px;font-size:12px;color:#555;line-height:1.65}
+.notice strong{color:#1c2438}
+
+/* FOOTER */
+footer{background:#1c2438;padding:16px 32px;text-align:center;font-family:sans-serif;font-size:10px;color:rgba(255,255,255,.36);line-height:1.8;-webkit-print-color-adjust:exact}
+footer a{color:#e3b341;text-decoration:none}
+
+@media(max-width:640px){.versions{grid-template-columns:1fr}.hero{padding:40px 22px 36px}.main{padding:34px 18px 44px}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-eye">Principal Performance Architecture &middot; Living Reference</div>
+  <h1 class="hero-title">AI/ML Infrastructure<br><em>from Silicon</em> to Scale</h1>
+  <div class="hero-sub">GPU physics &middot; Transformer kernels &middot; Distributed training &middot; LLM serving &middot; Production operations</div>
+  <div class="hero-rule"></div>
+  <div class="hero-author">Venkat Vinjam</div>
+  <div class="hero-role">Principal Performance Architect &middot; AMD &middot; Ex-Intel &middot; Ex-Cisco &middot; Ex-IBM</div>
+</div>
+
+<div class="main">
+
+  <div class="pick-eye">Select a Version</div>
+  <h2 class="pick-h">Choose Your Edition</h2>
+  <p class="pick-sub">Both editions cover the complete AI/ML infrastructure stack. Choose the format that fits your workflow.<br>Once inside, all chapter navigation stays within that version.</p>
+
+  <div class="versions">
+
+    <!-- V0.0 ─────────────────────────── -->
+    <a class="v-card dark" href="v0.0/index.html">
+      <div class="d-hdr">
+        <div class="d-badge"><span class="d-dot"></span>First Edition &middot; 2026</div>
+        <div class="d-ver">v 0.0</div>
+        <div class="d-name">Original Release &mdash; PDF + Separate Diagram Files</div>
+      </div>
+      <div class="d-body">
+        <p class="d-desc">
+          The original dark-theme edition. All 18 content chapters (Ch00&ndash;Ch18) available
+          as downloadable PDFs. Architecture diagrams packaged as standalone browser files —
+          40+ diagrams across 3 batch packs and 8 individual topic files.
+          Three appendices (Hardware Reference, Profiling Tools, Glossary).
+        </p>
+        <div class="d-stats">
+          <div class="d-stat"><div class="d-stat-n">18</div><div class="d-stat-l">Chapters</div></div>
+          <div class="d-stat"><div class="d-stat-n">PDF</div><div class="d-stat-l">Format</div></div>
+          <div class="d-stat"><div class="d-stat-n">40+</div><div class="d-stat-l">Diagrams</div></div>
+          <div class="d-stat"><div class="d-stat-n">3</div><div class="d-stat-l">Appendices</div></div>
+        </div>
+        <div class="d-chips">
+          <span class="d-chip">PDF download</span>
+          <span class="d-chip">Diagrams: separate files</span>
+          <span class="d-chip">Dark theme</span>
+          <span class="d-chip">IBM Plex fonts</span>
+          <span class="d-chip">Ch00 &ndash; Ch18</span>
+          <span class="d-chip">App A &ndash; C</span>
+        </div>
+        <div class="d-btn">Open v0.0 &#8599;</div>
+      </div>
+    </a>
+
+    <!-- V0.1 ─────────────────────────── -->
+    <a class="v-card light" href="v0.1/index.html">
+      <span class="ribbon">&#10003; Recommended</span>
+      <div class="l-hdr">
+        <div class="l-badge">Latest &mdash; Revised &amp; Expanded</div>
+        <div class="l-ver">v 0.1</div>
+        <div class="l-name">HTML + PDF &mdash; Inline Diagrams &mdash; Sidebar Navigation</div>
+      </div>
+      <div class="l-body">
+        <p class="l-desc">
+          Revised edition with full HTML chapters readable in the browser, fixed sidebar navigation,
+          inline SVG diagrams embedded inside each chapter, and three additional chapters
+          (Production Resilience, Future of AI Compute, Case Studies).
+          Five appendices including Performance Formulas and Reading Roadmap.
+        </p>
+        <div class="l-stats">
+          <div class="l-stat"><div class="l-stat-n">21</div><div class="l-stat-l">Chapters</div></div>
+          <div class="l-stat"><div class="l-stat-n">HTML+PDF</div><div class="l-stat-l">Format</div></div>
+          <div class="l-stat"><div class="l-stat-n">Inline</div><div class="l-stat-l">Diagrams</div></div>
+          <div class="l-stat"><div class="l-stat-n">5</div><div class="l-stat-l">Appendices</div></div>
+        </div>
+        <div class="l-chips">
+          <span class="l-chip new">&#10003; HTML per chapter</span>
+          <span class="l-chip new">&#10003; Inline SVG diagrams</span>
+          <span class="l-chip new">&#10003; Sidebar navigation</span>
+          <span class="l-chip new">&#10003; 3 new chapters</span>
+          <span class="l-chip">PDF download</span>
+          <span class="l-chip">App A &ndash; E</span>
+          <span class="l-chip">Ch00 &ndash; Ch21</span>
+        </div>
+        <div class="l-btn">Open v0.1 &#8594;</div>
+      </div>
+    </a>
+
+  </div><!-- .versions -->
+
+  <!-- COMPARISON TABLE -->
+  <div class="cmp">
+    <div class="cmp-hdr">Version Comparison</div>
+    <table>
+      <thead>
+        <tr>
+          <th class="feat">Feature</th>
+          <th style="color:#58a6ff">v0.0 &mdash; Original</th>
+          <th style="color:#27ae60">v0.1 &mdash; Revised</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="feat">Chapters</td>
+            <td><span class="dv">18 (Ch00&ndash;Ch18)</span></td>
+            <td><span class="lv">21 (Ch00&ndash;Ch21)</span></td></tr>
+        <tr><td class="feat">New in v0.1</td>
+            <td><span class="no">&mdash;</span></td>
+            <td><span class="lv">Ch19 Production Resilience &middot; Ch20 Future AI Compute &middot; Ch21 Case Studies</span></td></tr>
+        <tr><td class="feat">Appendices</td>
+            <td><span class="dv">3 &mdash; App A, B, C</span></td>
+            <td><span class="lv">5 &mdash; App A&ndash;E (adds Formulas &amp; Reading Roadmap)</span></td></tr>
+        <tr><td class="feat">Read in browser</td>
+            <td><span class="no">&#10005; PDF download only</span></td>
+            <td><span class="lv">&#10003; Full HTML per chapter</span></td></tr>
+        <tr><td class="feat">Diagrams</td>
+            <td><span class="dv">Separate HTML files (open in tab)</span></td>
+            <td><span class="lv">Inline SVG inside each chapter</span></td></tr>
+        <tr><td class="feat">Sidebar navigation</td>
+            <td><span class="no">&#10005;</span></td>
+            <td><span class="lv">&#10003; Section anchors, prev/next arrows</span></td></tr>
+        <tr><td class="feat">PDF download</td>
+            <td><span class="dv">&#10003; All chapters</span></td>
+            <td><span class="lv">&#10003; All chapters</span></td></tr>
+        <tr><td class="feat">Visual theme</td>
+            <td><span class="dv">Dark navy (IBM Plex Mono/Sans)</span></td>
+            <td><span class="lv">Light cream (Georgia serif)</span></td></tr>
+        <tr><td class="feat">Hardware coverage</td>
+            <td><span class="dv">H100&ndash;B200 / MI300X&ndash;CDNA3</span></td>
+            <td><span class="lv">H100&ndash;GB300 / MI300X&ndash;MI355X (updated)</span></td></tr>
+        <tr><td class="feat">Best for</td>
+            <td><span class="dv">Print &amp; offline, diagram reference</span></td>
+            <td><span class="lv">Online reading, interviews, daily reference</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="notice">
+    <strong>Navigation stays within each version.</strong>
+    Once you open v0.0 or v0.1, all links stay inside that version&rsquo;s folder.
+    Use your browser&rsquo;s back button or bookmark this page to switch between versions.
+  </div>
+
+</div>
+
+<footer>
+  AI/ML Infrastructure from Silicon to Scale &nbsp;&middot;&nbsp; Venkat Vinjam &nbsp;&middot;&nbsp; 2026<br>
+  <a href="https://github.com/vvinjamu/silicon-to-scale">github.com/vvinjamu/silicon-to-scale</a>
+</footer>
+
+</body>
+</html>

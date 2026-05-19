@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 4 — Memory Hierarchy &amp; HBM Deep Dive | AI/ML Infrastructure from Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
+.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
+.mem-tier-body{flex:1}
+.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
+.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+.fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+</style>
+</head>
+<body>
+
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">⌂ Index</a>
+  <a href="ch03b.html">← Ch 3B</a>
+  <a href="ch05.html">Ch 5 →</a>
+  <a href="ch01.html">Ch 1</a>
+  <a href="ch07.html">Ch 7</a>
+  <a href="ch08.html">Ch 8</a>
+  <a href="ch11.html">Ch 11</a>
+  <a href="ch17.html">Ch 17</a>
+</div>
+
+<div id="sidebar">
+  <h4>Chapter 4</h4>
+  <a href="#s41">4.1 The Memory Wall</a>
+  <a href="#s42">4.2 Five-Tier Hierarchy</a>
+  <a href="#s43">4.3 HBM Architecture</a>
+  <a href="#s44">4.4 Arithmetic Intensity</a>
+  <a href="#s45">4.5 BW Optimization</a>
+  <a href="#s46">4.6 Cluster Memory</a>
+  <a href="#s47">4.7 Profiling Tools</a>
+  <a href="#s48">4.8 Flash Attention</a>
+  <a href="#fa1">└ FAv1 Algorithm</a>
+  <a href="#fa2">└ FAv2 Warps</a>
+  <a href="#fa3">└ FAv3 H100</a>
+  <a href="#s49">4.9 Capacity Planning</a>
+  <a href="#s410">4.10 Decision Tree</a>
+  <a href="#diagrams">Diagrams (6)</a>
+  <a href="#qr">Quick Reference</a>
+  <a href="#review">Review Questions</a>
+</div>
+
+<div class="page">
+
+<div class="ch-label">Part II · Chapter 4</div>
+<h1 class="ch-title">Memory Hierarchy &amp; HBM Deep Dive</h1>
+<div class="ch-subtitle">The Physical Foundation of Every GPU Performance Decision — From Registers to Clusters, and the Kernel That Changed Everything: Flash Attention v1 → v2 → v3</div>
+<div class="ch-meta">
+  <strong>Book:</strong> AI/ML Infrastructure from Silicon to Scale — V2 Edition &nbsp;|&nbsp;
+  <strong>Author:</strong> Venkat Vinjam &nbsp;|&nbsp;
+  <strong>Cross-ref:</strong> <span class="xref">Ch 1: Roofline</span> <span class="xref">Ch 7: GPU Kernels</span> <span class="xref">Ch 11: KV Cache</span>
+</div>
+<div class="ch-divider"></div>
+
+<blockquote>"GPUs don't run out of compute. They run out of memory bandwidth. Every performance optimization in AI infrastructure is, at its core, a battle against the memory wall."
+<cite>— Principal Performance Architect's First Principle</cite></blockquote>
+
+<p>This chapter answers one deceptively simple question: <em>Why is moving data harder than computing with it?</em> The answer determines whether a kernel runs at 5% or 95% hardware efficiency, whether an inference system serves 10 users or 10,000, and whether your cluster achieves 40% or 80% Model FLOP Utilization (MFU).</p>
+
+<h2 id="s41">4.1 The Memory Wall — Why It Exists and Won't Go Away</h2>
+
+<table>
+  <tr><th>Year</th><th>GPU</th><th>Peak TFLOPS (BF16)</th><th>HBM Bandwidth</th><th>Compute:BW Ratio</th></tr>
+  <tr><td>2018</td><td>V100</td><td>112</td><td>900 GB/s</td><td>124 FLOP/byte</td></tr>
+  <tr><td>2020</td><td>A100</td><td>312</td><td>2.0 TB/s</td><td>156 FLOP/byte</td></tr>
+  <tr><td>2022</td><td>H100</td><td>989</td><td>3.35 TB/s</td><td class="warn">295 FLOP/byte ← ridge</td></tr>
+  <tr><td>2024</td><td>B200</td><td>~4,500 (FP8)</td><td>8.0 TB/s</td><td>562 FLOP/byte</td></tr>
+  <tr><td>2025</td><td>GB300</td><td>~9,000 (FP4)</td><td>12.0 TB/s</td><td>750 FLOP/byte</td></tr>
+</table>
+
+<div class="callout red"><strong>The Widening Gap</strong>
+Compute grew ~20× from V100→B200 over 6 years. Bandwidth grew only ~9×. The compute:bandwidth ratio widened from 124→562 FLOP/byte. Operations that were compute-bound in 2018 may now be memory-bound on H100. Performance engineers must <em>constantly re-evaluate</em> which regime their operations fall into as GPU generations advance.</div>
+
+<p><strong>Why bandwidth is hard to scale:</strong> Pin count physics limits each data pin to ~64 Gbps. DRAM refresh overhead consumes 3–5% at room temperature, rising to 8–12% at AI datacenter temperatures. The H100's HBM3 interface consumes ~40–60W just for the memory subsystem before any compute. HBM addresses these constraints by stacking DRAM dies vertically with through-silicon vias (TSVs), enabling 1024-bit buses at lower voltage — dramatically better bandwidth-per-watt and bandwidth-per-area than GDDR memory.</p>
+
+<h2 id="s42">4.2 The Five-Tier GPU Memory Hierarchy</h2>
+
+<p><strong>Every performance optimization involves moving data to the fastest tier that can hold it.</strong></p>
+
+<div class="mem-tier">
+  <div class="mem-tier-badge" style="background:#1c2438">TIER 1<br>Registers</div>
+  <div class="mem-tier-body"><h4>~33 MB total (H100) · 1-cycle latency · unlimited bandwidth</h4>
+  <p>65,536 × 32-bit registers per SM. Critical: register pressure limits occupancy. At 64 regs/thread → 50% occupancy; at 128 regs → 25%. <strong>Register spilling</strong> maps overflow to HBM L2 — turning 1-cycle access into 200–800 cycle access, a 200–800× slowdown.</p></div>
+</div>
+<div class="mem-tier">
+  <div class="mem-tier-badge" style="background:#2a4a8a">TIER 2<br>L1/SMEM</div>
+  <div class="mem-tier-body"><h4>228 KB/SM · ~80–100 TB/s aggregate · 20–30 cycle latency</h4>
+  <p>Explicitly programmer-managed cache shared among threads in a block. The key mechanism for GEMM tiling: without SMEM tiling, every operand access goes to HBM. <strong>Bank conflicts</strong> (32 banks, 4-byte words) can reduce SMEM BW from peak to peak/32. Fix by padding inner dim: <code>smem[32][33]</code> instead of <code>smem[32][32]</code>.</p></div>
+</div>
+<div class="mem-tier">
+  <div class="mem-tier-badge" style="background:#27ae60">TIER 3<br>L2 Cache</div>
+  <div class="mem-tier-body"><h4>50 MB · ~12 TB/s aggregate · 200–400 cycle latency · all SMs share</h4>
+  <p>Hardware-managed. Limited benefit for decode (weights far exceed 50 MB). Useful for KV cache hot-path, embedding table lookups, LayerNorm running stats. L2 hit rate in Nsight Compute indicates streaming vs. reuse patterns.</p></div>
+</div>
+<div class="mem-tier">
+  <div class="mem-tier-badge" style="background:#c0392b">TIER 4<br>HBM</div>
+  <div class="mem-tier-body"><h4>80–192 GB per GPU · H100: 3.35 TB/s | H200: 4.8 TB/s | B200: 8.0 TB/s · 400–800 cycle latency</h4>
+  <p>Per-GPU global memory. Holds model weights, activations, KV cache — the primary bottleneck for all memory-bound operations. Achieving &gt;80% utilization requires coalesced access, tiling, and quantization.</p></div>
+</div>
+<div class="mem-tier">
+  <div class="mem-tier-badge" style="background:#777">TIER 5<br>Host DRAM</div>
+  <div class="mem-tier-body"><h4>1–2 TB per server · PCIe Gen5: 128 GB/s GPU↔CPU · 10,000–50,000 cycle GPU latency</h4>
+  <p>CPU memory. Dataset staging, checkpoint buffers, model spill. PCIe is 26× slower than HBM. Frequent GPU↔CPU transfers are catastrophic for performance — minimize at all costs.</p></div>
+</div>
+
+<div class="formula">SMEM TILING — Naive GEMM vs Tiled GEMM:
+
+Naive GEMM: For each (i,j) in C[M×N], for each k in K:
+  Load A[i,k] from HBM + Load B[k,j] from HBM (2 reads per multiply)
+  Total reads M=N=K=4096: 137 billion HBM reads → fully bandwidth-bound
+
+Tiled GEMM (SMEM): Load TILE_M×TILE_K block of A + TILE_K×TILE_N of B
+  into SMEM once, compute all inner products from SMEM (fast access).
+  TILE=128: HBM reads reduced by 128× · AI rises to 128 FLOP/byte → compute-bound ✓</div>
+
+<h2 id="s43">4.3 HBM Architecture Deep Dive</h2>
+
+<div class="formula">HBM3e Physical Architecture (H200):
+  GPU Die (compute, TSMC 4nm, 132 SMs)
+      │ Through-Silicon Vias (TSVs) — 55 μm pitch, 1024 data bits/stack
+  HBM3e Stack (×6 for 141 GB):
+      ┌─ DRAM Die #4 (top)
+      ├─ DRAM Die #3
+      ├─ DRAM Die #2
+      ├─ DRAM Die #1
+      └─ Base Logic Die (signal routing, bottom)
+  
+  H100: 5 stacks × 1024-bit = 5120-bit bus → 3.35 TB/s, 80 GB
+  H200: 6 stacks × 1024-bit = 6144-bit bus → 4.8 TB/s, 141 GB
+  Gaming GDDR6X (RTX 4090): 384-bit bus → 1.0 TB/s (3.4× narrower)
+
+  BW = stacks × bus_width × clock_freq × 2(DDR)
+     = 5 × 1024 × 819MHz × 2 = 3.35 TB/s (H100)</div>
+
+<table>
+  <tr><th>Generation</th><th>HBM2 (V100)</th><th>HBM2e (A100)</th><th>HBM3 (H100)</th><th>HBM3e (H200)</th><th>HBM4 (MI450)</th></tr>
+  <tr><td>BW/stack</td><td>256 GB/s</td><td>307 GB/s</td><td>819 GB/s</td><td>1.2 TB/s</td><td>~2.4 TB/s</td></tr>
+  <tr><td>GPU total BW</td><td>900 GB/s</td><td>2.0 TB/s</td><td>3.35 TB/s</td><td>4.8 TB/s</td><td class="good">19.6 TB/s</td></tr>
+  <tr><td>Capacity/stack</td><td>16 GB</td><td>16 GB</td><td>16 GB</td><td>24 GB</td><td>~54 GB</td></tr>
+  <tr><td>Data rate/pin</td><td>2 Gbps</td><td>3.2 Gbps</td><td>6.4 Gbps</td><td>9.6 Gbps</td><td>~16 Gbps</td></tr>
+</table>
+
+<p><strong>Why HBM capacity scales slowly:</strong> Three constraints limit adding stacks: (1) Silicon interposer area is bounded by reticle limits (~858 mm²). (2) TSV yield — thousands of 55 μm-pitch vias per stack; defect rates multiply with taller stacks. (3) Thermal extraction — each stack dissipates 5–10W internally, running 15–25°C hotter than the GPU die. These drive ~2× capacity growth per generation vs. ~3× compute growth.</p>
+
+<table>
+  <tr><th>Access Pattern</th><th>Achieved BW (H100)</th><th>Utilization</th></tr>
+  <tr><td>Sequential streaming (memcpy)</td><td>3.0–3.1 TB/s</td><td class="good">90–92%</td></tr>
+  <tr><td>Flash Attention v3</td><td>2.7–2.9 TB/s</td><td class="good">80–87%</td></tr>
+  <tr><td>GEMM weight loading (large batch)</td><td>2.7–2.9 TB/s</td><td class="good">80–87%</td></tr>
+  <tr><td>GEMV (decode, matrix-vector, batch=1)</td><td>2.2–2.6 TB/s</td><td>65–78%</td></tr>
+  <tr><td>Scatter/gather ops</td><td>0.8–1.5 TB/s</td><td class="warn">24–45%</td></tr>
+  <tr><td>Standard attention (N=4096)</td><td>~0.8 TB/s</td><td class="bad">24%</td></tr>
+  <tr><td>Uncoalesced warp access</td><td>0.1–0.4 TB/s</td><td class="bad">3–12%</td></tr>
+</table>
+
+<div class="callout red"><strong>Coalesced vs. Uncoalesced Access — The #1 Pattern Decision</strong>
+When 32 threads access 32 consecutive 4-byte addresses (128 bytes = 1 cache line): ONE HBM transaction → 100% efficiency.<br>
+When 32 threads access 32 different cache lines: up to 32 separate transactions → 3% efficiency — a 32× overhead.<br><br>
+Fix: Ensure thread <code>i</code> accesses <code>base + i × element_size</code>. Avoid column-major traversal of row-major arrays. For GEMM B^T: store B transposed so both A and B^T are row-traversed.</div>
+
+<h2 id="s44">4.4 The Arithmetic Intensity Framework</h2>
+
+<div class="callout navy"><strong>Arithmetic Intensity (AI) Definition</strong>
+<code>AI = FLOPs executed / Bytes transferred to/from HBM</code> &nbsp;[units: FLOP/byte]<br>
+This single number determines whether any operation is memory-bound or compute-bound on any given hardware.</div>
+
+<div class="formula">KEY LLM OPERATIONS — ARITHMETIC INTENSITY:
+
+GEMM (prefill): C[M×N] = A[M×K] × B[K×N]
+  FLOPs: 2×M×N×K · Bytes: (M×K + K×N + M×N) × dtype_bytes
+  M=N=K=4096, BF16: FLOPs=137.4G · Bytes=100.7M → AI=1,365 FLOP/byte
+  H100 ridge=295 → compute-bound ✓ (This is why large-batch prefill is fast)
+
+GEMV (decode, batch=1): y[M] = A[M×K] × x[K]
+  FLOPs: 2×M×K · Bytes: M×K × dtype_bytes (load ENTIRE weight matrix!)
+  M=K=8192, BF16: FLOPs=134.2M · Bytes=134.2M → AI=1.0 FLOP/byte
+  H100 ridge=295 → DEEPLY MEMORY BOUND ✗ (decode loads weights for 1 token)
+
+RMSNorm / LayerNorm: AI ≈ 1.25 FLOP/byte → memory-bound
+  Practical throughput: HBM_BW/4 = 3.35TB/s/4 ≈ 840 GB/s of elements
+  → Standalone normalization wastes 99.6% of compute capacity
+  → Operator fusion with adjacent GEMM is MANDATORY
+
+Softmax (attention row, standard): AI ≈ 5 FLOP/byte → memory-bound
+FlashAttention QK matmul (S=2K): AI ≈ 250 FLOP/byte → near-ridge
+Attention GEMM S=4096: AI ≈ 2048 FLOP/byte → compute-bound
+
+Roofline rule (H100 BF16, ridge=295):
+  If AI < 295: achievable TFLOPS = AI × 3.35
+  If AI > 295: achievable TFLOPS = 989 (compute ceiling)</div>
+
+<h2 id="s45">4.5 Memory Bandwidth Optimization Techniques</h2>
+
+<h3>4.5.1 Operator Fusion</h3>
+<div class="formula">UNFUSED: y = LayerNorm(GELU(Linear(x)))
+  Linear:   read x[HBM] → GEMM → write z[HBM]        16 GB
+  GELU:     read z[HBM] → elementwise → write g[HBM]  32 GB
+  LayerNorm:read g[HBM] → reduce → write y[HBM]       32 GB
+  Total: 80 GB traffic for 16 GB of data = 5× overhead
+
+FUSED: Single kernel
+  Read x → GEMM(SMEM) → GELU(registers) → LayerNorm(registers) → write y
+  Total: 32 GB = 2× overhead · Speedup: ~2.5× on memory-bound workloads
+
+Key LLM fusion targets:
+  Flash Attention:  QKᵀ + softmax + mask + ×V → single kernel (most impactful)
+  MLP:              GEMM + GELU/SiLU (+ optional GEMM2)
+  Residual+Norm:    add_residual + RMSNorm → merged (vLLM, TRT-LLM default)
+  QKV projection:   3 linear projections → 1 wider GEMM</div>
+
+<h3>4.5.2 Quantization — Reducing Bytes Per Parameter</h3>
+<table>
+  <tr><th>Format</th><th>Bits</th><th>70B Weight Size</th><th>Decode Latency (H100)</th><th>Quality Loss</th></tr>
+  <tr><td>FP32</td><td>32</td><td>280 GB</td><td class="bad">83ms/tok — impractical</td><td>None</td></tr>
+  <tr><td>BF16/FP16</td><td>16</td><td>140 GB</td><td>42ms/tok (baseline)</td><td>Baseline</td></tr>
+  <tr><td>FP8 E4M3</td><td>8</td><td>70 GB</td><td class="good">21ms/tok (2×)</td><td>~0.1%</td></tr>
+  <tr><td>INT4 AWQ</td><td>4</td><td>35 GB</td><td class="good">10ms/tok (4×)</td><td>~0.3%</td></tr>
+  <tr><td>NVFP4</td><td>4</td><td>35 GB</td><td class="good">~8ms/tok (Blackwell)</td><td>~0.5%</td></tr>
+</table>
+
+<h2 id="s46">4.6 Memory Across the Full System</h2>
+
+<div class="formula">DGX H100 Memory Topology (8 GPUs):
+  8 × 80 GB HBM3 = 640 GB total · GPU-GPU: 900 GB/s NVSwitch · GPU-CPU: 128 GB/s PCIe
+
+Parallelism constraints driven by memory bandwidth:
+  Tensor Parallel (TP): AllReduce per layer → needs 900 GB/s → NVLink ONLY
+    80 layers × 0.5ms/AllReduce over IB = 40ms/fwd pass → UNUSABLE
+    80 layers × 0.05ms over NVLink = 4ms/fwd pass → acceptable
+    Constraint: TP group MUST stay within NVSwitch domain (≤8 GPUs)
+
+  Pipeline Parallel (PP): point-to-point activations → 50-100 GB/s → IB OK
+    Creates pipeline bubbles ∝ PP degree; use when model exceeds single-node HBM
+
+  Data Parallel (DP/FSDP): gradient AllReduce → 100-400 GB/s → IB OK
+    FSDP shards model weights across data-parallel ranks (ZeRO-3 equivalent)</div>
+
+<h2 id="s47">4.7 Memory Profiling and Diagnosis</h2>
+
+<div class="formula">Nsight Compute sections for memory analysis:
+
+1. "Memory Workload Analysis": HBM util%, L1/L2 hit rates, SMEM util%
+   Target: >80% HBM util for memory-bound; >50% SMEM for tiled kernels
+
+2. "Memory Chart": SMEM BW >> HBM BW = good tiling ✓
+                   HBM BW >> SMEM BW = poor tiling ✗
+
+3. "Source Counters": per-line HBM traffic → diagnose uncoalesced access
+
+4. "Roofline": auto-plots kernel, shows memory vs compute bound
+
+NCU command:
+  ncu --set full --section MemoryWorkloadAnalysis \
+      --section SpeedOfLight_RooflineChart python train.py
+
+AMD MI300X: omniperf profile --name run -- python train.py
+            omniperf analyze --path run/ --roof-only
+
+Key metrics and healthy ranges:
+  HBM BW Utilization: >70% (mem-bound) · <40% → check if compute-bound
+  L2 Hit Rate: 30-80% · <10% normal streaming; >90% excellent locality
+  Bank Conflicts/SMEM Access: 0 · Any → pad SMEM dim (smem[32][33])
+  Register Spills to Local: 0 · Any → reduce regs/thread
+  Uncoalesced Global Accesses: 0 · Any → fix thread-to-address mapping
+  Achieved Occupancy: >60% · <33% → register or SMEM pressure</div>
+
+<h2 id="s48">4.8 Flash Attention — A Complete Deep Dive</h2>
+
+<blockquote>"Flash Attention is not a clever trick. It is the correct way to implement attention. Everything else is wrong in proportion to how much memory it wastes."
+<cite>— AI Systems Engineering Perspective</cite></blockquote>
+
+<p>Flash Attention is the single most impactful GPU kernel innovation of the LLM era. Every major production system — vLLM, TRT-LLM, Megatron-LM, HuggingFace Transformers — uses it by default.</p>
+
+<h3>4.8.1 The Problem: Standard Attention Is O(N²) in Memory</h3>
+
+<div class="formula">STANDARD ATTENTION HBM TRAFFIC (Q,K,V each [N×d]):
+
+Step 1: S = Q × Kᵀ / √d  → S [N×N]   WRITE to HBM
+Step 2: P = softmax(S)    → P [N×N]   READ + WRITE to HBM
+Step 3: O = P × V         → O [N×d]   READ + WRITE to HBM
+
+Total: 4×N×d + 3×N² bytes (BF16: ×2)
+
+For N=4096, d=128, BF16:
+  N×d terms: 4 × 4096 × 128 × 2 =   4.2 MB
+  N² terms:  3 × 4096² × 2     = 100.7 MB ← DOMINATES
+  Total per head: ~105 MB
+
+For LLaMA-3 70B (80 layers × 64 MHA heads):
+  80 × 64 × 105 MB = 537 GB HBM traffic for attention alone!
+  At H100 3.35 TB/s: 0.16 seconds minimum per fwd pass (memory only!)
+
+CONTEXT LENGTH SCALING (why long contexts need FA):
+  N=8192:  N² = 134 MB/head   → problematic
+  N=32768: N² = 2.1 GB/head   → can't fit in 80 GB HBM
+  N=128K:  N² = 32 GB/head    → physically impossible
+  → Standard attention CANNOT support long contexts</div>
+
+<h3>4.8.2 The Key Insight: Online Softmax</h3>
+
+<p>Standard softmax for row i requires ALL j values simultaneously — the denominator requires the full sum. Online softmax (Milakov &amp; Gimelshein, 2018) maintains running statistics correctable tile-by-tile.</p>
+
+<div class="formula">ONLINE SOFTMAX TRICK:
+For row x processed in tiles [x₁..xₖ] then [xₖ₊₁..xₙ]:
+
+AFTER TILE 1:
+  m₁ = max(x₁..xₖ)                     ← running maximum
+  ℓ₁ = Σ exp(xⱼ - m₁)                  ← partial denominator (stable)
+  O₁ = Σ exp(xⱼ - m₁) × Vⱼ / ℓ₁      ← partial output
+
+AFTER TILE 2 (with correction):
+  m₂ = max(m₁, max(xₖ₊₁..xₙ))         ← global max update
+  α  = exp(m₁ - m₂)                    ← correction factor for old partial sum
+  ℓ₂ = α × ℓ₁ + Σ exp(xⱼ - m₂)       ← updated denominator
+  O₂ = (α × ℓ₁ × O₁ + Σ exp(xⱼ - m₂) × Vⱼ) / ℓ₂
+
+RESULT: O₂ is MATHEMATICALLY IDENTICAL to softmax([x₁..xₙ]) × [V₁..Vₙ]
+        — computed WITHOUT ever materializing the N×N matrix!
+
+NUMERICAL STABILITY:
+  Naive exp(1000) = inf (overflow), exp(-1000) = 0 (underflow)
+  Online softmax subtracts running max m: keeps all values in [exp(-large), 1]
+  This stability property is preserved across tiles via the correction factor α.</div>
+
+<h3 id="fa1">4.8.3 Flash Attention v1 — The Tiling Algorithm</h3>
+<span class="fa-ver">FAv1</span><em>Dao et al., NeurIPS 2022</em>
+
+<div class="formula">FAv1 SRAM BUDGET (H100: 228 KB SMEM per SM):
+  Q tile: 64×128×2 = 16 KB  |  K tile: 16 KB  |  V tile: 16 KB  |  O tile: 16 KB
+  m,ℓ vectors: ~0.5 KB  |  TOTAL: 64.5 KB → fits in 228 KB ✓
+
+ALGORITHM:
+  Init: O=zeros(N,d), ℓ=zeros(N), m=-inf(N)
+  
+  Outer loop → for each Q tile Qᵢ (N/64 blocks):
+    Load Qᵢ from HBM → SRAM          ← ONE HBM read per Q block
+    
+    Inner loop → for each K,V tile Kⱼ, Vⱼ:
+      Load Kⱼ from HBM → SRAM        ← ONE HBM read per K block
+      Load Vⱼ from HBM → SRAM        ← ONE HBM read per V block
+      Sᵢⱼ = Qᵢ × Kⱼᵀ / √d           ← SRAM matrix multiply
+      Online softmax update (m,ℓ,O corrected in registers)
+    
+    Write Oᵢ from SRAM → HBM         ← ONE HBM write per Q block
+
+HBM TRAFFIC COMPARISON (N=4096, d=128, BF16):
+  Standard attention:      139 MB per head
+  Flash Attention v1:        4.1 MB per head  ← 34× reduction!
+
+  Speedup: 2–4× at N=2048; 8–12× at N=8192 (memory dominates longer)
+
+FAv1 BACKWARD PASS BREAKTHROUGH:
+  Standard: stores N×N score matrix S → O(N²) memory during training
+  FAv1: stores only O and ℓ (size N each); recomputes softmax on-the-fly
+  Memory: O(N²) → O(N×d)
+  For 70B at seq=32K: 3.3 TB → 5 GB stored (660× memory reduction!)
+  Cost: +33% compute for recomputation → worth it at any sequence > 2K</div>
+
+<h3 id="fa2">4.8.5 Flash Attention v2 — Warp-Level Parallelism</h3>
+<span class="fa-ver">FAv2</span><em>Dao, 2023</em>
+
+<div class="formula">FAv1 PROBLEM: 40-50% warp utilization — many warps idle during reduction steps
+
+FAv2 KEY INNOVATIONS:
+
+① Split K/V dimension across warps (parallelism):
+  FAv1: all warps work on same (Q tile, K/V tile)
+  FAv2: different warps process different K/V tiles simultaneously
+        → merge via warp-level reductions
+  Warp utilization: 40% → 75%+
+
+② Parallelize over BOTH Q and K/V outer loops:
+  2× more thread-level parallelism exposed
+
+③ Algebraically simplify correction math:
+  ~25% fewer non-GEMM FLOPs vs FAv1 per tile step
+
+④ Native GQA support (H_kv = H_q / G):
+  K/V loaded once, applied to G query heads
+  → G× reduction in K/V HBM reads for GQA configs
+
+PERFORMANCE (A100 SXM, N=2048, d=64, BF16):
+  Standard:  ~42 TFLOPS  (12% of 312 TF peak)
+  FAv1:      ~93 TFLOPS  (30% of peak)
+  FAv2:     ~197 TFLOPS  (63% of peak)
+  Speedup FAv2 vs standard: 4.7× · vs FAv1: 2.1×
+
+Seq-length scaling:
+  N=512:  FAv2 ~1.8× over std  N=8192:  FAv2 ~8× over std
+  N=2048: FAv2 ~4.7× over std  N=32768: FAv2 ~12× over std</div>
+
+<h3 id="fa3">4.8.6 Flash Attention v3 — H100-Native Hardware Exploitation</h3>
+<span class="fa-ver">FAv3</span><em>Shah et al., 2024 — H100 exclusive</em>
+
+<div class="formula">H100 HARDWARE PRIMITIVES ENABLING FAv3:
+
+① WGMMA (Warp Group Matrix Multiply Accumulate):
+  H100-specific: operates on 4-warp groups (128 threads) vs per-warp MMA
+  Tile: 64×16×16 per warp group (larger than FAv2's per-warp tile)
+  Throughput: ~2× vs per-warp MMA · larger tiles → better SMEM→TC intensity
+
+② TMA (Tensor Memory Accelerator):
+  Dedicated hardware copies tiles HBM→SRAM ASYNCHRONOUSLY
+  Does NOT consume SM compute cycles or warp execution slots
+  Pipeline: TMA loads K,V tile N+1 while WGMMA computes tile N → TRUE OVERLAP
+
+FAv3 EXECUTION PIPELINE (with TMA + WGMMA):
+  TMA:   "Load K tile N+1 to SMEM"  [hardware, no SM cycles]
+  WGMMA: Q × K^T (tile N)           [SM fully utilized simultaneously]
+  WGMMA: P × V   (tile N)           [SM still computing]
+  TMA completes → tile N+1 in SMEM, WGMMA starts immediately
+  Effective throughput: ~2× v2 (both units busy, no serialization)
+
+FAv3 FP8 (H100 Transformer Engine):
+  Q,K computed in FP8 WGMMA → ~2× compute/cycle
+  Online descaling per tile (per-row scaling factor)
+  O accumulated in FP32 for stability · Quality impact: <0.1% degradation
+
+PERFORMANCE (H100 SXM, causal, BF16, d=128):
+  N       Standard    FAv2       FAv3       % H100 Peak
+  512     124 TF      280 TF     420 TF       42%
+  2048    88 TF       498 TF     680 TF       69%
+  4096    71 TF       571 TF     737 TF       74%
+  8192    52 TF       593 TF     750 TF       76%
+  FAv3 FP8 at N=4096: ~850-900 TFLOPS (86-91% of peak!)</div>
+
+<h3>4.8.7 Flash Attention in Production</h3>
+
+<div class="code-block">python# PyTorch 2.0+ SDPA — automatically selects FA backend by GPU arch
+import torch.nn.functional as F
+with torch.backends.cuda.sdp_kernel(enable_flash=True, enable_math=False):
+    output = F.scaled_dot_product_attention(q, k, v, is_causal=True)
+# A100 → FAv2 · H100 → FAv3 · Very short seqs fall back to math path
+
+# HuggingFace Transformers — explicit FA
+model = AutoModelForCausalLM.from_pretrained(
+    "meta-llama/Llama-3-70b",
+    attn_implementation="flash_attention_2",
+    torch_dtype=torch.bfloat16)
+
+# Sliding Window Attention (Mistral architecture)
+from flash_attn import flash_attn_func
+output = flash_attn_func(q, k, v, causal=True, window_size=(4096, 0))
+# O(N×W) instead of O(N²) for long seqs · KV cache: only store last 4K tokens
+# For W=4096 vs N=128K: 32× KV cache reduction!
+
+# Profiling command to verify FA is active:
+# ncu --kernel-name "flash_fwd_kernel" --set full python script.py
+# Look for: TMA accesses + WGMMA instructions → FAv3 confirmed on H100</div>
+
+<h3>4.8.8 GQA + Flash Attention — Compounding Savings</h3>
+
+<div class="formula">COMPOUNDING SAVINGS (LLaMA-3 70B, N=4096, H_q=64, H_kv=8, G=8):
+  Without GQA, without FA:  537 GB attention HBM traffic
+  Without GQA, with FA:     2.5 GB
+  With GQA, with FA:        1.05 GB
+  Combined reduction: 537 GB → 1.05 GB = 511× less traffic!
+
+PRODUCTION SCENARIO: LLaMA-3 70B Prefill, N=8192 (GQA + FAv3)
+  Standard attention + GQA:  856 GB per forward pass
+  FAv3 + GQA:                34.9 GB per forward pass
+
+  At H200 (4.8 TB/s):
+    Standard: 856 / 4800 = 178ms · FAv3: 34.9 / 4800 = 7.3ms
+    Saved: 171ms per 8K-token prefill request
+
+  At 1,000 req/min production load:
+    2,850ms/sec of GPU time freed ≈ 2.85 GPU-equivalents
+    At $2.50/GPU-hr: $7.13/hr = $62,400/year from FA alone.</div>
+
+<table>
+  <tr><th>Feature</th><th>Standard</th><th>FAv1 (2022)</th><th>FAv2 (2023)</th><th>FAv3 (2024)</th></tr>
+  <tr><td>HBM writes</td><td class="bad">O(N²)</td><td class="good">O(N×d)</td><td class="good">O(N×d)</td><td class="good">O(N×d)</td></tr>
+  <tr><td>Warp utilization</td><td>~12%</td><td>~40%</td><td>~75%</td><td>~75–85%</td></tr>
+  <tr><td>WGMMA + TMA (H100)</td><td>—</td><td>—</td><td>—</td><td class="good">YES</td></tr>
+  <tr><td>FP8 support</td><td>—</td><td>—</td><td>—</td><td class="good">YES (H100)</td></tr>
+  <tr><td>GQA native</td><td>—</td><td>—</td><td class="good">YES</td><td class="good">YES</td></tr>
+  <tr><td>Max H100 utilization</td><td>~12%</td><td>~40%</td><td>~63%</td><td class="good">~76% BF16 / ~88% FP8</td></tr>
+  <tr><td>Speed vs standard</td><td>1×</td><td>2–4×</td><td>4–8×</td><td class="good">6–14×</td></tr>
+</table>
+
+<div class="callout green"><strong>Production Recommendation</strong>
+H100: FAv3 via <code>flash-attn&gt;=2.6</code> or <code>torch.nn.functional.scaled_dot_product_attention</code> with <code>enable_flash=True</code><br>
+A100: FAv2 via <code>flash-attn&gt;=2.0</code><br>
+AMD MI300X: FAv2 via ROCm flash-attn fork (same algorithm, HIP backend)<br>
+<strong>Rule: Never use standard attention for sequence length &gt; 512 in any production system.</strong></div>
+
+<h2 id="s49">4.9 Memory Capacity Planning for LLM Deployments</h2>
+
+<div class="formula">TRAINING MEMORY BUDGET (LLaMA-3 70B, TP=8, BF16, Adam):
+
+  Model params:     70B/8 × 2 bytes = 17.5 GB per GPU
+  Optimizer states: Without ZeRO: 70B × 16 bytes / 8 = 140 GB → EXCEEDS 80 GB!
+  With ZeRO-3 (FSDP):
+    Each GPU holds 1/N all states: 70B × 16 / 64 GPUs = ~17.5 GB
+    + Activations + buffers: ~30–50 GB total → fits in 80 GB HBM3 ✓
+
+INFERENCE MEMORY BUDGET (LLaMA-3 70B, FP8, TP=8, H100):
+
+  Model weights:    70B/8 × 1 byte = 8.75 GB
+  KV cache/req:     2×L×H×D×S×2 bytes = 2×80×8×128×4096×2 = 1.3 GB/req
+  KV cache (32 req): 41.6 GB
+  Activation buffers: ~2 GB · Runtime (NCCL, CUDA ctx): ~2–3 GB
+  Total (32-req batch): ~54 GB → fits in 80 GB HBM3 ✓
+  Max batch size: (80 - 12 GB overhead) / 1.3 GB ≈ 52 concurrent requests
+
+Levers to increase batch size:
+  NVFP4 weights: → 4.4 GB (vs 8.75) → ~20 GB freed for KV cache
+  INT8 KV cache: 41.6 → 20.8 GB → 2× more concurrent requests
+  H200 (141 GB): ~90 GB more available → ~3× more concurrent requests</div>
+
+<h2 id="s410">4.10 Memory Performance Decision Tree</h2>
+
+<div class="formula">START: GPU kernel to optimize
+       │
+  Measure Arithmetic Intensity (Nsight Compute → Roofline tab)
+       │
+  ┌────▼──────────────┐
+  │  AI < Ridge Point? │──YES──→ MEMORY BOUND. Apply in order:
+  │  (295 H100 BF16)  │         1. Operator fusion (biggest single win)
+  └────────────────────┘         2. Quantization (fewer bytes/param → less BW)
+       │ NO                      3. Fix access coalescing (check Nsight)
+       ▼                         4. Increase SMEM tile sizes
+  COMPUTE BOUND                  5. Prefetching / async copy (TMA on H100)
+  Apply in order:                6. KV cache compression (inference only)
+  1. Increase batch size
+  2. Optimize Tensor Core tile efficiency (CUTLASS)
+  3. Reduce register pressure → increase occupancy
+  4. Use TC-native types: TF32, BF16, FP8, FP4
+  5. Consider operator fusion (reduce launch overhead)</div>
+
+
+<h2 id="diagrams">Architecture Diagrams</h2>
+
+<!-- DIAGRAM 1: Memory Hierarchy Pyramid -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 760 430" xmlns="http://www.w3.org/2000/svg" style="background:#fdfcf7">
+<text x="380" y="24" text-anchor="middle" font-family="Georgia,serif" font-size="14" font-weight="700" fill="#1c2438">GPU System Memory Hierarchy Pyramid</text>
+<text x="380" y="40" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#777">Bandwidth ↑ and Latency ↓ toward apex · Capacity ↑ toward base · Optimization = move data toward apex</text>
+<!-- REGISTERS apex -->
+<polygon points="380,52 310,96 450,96" fill="#1c2438" stroke="#fdfcf7" stroke-width="2"/>
+<text x="380" y="80" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#e3b341">REGISTERS</text>
+<text x="458" y="72" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="700">~33 MB total (H100)</text>
+<text x="458" y="84" font-family="sans-serif" font-size="9" fill="#555">~unlimited BW · 1 cycle latency · thread-private</text>
+<text x="458" y="96" font-family="sans-serif" font-size="8" fill="#777">65,536 regs/SM · spills → 200-800× slowdown</text>
+<!-- L1/SMEM -->
+<polygon points="310,98 255,148 505,148 450,98" fill="#2a4a8a" stroke="#fdfcf7" stroke-width="2"/>
+<text x="380" y="130" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#fff">L1 CACHE / SHARED MEMORY (SMEM)</text>
+<text x="512" y="112" font-family="sans-serif" font-size="9" fill="#2a4a8a" font-weight="700">228 KB/SM · ~80–100 TB/s aggregate</text>
+<text x="512" y="124" font-family="sans-serif" font-size="9" fill="#555">20–30 cycle latency · programmer-controlled</text>
+<text x="512" y="136" font-family="sans-serif" font-size="9" fill="#555">Scope: thread block · key for GEMM tiling + FA tiles</text>
+<!-- L2 -->
+<polygon points="255,150 195,205 565,205 505,150" fill="#27ae60" stroke="#fdfcf7" stroke-width="2"/>
+<text x="380" y="183" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#fff">L2 CACHE — 50 MB (H100)</text>
+<text x="572" y="162" font-family="sans-serif" font-size="9" fill="#27ae60" font-weight="700">~12 TB/s aggregate · 200–400 cycles</text>
+<text x="572" y="174" font-family="sans-serif" font-size="9" fill="#555">Hardware-managed · all SMs unified</text>
+<text x="572" y="186" font-family="sans-serif" font-size="9" fill="#555">KV cache hot entries, embedding reuse</text>
+<!-- HBM -->
+<polygon points="195,207 130,265 630,265 565,207" fill="#c0392b" stroke="#fdfcf7" stroke-width="2"/>
+<text x="380" y="238" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#fff">HBM (High Bandwidth Memory)</text>
+<text x="165" y="250" font-family="sans-serif" font-size="8" fill="#fff">H100: 80 GB / 3.35 TB/s</text>
+<text x="380" y="258" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">H200: 141 GB / 4.8 TB/s · B200: 192 GB / 8.0 TB/s · 400–800 cycle latency</text>
+<!-- PCIe gap -->
+<line x1="380" y1="267" x2="380" y2="283" stroke="#e3b341" stroke-width="2.5" stroke-dasharray="4,2"/>
+<text x="380" y="280" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#e3b341" font-weight="700">▼ PCIe Gen5: 128 GB/s (26× slower than HBM — design to avoid!) ▼</text>
+<!-- Host DRAM -->
+<polygon points="130,286 65,344 695,344 630,286" fill="#7b7b7b" stroke="#fdfcf7" stroke-width="2"/>
+<text x="380" y="317" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#fff">HOST DRAM (CPU Memory)</text>
+<text x="380" y="330" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#eee">1–2 TB · 300–400 GB/s CPU-side · 10,000–50,000 cycle latency from GPU perspective</text>
+<!-- NVMe -->
+<rect x="65" y="346" width="630" height="36" rx="0" fill="#444" stroke="#666" stroke-width="1"/>
+<text x="380" y="366" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#fff">NVMe SSD (Dataset Storage)</text>
+<text x="380" y="378" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#aaa">1–100 TB · 12–28 GB/s (NVMe Gen5) · milliseconds latency</text>
+<!-- Axes -->
+<path d="M 46,380 L 46,58" stroke="#1c2438" stroke-width="2" fill="none"/>
+<polygon points="46,52 41,65 51,65" fill="#1c2438"/>
+<text transform="rotate(-90,24,220)" x="24" y="220" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#1c2438">← Bandwidth / Speed Increases</text>
+<path d="M 714,58 L 714,380" stroke="#c0392b" stroke-width="2" fill="none"/>
+<polygon points="714,386 709,373 719,373" fill="#c0392b"/>
+<text transform="rotate(90,736,220)" x="736" y="220" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#c0392b">← Latency Decreases</text>
+</svg>
+<figcaption>Figure 4.1 — GPU system memory hierarchy pyramid. Apex = fastest/smallest (registers, 1 cycle). Base = largest/slowest (NVMe, ms). The gold dashed PCIe barrier marks the 26× bandwidth cliff for GPU↔CPU transfers. Every performance optimization moves working data toward the apex: SMEM tiling for GEMM, Flash Attention tiles fitting in 228 KB SMEM, quantization shrinking HBM footprint.</figcaption>
+</div>
+
+<!-- DIAGRAM 2: HBM Physical Stack Cross-Section -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" style="background:#fdfcf7">
+<text x="380" y="22" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="700" fill="#1c2438">HBM3e Physical Stack Cross-Section (H100 / H200)</text>
+<!-- GPU Die -->
+<rect x="25" y="40" width="155" height="190" rx="6" fill="#1c2438"/>
+<text x="102" y="62" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#e3b341">GPU Die</text>
+<text x="102" y="76" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#aaa">GH100 · TSMC 4nm · 80B transistors</text>
+<g fill="#2a4a8a" stroke="#1c2438" stroke-width="0.5">
+<rect x="36" y="86" width="26" height="16" rx="2"/><rect x="66" y="86" width="26" height="16" rx="2"/><rect x="96" y="86" width="26" height="16" rx="2"/><rect x="126" y="86" width="26" height="16" rx="2"/>
+<rect x="36" y="106" width="26" height="16" rx="2"/><rect x="66" y="106" width="26" height="16" rx="2"/><rect x="96" y="106" width="26" height="16" rx="2"/><rect x="126" y="106" width="26" height="16" rx="2"/>
+<rect x="36" y="126" width="26" height="16" rx="2"/><rect x="66" y="126" width="26" height="16" rx="2"/><rect x="96" y="126" width="26" height="16" rx="2"/><rect x="126" y="126" width="26" height="16" rx="2"/>
+<rect x="36" y="146" width="26" height="16" rx="2"/><rect x="66" y="146" width="26" height="16" rx="2"/><rect x="96" y="146" width="26" height="16" rx="2"/><rect x="126" y="146" width="26" height="16" rx="2"/>
+</g>
+<text x="102" y="178" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#7a9090">132 SMs · 814 mm²</text>
+<text x="102" y="190" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#7a9090">(near reticle limit)</text>
+<text x="102" y="214" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#7a9090">BW formula:</text>
+<text x="102" y="224" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#7a9090">stacks×1024b×819MHz×2</text>
+<!-- Interposer -->
+<rect x="15" y="242" width="730" height="22" rx="4" fill="#888"/>
+<text x="380" y="257" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#fff">Silicon Interposer — Passive · Routes 6144-bit HBM bus (H200) + Power/Ground</text>
+<!-- TSV connectors GPU→interposer -->
+<g stroke="#e3b341" stroke-width="1.5">
+<line x1="55" y1="230" x2="55" y2="242"/><line x1="75" y1="230" x2="75" y2="242"/>
+<line x1="95" y1="230" x2="95" y2="242"/><line x1="115" y1="230" x2="115" y2="242"/>
+<line x1="135" y1="230" x2="135" y2="242"/>
+</g>
+<!-- HBM stacks -->
+<g transform="translate(200,40)">
+  <rect x="0" y="0" width="76" height="25" rx="3" fill="#e67e22"/><text x="38" y="17" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="700" fill="#fff">DRAM Die #4 (top)</text>
+  <rect x="0" y="29" width="76" height="25" rx="3" fill="#e67e22"/><text x="38" y="45" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">DRAM Die #3</text>
+  <rect x="0" y="58" width="76" height="25" rx="3" fill="#e67e22"/><text x="38" y="74" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">DRAM Die #2</text>
+  <rect x="0" y="87" width="76" height="25" rx="3" fill="#e67e22"/><text x="38" y="103" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">DRAM Die #1</text>
+  <rect x="0" y="116" width="76" height="22" rx="3" fill="#c0392b"/><text x="38" y="131" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="700" fill="#fff">Base Logic Die</text>
+  <g stroke="#e3b341" stroke-width="1.5">
+  <line x1="12" y1="25" x2="12" y2="29"/><line x1="25" y1="25" x2="25" y2="29"/>
+  <line x1="38" y1="25" x2="38" y2="29"/><line x1="51" y1="25" x2="51" y2="29"/>
+  <line x1="12" y1="54" x2="12" y2="58"/><line x1="25" y1="54" x2="25" y2="58"/>
+  <line x1="38" y1="54" x2="38" y2="58"/><line x1="51" y1="54" x2="51" y2="58"/>
+  <line x1="12" y1="83" x2="12" y2="87"/><line x1="25" y1="83" x2="25" y2="87"/>
+  <line x1="12" y1="112" x2="12" y2="116"/><line x1="25" y1="112" x2="25" y2="116"/>
+  <line x1="12" y1="138" x2="12" y2="202"/><line x1="38" y1="138" x2="38" y2="202"/>
+  <line x1="64" y1="138" x2="64" y2="202"/>
+  </g>
+  <text x="38" y="215" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#e67e22">Stack #1</text>
+  <text x="38" y="227" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#777">4×8 GB=32 GB · 1024-bit</text>
+</g>
+<text x="218" y="37" font-family="sans-serif" font-size="8" fill="#e3b341" font-weight="700">TSVs (55 μm pitch)</text>
+<!-- Stacks 2-5 abbreviated -->
+<g transform="translate(292,40)">
+  <rect x="0" y="0" width="56" height="138" rx="3" fill="#e67e22" opacity="0.7"/>
+  <text x="28" y="72" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#fff" font-weight="700">Stack #2</text>
+  <line x1="28" y1="138" x2="28" y2="202" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="28" y="215" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#777">16 GB</text>
+</g>
+<g transform="translate(362,40)">
+  <rect x="0" y="0" width="56" height="138" rx="3" fill="#e67e22" opacity="0.55"/>
+  <text x="28" y="72" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#fff" font-weight="700">Stack #3</text>
+  <line x1="28" y1="138" x2="28" y2="202" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="28" y="215" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#777">16 GB</text>
+</g>
+<g transform="translate(432,40)">
+  <rect x="0" y="0" width="56" height="138" rx="3" fill="#e67e22" opacity="0.4"/>
+  <text x="28" y="72" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#fff" font-weight="700">Stack #4</text>
+  <line x1="28" y1="138" x2="28" y2="202" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="28" y="215" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#777">16 GB</text>
+</g>
+<g transform="translate(502,40)">
+  <rect x="0" y="0" width="56" height="138" rx="3" fill="#e67e22" opacity="0.3"/>
+  <text x="28" y="72" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#fff" font-weight="700">Stack #5</text>
+  <line x1="28" y1="138" x2="28" y2="202" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="28" y="215" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#777">16 GB</text>
+</g>
+<!-- H200 Stack #6 (extra) -->
+<g transform="translate(572,40)">
+  <rect x="0" y="0" width="70" height="138" rx="3" fill="#c0392b" opacity="0.55" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="35" y="60" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#fff" font-weight="700">Stack #6</text>
+  <text x="35" y="75" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#eee">H200 only</text>
+  <text x="35" y="89" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#eee">(same GPU die,</text>
+  <text x="35" y="101" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#eee">extra stack →</text>
+  <text x="35" y="113" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#eee">80→141 GB)</text>
+  <line x1="35" y1="138" x2="35" y2="202" stroke="#e3b341" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <text x="35" y="215" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#c0392b">+61 GB</text>
+</g>
+<!-- Comparison table at bottom -->
+<rect x="22" y="272" width="340" height="50" rx="4" fill="#f0f3f8" stroke="#c5cfe0" stroke-width="1"/>
+<text x="192" y="287" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#1c2438">H100 vs H200 vs GDDR6X Comparison</text>
+<text x="192" y="300" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">H100: 5 stacks · 3.35 TB/s · 80 GB · 5120-bit bus</text>
+<text x="192" y="313" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">H200: 6 stacks · 4.8 TB/s · 141 GB · 6144-bit bus</text>
+<text x="192" y="324" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#777">GDDR6X gaming: 384-bit bus · 1.0 TB/s (3.4× less BW)</text>
+</svg>
+<figcaption>Figure 4.2 — HBM3e physical stack cross-section. Left: H100 GPU compute die (132 SMs). Center: five HBM stacks on silicon interposer, each with 4 DRAM dies + base logic die connected by TSVs at 55 μm pitch, providing 1024-bit bus per stack. Right (red dashed): H200's 6th stack — same GH100 die, one more HBM3e stack adds 61 GB (80→141 GB) and 1.45 TB/s bandwidth (3.35→4.8 TB/s). The entire package fits on a single silicon interposer bounded by reticle limits.</figcaption>
+</div>
+
+<!-- DIAGRAM 3: Roofline Model -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 760 380" xmlns="http://www.w3.org/2000/svg" style="background:#fdfcf7">
+<defs>
+  <marker id="arrowX" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+    <polygon points="0,0 7,3.5 0,7" fill="#1c2438"/>
+  </marker>
+  <marker id="arrowY" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+    <polygon points="0,0 7,3.5 0,7" fill="#1c2438"/>
+  </marker>
+</defs>
+<text x="380" y="22" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="700" fill="#1c2438">Roofline Model — H100 SXM BF16</text>
+<text x="380" y="38" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#777">989 TFLOPS peak · 3.35 TB/s HBM · Ridge at 295 FLOP/byte</text>
+<!-- Axes -->
+<line x1="82" y1="315" x2="718" y2="315" stroke="#1c2438" stroke-width="2" marker-end="url(#arrowX)"/>
+<line x1="82" y1="315" x2="82" y2="50" stroke="#1c2438" stroke-width="2" marker-end="url(#arrowY)"/>
+<!-- Y-axis labels: log scale 1→1000 TFLOPS, plot height 315→55=260px -->
+<!-- y(val) = 315 - log10(val)/3 * 260, where log10(1)=0, log10(1000)=3 -->
+<text x="78" y="319" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">1</text>
+<text x="78" y="232" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">10</text>
+<text x="78" y="145" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">100</text>
+<text x="78" y="58" text-anchor="end" font-family="sans-serif" font-size="9" fill="#c0392b" font-weight="700">989</text>
+<text x="22" y="185" transform="rotate(-90,22,185)" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1c2438">Achievable Performance (TFLOPS) — log scale</text>
+<!-- X-axis labels: log scale 0.5→2000, plot width 82→710=628px -->
+<!-- x(val) = 82 + (log10(val)+0.3)/3.6*628 -->
+<!-- log10(0.5)=-0.301, log10(1)=0, log10(5)=0.699, log10(10)=1, log10(32)=1.505 -->
+<!-- log10(100)=2, log10(295)=2.470, log10(1365)=3.135 -->
+<!-- x(1)=82+(0.3)/3.6*628=82+52=134 -->
+<!-- x(5)=82+(1.0)/3.6*628=82+174=256 -->
+<!-- x(10)=82+(1.3)/3.6*628=82+226=308 -->
+<!-- x(32)=82+(1.805)/3.6*628=82+315=397 -->
+<!-- x(100)=82+(2.3)/3.6*628=82+401=483 -->
+<!-- x(250)=82+(2.698)/3.6*628=82+471=553 -->
+<!-- x(295)=82+(2.770)/3.6*628=82+483=565 -->
+<!-- x(1365)=82+(3.435)/3.6*628=82+599=681 -->
+<text x="134" y="330" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">1</text>
+<text x="256" y="330" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">5</text>
+<text x="308" y="330" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">10</text>
+<text x="397" y="330" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">32</text>
+<text x="483" y="330" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">100</text>
+<text x="553" y="330" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">250</text>
+<text x="565" y="330" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1c2438" font-weight="700">295</text>
+<text x="681" y="330" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">1365</text>
+<text x="400" y="346" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1c2438">Arithmetic Intensity (FLOP/byte) — log scale</text>
+<!-- Grid -->
+<line x1="82" y1="232" x2="718" y2="232" stroke="#e8e4da" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="82" y1="145" x2="718" y2="145" stroke="#e8e4da" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="82" y1="58" x2="718" y2="58" stroke="#c0392b" stroke-width="1" stroke-dasharray="6,3" opacity="0.5"/>
+<!-- Roofline: memory slope from (AI=0.5,x=82) to ridge (AI=295,x=565) -->
+<!-- At AI=1 (x=134): perf = 1×3.35 = 3.35 TFLOPS, y=315-log10(3.35)/3*260=315-53=262 -->
+<!-- At AI=295 (x=565): perf = 989 TFLOPS, y=58 (ceiling) -->
+<!-- Slope line from left edge approx -->
+<line x1="82" y1="315" x2="565" y2="58" stroke="#c0392b" stroke-width="3"/>
+<!-- Compute ceiling flat line -->
+<line x1="565" y1="58" x2="718" y2="58" stroke="#c0392b" stroke-width="3"/>
+<!-- Ridge point vertical dashed -->
+<line x1="565" y1="58" x2="565" y2="315" stroke="#e3b341" stroke-width="2" stroke-dasharray="7,4"/>
+<!-- Region labels -->
+<rect x="88" y="270" width="140" height="18" rx="3" fill="#fff0f0" stroke="#c0392b" stroke-width="1"/>
+<text x="158" y="282" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b" font-weight="700">◀ MEMORY BOUND (AI &lt; 295)</text>
+<rect x="595" y="65" width="115" height="18" rx="3" fill="#f0fff5" stroke="#27ae60" stroke-width="1"/>
+<text x="652" y="77" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#27ae60" font-weight="700">COMPUTE BOUND ▶</text>
+<!-- Ridge annotation -->
+<text x="568" y="308" font-family="sans-serif" font-size="9" fill="#e3b341" font-weight="700">Ridge:</text>
+<text x="568" y="320" font-family="sans-serif" font-size="9" fill="#e3b341" font-weight="700">295 FLOP/byte</text>
+<!-- Slope label -->
+<text x="190" y="200" transform="rotate(-22,190,200)" font-family="sans-serif" font-size="9" fill="#c0392b" font-weight="700">slope = 3.35 TB/s (HBM BW)</text>
+<!-- Peak label -->
+<text x="84" y="54" font-family="sans-serif" font-size="9" fill="#c0392b" font-weight="700">989 TFLOPS compute ceiling</text>
+
+<!-- OP 1: GEMV batch=1, AI=1, perf=3.35 TFLOPS, x=134, y=262 -->
+<!-- achieved perf slightly below slope (register overhead etc) -->
+<circle cx="134" cy="262" r="9" fill="#721c24" stroke="#fff" stroke-width="2"/>
+<rect x="80" y="228" width="90" height="28" rx="3" fill="#fff0f0" stroke="#721c24" stroke-width="1"/>
+<text x="125" y="240" text-anchor="middle" font-family="sans-serif" font-size="8.5" font-weight="700" fill="#721c24">GEMV batch=1</text>
+<text x="125" y="251" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">AI≈1 · ~3.4 TFLOPS</text>
+<line x1="125" y1="256" x2="134" y2="260" stroke="#721c24" stroke-width="1"/>
+
+<!-- OP 2: RMSNorm AI≈1.25, just right of GEMV -->
+<circle cx="148" cy="258" r="7" fill="#7b2d8b" stroke="#fff" stroke-width="2"/>
+<text x="152" y="249" font-family="sans-serif" font-size="8" fill="#7b2d8b" font-weight="700">RMSNorm</text>
+<text x="152" y="259" font-family="sans-serif" font-size="7.5" fill="#777">AI≈1.25</text>
+
+<!-- OP 3: Softmax AI≈5, x=256, perf=5×3.35=16.75 TFLOPS, y=315-log10(16.75)/3*260=315-107=208 -->
+<circle cx="256" cy="210" r="9" fill="#e67e22" stroke="#fff" stroke-width="2"/>
+<rect x="166" y="178" width="88" height="28" rx="3" fill="#fff8f0" stroke="#e67e22" stroke-width="1"/>
+<text x="210" y="190" text-anchor="middle" font-family="sans-serif" font-size="8.5" font-weight="700" fill="#e67e22">Softmax</text>
+<text x="210" y="201" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">AI≈5 · ~17 TFLOPS</text>
+<line x1="232" y1="205" x2="250" y2="210" stroke="#e67e22" stroke-width="1"/>
+
+<!-- OP 4: FlashAttention S=2K AI≈250, x=553 -->
+<!-- perf=250×3.35=837.5 TFLOPS, y=315-log10(837.5)/3*260=315-250=65, but cap near 58 -->
+<!-- actually achieved ~71% = 702 TFLOPS at N=4096 but near roof. Let's plot at y=68 -->
+<circle cx="553" cy="68" r="10" fill="#27ae60" stroke="#fff" stroke-width="2"/>
+<rect x="420" y="55" width="120" height="35" rx="3" fill="#f0fff5" stroke="#27ae60" stroke-width="1.5"/>
+<text x="480" y="67" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#27ae60">FlashAttn (FAv3)</text>
+<text x="480" y="78" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">AI≈250 · ~737 TFLOPS</text>
+<text x="480" y="88" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#27ae60">74% of peak</text>
+<line x1="537" y1="68" x2="551" y2="68" stroke="#27ae60" stroke-width="1.5"/>
+
+<!-- OP 5: GEMM 4K×4K AI=1365, x=681 -->
+<!-- compute-bound, achieved ~800 TFLOPS (80% MFU), y=315-log10(800)/3*260=315-248=67 -->
+<circle cx="681" cy="70" r="10" fill="#1c2438" stroke="#e3b341" stroke-width="2.5"/>
+<rect x="598" y="100" width="115" height="42" rx="3" fill="#f0f3f8" stroke="#1c2438" stroke-width="1.5"/>
+<text x="655" y="112" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#1c2438">GEMM 4K×4K</text>
+<text x="655" y="123" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">AI≈1365 · ~800 TFLOPS</text>
+<text x="655" y="134" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#856404">~80% MFU (tile overhead)</text>
+<line x1="655" y1="140" x2="681" y2="72" stroke="#1c2438" stroke-width="1.5"/>
+<!-- Gap annotation -->
+<line x1="681" y1="58" x2="681" y2="68" stroke="#e3b341" stroke-width="2" stroke-dasharray="2,2"/>
+<text x="695" y="65" font-family="sans-serif" font-size="8" fill="#e3b341">20% gap</text>
+
+<!-- Legend -->
+<rect x="88" y="90" width="175" height="90" rx="4" fill="#faf9f5" stroke="#d8d4c8" stroke-width="1"/>
+<text x="175" y="105" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#1c2438">Plotted Operations</text>
+<circle cx="102" cy="120" r="6" fill="#721c24"/><text x="113" y="124" font-family="sans-serif" font-size="8.5" fill="#555">GEMV batch=1  (AI≈1)</text>
+<circle cx="102" cy="136" r="6" fill="#7b2d8b"/><text x="113" y="140" font-family="sans-serif" font-size="8.5" fill="#555">RMSNorm       (AI≈1.25)</text>
+<circle cx="102" cy="152" r="6" fill="#e67e22"/><text x="113" y="156" font-family="sans-serif" font-size="8.5" fill="#555">Softmax       (AI≈5)</text>
+<circle cx="102" cy="168" r="6" fill="#27ae60"/><text x="113" y="172" font-family="sans-serif" font-size="8.5" fill="#555">FlashAttn FAv3 (AI≈250)</text>
+<circle cx="102" cy="163" r="0"/>
+<circle cx="102" cy="168" r="0"/>
+<circle cx="102" cy="172" r="6" fill="#1c2438" stroke="#e3b341" stroke-width="1.5"/><text x="113" y="176" font-family="sans-serif" font-size="8.5" fill="#555">GEMM 4K×4K  (AI≈1365)</text>
+</svg>
+<figcaption>Figure 4.3 — Roofline Model for H100 SXM BF16 (both axes log-scale). Memory slope = 3.35 TB/s HBM bandwidth. Compute ceiling = 989 TFLOPS. Ridge at 295 FLOP/byte (gold dashed). Operations left of ridge are memory-bound: optimization means reducing bytes (fusion, quantization, Flash Attention). Operations right of ridge are compute-bound: optimization means improving tensor core efficiency (tile sizing, occupancy). FlashAttention (green) achieves AI≈250 — near-ridge, near-optimal — by eliminating the O(N²) HBM writes of standard attention.</figcaption>
+</div>
+<!-- DIAGRAM 4: FlashAttention Tiling -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 760 410" xmlns="http://www.w3.org/2000/svg" style="background:#fdfcf7">
+<defs>
+  <marker id="fa-arr" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+    <polygon points="0,0 8,4 0,8" fill="#e3b341"/>
+  </marker>
+  <marker id="fa-red" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+    <polygon points="0,0 8,4 0,8" fill="#c0392b"/>
+  </marker>
+  <marker id="fa-grn" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+    <polygon points="0,0 8,4 0,8" fill="#27ae60"/>
+  </marker>
+  <marker id="fa-pur" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+    <polygon points="0,0 8,4 0,8" fill="#7b2d8b"/>
+  </marker>
+</defs>
+<text x="380" y="22" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="700" fill="#1c2438">Flash Attention Tiling — SRAM Tiles, Online Softmax, HBM Traffic</text>
+
+<!-- === HBM ZONE (left panel) === -->
+<rect x="12" y="35" width="290" height="310" rx="6" fill="#fff0f0" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="6,3"/>
+<text x="157" y="52" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#c0392b">HBM — Full N×d Matrices</text>
+
+<!-- Q matrix column -->
+<rect x="22" y="60" width="48" height="240" rx="3" fill="#2a4a8a"/>
+<text x="46" y="78" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#fff">Q</text>
+<text x="46" y="91" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#ccc">N×d</text>
+<!-- Qᵢ active tile highlight -->
+<rect x="22" y="60" width="48" height="46" rx="2" fill="#e3b341"/>
+<text x="46" y="81" text-anchor="middle" font-family="sans-serif" font-size="8.5" font-weight="700" fill="#1c2438">Qᵢ tile</text>
+<text x="46" y="92" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#333">(loaded once)</text>
+<!-- Q rows below active -->
+<rect x="22" y="108" width="48" height="44" fill="#2a4a8a" opacity="0.4"/><rect x="22" y="154" width="48" height="44" fill="#2a4a8a" opacity="0.3"/>
+<rect x="22" y="200" width="48" height="44" fill="#2a4a8a" opacity="0.2"/><rect x="22" y="246" width="48" height="24" fill="#2a4a8a" opacity="0.15"/>
+
+<!-- K matrix row -->
+<rect x="78" y="60" width="208" height="48" rx="3" fill="#c0392b"/>
+<text x="182" y="80" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#fff">K  [N×d — transposed for QKᵀ]</text>
+<!-- Kⱼ active tile -->
+<rect x="78" y="60" width="52" height="48" rx="2" fill="#e3b341"/>
+<text x="104" y="81" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="700" fill="#1c2438">Kⱼ</text>
+<text x="104" y="92" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#333">current tile</text>
+<rect x="132" y="60" width="50" height="48" fill="#c0392b" opacity="0.4"/>
+<rect x="184" y="60" width="50" height="48" fill="#c0392b" opacity="0.3"/>
+<rect x="236" y="60" width="48" height="48" fill="#c0392b" opacity="0.2"/>
+
+<!-- V matrix row -->
+<rect x="78" y="114" width="208" height="48" rx="3" fill="#27ae60"/>
+<text x="182" y="134" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#fff">V  [N×d]</text>
+<rect x="78" y="114" width="52" height="48" rx="2" fill="#e3b341"/>
+<text x="104" y="134" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="700" fill="#1c2438">Vⱼ</text>
+<text x="104" y="146" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#333">current tile</text>
+<rect x="132" y="114" width="50" height="48" fill="#27ae60" opacity="0.4"/>
+<rect x="184" y="114" width="50" height="48" fill="#27ae60" opacity="0.3"/>
+<rect x="236" y="114" width="48" height="48" fill="#27ae60" opacity="0.2"/>
+
+<!-- O matrix row (output) -->
+<rect x="78" y="170" width="208" height="40" rx="3" fill="#7b2d8b" opacity="0.8"/>
+<text x="182" y="194" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#fff">O  [N×d] — written ONCE per Qᵢ tile</text>
+
+<!-- HBM traffic annotation box -->
+<rect x="20" y="220" width="276" height="118" rx="4" fill="#1c2438"/>
+<text x="158" y="236" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#e3b341">HBM Traffic Comparison (N=4096, d=128, BF16)</text>
+<text x="34" y="252" font-family="sans-serif" font-size="8.5" fill="#fff">Standard attention:</text>
+<text x="200" y="252" text-anchor="end" font-family="sans-serif" font-size="8.5" fill="#c0392b" font-weight="700">139 MB / head</text>
+<text x="34" y="266" font-family="sans-serif" font-size="8.5" fill="#fff">  N×d reads:</text><text x="200" y="266" text-anchor="end" font-family="sans-serif" font-size="8.5" fill="#aaa">4.2 MB</text>
+<text x="34" y="278" font-family="sans-serif" font-size="8.5" fill="#fff">  N² writes/reads:</text><text x="200" y="278" text-anchor="end" font-family="sans-serif" font-size="8.5" fill="#c0392b">134.8 MB  ← dominates!</text>
+<line x1="22" y1="286" x2="292" y2="286" stroke="#444" stroke-width="1"/>
+<text x="34" y="298" font-family="sans-serif" font-size="8.5" fill="#fff">Flash Attention v1:</text>
+<text x="200" y="298" text-anchor="end" font-family="sans-serif" font-size="8.5" fill="#27ae60" font-weight="700">4.1 MB / head</text>
+<text x="34" y="310" font-family="sans-serif" font-size="8.5" fill="#fff">  Reads:  Q+K+V = 3×S×D</text><text x="200" y="310" text-anchor="end" font-family="sans-serif" font-size="8.5" fill="#27ae60">3.1 MB</text>
+<text x="34" y="322" font-family="sans-serif" font-size="8.5" fill="#fff">  Writes: O = S×D</text><text x="200" y="322" text-anchor="end" font-family="sans-serif" font-size="8.5" fill="#27ae60">1.0 MB</text>
+<text x="158" y="336" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#e3b341">→  34× less HBM traffic!</text>
+
+<!-- === SRAM ZONE (right panel) === -->
+<rect x="315" y="35" width="432" height="310" rx="6" fill="#f0fff5" stroke="#27ae60" stroke-width="2"/>
+<text x="531" y="52" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#27ae60">SM Shared Memory (SRAM) — 228 KB / SM</text>
+
+<!-- Qᵢ tile in SRAM -->
+<rect x="328" y="62" width="90" height="66" rx="4" fill="#e3b341" stroke="#1c2438" stroke-width="1.5"/>
+<text x="373" y="85" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#1c2438">Qᵢ tile</text>
+<text x="373" y="99" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#333">64 × 128</text>
+<text x="373" y="112" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#333">= 16 KB</text>
+<text x="373" y="123" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">LOADED ONCE</text>
+
+<!-- Kⱼ tile in SRAM -->
+<rect x="428" y="62" width="90" height="66" rx="4" fill="#c0392b" stroke="#fff" stroke-width="1.5"/>
+<text x="473" y="85" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#fff">Kⱼ tile</text>
+<text x="473" y="99" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#eee">64 × 128</text>
+<text x="473" y="112" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#eee">= 16 KB</text>
+<text x="473" y="123" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fcc">N/64 iterations</text>
+
+<!-- Vⱼ tile in SRAM -->
+<rect x="528" y="62" width="90" height="66" rx="4" fill="#27ae60" stroke="#fff" stroke-width="1.5"/>
+<text x="573" y="85" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#fff">Vⱼ tile</text>
+<text x="573" y="99" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#eee">64 × 128</text>
+<text x="573" y="112" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#eee">= 16 KB</text>
+<text x="573" y="123" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#dfd">N/64 iterations</text>
+
+<!-- Total SRAM usage -->
+<rect x="628" y="62" width="106" height="66" rx="4" fill="#f5f3ec" stroke="#d8d4c8" stroke-width="1"/>
+<text x="681" y="82" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#1c2438">SRAM Budget</text>
+<text x="681" y="96" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">Q: 16 KB</text>
+<text x="681" y="108" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">K: 16 KB</text>
+<text x="681" y="120" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">V: 16 KB</text>
+<text x="681" y="132" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#27ae60" font-weight="700">= 48 KB ✓ fits!</text>
+
+<!-- Compute step -->
+<rect x="328" y="142" width="190" height="52" rx="4" fill="#1c2438" stroke="#e3b341" stroke-width="1.5"/>
+<text x="423" y="161" text-anchor="middle" font-family="sans-serif" font-size="9.5" font-weight="700" fill="#e3b341">Tensor Core Computation</text>
+<text x="423" y="176" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#aaa">Sᵢⱼ = Qᵢ × Kⱼᵀ / √d</text>
+<text x="423" y="188" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#aaa">(SMEM → Registers → TC)</text>
+
+<!-- Online softmax state -->
+<rect x="530" y="142" width="208" height="70" rx="4" fill="#7b2d8b" stroke="#e3b341" stroke-width="1.5"/>
+<text x="634" y="159" text-anchor="middle" font-family="sans-serif" font-size="9.5" font-weight="700" fill="#fff">Online Softmax State</text>
+<text x="634" y="172" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#eee">(held in registers per row)</text>
+<text x="634" y="185" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#ddd">m = running row maximum</text>
+<text x="634" y="197" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#ddd">ℓ = running denominator sum</text>
+<text x="634" y="209" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#ddd">O = partial output (corrected)</text>
+
+<!-- Correction formula -->
+<rect x="328" y="206" width="190" height="62" rx="4" fill="#2a4a8a" stroke="#e3b341" stroke-width="1"/>
+<text x="423" y="221" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#e3b341">Correction per tile</text>
+<text x="423" y="234" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#b8ddf0">m_new = max(m, rowmax(Sᵢⱼ))</text>
+<text x="423" y="246" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#b8ddf0">α = exp(m - m_new)</text>
+<text x="423" y="258" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#b8ddf0">O = (α×ℓ×O + exp(Sᵢⱼ-m_new)×Vⱼ) / ℓ_new</text>
+<text x="423" y="264" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#8ab" font-style="italic">Key: α corrects stale partial sum without full row</text>
+
+<!-- Output Oᵢ box -->
+<rect x="530" y="226" width="208" height="42" rx="4" fill="#7b2d8b" opacity="0.7" stroke="#e3b341" stroke-width="1.5"/>
+<text x="634" y="244" text-anchor="middle" font-family="sans-serif" font-size="9.5" font-weight="700" fill="#fff">Oᵢ tile (accumulated)</text>
+<text x="634" y="258" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#ddd">Written to HBM once (after all Kⱼ,Vⱼ)</text>
+
+<!-- Loop structure box -->
+<rect x="328" y="282" width="408" height="56" rx="4" fill="#f5f3ec" stroke="#d8d4c8" stroke-width="1"/>
+<text x="532" y="298" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#1c2438">Algorithm Loop Structure</text>
+<text x="532" y="312" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">OUTER loop: for each Qᵢ tile (N/64 blocks) → load Qᵢ from HBM ONCE</text>
+<text x="532" y="326" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">  INNER loop: for each Kⱼ,Vⱼ tile (N/64 blocks) → load from HBM, compute, update m/ℓ/O</text>
+<text x="532" y="338" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#27ae60" font-weight="700">  → After all K,V: write Oᵢ to HBM · no N×N score matrix ever written!</text>
+
+<!-- Arrows: HBM loads → SRAM -->
+<path d="M 302,84 C 312,84 320,84 326,84" stroke="#e3b341" stroke-width="2" fill="none" marker-end="url(#fa-arr)"/>
+<text x="305" y="79" font-family="sans-serif" font-size="7.5" fill="#e3b341">load Q once</text>
+<path d="M 302,84 C 312,95 320,100 426,100" stroke="#c0392b" stroke-width="2" fill="none" marker-end="url(#fa-red)"/>
+<text x="305" y="110" font-family="sans-serif" font-size="7.5" fill="#c0392b">load K N/64×</text>
+<path d="M 302,138 C 312,138 340,138 526,138" stroke="#27ae60" stroke-width="2" fill="none" marker-end="url(#fa-grn)"/>
+<text x="305" y="135" font-family="sans-serif" font-size="7.5" fill="#27ae60">load V N/64×</text>
+<!-- Write O back -->
+<path d="M 530,247 C 510,247 480,210 302,205" stroke="#7b2d8b" stroke-width="2" fill="none" stroke-dasharray="4,2" marker-end="url(#fa-pur)"/>
+<text x="372" y="210" font-family="sans-serif" font-size="7.5" fill="#7b2d8b">write O once</text>
+<!-- Compute arrows inside SRAM -->
+<path d="M 373,128 L 373,142" stroke="#e3b341" stroke-width="1.5" fill="none"/>
+<path d="M 473,128 L 450,142" stroke="#c0392b" stroke-width="1.5" fill="none"/>
+<path d="M 573,128 L 530,167" stroke="#27ae60" stroke-width="1.5" fill="none"/>
+<path d="M 423,194 L 423,206" stroke="#1c2438" stroke-width="1.5" fill="none"/>
+<path d="M 518,167 L 530,167" stroke="#7b2d8b" stroke-width="1.5" fill="none"/>
+
+<!-- N×N NEVER label -->
+<rect x="320" y="355" width="420" height="30" rx="4" fill="#fff0f0" stroke="#c0392b" stroke-width="1.5"/>
+<text x="530" y="374" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#c0392b">The N×N attention score matrix S is NEVER materialized — online softmax eliminates it entirely</text>
+</svg>
+<figcaption>Figure 4.4 — Flash Attention tiling mechanics. Left (red): HBM holds the full Q, K, V, O matrices. The N×N score matrix S is never written to HBM. Right (green): SM shared memory workspace. Qᵢ (gold, 16 KB) is loaded once per outer loop. Kⱼ and Vⱼ tiles (16 KB each) are loaded in the inner loop N/64 times. Online softmax state (m, ℓ, O) lives in registers and is corrected per tile using factor α = exp(m_old − m_new) without ever needing the full row. Result: 139 MB → 4.1 MB per head (34× reduction).</figcaption>
+</div>
+<!-- DIAGRAM 5: Memory Access Patterns -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 760 310" xmlns="http://www.w3.org/2000/svg" style="background:#fdfcf7">
+<text x="380" y="22" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="700" fill="#1c2438">Memory Access Pattern Comparison — 32-Thread Warp</text>
+<text x="380" y="38" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#777">Each row represents 32 warp threads accessing HBM. Each unique color = one distinct 128-byte cache line fetched.</text>
+
+<!-- ── COALESCED ── -->
+<rect x="14" y="48" width="226" height="220" rx="6" fill="#f0fff5" stroke="#27ae60" stroke-width="2"/>
+<text x="127" y="66" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#27ae60">COALESCED</text>
+<text x="127" y="80" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">thread[i] → addr[base + i × 4]</text>
+<!-- One big cache-line block (32 elements contiguous) -->
+<rect x="24" y="88" width="206" height="30" rx="3" fill="#27ae60" opacity="0.25" stroke="#27ae60" stroke-width="1.5"/>
+<text x="127" y="105" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#155724" font-weight="700">← ONE 128-byte cache line: threads 0–31 →</text>
+<!-- 32 thread squares -->
+<g fill="#27ae60">
+  <rect x="24" y="122" width="6" height="20" rx="1"/><rect x="31" y="122" width="6" height="20" rx="1"/>
+  <rect x="38" y="122" width="6" height="20" rx="1"/><rect x="45" y="122" width="6" height="20" rx="1"/>
+  <rect x="52" y="122" width="6" height="20" rx="1"/><rect x="59" y="122" width="6" height="20" rx="1"/>
+  <rect x="66" y="122" width="6" height="20" rx="1"/><rect x="73" y="122" width="6" height="20" rx="1"/>
+  <rect x="80" y="122" width="6" height="20" rx="1"/><rect x="87" y="122" width="6" height="20" rx="1"/>
+  <rect x="94" y="122" width="6" height="20" rx="1"/><rect x="101" y="122" width="6" height="20" rx="1"/>
+  <rect x="108" y="122" width="6" height="20" rx="1"/><rect x="115" y="122" width="6" height="20" rx="1"/>
+  <rect x="122" y="122" width="6" height="20" rx="1"/><rect x="129" y="122" width="6" height="20" rx="1"/>
+  <rect x="136" y="122" width="6" height="20" rx="1"/><rect x="143" y="122" width="6" height="20" rx="1"/>
+  <rect x="150" y="122" width="6" height="20" rx="1"/><rect x="157" y="122" width="6" height="20" rx="1"/>
+  <rect x="164" y="122" width="6" height="20" rx="1"/><rect x="171" y="122" width="6" height="20" rx="1"/>
+  <rect x="178" y="122" width="6" height="20" rx="1"/><rect x="185" y="122" width="6" height="20" rx="1"/>
+  <rect x="192" y="122" width="6" height="20" rx="1"/><rect x="199" y="122" width="6" height="20" rx="1"/>
+  <rect x="206" y="122" width="6" height="20" rx="1"/><rect x="213" y="122" width="6" height="20" rx="1"/>
+  <rect x="220" y="122" width="6" height="20" rx="1"/>
+</g>
+<text x="24" y="152" font-family="sans-serif" font-size="8" fill="#555">T0</text><text x="218" y="152" font-family="sans-serif" font-size="8" fill="#555">T31</text>
+<rect x="24" y="160" width="206" height="20" rx="3" fill="#d4edda" stroke="#27ae60" stroke-width="1"/>
+<text x="127" y="173" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#155724">1 HBM transaction → 100% efficiency</text>
+<rect x="24" y="186" width="206" height="20" rx="3" fill="#f0fff5"/>
+<text x="127" y="199" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#27ae60" font-weight="700">~3.0–3.1 TB/s achieved</text>
+<text x="127" y="220" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#155724">Use for: row-major GEMM, sequential</text>
+<text x="127" y="233" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#155724">streaming, Flash Attention tiles</text>
+<text x="127" y="258" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#27ae60">✓ OPTIMAL</text>
+
+<!-- ── STRIDED ── -->
+<rect x="253" y="48" width="226" height="220" rx="6" fill="#fff8f0" stroke="#e67e22" stroke-width="2"/>
+<text x="366" y="66" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#e67e22">STRIDED</text>
+<text x="366" y="80" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">thread[i] → addr[base + i × stride] (stride &gt; 1)</text>
+<!-- 4 different cache lines -->
+<rect x="263" y="88" width="48" height="24" rx="2" fill="#e67e22" opacity="0.4" stroke="#e67e22" stroke-width="1"/>
+<rect x="313" y="88" width="48" height="24" rx="2" fill="#2a4a8a" opacity="0.5" stroke="#2a4a8a" stroke-width="1"/>
+<rect x="363" y="88" width="48" height="24" rx="2" fill="#27ae60" opacity="0.4" stroke="#27ae60" stroke-width="1"/>
+<rect x="413" y="88" width="55" height="24" rx="2" fill="#7b2d8b" opacity="0.4" stroke="#7b2d8b" stroke-width="1"/>
+<text x="287" y="102" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#333">CL #0</text>
+<text x="337" y="102" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#333">CL #1</text>
+<text x="387" y="102" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#333">CL #2</text>
+<text x="440" y="102" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#333">CL #3...</text>
+<!-- Threads hitting different cache lines -->
+<rect x="263" y="122" width="6" height="20" rx="1" fill="#e67e22"/>
+<rect x="270" y="122" width="6" height="20" rx="1" fill="#2a4a8a"/>
+<rect x="277" y="122" width="6" height="20" rx="1" fill="#27ae60"/>
+<rect x="284" y="122" width="6" height="20" rx="1" fill="#7b2d8b"/>
+<rect x="291" y="122" width="6" height="20" rx="1" fill="#e67e22"/>
+<rect x="298" y="122" width="6" height="20" rx="1" fill="#2a4a8a"/>
+<rect x="305" y="122" width="6" height="20" rx="1" fill="#27ae60"/>
+<rect x="312" y="122" width="6" height="20" rx="1" fill="#7b2d8b"/>
+<rect x="319" y="122" width="6" height="20" rx="1" fill="#e67e22"/>
+<rect x="326" y="122" width="6" height="20" rx="1" fill="#2a4a8a"/>
+<rect x="333" y="122" width="6" height="20" rx="1" fill="#27ae60"/>
+<rect x="340" y="122" width="6" height="20" rx="1" fill="#7b2d8b"/>
+<rect x="347" y="122" width="6" height="20" rx="1" fill="#e67e22"/>
+<rect x="354" y="122" width="6" height="20" rx="1" fill="#2a4a8a"/>
+<rect x="361" y="122" width="6" height="20" rx="1" fill="#27ae60"/>
+<rect x="368" y="122" width="6" height="20" rx="1" fill="#7b2d8b"/>
+<rect x="375" y="122" width="6" height="20" rx="1" fill="#e67e22"/>
+<rect x="382" y="122" width="6" height="20" rx="1" fill="#2a4a8a"/>
+<rect x="389" y="122" width="6" height="20" rx="1" fill="#27ae60"/>
+<rect x="396" y="122" width="6" height="20" rx="1" fill="#7b2d8b"/>
+<rect x="403" y="122" width="6" height="20" rx="1" fill="#e67e22"/>
+<rect x="410" y="122" width="6" height="20" rx="1" fill="#2a4a8a"/>
+<rect x="417" y="122" width="6" height="20" rx="1" fill="#27ae60"/>
+<rect x="424" y="122" width="6" height="20" rx="1" fill="#7b2d8b"/>
+<rect x="431" y="122" width="6" height="20" rx="1" fill="#e67e22"/>
+<rect x="438" y="122" width="6" height="20" rx="1" fill="#2a4a8a"/>
+<rect x="445" y="122" width="6" height="20" rx="1" fill="#27ae60"/>
+<rect x="452" y="122" width="6" height="20" rx="1" fill="#7b2d8b"/>
+<rect x="459" y="122" width="6" height="20" rx="1" fill="#e67e22"/>
+<text x="263" y="152" font-family="sans-serif" font-size="8" fill="#555">T0</text><text x="456" y="152" font-family="sans-serif" font-size="8" fill="#555">T31</text>
+<rect x="263" y="160" width="206" height="20" rx="3" fill="#fff3cd" stroke="#e67e22" stroke-width="1"/>
+<text x="366" y="173" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#856404">4–8 HBM transactions · 25–50% eff.</text>
+<rect x="263" y="186" width="206" height="20" rx="3" fill="#fff8f0"/>
+<text x="366" y="199" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#e67e22" font-weight="700">~1.0–1.5 TB/s (stride=4)</text>
+<text x="366" y="220" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Cause: col-major traverse of row-major</text>
+<text x="366" y="233" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">array, or poorly transposed GEMM input</text>
+<text x="366" y="250" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#856404">Fix: store B^T · re-layout data</text>
+<text x="366" y="263" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#e67e22">⚠ SUBOPTIMAL</text>
+
+<!-- ── RANDOM ── -->
+<rect x="492" y="48" width="256" height="220" rx="6" fill="#fff5f5" stroke="#c0392b" stroke-width="2"/>
+<text x="620" y="66" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#c0392b">RANDOM ACCESS</text>
+<text x="620" y="80" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">thread[i] → arbitrary / hash-based address</text>
+<!-- 32 different-colored squares (every thread in a different cache line) -->
+<g>
+<rect x="502" y="122" width="7" height="20" rx="1" fill="#c0392b"/>
+<rect x="510" y="122" width="7" height="20" rx="1" fill="#2a4a8a"/>
+<rect x="518" y="122" width="7" height="20" rx="1" fill="#27ae60"/>
+<rect x="526" y="122" width="7" height="20" rx="1" fill="#e67e22"/>
+<rect x="534" y="122" width="7" height="20" rx="1" fill="#7b2d8b"/>
+<rect x="542" y="122" width="7" height="20" rx="1" fill="#1c2438"/>
+<rect x="550" y="122" width="7" height="20" rx="1" fill="#856404"/>
+<rect x="558" y="122" width="7" height="20" rx="1" fill="#155724"/>
+<rect x="566" y="122" width="7" height="20" rx="1" fill="#721c24"/>
+<rect x="574" y="122" width="7" height="20" rx="1" fill="#0d6efd"/>
+<rect x="582" y="122" width="7" height="20" rx="1" fill="#198754"/>
+<rect x="590" y="122" width="7" height="20" rx="1" fill="#dc3545"/>
+<rect x="598" y="122" width="7" height="20" rx="1" fill="#fd7e14"/>
+<rect x="606" y="122" width="7" height="20" rx="1" fill="#6610f2"/>
+<rect x="614" y="122" width="7" height="20" rx="1" fill="#20c997"/>
+<rect x="622" y="122" width="7" height="20" rx="1" fill="#6c757d"/>
+<rect x="630" y="122" width="7" height="20" rx="1" fill="#c0392b" opacity="0.7"/>
+<rect x="638" y="122" width="7" height="20" rx="1" fill="#2a4a8a" opacity="0.7"/>
+<rect x="646" y="122" width="7" height="20" rx="1" fill="#27ae60" opacity="0.7"/>
+<rect x="654" y="122" width="7" height="20" rx="1" fill="#e67e22" opacity="0.7"/>
+<rect x="662" y="122" width="7" height="20" rx="1" fill="#7b2d8b" opacity="0.7"/>
+<rect x="670" y="122" width="7" height="20" rx="1" fill="#1c2438" opacity="0.7"/>
+<rect x="678" y="122" width="7" height="20" rx="1" fill="#856404" opacity="0.7"/>
+<rect x="686" y="122" width="7" height="20" rx="1" fill="#155724" opacity="0.7"/>
+<rect x="694" y="122" width="7" height="20" rx="1" fill="#721c24" opacity="0.7"/>
+<rect x="702" y="122" width="7" height="20" rx="1" fill="#0d6efd" opacity="0.7"/>
+<rect x="710" y="122" width="7" height="20" rx="1" fill="#198754" opacity="0.7"/>
+<rect x="718" y="122" width="7" height="20" rx="1" fill="#dc3545" opacity="0.7"/>
+<rect x="726" y="122" width="7" height="20" rx="1" fill="#fd7e14" opacity="0.7"/>
+<rect x="734" y="122" width="6" height="20" rx="1" fill="#6610f2" opacity="0.7"/>
+</g>
+<text x="502" y="152" font-family="sans-serif" font-size="8" fill="#555">T0</text>
+<text x="734" y="152" font-family="sans-serif" font-size="8" fill="#555">T31</text>
+<text x="620" y="105" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#c0392b" font-weight="700">← 32 different cache lines! →</text>
+<rect x="502" y="160" width="236" height="20" rx="3" fill="#f8d7da" stroke="#c0392b" stroke-width="1"/>
+<text x="620" y="173" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#721c24">Up to 32 HBM transactions → 3% eff.</text>
+<rect x="502" y="186" width="236" height="20" rx="3" fill="#fff5f5"/>
+<text x="620" y="199" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b" font-weight="700">~0.1–0.4 TB/s (32× penalty!)</text>
+<text x="620" y="222" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Cause: hash-table lookups, sparse</text>
+<text x="620" y="235" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">gather ops, unordered accesses</text>
+<text x="620" y="250" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#721c24">Fix: sort indices · LUT in SMEM</text>
+<text x="620" y="263" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#c0392b">✗ CATASTROPHIC</text>
+
+<!-- Bottom rule -->
+<rect x="14" y="276" width="734" height="26" rx="4" fill="#f0f3f8" stroke="#c5cfe0" stroke-width="1"/>
+<text x="381" y="291" text-anchor="middle" font-family="sans-serif" font-size="9.5" font-weight="700" fill="#1c2438">Rule: Ensure thread i accesses address[base + i × element_size] — consecutive, 128-byte-aligned, stride = 1 element</text>
+<text x="381" y="303" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">Diagnose with Nsight Compute → "Uncoalesced Global Accesses" metric. Any nonzero value = bandwidth penalty present.</text>
+</svg>
+<figcaption>Figure 4.5 — Memory access pattern comparison. Each colored square = one 32-bit element; unique colors = different 128-byte cache lines. Coalesced (left): all 32 threads access one cache line → 1 HBM transaction → ~3 TB/s. Strided (center): 4 cache lines needed → 4+ transactions → 25–50% efficiency. Random (right): 32 different cache lines → up to 32 transactions → 3% efficiency, 0.1–0.4 TB/s. Uncoalesced access is the #1 cause of preventable HBM bandwidth waste.</figcaption>
+</div>
+
+<!-- DIAGRAM 6: HBM Bandwidth Utilization -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" style="background:#fdfcf7">
+<text x="380" y="22" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="700" fill="#1c2438">HBM Bandwidth Utilization: Theoretical vs Sustained (H100 — 3.35 TB/s Peak)</text>
+<!-- Axes -->
+<line x1="185" y1="270" x2="730" y2="270" stroke="#1c2438" stroke-width="1.5"/>
+<line x1="185" y1="40" x2="185" y2="270" stroke="#1c2438" stroke-width="1.5"/>
+<!-- Y-axis labels (TB/s): 0 at 270, 3.35 at 50, each 0.5=32px -->
+<!-- y(bw) = 270 - bw/3.35 * 220 -->
+<!-- 0.5 → y=237, 1.0 → y=204, 1.5 → y=171, 2.0 → y=138, 2.5 → y=105, 3.0 → y=72, 3.35 → y=50 -->
+<text x="180" y="274" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">0</text>
+<text x="180" y="241" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">0.5</text>
+<text x="180" y="208" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">1.0</text>
+<text x="180" y="175" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">1.5</text>
+<text x="180" y="142" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">2.0</text>
+<text x="180" y="109" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">2.5</text>
+<text x="180" y="76" text-anchor="end" font-family="sans-serif" font-size="9" fill="#555">3.0</text>
+<text x="180" y="54" text-anchor="end" font-family="sans-serif" font-size="9" fill="#c0392b" font-weight="700">3.35</text>
+<text x="18" y="160" transform="rotate(-90,18,160)" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1c2438">Bandwidth (TB/s)</text>
+<!-- Grid lines -->
+<line x1="185" y1="237" x2="730" y2="237" stroke="#e8e4da" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="185" y1="204" x2="730" y2="204" stroke="#e8e4da" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="185" y1="171" x2="730" y2="171" stroke="#e8e4da" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="185" y1="138" x2="730" y2="138" stroke="#e8e4da" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="185" y1="105" x2="730" y2="105" stroke="#e8e4da" stroke-width="1" stroke-dasharray="3,3"/>
+<!-- Peak line -->
+<line x1="185" y1="50" x2="730" y2="50" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.6"/>
+<text x="735" y="54" font-family="sans-serif" font-size="8" fill="#c0392b">Peak</text>
+<!-- Bars: each has gray (theoretical) + colored (achieved) -->
+<!-- Bar width 50px, spacing 80px, starting x=210 -->
+<!-- Sequential: achieved=3.05, y_achiev=270-3.05/3.35*220=70, theoretical=3.35,y=50 -->
+<rect x="204" y="50" width="52" height="220" fill="#888" opacity="0.15" rx="2"/>
+<rect x="207" y="70" width="46" height="200" fill="#27ae60" rx="2"/>
+<text x="230" y="284" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">Sequential</text>
+<text x="230" y="295" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#777">Streaming</text>
+<text x="230" y="66" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#27ae60" font-weight="700">3.05</text>
+<text x="230" y="56" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#155724">91%</text>
+<!-- FlashAttn: achieved=2.9, y=270-2.9/3.35*220=80 -->
+<rect x="284" y="50" width="52" height="220" fill="#888" opacity="0.15" rx="2"/>
+<rect x="287" y="80" width="46" height="190" fill="#27ae60" opacity="0.8" rx="2"/>
+<text x="310" y="284" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">Flash</text>
+<text x="310" y="295" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#777">Attention v3</text>
+<text x="310" y="76" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#27ae60" font-weight="700">2.9</text>
+<text x="310" y="65" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#155724">87%</text>
+<!-- GEMM large: achieved=2.8, y=270-2.8/3.35*220=86 -->
+<rect x="364" y="50" width="52" height="220" fill="#888" opacity="0.15" rx="2"/>
+<rect x="367" y="86" width="46" height="184" fill="#2a4a8a" rx="2"/>
+<text x="390" y="284" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">GEMM</text>
+<text x="390" y="295" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#777">Large batch</text>
+<text x="390" y="82" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#2a4a8a" font-weight="700">2.8</text>
+<text x="390" y="71" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#2a4a8a">84%</text>
+<!-- GEMV decode: achieved=2.4, y=270-2.4/3.35*220=112 -->
+<rect x="444" y="50" width="52" height="220" fill="#888" opacity="0.15" rx="2"/>
+<rect x="447" y="112" width="46" height="158" fill="#e3b341" rx="2"/>
+<text x="470" y="284" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">GEMV</text>
+<text x="470" y="295" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#777">Decode b=1</text>
+<text x="470" y="108" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#856404" font-weight="700">2.4</text>
+<text x="470" y="97" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#856404">72%</text>
+<!-- Standard attention: achieved=0.8, y=270-0.8/3.35*220=217 -->
+<rect x="524" y="50" width="52" height="220" fill="#888" opacity="0.15" rx="2"/>
+<rect x="527" y="217" width="46" height="53" fill="#e67e22" rx="2"/>
+<text x="550" y="284" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">Standard</text>
+<text x="550" y="295" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#777">Attention</text>
+<text x="550" y="213" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#e67e22" font-weight="700">0.8</text>
+<text x="550" y="202" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#e67e22">24%</text>
+<!-- Scatter/gather: achieved=1.2, y=270-1.2/3.35*220=191 -->
+<rect x="604" y="50" width="52" height="220" fill="#888" opacity="0.15" rx="2"/>
+<rect x="607" y="191" width="46" height="79" fill="#c0392b" opacity="0.7" rx="2"/>
+<text x="630" y="284" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">Scatter/</text>
+<text x="630" y="295" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#777">Gather</text>
+<text x="630" y="187" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#c0392b" font-weight="700">1.2</text>
+<text x="630" y="176" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#c0392b">36%</text>
+<!-- Uncoalesced: achieved=0.25, y=270-0.25/3.35*220=254 -->
+<rect x="684" y="50" width="52" height="220" fill="#888" opacity="0.15" rx="2"/>
+<rect x="687" y="254" width="46" height="16" fill="#721c24" rx="2"/>
+<text x="710" y="284" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">Uncoalesced</text>
+<text x="710" y="295" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#777">Warp Access</text>
+<text x="710" y="250" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#721c24" font-weight="700">0.25</text>
+<text x="710" y="240" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#721c24">7.5%</text>
+<!-- FA vs Standard annotation line -->
+<line x1="310" y1="80" x2="550" y2="217" stroke="#1c2438" stroke-width="1.5" stroke-dasharray="4,2"/>
+<text x="430" y="145" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#1c2438" font-weight="700">FA: 3.6× more BW utility</text>
+<text x="430" y="157" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">2.9 vs 0.8 TB/s</text>
+<!-- Legend -->
+<rect x="186" y="44" width="90" height="34" rx="3" fill="#faf9f5" stroke="#d8d4c8" stroke-width="1"/>
+<rect x="192" y="50" width="12" height="10" fill="#888" opacity="0.3" rx="1"/><text x="208" y="59" font-family="sans-serif" font-size="8" fill="#555">Theoretical</text>
+<rect x="192" y="64" width="12" height="10" fill="#27ae60" rx="1"/><text x="208" y="73" font-family="sans-serif" font-size="8" fill="#555">Achieved</text>
+</svg>
+<figcaption>Figure 4.6 — HBM bandwidth utilization by operation type on H100 (3.35 TB/s peak). Gray = theoretical maximum; colored bars = sustained achieved bandwidth. Flash Attention v3 achieves 2.9 TB/s (87%) vs standard attention's 0.8 TB/s (24%) — a 3.6× utilization improvement from eliminating N² HBM writes. Uncoalesced warp access achieves only 7.5% of peak (0.25 TB/s) — the single most costly access pattern mistake. GEMV decode at 72% (2.4 TB/s) represents the irreducible cost of loading full weight matrices for a single token.</figcaption>
+</div>
+
+<!-- ═══ QUICK REFERENCE ═══ -->
+<h2 id="qr">Quick Reference — H100 SXM Memory Hierarchy at a Glance</h2>
+
+<table>
+  <tr><th>Tier</th><th>Size</th><th>Bandwidth</th><th>Latency</th><th>Scope</th><th>Primary LLM Role</th></tr>
+  <tr><td><strong>Registers</strong></td><td>256 KB/SM (~33 MB total)</td><td>~unlimited (1 cycle)</td><td>1 cycle</td><td>Thread-private</td><td>Occupancy driver; spill = 200–800× penalty. Profile: NCU "Register spills to local memory".</td></tr>
+  <tr><td><strong>L1 / SMEM</strong></td><td>228 KB/SM</td><td>~80–100 TB/s aggregate</td><td>20–30 cycles</td><td>Thread block</td><td>GEMM tiling (128×128 tiles), Flash Attention Q/K/V tiles (16 KB each). Programmer-managed.</td></tr>
+  <tr><td><strong>L2 Cache</strong></td><td>50 MB (H100)</td><td>~12 TB/s aggregate</td><td>200–400 cycles</td><td>All SMs, unified</td><td>KV cache hot blocks, embedding reuse, LayerNorm running stats. Hardware-managed.</td></tr>
+  <tr><td><strong>HBM3</strong></td><td>80 GB (H100) / 141 GB (H200) / 192 GB (B200)</td><td>3.35 / 4.8 / 8.0 TB/s</td><td>400–800 cycles</td><td>Per-GPU global</td><td>Model weights, full KV cache, activations. Primary bottleneck for memory-bound kernels.</td></tr>
+  <tr><td><strong>Host DRAM</strong></td><td>1–2 TB / server</td><td>128 GB/s (PCIe Gen5)</td><td>10,000–50,000 cycles</td><td>System-wide (via PCIe)</td><td>Checkpoint staging, dataset prefetch, model parameter spill (avoid at all costs).</td></tr>
+  <tr><td><strong>NVMe SSD</strong></td><td>1–100 TB</td><td>12–28 GB/s (Gen5)</td><td>~100 µs (ms-range)</td><td>Node storage</td><td>Dataset streaming (preloaded to DRAM), checkpoint persistence, model weights at rest.</td></tr>
+</table>
+
+<table>
+  <tr><th>Operation</th><th>Arithmetic Intensity</th><th>Regime on H100</th><th>Achievable TFLOPS</th><th>Primary Optimization</th></tr>
+  <tr><td>RMSNorm / LayerNorm</td><td>~1.25 FLOP/byte</td><td class="bad">Deeply memory-bound</td><td>~4 TFLOPS</td><td>Fuse with adjacent GEMM — mandatory</td></tr>
+  <tr><td>GEMV batch=1 (decode)</td><td>~1.0 FLOP/byte</td><td class="bad">Deeply memory-bound</td><td>~3 TFLOPS</td><td>Quantization (INT4/FP8), batch requests</td></tr>
+  <tr><td>Softmax (attention row)</td><td>~5 FLOP/byte</td><td class="bad">Memory-bound</td><td>~17 TFLOPS</td><td>Fuse into Flash Attention kernel</td></tr>
+  <tr><td>GEMV batch=32</td><td>~32 FLOP/byte</td><td class="warn">Memory-bound</td><td>~107 TFLOPS</td><td>Increase batch size further</td></tr>
+  <tr><td>FlashAttention FAv3 (S=4K)</td><td>~250 FLOP/byte</td><td class="good">Near-ridge (optimal)</td><td>~737 TFLOPS (74%)</td><td>Already optimal — use FAv3 on H100</td></tr>
+  <tr><td>GEMM 4K×4K (prefill)</td><td>~1,365 FLOP/byte</td><td class="good">Compute-bound</td><td>~800 TFLOPS (80%)</td><td>Tile sizing, occupancy, FP8 Tensor Cores</td></tr>
+</table>
+
+<table>
+  <tr><th>Key Number</th><th>Value</th><th>Why It Matters</th></tr>
+  <tr><td>H100 ridge point (BF16)</td><td class="warn">295 FLOP/byte</td><td>The dividing line between memory-bound and compute-bound. Know it cold.</td></tr>
+  <tr><td>H100 HBM3 bandwidth</td><td>3.35 TB/s</td><td>The slope of the memory roof. Decode throughput = weight_bytes / 3.35 TB/s.</td></tr>
+  <tr><td>H100 SMEM / SM</td><td>228 KB</td><td>Maximum tile size budget. FA tiles (Q+K+V = 48 KB) must fit here.</td></tr>
+  <tr><td>HBM traffic: standard attention (70B, N=4K)</td><td>537 GB/fwd pass</td><td>The problem Flash Attention solves — 511× larger than with FA + GQA.</td></tr>
+  <tr><td>HBM traffic: FA + GQA (70B, N=4K)</td><td>1.05 GB/fwd pass</td><td>What production LLM inference actually uses. 511× reduction vs standard.</td></tr>
+  <tr><td>FA HBM reduction (per head)</td><td>34× (139→4.1 MB)</td><td>The core Flash Attention result at N=4096, d=128.</td></tr>
+  <tr><td>FAv1 backward memory savings</td><td>660× (3.3 TB→5 GB at seq=32K)</td><td>Why long-context training became feasible in 2022.</td></tr>
+  <tr><td>FAv3 peak utilization</td><td>74% BF16 / 88% FP8 (N=4096)</td><td>Best achievable on H100 for attention. WGMMA + TMA enables this.</td></tr>
+  <tr><td>Production FA value (70B, 8K ctx, 1K req/min)</td><td>$62,400/year</td><td>Cost of memory bandwidth reclaimed by FAv3 at $2.50/GPU-hr.</td></tr>
+  <tr><td>Uncoalesced warp access penalty</td><td>32× BW overhead</td><td>Single most costly access pattern error. Detect with NCU immediately.</td></tr>
+</table>
+
+<!-- ═══ REVIEW QUESTIONS ═══ -->
+<h2 id="review">Chapter 4 Review Questions</h2>
+
+<ol class="review-q">
+  <li>
+    <strong>A kernel has arithmetic intensity of 50 FLOP/byte on H100 (ridge ~295 FLOP/byte). Is it memory-bound or compute-bound? What is its theoretical peak performance?</strong>
+    <br>By how much would you need to increase the batch size to push this operation above the ridge point, assuming AI scales linearly with batch size? At what batch size would the same kernel become compute-bound on B200 (ridge ~562 FLOP/byte)?
+  </li>
+  <li>
+    <strong>You profile a custom attention implementation and observe 0.8 TB/s HBM bandwidth on H100. Flash Attention achieves 2.8 TB/s for the same operation. Explain the exact mechanism — not "uses tiling."</strong>
+    <br>Name the two specific HBM write operations that standard attention requires and FAv1 eliminates. Derive the HBM traffic formula for both and verify the 34× reduction at N=4096, d=128, BF16.
+  </li>
+  <li>
+    <strong>An LLaMA-3 70B inference job runs on 8× H100 GPUs with TP=8 in BF16. What is the per-GPU memory footprint for weights alone? If you switch to INT4 (AWQ), how does the maximum concurrent batch size change?</strong>
+    <br>Show the full calculation: weights → KV cache per request → max batch given 80 GB HBM with 12 GB runtime overhead. Then repeat for INT8 KV cache with INT4 weights.
+  </li>
+  <li>
+    <strong>Flash Attention v3 uses WGMMA and TMA. Explain what each primitive does and why their combination yields ~1.5× throughput over FAv2 on the same H100.</strong>
+    <br>What happens to FAv3 performance on an A100 — does it fall back to FAv2 or FAv1? What specific hardware features are missing? Explain why TMA is particularly critical for hiding HBM latency in attention's inner loop.
+  </li>
+  <li>
+    <strong>The online softmax trick maintains running statistics m (running max) and ℓ (running sum) per row. Why is subtracting the running maximum m critical for numerical stability?</strong>
+    <br>Walk through what would happen at sequence length N=8192 with head_dim=128 if standard non-stabilized softmax were applied tile-by-tile — which floating point exception occurs first, and at what attention score value for BF16?
+  </li>
+  <li>
+    <strong>Describe the complete sequence of memory accesses for a single autoregressive decode step in LLM inference, from request arrival to token output.</strong>
+    <br>For each stage — embedding lookup, attention QKV projection, attention score computation, MLP layers, output projection, sampling — identify (a) which memory tier the data lives in, (b) the approximate arithmetic intensity, and (c) whether the stage is memory-bound or compute-bound at batch=1 on H100.
+  </li>
+</ol>
+
+<!-- ═══ CROSS-REFERENCES ═══ -->
+<div class="callout navy" style="margin-top:32px">
+  <strong>Chapter Cross-References</strong><br><br>
+  <span class="xref">Ch 1</span> &nbsp;Roofline model seven-layer framework — the analytical foundation for every AI calculation in this chapter. The ridge point, memory and compute regimes, and MFU interpretation all originate there.<br><br>
+  <span class="xref">Ch 3A/3B</span> &nbsp;GPU silicon architecture — SM structure, Tensor Core generations, HBM physical integration, NVLink topology. HBM stack numbers used here are derived from Ch 3B GPU roadmap tables.<br><br>
+  <span class="xref">Ch 5</span> &nbsp;Thermal &amp; TCO — the HBM3 memory subsystem consumes ~40–60W on H100 before any compute. This feeds directly into TDP budgeting, cooling design, and tokens-per-kW analysis in Ch 5.<br><br>
+  <span class="xref">Ch 7</span> &nbsp;GPU Kernels — CUTLASS tiling patterns, GEMM kernel anatomy, Tensor Core tile feeding via SMEM. The SMEM bank conflict and swizzled layout techniques introduced here are implemented concretely in Ch 7.<br><br>
+  <span class="xref">Ch 8</span> &nbsp;Quantization — FP8 E4M3/E5M2, INT4 AWQ, NVFP4 formats covered briefly here (bandwidth reduction) are analyzed in full precision/accuracy/hardware detail in Ch 8.<br><br>
+  <span class="xref">Ch 9</span> &nbsp;Fusion &amp; Compiler — operator fusion strategy introduced in §4.5.1 is automated by XLA, torch.compile, and TensorRT at the graph compiler level; Ch 9 covers the compiler IR, fusion passes, and auto-tuning.<br><br>
+  <span class="xref">Ch 11</span> &nbsp;KV Cache — inference memory capacity planning (§4.9.2) provides the foundation. Ch 11 extends this with paged attention, prefix caching, eviction policies, and KV quantization.<br><br>
+  <span class="xref">Ch 17</span> &nbsp;Telemetry &amp; Tools — Nsight Compute metric tables from §4.7 map directly to dcgm-exporter Prometheus counters and omniperf dashboard panels covered in Ch 17.
+</div>
+
+<div class="ch-end">Chapter 4 Complete &nbsp;·&nbsp; AI/ML Infrastructure from Silicon to Scale &nbsp;·&nbsp; Venkat Vinjam &nbsp;·&nbsp; V2 Edition &nbsp;·&nbsp; Current as of 2026</div>
+
+</div><!-- .page -->
+</body>
+</html>

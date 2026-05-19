@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 3A — Accelerator Landscape: Beyond GPUs | AI/ML Infrastructure from Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
+.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
+.mem-tier-body{flex:1}
+.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
+.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+.fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+
+.ch-hdr{margin-bottom:32px;padding-bottom:18px;border-bottom:2px solid #e3b341}
+.pullquote{border-left:4px solid #e3b341;padding:10px 20px;margin:20px 0 24px;background:#fffbf0;font-style:italic;color:#333;border-radius:0 6px 6px 0}
+.pullquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.objectives-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:16px 0}
+.obj-card{background:#f0f6ff;border:1px solid #c5cfe0;border-radius:7px;padding:12px 16px}
+.obj-card h4{color:#2a4a8a;font-style:normal;font-size:12px;margin:0 0 6px}
+.obj-card ul{margin-left:14px}.obj-card li{font-size:11.5px;margin-bottom:3px}
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.card{background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 16px}
+.card h4{color:#1c2438;font-style:normal;font-size:12.5px;margin:0 0 6px}
+.card .eq{background:#0d1117;color:#b8ddf0;padding:8px 12px;border-radius:4px;font-family:'Courier New',monospace;font-size:10px;margin:6px 0;white-space:pre-wrap;overflow-x:auto}
+.card .note{font-size:11px;color:#666;margin-top:6px}
+.big-eq{text-align:center;font-family:'Courier New',monospace;font-size:14px;color:#1c2438;font-weight:bold;padding:14px;background:#f3f5f8;border-radius:7px;border:2px solid #e3b341;margin:12px 0}
+</style>
+</head>
+<body>
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="ch03.html">&#8592; Ch 3</a>
+  <a href="ch03b.html">Ch 3B &#8594;</a>
+  <a href="ch01.html">Ch 1</a>
+  <a href="ch04.html">Ch 4</a>
+  <a href="ch06.html">Ch 6</a>
+</div>
+<div id="sidebar">
+  <h4>Chapter 3A</h4>
+  <a href="#s1">3A.1 Why Custom Accelerators Exist</a>
+  <a href="#s2">3A.2 Google TPU — The Systolic Array Accelera</a>
+  <a href="#s3">3A.3 Apple Neural Engine — On-Device AI</a>
+  <a href="#s4">3A.4 AWS Trainium and Inferentia — Cloud Cust</a>
+  <a href="#s5">3A.5 Intel Gaudi 3 — The Open Ecosystem Chall</a>
+  <a href="#s6">3A.6 Meta MTIA v2 — Custom Silicon for Recomm</a>
+  <a href="#s7">3A.7 Groq LPU — Deterministic Latency</a>
+  <a href="#s8">3A.8 Tenstorrent — The Open RISC-V Bet</a>
+  <a href="#s9">3A.9 The Accelerator Selection Framework</a>
+  <a href="#s10">3A.10 The Principal Architect's View — Hetero</a>
+</div>
+<div class="page">
+<!-- CHAPTER HEADER -->
+<div class="ch-label">Part II — Hardware Deep Dive &nbsp;·&nbsp; Chapter 3A</div>
+<h1 class="ch-title">The Accelerator Landscape: Beyond GPUs</h1>
+<div class="ch-subtitle">TPUs, Custom Silicon, Neural Engines — Why the World Needs More Than NVIDIA</div>
+  <div class="ch-meta">AI/ML Infrastructure from Silicon to Scale &nbsp;·&nbsp; Venkat Vinjam</div>
+
+
+<div class="pullquote">
+"A GPU is a general-purpose parallel processor that happens to be excellent at matrix multiply. A TPU is a matrix multiply processor that happens to be able to run general programs. The difference in that sentence is worth billions of dollars."
+<cite>— AI Infrastructure Design Principle</cite>
+</div>
+
+<div class="objectives">
+  <h4>Chapter Objectives — By the end of this chapter you will be able to:</h4>
+  <ul>
+    <li>Explain the systolic array architecture of Google TPUs and contrast it with GPU SIMT</li>
+    <li>Describe the Apple Neural Engine and its role in on-device AI</li>
+    <li>Evaluate AWS Trainium and Inferentia against GPU alternatives with TCO math</li>
+    <li>Understand Intel Gaudi 3's positioning and differentiation</li>
+    <li>Explain Meta's MTIA architecture and why recommendation models need custom silicon</li>
+    <li>Articulate Groq's LPU architecture and the deterministic latency promise</li>
+    <li>Apply a structured decision framework for accelerator selection</li>
+  </ul>
+</div>
+
+<p>NVIDIA GPUs command 80–90% of the AI accelerator market by revenue — but 100% of the world's AI inference does not run on NVIDIA hardware. Google trains Gemini on TPUs. Apple runs on-device LLMs on the Neural Engine inside every iPhone. AWS customers deploy billions of daily inferences on Inferentia chips. Meta serves its recommendation models on custom MTIA silicon. Groq has redefined what "deterministic latency" means for LLM serving.</p>
+
+<p>A Principal Performance Architect who only knows GPUs is half-equipped. This chapter provides the architectural literacy needed to reason about the full accelerator landscape — when to choose each, how each differs from GPU execution, and what each teaches us about the fundamental trade-offs in AI hardware design.</p>
+
+<!-- ═══════════════ SECTION 1 ═══════════════ -->
+<h2 id="s1">3A.1 Why Custom Accelerators Exist</h2>
+
+<h3>3A.1.1 The GPU Tax</h3>
+<p>GPUs are designed for a broad class of parallel workloads: scientific simulation, graphics rendering, data analytics, and AI. This generality is expensive. Every die area square millimeter devoted to rasterization hardware, texture units, and display engines is die area <em>not</em> devoted to AI compute.</p>
+
+<div class="formula">WHAT A GPU CARRIES THAT DEDICATED AI SILICON DOESN'T:
+
+Feature                GPU Uses It For        AI Inference Needs It?
+─────────────────────────────────────────────────────────────────────
+Rasterization HW       Graphics pipelines     <span class="bad">NO</span>
+Texture units          Image rendering        <span class="bad">NO</span>
+Display engines        Monitor output         <span class="bad">NO</span>
+General SIMT cores     Flexible parallelism   SOMETIMES
+Complex caches         Irregular workloads    PARTIALLY
+PCIe PHY overhead      Host connectivity     SOMETIMES
+Multi-tenant vGPU      Cloud sharing          SOMETIMES
+
+Estimated die area wasted on non-AI features: 15–30%
+Estimated power wasted at typical AI inference workloads: 10–20%
+
+A dedicated AI ASIC uses 100% of die area for the one thing it does:
+matrix multiply + memory access for a specific workload class.</div>
+
+<h3>3A.1.2 The Three Motivations for Custom Silicon</h3>
+<p><strong>Cost at scale:</strong> At hyperscaler inference volumes, a 30% cost reduction from custom silicon is worth billions annually. Google's TPU fleet serves trillions of queries per day — even a 10% cost advantage over equivalent GPU capacity is immense.</p>
+<p><strong>Workload specialization:</strong> Recommendation models have fundamentally different compute characteristics than transformer LLMs — sparse embedding lookups, irregular memory access, relatively small matrix multiplies. GPUs are poorly matched to these workloads.</p>
+<p><strong>Supply chain independence:</strong> Dependence on a single supplier creates strategic vulnerability. Companies with the engineering resources to build custom silicon insulate themselves from supply constraints and pricing power.</p>
+
+<!-- DIAGRAM 1: Why Custom Silicon Exists -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 200" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <text x="390" y="18" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">The GPU Tax vs. Dedicated AI Silicon</text>
+
+  <!-- GPU die allocation -->
+  <rect x="30" y="30" width="320" height="150" rx="6" fill="#f3f5f8" stroke="#888" stroke-width="1.5"/>
+  <text x="190" y="48" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#555">General-Purpose GPU Die</text>
+
+  <rect x="40" y="56" width="70" height="50" rx="3" fill="#c0392b" fill-opacity=".7"/>
+  <text x="75" y="78" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="white" font-weight="bold">Raster /</text>
+  <text x="75" y="90" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="white" font-weight="bold">Display</text>
+  <text x="75" y="103" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white">~10%</text>
+
+  <rect x="115" y="56" width="60" height="50" rx="3" fill="#c0392b" fill-opacity=".5"/>
+  <text x="145" y="78" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="white" font-weight="bold">Cache /</text>
+  <text x="145" y="90" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="white" font-weight="bold">PHY</text>
+  <text x="145" y="103" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white">~10%</text>
+
+  <rect x="180" y="56" width="85" height="50" rx="3" fill="#2a6099" fill-opacity=".7"/>
+  <text x="222" y="78" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="white" font-weight="bold">SIMT Cores</text>
+  <text x="222" y="90" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="white" font-weight="bold">(flexible)</text>
+  <text x="222" y="103" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white">~30%</text>
+
+  <rect x="270" y="56" width="68" height="50" rx="3" fill="#1a7a3a" fill-opacity=".8"/>
+  <text x="304" y="78" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="white" font-weight="bold">Tensor</text>
+  <text x="304" y="90" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="white" font-weight="bold">Cores</text>
+  <text x="304" y="103" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white">~50%</text>
+
+  <rect x="40" y="115" width="298" height="30" rx="3" fill="#e8e0cc" fill-opacity=".8"/>
+  <text x="189" y="130" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555" font-weight="bold">HBM Memory Interface (shared BW)</text>
+  <text x="189" y="143" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#c0392b">15–30% die area not doing AI work → "The GPU Tax"</text>
+
+  <!-- Arrow -->
+  <text x="360" y="106" text-anchor="middle" font-family="sans-serif" font-size="22" fill="#e3b341">→</text>
+
+  <!-- AI ASIC die allocation -->
+  <rect x="375" y="30" width="375" height="150" rx="6" fill="#f0fff5" stroke="#27ae60" stroke-width="2"/>
+  <text x="562" y="48" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#1a7a3a">Dedicated AI ASIC Die</text>
+
+  <rect x="385" y="56" width="175" height="112" rx="5" fill="#1a7a3a" fill-opacity=".85"/>
+  <text x="472" y="102" text-anchor="middle" font-family="sans-serif" font-size="12" fill="white" font-weight="bold">Matrix Multiply</text>
+  <text x="472" y="118" text-anchor="middle" font-family="sans-serif" font-size="12" fill="white" font-weight="bold">+ Memory Access</text>
+  <text x="472" y="138" text-anchor="middle" font-family="sans-serif" font-size="9" fill="rgba(255,255,255,.8)">100% of die area</text>
+
+  <rect x="568" y="56" width="172" height="50" rx="5" fill="#2a6099" fill-opacity=".7"/>
+  <text x="654" y="76" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white" font-weight="bold">Workload-</text>
+  <text x="654" y="89" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white" font-weight="bold">Specific Logic</text>
+  <text x="654" y="102" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="rgba(255,255,255,.8)">(e.g. embed. lookup)</text>
+
+  <rect x="568" y="112" width="172" height="56" rx="5" fill="#e3b341" fill-opacity=".7"/>
+  <text x="654" y="138" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="bold">High-BW</text>
+  <text x="654" y="152" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="bold">Memory Fabric</text>
+
+  <text x="562" y="175" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1a7a3a" font-weight="bold">Result: 90–95% peak GEMM efficiency (vs 60–80% GPU)</text>
+</svg>
+<figcaption>Figure 3A.1 — GPU die area allocation vs. dedicated AI ASIC. The "GPU Tax" is 15–30% of die area serving non-AI workloads.</figcaption>
+</div>
+
+<!-- ═══════════════ SECTION 2 ═══════════════ -->
+<h2 id="s2">3A.2 Google TPU — The Systolic Array Accelerator</h2>
+
+<h3>3A.2.1 Architecture: Systolic Arrays vs SIMT</h3>
+<p>The TPU's core compute primitive is a <strong>systolic array</strong> — a fundamentally different architectural paradigm from GPU SIMT. In a systolic array, data flows rhythmically through a grid of Processing Elements (PEs), each multiplying one input and passing the result to its neighbor. Weights are loaded <em>once</em> into the array and stay stationary while activations stream through.</p>
+
+<!-- DIAGRAM 2: Systolic Array vs SIMT -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 280" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <text x="390" y="18" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">Systolic Array (TPU) vs SIMT (GPU) Execution Model</text>
+
+  <!-- SYSTOLIC SIDE -->
+  <text x="195" y="38" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#2a6099">Systolic Array (TPU)</text>
+
+  <!-- 4x4 PE grid -->
+  <g>
+    <!-- Row 0 -->
+    <rect x="30" y="50" width="44" height="44" rx="4" fill="#2a6099"/>
+    <text x="52" y="69" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white">W₀₀</text>
+    <text x="52" y="82" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#ddd">×accumulate</text>
+    <rect x="86" y="50" width="44" height="44" rx="4" fill="#2a6099"/>
+    <text x="108" y="69" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white">W₀₁</text>
+    <text x="108" y="82" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#ddd">×accumulate</text>
+    <rect x="142" y="50" width="44" height="44" rx="4" fill="#2a6099"/>
+    <text x="164" y="69" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white">W₀₂</text>
+    <text x="164" y="82" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#ddd">×accumulate</text>
+    <rect x="198" y="50" width="44" height="44" rx="4" fill="#2a6099"/>
+    <text x="220" y="69" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white">W₀₃</text>
+    <text x="220" y="82" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#ddd">×accumulate</text>
+
+    <!-- Rows 1-3 (simplified) -->
+    <rect x="30" y="106" width="44" height="44" rx="4" fill="#1a3060"/>
+    <rect x="86" y="106" width="44" height="44" rx="4" fill="#1a3060"/>
+    <rect x="142" y="106" width="44" height="44" rx="4" fill="#1a3060"/>
+    <rect x="198" y="106" width="44" height="44" rx="4" fill="#1a3060"/>
+    <rect x="30" y="162" width="44" height="44" rx="4" fill="#1a3060"/>
+    <rect x="86" y="162" width="44" height="44" rx="4" fill="#1a3060"/>
+    <rect x="142" y="162" width="44" height="44" rx="4" fill="#1a3060"/>
+    <rect x="198" y="162" width="44" height="44" rx="4" fill="#1a3060"/>
+    <rect x="30" y="218" width="44" height="44" rx="4" fill="#1a3060"/>
+    <rect x="86" y="218" width="44" height="44" rx="4" fill="#1a3060"/>
+    <rect x="142" y="218" width="44" height="44" rx="4" fill="#1a3060"/>
+    <rect x="198" y="218" width="44" height="44" rx="4" fill="#1a3060"/>
+
+    <!-- Input activation arrows (left to right) -->
+    <polygon points="15,72 28,67 28,77" fill="#e3b341"/>
+    <text x="5" y="68" font-family="sans-serif" font-size="8" fill="#e3b341">A₀→</text>
+    <polygon points="15,128 28,123 28,133" fill="#e3b341"/>
+    <text x="5" y="124" font-family="sans-serif" font-size="8" fill="#e3b341">A₁→</text>
+    <polygon points="15,184 28,179 28,189" fill="#e3b341"/>
+    <text x="5" y="180" font-family="sans-serif" font-size="8" fill="#e3b341">A₂→</text>
+    <polygon points="15,240 28,235 28,245" fill="#e3b341"/>
+    <text x="5" y="236" font-family="sans-serif" font-size="8" fill="#e3b341">A₃→</text>
+
+    <!-- Partial sum arrows (top to bottom) -->
+    <polygon points="47,255 52,268 57,255" fill="#7ec8a0"/>
+    <polygon points="103,255 108,268 113,255" fill="#7ec8a0"/>
+    <polygon points="159,255 164,268 169,255" fill="#7ec8a0"/>
+    <polygon points="215,255 220,268 225,255" fill="#7ec8a0"/>
+    <text x="52" y="276" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#7ec8a0">C₀</text>
+    <text x="108" y="276" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#7ec8a0">C₁</text>
+    <text x="164" y="276" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#7ec8a0">C₂</text>
+    <text x="220" y="276" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#7ec8a0">C₃</text>
+  </g>
+
+  <text x="195" y="290" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#2a6099" font-weight="bold">Weights stationary · Data flows rhythmically</text>
+
+  <!-- DIVIDER -->
+  <line x1="390" y1="40" x2="390" y2="275" stroke="#ccc" stroke-width="1.5" stroke-dasharray="6,3"/>
+
+  <!-- SIMT SIDE -->
+  <text x="585" y="38" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#c0392b">SIMT (GPU)</text>
+
+  <!-- SM with multiple warps -->
+  <rect x="405" y="50" width="360" height="220" rx="6" fill="#f8f0f0" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="585" y="68" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#c0392b" font-weight="bold">SM (Streaming Multiprocessor)</text>
+
+  <!-- Warp scheduler box -->
+  <rect x="415" y="76" width="340" height="30" rx="4" fill="#c0392b"/>
+  <text x="585" y="96" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="white" font-weight="bold">Warp Scheduler (runtime decisions at every cycle)</text>
+
+  <!-- Warps -->
+  <rect x="415" y="116" width="100" height="36" rx="4" fill="#ddd" stroke="#888" stroke-width="1"/>
+  <text x="465" y="132" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#333">Warp 0</text>
+  <text x="465" y="145" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#555">32 threads</text>
+  <rect x="525" y="116" width="100" height="36" rx="4" fill="#ddd" stroke="#888" stroke-width="1"/>
+  <text x="575" y="132" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#333">Warp 1</text>
+  <text x="575" y="145" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#555">32 threads</text>
+  <rect x="635" y="116" width="100" height="36" rx="4" fill="#ddd" stroke="#888" stroke-width="1"/>
+  <text x="685" y="132" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#333">Warp N</text>
+  <text x="685" y="145" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#555">32 threads</text>
+
+  <!-- L1/Shared memory -->
+  <rect x="415" y="162" width="320" height="28" rx="4" fill="#f0d8c0" stroke="#d4820a" stroke-width="1"/>
+  <text x="575" y="180" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#a55000" font-weight="bold">L1 Cache + Shared Memory (96 KB)</text>
+
+  <!-- HBM access with latency annotation -->
+  <rect x="415" y="202" width="320" height="28" rx="4" fill="#f8e8e8" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="575" y="220" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b" font-weight="bold">HBM (random access OK, but variable latency)</text>
+
+  <text x="585" y="252" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b">Flexible · Any workload · Dynamic dispatch</text>
+  <text x="585" y="265" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b">20-30% die = scheduler / control logic</text>
+</svg>
+<figcaption>Figure 3A.2 — Systolic array (TPU) vs SIMT (GPU) execution model. TPU weights are stationary; activations and partial sums flow through the array. GPU warps are dynamically scheduled with full random memory access.</figcaption>
+</div>
+
+<table>
+<thead><tr><th>Property</th><th>Systolic Array (TPU)</th><th>SIMT (GPU)</th></tr></thead>
+<tbody>
+<tr><td>Control model</td><td>No control flow</td><td>Arbitrary branches</td></tr>
+<tr><td>Memory access</td><td>Stationary, rhythmic</td><td>Random access OK</td></tr>
+<tr><td>Flexibility</td><td>GEMM-optimized</td><td>Any parallel op</td></tr>
+<tr><td>Control logic area</td><td class="good">~5% of die</td><td class="warn">~20–30% of die</td></tr>
+<tr><td>Peak GEMM efficiency</td><td class="good">90–95%</td><td class="warn">60–80% typical</td></tr>
+<tr><td>Irregular workloads</td><td class="bad">Poor (dynamic shapes)</td><td class="good">Good</td></tr>
+<tr><td>Programming model</td><td>XLA / JAX (compiler)</td><td>CUDA / Triton (explicit)</td></tr>
+</tbody>
+</table>
+
+<h3>3A.2.2 TPU Generation Progression</h3>
+
+<div class="formula">TPU GENERATION PROGRESSION:
+
+TPU v1 (2016) — Inference-only:   <span class="warn">[SHIPPED]</span>
+  Matrix multiplier: 256×256 = 65,536 MACs/cycle
+  Memory: 28 MB on-chip SRAM, no HBM
+  Purpose: Serving RankBrain; not for training
+
+TPU v4 (2021–2023) — Dominant Google AI chip:  <span class="warn">[SHIPPED]</span>
+  Peak BF16: ~275 TFLOPS per chip
+  HBM: 32 GB HBM2, 1.2 TB/s bandwidth
+  ICI: 800 Gbps per port, 6 ports = 4.8 Tbps per chip
+  Pods: 4,096 chips via ICI in 3D torus topology
+  Power: ~170W (vs H100's 700W)
+
+TPU v5e (2023) — Inference-optimized:  <span class="warn">[SHIPPED]</span>
+  Peak INT8: 393 TOPS
+  Price: ~$0.35/hr on GCP (vs H100 ~$2.50/hr equivalent)
+
+TPU v5p (2024) — Training powerhouse:  <span class="warn">[SHIPPED]</span>
+  HBM: 95 GB per chip, 2.76 TB/s bandwidth
+  ICI: 4,800 Gbps per chip
+  Used for: Gemini Ultra training
+
+Trillium (TPU v6, 2024–2025):  <span class="good">[SHIPPING]</span>
+  4.7× peak compute vs v5e
+  HBM: 192 GB per chip  ← matches AMD MI300X!
+  SparseCore: dedicated sparse embedding accelerator (new)
+  Used for: Gemini 1.5 Pro/Ultra serving</div>
+
+<h3>3A.2.3 TPU Pods — The Interconnect Advantage</h3>
+<p>The most distinctive feature of TPU systems is their interconnect topology. Where GPU clusters use InfiniBand or RoCE with external switches, TPUs use <strong>ICI (Inter-Chip Interconnect)</strong> — a direct chip-to-chip fabric without network switches. This creates a fundamentally different communication model at scale.</p>
+
+<!-- DIAGRAM 3: TPU Pod Topology vs GPU Cluster -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 230" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <text x="390" y="18" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">TPU Pod (ICI) vs GPU Cluster (InfiniBand) Communication Topology</text>
+
+  <!-- GPU Cluster Side -->
+  <text x="175" y="38" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#c0392b">GPU Cluster (InfiniBand)</text>
+
+  <!-- GPUs -->
+  <rect x="20" y="50" width="60" height="30" rx="4" fill="#2a4580"/>
+  <text x="50" y="70" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="white">GPU A</text>
+  <rect x="100" y="50" width="60" height="30" rx="4" fill="#2a4580"/>
+  <text x="130" y="70" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="white">GPU B</text>
+  <rect x="20" y="170" width="60" height="30" rx="4" fill="#2a4580"/>
+  <text x="50" y="190" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="white">GPU C</text>
+  <rect x="100" y="170" width="60" height="30" rx="4" fill="#2a4580"/>
+  <text x="130" y="190" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="white">GPU D</text>
+
+  <!-- NICs -->
+  <rect x="30" y="88" width="40" height="22" rx="3" fill="#888"/>
+  <text x="50" y="102" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="white">NIC</text>
+  <rect x="110" y="88" width="40" height="22" rx="3" fill="#888"/>
+  <text x="130" y="102" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="white">NIC</text>
+  <rect x="30" y="148" width="40" height="22" rx="3" fill="#888"/>
+  <text x="50" y="162" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="white">NIC</text>
+  <rect x="110" y="148" width="40" height="22" rx="3" fill="#888"/>
+  <text x="130" y="162" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="white">NIC</text>
+
+  <!-- Switches -->
+  <rect x="65" y="112" width="50" height="30" rx="4" fill="#c0392b"/>
+  <text x="90" y="131" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white" font-weight="bold">ToR Switch</text>
+  <rect x="155" y="112" width="55" height="30" rx="4" fill="#7b2d8b"/>
+  <text x="182" y="131" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white" font-weight="bold">Spine</text>
+
+  <!-- Connections (zigzag path) -->
+  <line x1="50" y1="110" x2="80" y2="112" stroke="#888" stroke-width="1.5"/>
+  <line x1="130" y1="110" x2="102" y2="112" stroke="#888" stroke-width="1.5"/>
+  <line x1="50" y1="148" x2="80" y2="142" stroke="#888" stroke-width="1.5"/>
+  <line x1="130" y1="148" x2="102" y2="142" stroke="#888" stroke-width="1.5"/>
+  <line x1="115" y1="127" x2="155" y2="127" stroke="#888" stroke-width="1.5"/>
+
+  <!-- Hop count annotation -->
+  <text x="175" y="52" font-family="sans-serif" font-size="8.5" fill="#c0392b">Hops: 4–6</text>
+  <text x="175" y="64" font-family="sans-serif" font-size="8.5" fill="#c0392b">Latency: 3–10 µs</text>
+  <text x="175" y="76" font-family="sans-serif" font-size="8.5" fill="#c0392b">BW: switch-limited</text>
+
+  <!-- Divider -->
+  <line x1="360" y1="35" x2="360" y2="220" stroke="#ccc" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="390" y="215" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#888">← More hops, more switches · Direct chip-to-chip →</text>
+
+  <!-- TPU Side -->
+  <text x="575" y="38" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#27ae60">TPU Pod (ICI — 3D Torus)</text>
+
+  <!-- 3×3 TPU grid -->
+  <g>
+  <rect x="395" y="50" width="50" height="50" rx="5" fill="#1a7a3a"/>
+  <text x="420" y="73" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white">TPU</text>
+  <text x="420" y="87" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#ddd">6 ICI ports</text>
+
+  <rect x="455" y="50" width="50" height="50" rx="5" fill="#1a7a3a"/>
+  <text x="480" y="73" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white">TPU</text>
+  <text x="480" y="87" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#ddd">6 ICI ports</text>
+
+  <rect x="515" y="50" width="50" height="50" rx="5" fill="#1a7a3a"/>
+  <text x="540" y="73" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white">TPU</text>
+  <text x="540" y="87" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#ddd">6 ICI ports</text>
+
+  <rect x="395" y="110" width="50" height="50" rx="5" fill="#1a7a3a"/>
+  <text x="420" y="133" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white">TPU</text>
+  <rect x="455" y="110" width="50" height="50" rx="5" fill="#27ae60"/>
+  <text x="480" y="133" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white" font-weight="bold">TPU</text>
+  <rect x="515" y="110" width="50" height="50" rx="5" fill="#1a7a3a"/>
+  <text x="540" y="133" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white">TPU</text>
+  <rect x="395" y="170" width="50" height="50" rx="5" fill="#1a7a3a"/>
+  <text x="420" y="193" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white">TPU</text>
+  <rect x="455" y="170" width="50" height="50" rx="5" fill="#1a7a3a"/>
+  <text x="480" y="193" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white">TPU</text>
+  <rect x="515" y="170" width="50" height="50" rx="5" fill="#1a7a3a"/>
+  <text x="540" y="193" text-anchor="middle" font-family="sans-serif" font-size="8" fill="white">TPU</text>
+
+  <!-- ICI direct connections (horizontal and vertical) -->
+  <line x1="445" y1="75" x2="455" y2="75" stroke="#7ec8a0" stroke-width="2.5"/>
+  <line x1="505" y1="75" x2="515" y2="75" stroke="#7ec8a0" stroke-width="2.5"/>
+  <line x1="445" y1="135" x2="455" y2="135" stroke="#7ec8a0" stroke-width="2.5"/>
+  <line x1="505" y1="135" x2="515" y2="135" stroke="#7ec8a0" stroke-width="2.5"/>
+  <line x1="445" y1="195" x2="455" y2="195" stroke="#7ec8a0" stroke-width="2.5"/>
+  <line x1="505" y1="195" x2="515" y2="195" stroke="#7ec8a0" stroke-width="2.5"/>
+  <line x1="420" y1="100" x2="420" y2="110" stroke="#7ec8a0" stroke-width="2.5"/>
+  <line x1="480" y1="100" x2="480" y2="110" stroke="#7ec8a0" stroke-width="2.5"/>
+  <line x1="540" y1="100" x2="540" y2="110" stroke="#7ec8a0" stroke-width="2.5"/>
+  <line x1="420" y1="160" x2="420" y2="170" stroke="#7ec8a0" stroke-width="2.5"/>
+  <line x1="480" y1="160" x2="480" y2="170" stroke="#7ec8a0" stroke-width="2.5"/>
+  <line x1="540" y1="160" x2="540" y2="170" stroke="#7ec8a0" stroke-width="2.5"/>
+  </g>
+
+  <!-- Annotations -->
+  <text x="585" y="52" font-family="sans-serif" font-size="8.5" fill="#27ae60">Hops: 1–2 (direct)</text>
+  <text x="585" y="64" font-family="sans-serif" font-size="8.5" fill="#27ae60">Latency: 1–2 µs</text>
+  <text x="585" y="76" font-family="sans-serif" font-size="8.5" fill="#27ae60">BW: scales with chips</text>
+  <text x="585" y="95" font-family="sans-serif" font-size="8" fill="#27ae60" font-style="italic">No external switches.</text>
+  <text x="585" y="107" font-family="sans-serif" font-size="8" fill="#27ae60" font-style="italic">4,096-chip AllReduce:</text>
+  <text x="585" y="119" font-family="sans-serif" font-size="8" fill="#27ae60" font-style="italic">3–5× lower latency</text>
+  <text x="585" y="131" font-family="sans-serif" font-size="8" fill="#27ae60" font-style="italic">than GPU cluster.</text>
+  <text x="585" y="152" font-family="sans-serif" font-size="8" fill="#c0392b" font-style="italic">Trade-off: fixed topology,</text>
+  <text x="585" y="164" font-family="sans-serif" font-size="8" fill="#c0392b" font-style="italic">cannot reconfigure like</text>
+  <text x="585" y="176" font-family="sans-serif" font-size="8" fill="#c0392b" font-style="italic">GPU IB (NCCL-controlled).</text>
+</svg>
+<figcaption>Figure 3A.3 — TPU ICI 3D-torus topology (right) vs GPU InfiniBand cluster (left). TPUs communicate directly chip-to-chip without switches, cutting AllReduce latency 3–5× at 4,096-chip scale. Trade-off: the topology is fixed and cannot be reconfigured.</figcaption>
+</div>
+
+<h3>3A.2.4 XLA Programming Model — Strength and Constraint</h3>
+<div class="formula">WHAT XLA PROVIDES:
+  ✓ Automatic operator fusion (described in Ch 9)
+  ✓ Static shape compilation — all shapes known at compile time
+  ✓ Optimal tiling for systolic array dimensions
+  ✓ Automatic replication/partitioning across TPU pods
+  ✓ Guaranteed execution plan — no runtime dynamic dispatch
+
+WHAT XLA RESTRICTS:
+  ✗ No dynamic shapes (variable sequence lengths → bucketing or padding required)
+  ✗ No custom kernels without XLA custom_call (complex API)
+  ✗ No PyTorch eager mode on TPU
+  ✗ Long compilation times: first run 5–30 minutes for large models
+  ✗ Debugging is difficult (HLO IR is not human-readable)
+
+  import jax, jax.numpy as jnp
+  
+  @jax.jit               # triggers XLA compilation on first call
+  def transformer_layer(x, weights):
+      return jnp.dot(x, weights['qkv'])  # compiled to systolic array MXU ops
+
+  devices = jax.devices('tpu')           # returns list of TPU chips
+  parallel_layer = jax.pmap(transformer_layer, axis_name='batch')  # auto DP</div>
+
+<div class="callout blue">
+<strong>When to Choose TPU vs GPU</strong>
+Choose TPU when: using Google Cloud · primary framework is JAX · models have static shapes · scale &gt;1,000 chips · training cost is primary concern. Choose GPU when: using PyTorch · variable sequence lengths · rapid prototyping · custom kernels needed · multi-cloud or on-premise deployment · quantization-heavy workloads (NVIDIA FP8/FP4 ahead).
+</div>
+
+<!-- ═══════════════ SECTION 3 ═══════════════ -->
+<h2 id="s3">3A.3 Apple Neural Engine — On-Device AI</h2>
+
+<h3>3A.3.1 Architecture Overview</h3>
+<p>The Apple Neural Engine (ANE) is a dedicated AI accelerator embedded in every Apple Silicon chip (A-series and M-series). Unlike cloud accelerators optimized for throughput, the ANE is designed for <strong>extreme energy efficiency</strong> — running AI models on battery-powered devices. The key architectural differentiator is <em>unified memory</em>: CPU, GPU, and ANE share the same DRAM pool, eliminating the PCIe transfer overhead that burdens conventional GPU-attached systems.</p>
+
+<div class="formula">APPLE NEURAL ENGINE EVOLUTION:
+
+A11 (2017) — First ANE: 600 GOPS, 2-core, Face ID/Siri
+A15 / M1 (2021): 15.8 TOPS INT8, 16-core ANE
+A16 (2022): 17 TOPS, TSMC 4nm
+A17 Pro / M3 (2023): 35 TOPS, TSMC 3nm, transformer optimizations
+A18 / M4 (2024): <span class="warn">[SHIPPED]</span>
+  38 TOPS, TSMC 3nm 2nd gen, native attention acceleration
+  Use: On-device LLMs (Llama 3.2 3B/11B)
+M4 Max (2024): <span class="warn">[SHIPPED]</span>
+  38 TOPS ANE + 128 GB unified memory
+  Runs: LLaMA-3 70B locally (quantized to INT4)
+  Memory bandwidth: 546 GB/s unified (CPU/GPU/ANE share pool)
+
+ON-DEVICE LLM PERFORMANCE (Apple M4 Max, 128 GB):
+Model            Format    Speed         Notes
+─────────────────────────────────────────────────
+Llama 3.2 3B     INT4      ~150 tok/s    Runs on A18 iPhone too
+Llama 3.2 11B    INT4      ~60 tok/s     Requires M1+ (16 GB min)
+Llama 3 70B      INT4      ~18 tok/s     M4 Max / Pro only
+Mistral 7B       INT4      ~90 tok/s     Excellent perf/watt
+Gemma 2 27B      INT4      ~35 tok/s     Requires 32 GB+
+
+PERFORMANCE-PER-WATT COMPARISON:
+M4 Max ANE+GPU (70B INT4): ~18 tok/s at ~15W = 1.2 tok/s/W
+H100 SXM       (70B INT4): ~3,500 tok/s at 700W = 5.0 tok/s/W
+
+GPU wins per watt — BUT M4 Max serves ONE user on a laptop battery.
+H100 serves THOUSANDS of users simultaneously.
+These workloads are NOT comparable — different use-case regimes.</div>
+
+<!-- ═══════════════ SECTION 4 ═══════════════ -->
+<h2 id="s4">3A.4 AWS Trainium and Inferentia — Cloud Custom Silicon</h2>
+
+<h3>3A.4.1 AWS Inferentia2 — Dedicated Inference ASIC</h3>
+<p>AWS Inferentia2 (2023) is Amazon's purpose-built inference accelerator. The economic case is compelling: at roughly half the cost per million tokens compared to A100 GPUs, Inferentia2 demonstrates the TCO advantage of dedicated silicon for stable, high-volume inference workloads.</p>
+
+<div class="formula">AWS INFERENTIA2 ARCHITECTURE: <span class="warn">[SHIPPED]</span>
+  Process: TSMC 7nm
+  Compute: 2× NeuronCore v2 per chip
+  Peak BF16: 380 TFLOPS per chip; FP8: 760 TFLOPS per chip
+  Memory: 32 GB HBM2e per chip, 820 GB/s bandwidth
+  Max instance: inf2.48xlarge — 12 chips, 384 GB total HBM
+
+COST ANALYSIS — LLaMA-2 70B inference:
+  inf2.48xlarge (12 Inferentia2): ~1,800 tok/s at $16.37/hr
+  p4d.24xlarge  (8× A100):        ~2,100 tok/s at $32.77/hr
+
+  Cost/1M tokens:
+    Inferentia2: $16.37 / (1,800 × 3,600 / 1,000,000) = <span class="good">$2.53</span>
+    A100:        $32.77 / (2,100 × 3,600 / 1,000,000) = <span class="warn">$4.33</span>
+
+  → Inferentia2 is 41% cheaper per token than A100.
+    This is the economic case for dedicated inference silicon.
+
+KEY LIMITATIONS:
+  ✗ Neuron SDK supports limited ops (custom ops fall back to CPU)
+  ✗ Dynamic shapes poorly supported (pad to fixed max length)
+  ✗ Only available on AWS — no on-premise option
+  ✗ Smaller ecosystem vs CUDA</div>
+
+<h3>3A.4.2 AWS Trainium2 — Training Accelerator</h3>
+<div class="formula">AWS TRAINIUM2 SPECIFICATIONS (2024): <span class="warn">[SHIPPED]</span>
+  Chips per server: 16 Trainium2 (vs 8 GPUs in typical GPU server)
+  Peak BF16: ~3.7 PFLOPS per chip
+  Memory: 96 GB HBM per chip, 1.54 TB/s bandwidth
+  Interconnect: NeuronLink 4 — 1,600 Gbps per chip
+  Instance: trn2.48xlarge — 16 chips, 1.5 TB total HBM
+
+TCO COMPARISON — Fine-tuning LLaMA-3 70B (1 epoch, 50B tokens):
+  On H100:      ~480 GPU-hours  @ $2.00/GPU-hr  = ~$960
+  On Trainium2: ~380 Trn2-hours @ $1.30/Trn2-hr = ~$494
+  Savings: <span class="good">49% cost reduction</span>
+
+NOTE: Results depend heavily on model architecture and Neuron SDK
+optimization quality. NVIDIA's software advantages can partially close this gap.</div>
+
+<!-- ═══════════════ SECTION 5 ═══════════════ -->
+<h2 id="s5">3A.5 Intel Gaudi 3 — The Open Ecosystem Challenger</h2>
+<p>Intel Gaudi 3 (launched 2024) offers a compelling value proposition for cost-sensitive training: ~4× cheaper server hardware than H100, integrated networking, and open Ethernet connectivity — at the cost of being 1.87× slower on equivalent workloads (MLPerf v4.1).</p>
+
+<div class="formula">INTEL GAUDI 3 SPECIFICATIONS: <span class="warn">[SHIPPED]</span>
+  Process: TSMC 5nm
+  Compute: ~800 TFLOPS BF16 (actual comparable, vs 1,835 claimed in marketing)
+  Memory: 128 GB HBM2e, 3.7 TB/s bandwidth
+  Network: 24× 200GbE RoCE ports — INTEGRATED ON-DIE (unique!)
+  Power: ~900W TDP
+  Server price: ~$65,000 (vs $250,000+ for 8× H100)
+
+KEY DIFFERENTIATOR — Integrated RDMA Networking:
+  24 × 200 Gbps = 4.8 Tbps network ON-DIE
+  H100 requires 8 separate InfiniBand NICs + PCIe switch → adds cost + power
+  Gaudi 3 server is ~15% cheaper to build (NIC cost eliminated)
+
+PERFORMANCE vs H100 (MLPerf v4.1):
+  LLaMA-2 70B training to accuracy target:
+    8× H100:    16.8 minutes
+    8× Gaudi 3: 31.5 minutes  (1.87× slower)
+    
+  Break-even: Gaudi 3 cheaper at &lt;60% utilization; H100 better at &gt;80%
+
+ECOSYSTEM STATUS (2026):
+  ✓ PyTorch, DeepSpeed, HuggingFace Optimum Habana
+  ✗ No Triton backend · No FlashAttention v3 · No CUDA Graph equivalent</div>
+
+<!-- ═══════════════ SECTION 6 ═══════════════ -->
+<h2 id="s6">3A.6 Meta MTIA v2 — Custom Silicon for Recommendation</h2>
+
+<h3>3A.6.1 Why Recommendation Models Need Custom Silicon</h3>
+<p>Meta's largest AI workload is NOT LLM inference — it is recommendation and ranking for Facebook, Instagram, and WhatsApp ads. These models have fundamentally different characteristics: sparse embedding lookups that access thousands of random addresses per inference. GPU HBM is optimized for sequential coalesced access — random access collapses effective bandwidth by 6–10×.</p>
+
+<!-- DIAGRAM 4: LLM vs RecSys memory access patterns -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 220" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <text x="390" y="18" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">Memory Access Pattern: LLM Inference vs Recommendation Model</text>
+
+  <!-- LLM side -->
+  <rect x="20" y="32" width="350" height="170" rx="8" fill="#f0f6ff" stroke="#2a6099" stroke-width="1.5"/>
+  <text x="195" y="52" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#2a6099">LLM Transformer Inference</text>
+
+  <!-- Sequential memory strip -->
+  <text x="40" y="75" font-family="sans-serif" font-size="9" fill="#555">HBM memory layout:</text>
+  <rect x="38" y="80" width="310" height="22" rx="3" fill="#2a6099" fill-opacity=".15" stroke="#2a6099" stroke-width="1"/>
+
+  <!-- Sequential access arrows (evenly spaced) -->
+  <g fill="#2a6099">
+  <polygon points="50,68 56,58 62,68"/>
+  <polygon points="90,68 96,58 102,68"/>
+  <polygon points="130,68 136,58 142,68"/>
+  <polygon points="170,68 176,58 182,68"/>
+  <polygon points="210,68 216,58 222,68"/>
+  <polygon points="250,68 256,58 262,68"/>
+  <polygon points="290,68 296,58 302,68"/>
+  <polygon points="330,68 336,58 342,68"/>
+  </g>
+  <text x="195" y="55" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#2a6099">Sequential reads (weights, KV cache)</text>
+
+  <rect x="38" y="112" width="200" height="16" rx="3" fill="#2a6099" fill-opacity=".5"/>
+  <text x="143" y="124" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="white">GEMM weight matrix — 4096×4096</text>
+  <text x="35" y="150" font-family="sans-serif" font-size="9.5" fill="#555">GPU HBM efficiency:</text>
+  <text x="35" y="165" font-family="sans-serif" font-size="11" fill="#2a6099" font-weight="bold">  ~3.0–3.35 TB/s effective</text>
+  <text x="35" y="180" font-family="sans-serif" font-size="9" fill="#555">(near theoretical peak — sequential!)</text>
+  <text x="35" y="195" font-family="sans-serif" font-size="9" fill="#1a7a3a" font-weight="bold">GPU MFU: 60–80%</text>
+
+  <!-- Recsys side -->
+  <rect x="390" y="32" width="370" height="170" rx="8" fill="#fff5f5" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="575" y="52" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#c0392b">Recommendation Model (DLRM)</text>
+
+  <!-- Scattered random access -->
+  <text x="410" y="75" font-family="sans-serif" font-size="9" fill="#555">HBM embedding table layout:</text>
+  <rect x="408" y="80" width="340" height="22" rx="3" fill="#c0392b" fill-opacity=".10" stroke="#c0392b" stroke-width="1"/>
+
+  <!-- Random access arrows (scattered) -->
+  <polygon points="428,68 434,58 440,68" fill="#c0392b"/>
+  <polygon points="588,68 594,58 600,68" fill="#c0392b"/>
+  <polygon points="468,68 474,58 480,68" fill="#c0392b"/>
+  <polygon points="698,68 704,58 710,68" fill="#c0392b"/>
+  <polygon points="648,68 654,58 660,68" fill="#c0392b"/>
+  <polygon points="508,68 514,58 520,68" fill="#c0392b"/>
+  <!-- Gap annotation -->
+  <text x="575" y="55" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b">Random sparse lookups (feature IDs)</text>
+
+  <text x="408" y="115" font-family="sans-serif" font-size="9" fill="#555">Embedding table: 1TB+ entries</text>
+  <text x="408" y="130" font-family="sans-serif" font-size="9" fill="#c0392b">Each inference: thousands of random</text>
+  <text x="408" y="143" font-family="sans-serif" font-size="9" fill="#c0392b">address lookups → HBM controller</text>
+  <text x="408" y="155" font-family="sans-serif" font-size="9" fill="#c0392b">serializes them</text>
+  <text x="408" y="175" font-family="sans-serif" font-size="11" fill="#c0392b" font-weight="bold">GPU HBM: ~300–500 GB/s effective</text>
+  <text x="408" y="192" font-family="sans-serif" font-size="9" fill="#c0392b" font-weight="bold">GPU MFU: &lt;20%  ← hardware mismatch</text>
+</svg>
+<figcaption>Figure 3A.4 — LLM inference accesses HBM sequentially (near peak efficiency). Recommendation model inference accesses thousands of random embedding table entries per inference, collapsing effective GPU bandwidth 6–10×.</figcaption>
+</div>
+
+<div class="formula">MTIA v2 SPECIFICATIONS (2024): <span class="warn">[SHIPPED]</span>
+  Process: TSMC 5nm
+  Compute: ~192 TFLOPS BF16 (low — compute is NOT the bottleneck)
+  Memory: 64 GB LPDDR5 + on-chip SRAM
+  Memory bandwidth: 1.7 TB/s (LPDDR5 optimized for random access)
+  Power: ~90W (dramatically lower than GPU)
+  Specialized units: Embedding lookup engine · Small GEMM engine
+
+KEY ARCHITECTURAL CHOICE — LPDDR5 over HBM:
+  HBM:    3.35–8 TB/s peak sequential · terrible random access latency
+  LPDDR5: ~1.7 TB/s peak sequential · MUCH better random access
+           (many independent banks, lower queue depth)
+
+  For embedding lookup (random access):
+    GPU HBM effective BW:     ~300–500 GB/s  (random access penalty)
+    MTIA LPDDR5 effective BW: ~900–1,200 GB/s
+    MTIA is 2–3× faster at embedding lookup despite lower peak BW!
+
+AT META SCALE:
+  Deployed: Tens of thousands of MTIA v2 chips
+  Inference volume: "Hundreds of trillions per day"
+  Cost vs GPU: ~40–50% lower TCO for recommendation workloads</div>
+
+<!-- ═══════════════ SECTION 7 ═══════════════ -->
+<h2 id="s7">3A.7 Groq LPU — Deterministic Latency</h2>
+
+<h3>3A.7.1 The Static Dataflow Architecture</h3>
+<p>Groq's Language Processing Unit takes a completely different approach: instead of maximizing throughput, it maximizes <strong>deterministic, predictable latency</strong>. The key insight is that GPU latency variance stems from dynamic scheduling — warp schedulers making runtime decisions based on cache state and memory bank conflicts. Groq eliminates runtime decisions entirely.</p>
+
+<div class="formula">GROQ LPU CORE DESIGN:
+
+Problem with GPU inference:
+  Dynamic scheduling → latency varies based on memory bank conflicts, cache behavior
+  P99 latency >> P50 latency → hard to guarantee SLAs for interactive AI
+
+Groq's solution: STATIC DATAFLOW ARCHITECTURE
+  ALL computation scheduled at COMPILE TIME — no runtime decisions
+  Compiler determines exactly:
+    - When each instruction executes (to the cycle)
+    - Where each piece of data lives at each cycle
+    - Which memory bank is accessed at each step
+
+Result:
+  <span class="good">P50 latency == P99 latency</span>  (zero variance)
+  No cache misses (no caches — all memory access deterministic)
+  No warp scheduling overhead
+
+GROQ CHIP SPECIFICATIONS (GroqChip 1): <span class="warn">[SHIPPED]</span>
+  SRAM: 230 MB on-chip (massive — replaces HBM for small models)
+  Compute: ~750 TOPS INT8
+  Power: ~300W
+  Key: NO HBM — entire working set in on-chip SRAM
+
+SRAM vs HBM for working set that fits:
+  SRAM bandwidth:     ~80 TB/s
+  H100 HBM bandwidth: ~3.35 TB/s
+  → 24× faster memory access for the active working set!
+
+GROQ PERFORMANCE (2024):
+  LLaMA-3 70B decode latency: ~17 ms/token (P99 ≈ P50)
+  Comparable H100:            ~25–40 ms/token (with variance)
+  Advantage: 1.5–2.4× lower latency + zero variance
+  Trade-off: Lower throughput per dollar vs GPU for batched workloads
+  Use case: Ultra-low-latency interactive applications (code completion, voice AI)</div>
+
+<h3>3A.7.2 GroqRack Scale</h3>
+<div class="formula">GROQRACK ARCHITECTURE:
+  9 GroqCards per rack
+  Each GroqCard: 8 GroqChips
+  Total: 72 GroqChips per rack
+  Aggregate SRAM: 72 × 230 MB = 16.6 GB (ultra-fast)
+  External DRAM (larger models): 18 TB/s aggregate bandwidth
+  
+  LLaMA-3 405B on GroqRack:
+    Weights distributed across 72 chips' DRAM
+    Streamed to SRAM in pipeline
+    Execution: fully deterministic end-to-end
+    Throughput: lower than H100 cluster; Latency: 2–4× lower</div>
+
+<!-- ═══════════════ SECTION 8 ═══════════════ -->
+<h2 id="s8">3A.8 Tenstorrent — The Open RISC-V Bet</h2>
+<p>Tenstorrent (founded by Jim Keller, former Apple Silicon and AMD Zen architect) takes a long-term open-hardware bet: building AI accelerators on RISC-V cores, eliminating instruction set licensing, and enabling fully open compiler stacks. Each "Tensix core" is a small RISC-V processor paired with a matrix engine and SRAM tile — programmable in a way that TPU systolic arrays are not.</p>
+
+<div class="formula">TENSTORRENT BLACKHOLE (2024): <span class="warn">[SHIPPED — limited]</span>
+  140 Tensix cores per chip (each = RISC-V + matrix engine + 1.5 MB SRAM)
+  Peak: ~735 TFLOPS BF16
+  Memory: 32 GB LPDDR5, 768 GB/s
+  On-chip SRAM: 210 MB total
+
+STATUS (2026):
+  ✓ Growing interest from research labs and edge AI
+  ✓ Open-source compiler potential (MLIR backend in development)
+  ✗ Not yet competitive with H100/MI300X for large-scale training
+  ✗ Ecosystem thin vs CUDA
+
+Long-term potential: open AI hardware ecosystem play as RISC-V matures</div>
+
+<!-- ═══════════════ SECTION 9 ═══════════════ -->
+<h2 id="s9">3A.9 The Accelerator Selection Framework</h2>
+
+<!-- DIAGRAM 5: Decision Tree -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 310" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <text x="390" y="18" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">Accelerator Selection Decision Tree</text>
+
+  <!-- Root -->
+  <rect x="290" y="28" width="200" height="36" rx="6" fill="#1c2438"/>
+  <text x="390" y="51" text-anchor="middle" font-family="sans-serif" font-size="11" fill="white" font-weight="bold">What is the primary workload?</text>
+
+  <!-- Branch 1: LLM Training -->
+  <line x1="290" y1="46" x2="100" y2="96" stroke="#888" stroke-width="1.5"/>
+  <rect x="20" y="96" width="160" height="36" rx="5" fill="#2a4580"/>
+  <text x="100" y="113" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">LLM Training</text>
+  <text x="100" y="127" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#ddd">Frontier scale?</text>
+
+  <!-- Training sub-branches -->
+  <line x1="60" y1="132" x2="40" y2="165" stroke="#888" stroke-width="1"/>
+  <rect x="10" y="165" width="100" height="36" rx="4" fill="#1a7a3a"/>
+  <text x="60" y="183" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white" font-weight="bold">H100 / B200</text>
+  <text x="60" y="196" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#ddd">PyTorch + CUDA</text>
+
+  <line x1="140" y1="132" x2="130" y2="165" stroke="#888" stroke-width="1"/>
+  <rect x="100" y="165" width="100" height="36" rx="4" fill="#1a7a3a"/>
+  <text x="150" y="183" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white" font-weight="bold">TPU v5p</text>
+  <text x="150" y="196" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#ddd">JAX on GCP</text>
+
+  <!-- Branch 2: LLM Inference -->
+  <line x1="390" y1="64" x2="390" y2="96" stroke="#888" stroke-width="1.5"/>
+  <rect x="300" y="96" width="180" height="36" rx="5" fill="#2a4580"/>
+  <text x="390" y="113" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">LLM Inference</text>
+  <text x="390" y="127" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#ddd">Primary constraint?</text>
+
+  <!-- Inference sub-branches -->
+  <line x1="330" y1="132" x2="250" y2="165" stroke="#888" stroke-width="1"/>
+  <rect x="200" y="165" width="110" height="36" rx="4" fill="#d4820a"/>
+  <text x="255" y="183" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white" font-weight="bold">Groq LPU</text>
+  <text x="255" y="196" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#ddd">Latency-critical</text>
+
+  <line x1="390" y1="132" x2="390" y2="165" stroke="#888" stroke-width="1"/>
+  <rect x="330" y="165" width="120" height="36" rx="4" fill="#1a7a3a"/>
+  <text x="390" y="183" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white" font-weight="bold">H100 / B200</text>
+  <text x="390" y="196" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#ddd">Max throughput</text>
+
+  <line x1="450" y1="132" x2="500" y2="165" stroke="#888" stroke-width="1"/>
+  <rect x="458" y="165" width="110" height="36" rx="4" fill="#2a6099"/>
+  <text x="513" y="183" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white" font-weight="bold">Inferentia2</text>
+  <text x="513" y="196" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#ddd">Cost on AWS</text>
+
+  <!-- Branch 3: Recommendation -->
+  <line x1="490" y1="46" x2="650" y2="96" stroke="#888" stroke-width="1.5"/>
+  <rect x="570" y="96" width="180" height="36" rx="5" fill="#2a4580"/>
+  <text x="660" y="113" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">Recommendation</text>
+  <text x="660" y="127" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#ddd">/ RecSys / DLRM</text>
+
+  <line x1="630" y1="132" x2="610" y2="165" stroke="#888" stroke-width="1"/>
+  <rect x="570" y="165" width="100" height="36" rx="4" fill="#7b2d8b"/>
+  <text x="620" y="183" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white" font-weight="bold">Meta MTIA v2</text>
+  <text x="620" y="196" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#ddd">If at Meta scale</text>
+
+  <line x1="690" y1="132" x2="710" y2="165" stroke="#888" stroke-width="1"/>
+  <rect x="680" y="165" width="90" height="36" rx="4" fill="#1a7a3a"/>
+  <text x="725" y="183" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white" font-weight="bold">MI300X GPU</text>
+  <text x="725" y="196" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#ddd">Otherwise</text>
+
+  <!-- On-device bottom -->
+  <rect x="155" y="250" width="470" height="40" rx="6" fill="#f3f5f8" stroke="#d0d6e2" stroke-width="1.5"/>
+  <text x="390" y="267" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1c2438" font-weight="bold">On-Device / Edge: Apple ANE (M4 / A18) — power budget &lt;15W</text>
+  <text x="390" y="283" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#555">Long context (&gt;32K): AMD MI300X (192 GB HBM fits 70B in one GPU)</text>
+  <text x="390" y="297" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#555">Open hardware / research: Tenstorrent (RISC-V, open ecosystem)</text>
+</svg>
+<figcaption>Figure 3A.5 — Accelerator selection decision tree. The primary workload characteristic — training vs. inference × throughput vs. latency vs. cost — determines the optimal choice.</figcaption>
+</div>
+
+<table>
+<thead><tr><th>Workload</th><th>Best Choice</th><th>Why</th><th>Avoid</th></tr></thead>
+<tbody>
+<tr><td>LLM Training (frontier)</td><td class="good">H100 / B200</td><td>CUDA ecosystem, FP8</td><td>TPU (JAX friction)</td></tr>
+<tr><td>LLM Training (JAX)</td><td class="good">TPU v5p</td><td>ICI fabric, native JAX</td><td>GPU (Python overhead)</td></tr>
+<tr><td>LLM Inference (latency)</td><td class="good">Groq LPU</td><td>Deterministic P99</td><td>GPU (latency variance)</td></tr>
+<tr><td>LLM Inference (throughput)</td><td class="good">H100 / B200</td><td>Best tok/s/$ overall</td><td>TPU v5e (limited flex)</td></tr>
+<tr><td>LLM Inference (cost, AWS)</td><td class="good">Inferentia2 / TPU v5e</td><td>41% cheaper than A100</td><td>On-demand GPU</td></tr>
+<tr><td>Long context (&gt;32K)</td><td class="good">AMD MI300X</td><td>192 GB HBM in one GPU</td><td>TPU (shape constraints)</td></tr>
+<tr><td>Recommendation / DLRM</td><td class="good">MTIA / MI300X</td><td>Random access BW</td><td>TPU (poor random access)</td></tr>
+<tr><td>On-device inference</td><td class="good">Apple ANE</td><td>Battery efficiency</td><td>GPU (power too high)</td></tr>
+<tr><td>Cost-sensitive training</td><td class="good">Gaudi 3 / Trainium2</td><td>4× cheaper hardware</td><td>H100 (premium price)</td></tr>
+<tr><td>Research / flexibility</td><td class="good">GPU (any)</td><td>PyTorch ecosystem</td><td>All others (friction)</td></tr>
+</tbody>
+</table>
+
+<h3>3A.9.2 Performance-Per-Dollar Comparison</h3>
+<div class="formula">COST EFFICIENCY — LLM Inference, LLaMA-3 70B (April 2026 cloud rates):
+
+                      $/hr     Tok/s    $/1M tokens   vs H100
+──────────────────────────────────────────────────────────────────
+H100 SXM (8× GPU)    ~$16     ~9,000   $0.49         Baseline
+H200 SXM (8× GPU)    ~$22     ~13,000  $0.47         <span class="good">-4%</span>
+B200 (8× GPU)        ~$40     ~30,000  $0.37         <span class="good">-24%</span>
+TPU v5e (8× chip)    ~$13     ~7,200   $0.50         +2%
+AWS Inferentia2      ~$16     ~7,500   $0.59         <span class="warn">+20%</span>
+MI300X (8× GPU)      ~$20     ~9,200   $0.60         <span class="warn">+22%</span>
+Groq (per token)     $0.27/1M ~varies  <span class="good">$0.27</span>          <span class="good">-45%</span>
+
+Notes:
+  Groq prices per-token, not per-hour — latency advantage not shown
+  MI300X advantage for 70B: fits in 1 GPU vs 2× H100 for FP16
+  On-premise TCO changes math significantly (see Chapter 5)</div>
+
+<h3>3A.9.3 Build vs Buy — Custom Silicon Decision Framework</h3>
+<div class="formula">CUSTOM SILICON DECISION FRAMEWORK:
+
+1. SCALE: &gt;$500M/year inference spend? → custom silicon may be justified
+          Below this: buy commercial, optimize in software
+
+2. WORKLOAD UNIQUENESS: Recommendation models, unusual sparsity, MoE routing
+   → may justify custom silicon. Standard transformer → H100/B200/TPU already optimal
+
+3. ENGINEERING DEPTH: $50–500M NRE, 3–5 year timeline for custom chip
+   Chiplet customization: $5–20M, 1–2 years
+   FPGA prototyping: $1–5M, months
+
+4. RISK TOLERANCE: single tape-out failure = $5–50M wasted, 18-month delay
+
+REAL-WORLD THRESHOLDS (2026):
+  Meta (MTIA):   ~$10B/year inference spend → clearly justified
+  Apple (ANE):   billions of devices × marginal cost → clearly justified
+  AWS (Inf/Trn): cloud revenue leverage → justified
+  $20M/year startup: NOT justified → use commercial hardware</div>
+
+<!-- ═══════════════ SECTION 10 ═══════════════ -->
+<h2 id="s10">3A.10 The Principal Architect's View — Heterogeneous Infrastructure</h2>
+<p>Production AI infrastructure increasingly mixes accelerator types. The optimal architecture routes workloads to hardware based on their characteristics — not a single hardware platform for everything.</p>
+
+<!-- DIAGRAM 6: Heterogeneous Architecture -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 270" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <text x="390" y="18" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">Multi-Accelerator Inference Architecture (Production Pattern)</text>
+
+  <!-- Incoming request -->
+  <rect x="320" y="30" width="140" height="32" rx="5" fill="#1c2438"/>
+  <text x="390" y="51" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="white" font-weight="bold">Incoming Request</text>
+
+  <!-- Load balancer -->
+  <line x1="390" y1="62" x2="390" y2="82" stroke="#888" stroke-width="1.5"/>
+  <polygon points="385,78 395,78 390,88" fill="#888"/>
+  <rect x="290" y="88" width="200" height="32" rx="5" fill="#555"/>
+  <text x="390" y="109" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="white" font-weight="bold">Load Balancer (CPU) — Route by workload type</text>
+
+  <!-- Four branches -->
+  <!-- Branch 1: Short/simple -->
+  <line x1="300" y1="120" x2="100" y2="155" stroke="#2a6099" stroke-width="1.5"/>
+  <rect x="15" y="155" width="170" height="52" rx="6" fill="#f0f6ff" stroke="#2a6099" stroke-width="2"/>
+  <text x="100" y="174" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#2a6099" font-weight="bold">AWS Inferentia2 Fleet</text>
+  <text x="100" y="188" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">Simple / short requests</text>
+  <text x="100" y="200" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#2a6099">Cost-optimized · 41% cheaper</text>
+
+  <!-- Branch 2: Latency-critical -->
+  <line x1="345" y1="120" x2="250" y2="155" stroke="#d4820a" stroke-width="1.5"/>
+  <rect x="195" y="155" width="155" height="52" rx="6" fill="#fff8e0" stroke="#d4820a" stroke-width="2"/>
+  <text x="272" y="174" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#d4820a" font-weight="bold">Groq LPU Fleet</text>
+  <text x="272" y="188" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">Interactive / low-latency</text>
+  <text x="272" y="200" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#d4820a">P99=P50 · 17 ms/token</text>
+
+  <!-- Branch 3: Long context -->
+  <line x1="435" y1="120" x2="535" y2="155" stroke="#c0392b" stroke-width="1.5"/>
+  <rect x="435" y="155" width="155" height="52" rx="6" fill="#fff5f5" stroke="#c0392b" stroke-width="2"/>
+  <text x="512" y="174" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#c0392b" font-weight="bold">AMD MI300X Fleet</text>
+  <text x="512" y="188" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">Long context (&gt;32K tokens)</text>
+  <text x="512" y="200" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#c0392b">192 GB fits 70B + big KV</text>
+
+  <!-- Branch 4: Batch/Training -->
+  <line x1="480" y1="120" x2="680" y2="155" stroke="#1a7a3a" stroke-width="1.5"/>
+  <rect x="595" y="155" width="175" height="52" rx="6" fill="#f0fff5" stroke="#1a7a3a" stroke-width="2"/>
+  <text x="682" y="174" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#1a7a3a" font-weight="bold">H100 / B200 GPU Fleet</text>
+  <text x="682" y="188" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">Batch inference · Training</text>
+  <text x="682" y="200" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#1a7a3a">Max throughput · Flexible</text>
+
+  <!-- Implementation challenges -->
+  <rect x="20" y="224" width="740" height="36" rx="6" fill="#f3f5f8" stroke="#d0d6e2" stroke-width="1.5"/>
+  <text x="390" y="238" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#1c2438" font-weight="bold">Implementation Challenges:</text>
+  <text x="390" y="252" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Same model compiled for Inferentia, GPU, Groq · Routing logic · Heterogeneous telemetry (DCGM vs Neuron Monitor vs GroqStat) · Model version sync</text>
+</svg>
+<figcaption>Figure 3A.6 — Multi-accelerator production inference architecture. Workloads are routed by type: cost-optimized requests to Inferentia, latency-critical to Groq, long-context to MI300X, high-throughput to H100/B200.</figcaption>
+</div>
+
+<h2>Key Numbers to Know Cold</h2>
+
+<div class="spec-grid">
+<div class="spec-box highlight">
+  <div class="spec-name">Google TPU Trillium (v6)</div>
+  <div class="spec-title">~4.7× v5e compute · 192 GB HBM · ICI fabric</div>
+  <div class="spec-detail">Best for: JAX training · Google Cloud · static-shape workloads · large-scale Google model training</div>
+</div>
+<div class="spec-box">
+  <div class="spec-name">Apple M4 Max ANE</div>
+  <div class="spec-title">38 TOPS · 128 GB unified · ~15W</div>
+  <div class="spec-detail">Best for: On-device inference · privacy-critical applications · single-user 70B INT4 locally</div>
+</div>
+<div class="spec-box">
+  <div class="spec-name">AWS Inferentia2</div>
+  <div class="spec-title">380 TFLOPS BF16 · 32 GB · $16.37/hr</div>
+  <div class="spec-detail">Best for: Cost-optimized AWS inference (41% cheaper than A100 per million tokens)</div>
+</div>
+<div class="spec-box">
+  <div class="spec-name">Intel Gaudi 3</div>
+  <div class="spec-title">~800 TFLOPS BF16 · 128 GB · 24×200GbE</div>
+  <div class="spec-detail">Best for: Cost-sensitive training · open networking · 4× cheaper server vs H100</div>
+</div>
+<div class="spec-box">
+  <div class="spec-name">Meta MTIA v2</div>
+  <div class="spec-title">192 TFLOPS BF16 · 64 GB LPDDR5 · 90W</div>
+  <div class="spec-detail">Best for: Recommendation/ranking · random memory access · hyperscale embedding workloads</div>
+</div>
+<div class="spec-box highlight">
+  <div class="spec-name">Groq LPU</div>
+  <div class="spec-title">~750 TOPS INT8 · 230 MB SRAM · 300W</div>
+  <div class="spec-detail">Best for: Ultra-low deterministic latency · &lt;17 ms/token P99 · interactive AI SLA guarantee</div>
+</div>
+</div>
+
+<div class="callout green">
+<strong>AMD MI300X Correction (Common Misconception)</strong>
+MI300X architecture: 6 XCDs (Compute Dies) + 4 MCDs (Memory Controller Dies) = 10 total chiplets. 304 Compute Units total. Not "3 chiplets" — that is the most common misconception about this architecture.
+</div>
+
+<!-- REVIEW QUESTIONS -->
+<div class="review" id="review">
+  <h3>Chapter 3A Review Questions</h3>
+  <ol>
+    <li>Explain the systolic array architecture used in Google TPUs. Why does it achieve higher efficiency for GEMM than NVIDIA's SIMT model? What workloads does it handle poorly that GPUs handle well? Draw the data flow diagram from memory.</li>
+    <li>A startup is deciding between deploying on AWS Inferentia2 vs H100 GPUs for serving LLaMA-3 70B at 10,000 requests/day with average output length of 500 tokens. Calculate approximate monthly cost for each option using the formulas in this chapter. Which is cheaper and under what assumptions does that change?</li>
+    <li>Why does Meta's MTIA v2 use LPDDR5 instead of HBM? Explain the memory access pattern of recommendation model inference and why effective bandwidth differs so dramatically from peak bandwidth on GPU HBM.</li>
+    <li>Groq claims "P99 latency = P50 latency" for LLM inference. Explain the architectural mechanism that makes this possible. What is the fundamental trade-off Groq makes to achieve this property, and for which workloads does this trade-off make economic sense?</li>
+    <li>A company runs 50% of its inference on LLMs (70B class) and 50% on recommendation models (DLRM-style). They currently use all H100 GPUs. Design a heterogeneous hardware strategy, estimate the cost reduction, and identify the top three implementation challenges in deploying it.</li>
+  </ol>
+</div>
+
+<div class="ch-end">— End of Chapter 3A · AI/ML Infrastructure from Silicon to Scale · Venkat Vinjam —<br>Next: Chapter 3B — GPU Generation Roadmap: H100 to GB300, MI300X to MI455X</div>
+
+<!-- .page -->
+</body>
+</html>
+</div>
+</body>
+</html>

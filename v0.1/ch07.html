@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 7 — GPU Kernels: CUDA, HIP &amp; Triton | Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.82;color:#1c2438;background:#fdfcf7;padding-top:48px}
+#nav{position:fixed;top:0;left:0;right:0;height:48px;background:#1c2438;display:flex;align-items:center;gap:5px;padding:0 16px;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,.35);overflow-x:auto}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:12px;white-space:nowrap;margin-right:10px;flex-shrink:0}
+#nav a{color:#c8d0e0;font-family:sans-serif;font-size:10.5px;text-decoration:none;padding:4px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.15);white-space:nowrap;flex-shrink:0;transition:all .15s}
+#nav a:hover{background:#e3b341;color:#1c2438;border-color:#e3b341;font-weight:700}
+#nav a.home{border-color:#e3b341;color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:210px;height:calc(100vh - 48px);background:#f5f3ec;border-right:1px solid #ddd;overflow-y:auto;padding:14px 0;z-index:900}
+#sidebar h4{font-family:sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#e3b341;padding:0 14px;margin-bottom:8px;margin-top:4px}
+#sidebar a{display:block;font-family:sans-serif;font-size:11px;color:#444;text-decoration:none;padding:4px 14px;line-height:1.4;transition:background .12s,color .12s}
+#sidebar a:hover{background:#e8e4da;color:#1c2438}
+#sidebar .sub{padding-left:24px;font-size:10.5px;color:#666}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px 60px}
+.ch-label{font-family:sans-serif;font-size:9.5px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:6px}
+h1.ch-title{font-size:32px;font-weight:900;color:#1c2438;line-height:1.2;margin-bottom:8px}
+.ch-subtitle{font-size:14px;color:#556;font-style:italic;margin-bottom:12px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:11px;color:#666;margin-bottom:16px}
+.ch-meta strong{color:#1c2438}
+.xref{color:#2a6099;font-style:italic}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438);border-radius:2px;margin:18px 0 24px}
+.ch-hero-banner{background:linear-gradient(135deg,#1c2438 0%,#1a3a6b 100%);color:#fff;border-radius:10px;padding:28px 34px;margin-bottom:32px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.ch-hero-banner blockquote{border:none;background:none;padding:0;margin:0;font-style:italic;font-size:14px;line-height:1.7;color:rgba(255,255,255,.88)}
+.ch-hero-banner cite{display:block;margin-top:10px;font-size:11.5px;color:#e3b341;font-style:normal;font-family:sans-serif}
+h2{font-size:20px;color:#1c2438;margin:38px 0 12px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:16px;color:#1a3a6b;margin:26px 0 9px}
+h4{font-size:13.5px;color:#1a3a6b;margin:18px 0 6px;font-style:italic}
+p{margin-bottom:13px}
+ul,ol{margin:0 0 13px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.shipped{display:inline-block;background:#1a7a3a;color:#fff;font-family:sans-serif;font-size:8.5px;padding:1px 7px;border-radius:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-left:4px;vertical-align:middle}
+.announced{display:inline-block;background:#2a6099;color:#fff;font-family:sans-serif;font-size:8.5px;padding:1px 7px;border-radius:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-left:4px;vertical-align:middle}
+.roadmap{display:inline-block;background:#7b2d8b;color:#fff;font-family:sans-serif;font-size:8.5px;padding:1px 7px;border-radius:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-left:4px;vertical-align:middle}
+.objectives{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:24px 0}
+.obj-card{border-radius:7px;padding:14px 16px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.obj-card.foundational{background:#e8fff0;border:1px solid #b0dfc0}
+.obj-card.intermediate{background:#fffbf0;border:1px solid #e3c87a}
+.obj-card.principal{background:#f0f0ff;border:1px solid #a090d0}
+.obj-label{font-family:sans-serif;font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:7px}
+.obj-card.foundational .obj-label{color:#27ae60}
+.obj-card.intermediate .obj-label{color:#a07800}
+.obj-card.principal .obj-label{color:#7b2d8b}
+.obj-card ul{margin-left:14px}
+.obj-card li{font-size:11.5px;margin-bottom:4px;color:#333}
+.diagram-wrap{background:#fff;border:1px solid #dde2ec;border-radius:8px;padding:18px 20px;margin:24px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.diagram-wrap figcaption{font-family:sans-serif;font-size:10.5px;color:#666;margin-top:10px;font-style:italic;text-align:center;border-top:1px solid #eee;padding-top:8px}
+.formula{background:#0d1117;color:#b8ddf0;padding:14px 18px;border-radius:6px;font-family:'Courier New',monospace;font-size:11px;line-height:1.72;margin:16px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:12px 16px;margin:18px 0;border-radius:0 6px 6px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout.key{border-color:#7b2d8b;background:#fdf5ff}
+.callout.warn{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout strong{display:block;margin-bottom:4px;color:#1c2438}
+.worked{background:#fff8ec;border:2px solid #e3b341;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.worked-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#a07800;margin-bottom:10px}
+.worked h4{color:#1c2438;font-size:13px;margin:14px 0 6px;font-style:normal}
+.cookbook{background:#0d1117;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cookbook-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#e3b341;margin-bottom:12px;border-bottom:1px solid #2a3050;padding-bottom:8px}
+.cookbook pre{color:#b8ddf0;font-family:'Courier New',monospace;font-size:11px;line-height:1.72;white-space:pre;overflow-x:auto}
+.cookbook .cmt{color:#6a7a8a}
+.cookbook .cmd{color:#79d99a}
+.cookbook .out{color:#f0c060}
+.qref{background:#1c2438;color:#c8d8f0;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.qref h4{color:#e3b341;font-family:sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;font-style:normal;border-bottom:1px solid rgba(255,255,255,.15);padding-bottom:8px}
+.qref table{color:#c8d8f0;font-size:11.5px}
+.qref th{background:rgba(255,255,255,.08);color:#e3b341;font-size:10px}
+.qref td{border-color:rgba(255,255,255,.1)}
+.qref tr:nth-child(even) td{background:rgba(255,255,255,.04)}
+.takeaways{background:#f3f5f8;border:2px solid #1c2438;border-radius:9px;padding:18px 22px;margin:32px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.takeaways h3{color:#1c2438;margin:0 0 14px;font-size:15px;border:none;padding:0}
+.takeaway-group{margin-bottom:14px}
+.takeaway-group:last-child{margin-bottom:0}
+.tg-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#e3b341;margin-bottom:6px}
+.takeaway-group ul{margin-left:16px}
+.takeaway-group li{font-size:12.5px;margin-bottom:4px;color:#222}
+.review-questions{margin-top:36px}
+.review-questions h3{font-size:16px;color:#1c2438;margin-bottom:16px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+.rq-tier{border-radius:8px;padding:14px 18px;margin-bottom:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rq-tier.foundational{background:#e8fff0;border-left:5px solid #27ae60}
+.rq-tier.intermediate{background:#fffbf0;border-left:5px solid #e3b341}
+.rq-tier.principal{background:#f0f0ff;border-left:5px solid #7b2d8b}
+.rq-tier-label{font-family:sans-serif;font-size:10px;color:#555;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.rq-badge{font-weight:700;font-size:9px;padding:2px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.foundational .rq-badge{background:#27ae60;color:#fff}
+.intermediate .rq-badge{background:#e3b341;color:#1c2438}
+.principal .rq-badge{background:#7b2d8b;color:#fff}
+.rq-tier ol{margin-left:18px}
+.rq-tier li{margin-bottom:10px;font-size:12.5px;line-height:1.7;color:#222}
+.rq-tier li::marker{font-weight:700}
+.ch-end{text-align:center;margin-top:48px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#999;letter-spacing:2px;text-transform:uppercase}
+.ch-end a{color:#2a6099;text-decoration:none;font-weight:700}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#2a4a8a}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e8e8}
+tr:nth-child(even) td{background:#f8f9fb;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout,.worked,.cookbook{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+</style>
+</head>
+<body>
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="ch06.html">&#8592; Ch 6</a>
+  <a href="ch08.html">Ch 8 &#8594;</a>
+  <a href="ch01.html">Ch 1</a>
+  <a href="ch04.html">Ch 4</a>
+  <a href="ch05.html">Ch 5</a>
+  <a href="ch09.html">Ch 9</a>
+  <a href="ch17.html">Ch 17</a>
+</div>
+<div id="sidebar">
+  <h4>Chapter 7</h4>
+  <a href="#overview">Overview</a>
+  <a href="#objectives">Objectives</a>
+  <a href="#s71">7.1 Execution Model</a>
+  <a class="sub" href="#s711">&nbsp;&nbsp;&#8627; Thread Hierarchy</a>
+  <a class="sub" href="#s712">&nbsp;&nbsp;&#8627; SM Architecture</a>
+  <a class="sub" href="#s713">&nbsp;&nbsp;&#8627; Warp Divergence</a>
+  <a class="sub" href="#s714">&nbsp;&nbsp;&#8627; Occupancy</a>
+  <a href="#s72">7.2 GEMM Kernels</a>
+  <a class="sub" href="#s721">&nbsp;&nbsp;&#8627; Naive GEMM</a>
+  <a class="sub" href="#s722">&nbsp;&nbsp;&#8627; Tiled GEMM</a>
+  <a class="sub" href="#s723">&nbsp;&nbsp;&#8627; Tensor Cores</a>
+  <a class="sub" href="#s724">&nbsp;&nbsp;&#8627; CUTLASS</a>
+  <a href="#s73">7.3 Memory &amp; Graphs</a>
+  <a href="#s74">7.4 HIP / AMD</a>
+  <a href="#s75">7.5 Triton</a>
+  <a class="sub" href="#s752">&nbsp;&nbsp;&#8627; Triton GEMM</a>
+  <a class="sub" href="#s754">&nbsp;&nbsp;&#8627; Fused Kernels</a>
+  <a href="#s76">7.6 LLM Kernels</a>
+  <a class="sub" href="#s762">&nbsp;&nbsp;&#8627; Flash Attn v3</a>
+  <a href="#s77">7.7 Profiling (NCU)</a>
+  <a href="#s78">7.8 Advanced</a>
+  <a href="#s79">7.9 Ecosystem</a>
+  <a href="#cookbook">Profiling Cookbook</a>
+  <a href="#worked">Worked Example</a>
+  <a href="#qref">Quick Reference</a>
+  <a href="#takeaways">Key Takeaways</a>
+  <a href="#review">Review Questions</a>
+</div>
+<div class="page">
+<div class="ch-label">Part III &middot; Chapter 7</div>
+<h1 class="ch-title">GPU Kernels: CUDA, HIP &amp; Triton</h1>
+<div class="ch-subtitle">From Thread Hierarchy to Tensor Cores &#8212; Writing and Optimizing the Compute Primitives That Power Every AI Model</div>
+<div class="ch-meta">
+  <strong>Book:</strong> AI/ML Infrastructure from Silicon to Scale &nbsp;|&nbsp;
+  <strong>Author:</strong> Venkat Vinjam &nbsp;|&nbsp;
+  <strong>Cross-ref:</strong> <span class="xref">Roofline (Ch 1) &middot; HBM Hierarchy (Ch 4) &middot; FlashAttention concept (Ch 4) &middot; Inference kernels (Ch 6) &middot; Quantization (Ch 8) &middot; Networking/NCCL (Ch 14)</span>
+</div>
+<div class="ch-divider"></div>
+<div class="ch-hero-banner">
+  <blockquote>"A GPU kernel is a contract between the programmer and the hardware. Honor the hardware's preferences &#8212; aligned memory, full warps, tiled access &#8212; and the hardware rewards you with near-peak throughput. Violate them, and you pay in idle cycles."</blockquote>
+  <cite>&#8212; GPU Performance Engineering Maxim</cite>
+</div>
+<div id="overview">
+<p>Every TFLOP of AI computation ultimately executes as a GPU kernel &#8212; a function launched across thousands of parallel threads that reads from HBM, computes in registers and SMEM, and writes results back. The difference between a 15% MFU training run and a 65% MFU run almost always traces to <em>kernel quality</em>: how well the execution maps to the hardware's parallel execution model.</p>
+<p>This chapter builds the complete mental model from first principles: why does naive GEMM achieve only 0.6% compute utilization despite correct arithmetic? Why does tiling recover 100x? How do Tensor Cores deliver 30x more throughput per cycle? And how does a Triton kernel written in 40 lines of Python approach cuBLAS efficiency through automatic compilation? Every answer connects directly to measurable infrastructure cost. A kernel running at 40% MFU instead of 70% costs 75% more per token at identical hardware spend.</p>
+</div>
+<div id="objectives">
+<div class="objectives">
+  <div class="obj-card foundational"><div class="obj-label">Foundational</div><ul>
+    <li>Explain the grid/block/warp/thread hierarchy and hardware mapping</li>
+    <li>Understand why memory coalescing is the #1 performance factor</li>
+    <li>Describe what a Tensor Core does and why it requires aligned data</li>
+    <li>Know the occupancy-vs-performance tradeoff intuitively</li>
+  </ul></div>
+  <div class="obj-card intermediate"><div class="obj-label">Intermediate</div><ul>
+    <li>Calculate arithmetic intensity and locate any kernel on the roofline</li>
+    <li>Write and analyze a tiled GEMM in CUDA and equivalent Triton</li>
+    <li>Use Nsight Compute to identify the binding bottleneck</li>
+    <li>Quantify CUDA Graph speedup for decode-phase inference</li>
+  </ul></div>
+  <div class="obj-card principal"><div class="obj-label">Principal Level</div><ul>
+    <li>Design the full kernel optimization strategy for a new LLM architecture</li>
+    <li>Choose among cuBLAS/CUTLASS/Triton/raw CUDA for any custom operator</li>
+    <li>Explain FlashAttention v3's WGMMA+TMA pipeline with H100 specifics</li>
+    <li>Quantify cost savings from kernel optimization at fleet scale</li>
+  </ul></div>
+</div>
+</div>
+<h2 id="s71">7.1 The GPU Execution Model &#8212; From Grid to Instruction</h2>
+<h3 id="s711">7.1.1 The Three-Level Thread Hierarchy</h3>
+<p>CUDA programs express parallelism through a three-level hierarchy that maps directly to hardware. Understanding this mapping is the prerequisite for all kernel optimization &#8212; every performance technique is ultimately about aligning computation to this hierarchy efficiently.</p>
+<div class="diagram-wrap" id="diag-thread-hierarchy"><figure>
+<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <defs><linearGradient id="gGrid" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1a3a6b"/><stop offset="100%" stop-color="#1c2438"/></linearGradient></defs>
+  <rect x="10" y="10" width="740" height="400" rx="10" fill="#f0f4fa" stroke="#1c2438" stroke-width="2"/>
+  <rect x="10" y="10" width="740" height="34" rx="10" fill="url(#gGrid)"/>
+  <rect x="10" y="28" width="740" height="16" fill="url(#gGrid)"/>
+  <text x="380" y="32" text-anchor="middle" fill="#e3b341" font-size="13" font-weight="bold" font-family="sans-serif">GRID (entire kernel launch)</text>
+  <text x="380" y="53" text-anchor="middle" fill="#ccc" font-size="10.5" font-family="sans-serif">Maps to: All SMs on GPU | Up to 2^31-1 blocks per dimension | No direct block-to-block communication</text>
+  <!-- Block 1 -->
+  <rect x="25" y="65" width="330" height="220" rx="8" fill="#1a3a6b" opacity=".9"/>
+  <text x="190" y="84" text-anchor="middle" fill="#e3b341" font-size="11.5" font-weight="bold" font-family="sans-serif">BLOCK (Thread Block / CTA)</text>
+  <text x="190" y="98" text-anchor="middle" fill="#c8d8f0" font-size="10" font-family="sans-serif">Up to 1,024 threads | Shared SMEM | __syncthreads()</text>
+  <!-- Warp 1 -->
+  <rect x="38" y="110" width="145" height="80" rx="6" fill="#e8f0ff" stroke="#2a6099" stroke-width="1.5"/>
+  <text x="110" y="128" text-anchor="middle" fill="#1c2438" font-size="10.5" font-weight="bold" font-family="sans-serif">WARP (32 threads)</text>
+  <text x="110" y="142" text-anchor="middle" fill="#444" font-size="9.5" font-family="sans-serif">SIMT lockstep execution</text>
+  <text x="110" y="155" text-anchor="middle" fill="#444" font-size="9.5" font-family="sans-serif">4 warp schedulers/SM (H100)</text>
+  <text x="110" y="168" text-anchor="middle" fill="#c0392b" font-size="9" font-family="sans-serif">AMD Wavefront = 64 threads</text>
+  <!-- Thread -->
+  <rect x="40" y="200" width="140" height="52" rx="5" fill="#fff" stroke="#aab" stroke-width="1"/>
+  <text x="110" y="218" text-anchor="middle" fill="#1c2438" font-size="10" font-weight="bold" font-family="sans-serif">THREAD</text>
+  <text x="110" y="232" text-anchor="middle" fill="#444" font-size="9.5" font-family="sans-serif">255 private registers</text>
+  <text x="110" y="246" text-anchor="middle" fill="#444" font-size="9.5" font-family="sans-serif">threadIdx.x/y/z</text>
+  <!-- Warp 2 -->
+  <rect x="196" y="110" width="145" height="145" rx="6" fill="#e8f0ff" stroke="#2a6099" stroke-width="1.5"/>
+  <text x="268" y="128" text-anchor="middle" fill="#1c2438" font-size="10.5" font-weight="bold" font-family="sans-serif">WARP 2...</text>
+  <text x="268" y="148" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">Up to 64 warps/SM</text>
+  <text x="268" y="164" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">Occupancy =</text>
+  <text x="268" y="178" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">active/max warps</text>
+  <text x="268" y="200" text-anchor="middle" fill="#1a7a3a" font-size="9" font-family="sans-serif">Hides HBM latency by</text>
+  <text x="268" y="214" text-anchor="middle" fill="#1a7a3a" font-size="9" font-family="sans-serif">switching to ready warps</text>
+  <!-- Block SMEM label -->
+  <rect x="32" y="268" width="310" height="28" rx="5" fill="rgba(255,255,255,.18)"/>
+  <text x="187" y="285" text-anchor="middle" fill="#e3b341" font-size="10" font-family="sans-serif">Block-private: SMEM (228 KB H100) | __syncthreads() | L1 cache</text>
+  <!-- Block 2 -->
+  <rect x="370" y="65" width="195" height="220" rx="8" fill="#1a3a6b" opacity=".5"/>
+  <text x="467" y="180" text-anchor="middle" fill="#c8d8f0" font-size="12" font-family="sans-serif">BLOCK 2</text>
+  <!-- Block 3 -->
+  <rect x="578" y="65" width="155" height="220" rx="8" fill="#1a3a6b" opacity=".28"/>
+  <text x="655" y="180" text-anchor="middle" fill="#c8d8f0" font-size="11" font-family="sans-serif">...Blocks</text>
+  <!-- HW mapping row -->
+  <rect x="20" y="302" width="720" height="95" rx="7" fill="#fff" stroke="#dde" stroke-width="1"/>
+  <text x="360" y="320" text-anchor="middle" fill="#1c2438" font-size="11" font-weight="bold" font-family="sans-serif">HARDWARE MAPPING</text>
+  <text x="60" y="340" fill="#1c2438" font-size="10.5" font-family="sans-serif">Grid &#8594; Entire GPU (all 132 SMs on H100)</text>
+  <text x="340" y="340" fill="#1c2438" font-size="10.5" font-family="sans-serif">Block &#8594; One SM (multiple blocks/SM if resources permit)</text>
+  <text x="60" y="358" fill="#1c2438" font-size="10.5" font-family="sans-serif">Warp &#8594; Warp scheduler (4/SM on H100)</text>
+  <text x="340" y="358" fill="#1c2438" font-size="10.5" font-family="sans-serif">Thread &#8594; CUDA core / Tensor Core execution slot</text>
+  <text x="60" y="378" fill="#c0392b" font-size="10" font-family="sans-serif">AMD Wavefront = 64 threads (2x CUDA warp) &#8594; tile sizes must be multiples of 64 on MI300X</text>
+</svg>
+<figcaption><strong>Figure 7.1</strong> &#8212; CUDA thread hierarchy and hardware mapping. Grid maps to all SMs; block maps to one SM; warp (32 threads) is the actual scheduling unit. AMD's Wavefront of 64 threads requires adjusted tile sizing in HIP kernels.</figcaption>
+</figure></div>
+
+<h3 id="s712">7.1.2 The SM Execution Engine &#8212; H100 Architecture</h3>
+<div class="diagram-wrap" id="diag-sm"><figure>
+<svg viewBox="0 0 760 375" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <defs><linearGradient id="gSM" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1a3a6b"/><stop offset="100%" stop-color="#1c2438"/></linearGradient></defs>
+  <rect x="10" y="10" width="740" height="355" rx="10" fill="#fafbff" stroke="#1c2438" stroke-width="2"/>
+  <rect x="10" y="10" width="740" height="32" rx="10" fill="url(#gSM)"/>
+  <rect x="10" y="28" width="740" height="14" fill="url(#gSM)"/>
+  <text x="380" y="30" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold" font-family="sans-serif">H100 STREAMING MULTIPROCESSOR (SM) &#8212; 132 SMs total on H100 SXM5</text>
+  <!-- Warp schedulers -->
+  <rect x="20" y="52" width="168" height="90" rx="6" fill="#1c2438" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="104" y="70" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">4x WARP SCHEDULERS</text>
+  <text x="104" y="84" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">2 instructions/cycle each</text>
+  <text x="104" y="98" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">= 8 total instr/cycle/SM</text>
+  <text x="104" y="112" text-anchor="middle" fill="#79d99a" font-size="9.5" font-family="sans-serif">Max 64 warps resident/SM</text>
+  <text x="104" y="126" text-anchor="middle" fill="#79d99a" font-size="9" font-family="sans-serif">Hides HBM latency by switching</text>
+  <!-- FP32 -->
+  <rect x="200" y="52" width="128" height="90" rx="6" fill="#e8f0ff" stroke="#2a6099" stroke-width="1.5"/>
+  <text x="264" y="70" text-anchor="middle" fill="#1c2438" font-size="10" font-weight="bold" font-family="sans-serif">128x FP32 CORES</text>
+  <text x="264" y="84" text-anchor="middle" fill="#444" font-size="9.5" font-family="sans-serif">4 groups of 32</text>
+  <text x="264" y="98" text-anchor="middle" fill="#444" font-size="9.5" font-family="sans-serif">128 ops/cycle/SM</text>
+  <text x="264" y="112" text-anchor="middle" fill="#c0392b" font-size="9.5" font-family="sans-serif">~33 TFLOPS (full H100)</text>
+  <text x="264" y="126" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">Non-TC path only</text>
+  <!-- Tensor Cores HIGHLIGHTED -->
+  <rect x="340" y="47" width="165" height="100" rx="6" fill="#1a3a6b" stroke="#e3b341" stroke-width="2.5"/>
+  <text x="422" y="65" text-anchor="middle" fill="#e3b341" font-size="10.5" font-weight="bold" font-family="sans-serif">4x TENSOR CORES (4th Gen)</text>
+  <text x="422" y="80" text-anchor="middle" fill="#fff" font-size="9.5" font-family="sans-serif">WGMMA: 16x16x16 per instr</text>
+  <text x="422" y="95" text-anchor="middle" fill="#79d99a" font-size="10" font-weight="bold" font-family="sans-serif">BF16: ~1,024 ops/cycle/SM</text>
+  <text x="422" y="110" text-anchor="middle" fill="#79d99a" font-size="10" font-weight="bold" font-family="sans-serif">INT8: ~2,048 ops/cycle/SM</text>
+  <text x="422" y="125" text-anchor="middle" fill="#e3b341" font-size="9.5" font-family="sans-serif">989 TFLOPS BF16 full H100</text>
+  <text x="422" y="140" text-anchor="middle" fill="#e3b341" font-size="9.5" font-family="sans-serif">30x faster than FP32 CUDA cores</text>
+  <!-- Special units -->
+  <rect x="518" y="52" width="118" height="90" rx="6" fill="#f5f0ff" stroke="#7b2d8b" stroke-width="1.5"/>
+  <text x="577" y="70" text-anchor="middle" fill="#7b2d8b" font-size="10" font-weight="bold" font-family="sans-serif">SPECIAL UNITS</text>
+  <text x="577" y="84" text-anchor="middle" fill="#444" font-size="9.5" font-family="sans-serif">32x SFU (sin/cos/exp)</text>
+  <text x="577" y="98" text-anchor="middle" fill="#444" font-size="9.5" font-family="sans-serif">32x LD/ST units</text>
+  <text x="577" y="112" text-anchor="middle" fill="#444" font-size="9.5" font-family="sans-serif">64x FP64 cores</text>
+  <text x="577" y="126" text-anchor="middle" fill="#1a7a3a" font-size="9" font-family="sans-serif">TMA engine (H100-only)</text>
+  <!-- SMEM -->
+  <rect x="648" y="52" width="98" height="90" rx="6" fill="#fff8ec" stroke="#e3b341" stroke-width="1"/>
+  <text x="697" y="70" text-anchor="middle" fill="#a07800" font-size="10" font-weight="bold" font-family="sans-serif">L1/SMEM</text>
+  <text x="697" y="84" text-anchor="middle" fill="#444" font-size="9" font-family="sans-serif">228 KB SMEM</text>
+  <text x="697" y="98" text-anchor="middle" fill="#444" font-size="9" font-family="sans-serif">+ 64 KB L1</text>
+  <text x="697" y="112" text-anchor="middle" fill="#444" font-size="9" font-family="sans-serif">Shared SRAM</text>
+  <text x="697" y="126" text-anchor="middle" fill="#1a7a3a" font-size="9" font-family="sans-serif">~20 cycle latency</text>
+  <!-- Register file -->
+  <rect x="20" y="155" width="726" height="48" rx="6" fill="#1c2438" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="383" y="174" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">REGISTER FILE: 65,536 x 32-bit registers per SM = 256 KB</text>
+  <text x="383" y="191" text-anchor="middle" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">~1 cycle access latency | Binding occupancy constraint when &gt;32 registers/thread</text>
+  <!-- L2 -->
+  <rect x="20" y="215" width="726" height="40" rx="6" fill="#e8f0ff" stroke="#2a6099" stroke-width="1.5"/>
+  <text x="383" y="233" text-anchor="middle" fill="#1c2438" font-size="10.5" font-weight="bold" font-family="sans-serif">L2 CACHE: 50 MB (H100) shared across all 132 SMs | ~200-300 cycle access</text>
+  <text x="383" y="248" text-anchor="middle" fill="#2a6099" font-size="9.5" font-family="sans-serif">AMD MI300X: 256 MB L2 (5x larger) &#8594; dramatically better reuse for small-batch decode</text>
+  <!-- HBM -->
+  <rect x="20" y="267" width="726" height="40" rx="6" fill="#fff0f0" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="383" y="285" text-anchor="middle" fill="#c0392b" font-size="10.5" font-weight="bold" font-family="sans-serif">HBM3: 80 GB, 3.35 TB/s &#8212; bandwidth bottleneck for all LLM decode workloads</text>
+  <text x="383" y="300" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">~500 cycle latency | Hidden by occupancy | H200: 141 GB HBM3e at 4.8 TB/s [SHIPPED]</text>
+  <!-- Throughput summary -->
+  <rect x="20" y="319" width="726" height="36" rx="5" fill="#fff8ec" stroke="#e3b341" stroke-width="1"/>
+  <text x="110" y="340" text-anchor="middle" fill="#1a7a3a" font-size="10.5" font-weight="bold" font-family="sans-serif">FP32: 128 ops/cycle</text>
+  <text x="290" y="340" text-anchor="middle" fill="#1a3a6b" font-size="10.5" font-weight="bold" font-family="sans-serif">BF16 TC: 1,024 ops/cycle</text>
+  <text x="490" y="340" text-anchor="middle" fill="#7b2d8b" font-size="10.5" font-weight="bold" font-family="sans-serif">INT8 TC: 2,048 ops/cycle</text>
+  <text x="660" y="340" text-anchor="middle" fill="#c0392b" font-size="10" font-weight="bold" font-family="sans-serif">LD/ST: 32x128B</text>
+  <text x="383" y="350" text-anchor="middle" fill="#666" font-size="9" font-family="sans-serif">(per SM per cycle)</text>
+</svg>
+<figcaption><strong>Figure 7.2</strong> &#8212; H100 SM internal architecture. Tensor Cores deliver 30x more throughput than FP32 CUDA cores for matrix multiply &#8212; the economic foundation of LLM training. SMEM is software-managed (programmer-controlled); L1 is hardware-managed. HBM at ~500 cycle latency is hidden by switching between resident warps.</figcaption>
+</figure></div>
+
+<div class="callout key">
+<strong>Why Tensor Cores Are the Economic Foundation of LLM Training</strong>
+Without Tensor Cores, H100 delivers ~33 TFLOPS FP32. With Tensor Cores in BF16: 989 TFLOPS &#8212; a 30x increase for matrix multiply. A 70B training run requires ~2.1&#215;10&#178;&#176; FLOPs. At 33 TFLOPS: 6,400 GPU-days. At 989 TFLOPS with 60% MFU: ~230 GPU-days. That 28x difference is $15M vs $530,000 at $3/GPU-hour on 256 GPUs. Tensor Cores are not a feature; they are why modern LLM training is economically feasible.
+</div>
+
+<h3 id="s713">7.1.3 SIMT Execution and Warp Divergence</h3>
+<p>All 32 threads in a warp execute the same instruction simultaneously (SIMT &#8212; Single Instruction, Multiple Thread). When threads take different code paths, the warp serializes both branches with masked inactive threads. This is warp divergence, and it is the mechanism that kills performance in branchy kernels.</p>
+<div class="formula">WARP DIVERGENCE &#8212; cost model:
+
+// BAD: 50/50 split (both branches execute sequentially &#8212; 2x slower)
+if (threadIdx.x &lt; 16) {
+    result = heavy_compute_A();  // Threads 0-15 active, 16-31 masked (wasted)
+} else {
+    result = heavy_compute_B();  // Threads 16-31 active, 0-15 masked (wasted)
+}
+// Cost: latency(A) + latency(B) &#8212; no overlap
+
+// GOOD: Warp-uniform condition (all 32 threads take same path)
+if (blockIdx.x &lt; N/2) { result = heavy_compute_A(); }
+
+LLM DIVERGENCE SCENARIOS:
+  Causal attention mask: upper triangle is zero &#8212; per-element branching if naive
+  Flash Attention FIX:   process in TILE*TILE blocks, apply mask to entire tile
+                         &#8212; warp-uniform operation, zero divergence
+  Variable seq lengths:  pad to power-of-2 bucket &#8594; uniform per batch</div>
+
+<h3 id="s714">7.1.4 Occupancy &#8212; The Hardware Utilization Multiplier</h3>
+<p><strong>Occupancy</strong> is the ratio of active warps to the maximum number of warps an SM can support. High occupancy hides HBM latency: while one warp waits 500 cycles for data, the scheduler switches to a ready warp. But more occupancy is not always better &#8212; large tiles with lower occupancy often outperform small tiles with maximal occupancy.</p>
+<div class="formula">OCCUPANCY CALCULATION (H100, typical GEMM kernel):
+
+H100 SM limits:
+  Max warps/SM: 64  |  Max threads/SM: 2,048  |  Registers/SM: 65,536  |  SMEM: 228 KB
+
+Kernel: blockSize=256 threads (8 warps), 32 regs/thread, 32 KB SMEM/block
+
+  Register check: 65,536 / (32 regs * 32 threads) = 64 warps &#8594; 100% occupancy
+  SMEM check:     228 KB / 32 KB = 7 blocks * 8 warps = 56 warps &#8594; 87.5%  &#8592; BINDING
+  Block limit:    min(32, 7) = 7 blocks * 256 threads = 1,792 / 2,048 = 87.5%
+
+Final occupancy = 87.5%  (SMEM is the binding constraint)
+
+TO IMPROVE: reduce SMEM to 28 KB &#8594; 8 blocks &#8594; 100% occupancy
+RISK:        smaller tile = more HBM round-trips = often SLOWER overall
+RULE:        always measure end-to-end throughput, not just occupancy</div>
+
+<h2 id="s72">7.2 Writing and Understanding GEMM Kernels</h2>
+<p>GEMM (General Matrix-Matrix Multiply) constitutes 85&#8211;95% of compute time during LLM training prefill and 70&#8211;90% during decode for large models. Understanding how it maps to GPU hardware from first principles is the single most valuable kernel knowledge a Principal Performance Engineer can possess.</p>
+
+<h3 id="s721">7.2.1 Why Naive GEMM Fails &#8212; The Arithmetic Intensity Argument</h3>
+<div class="formula">NAIVE GEMM ANALYSIS: C[M*N] = A[M*K] * B[K*N], M=N=K=4096
+
+Each thread computes ONE output: loops K, reads A[row][k] and B[k][col] from HBM every iteration.
+
+FLOPs      = 2 * 4096^3            = 137 GFLOP
+HBM reads  = 2 * 4096^3 elements * 4 bytes (FP32) = 549 GB
+
+Arithmetic Intensity = 137 GFLOP / 549 GB = 0.25 FLOP/byte
+H100 ridge point     = 989 TFLOPS / 3.35 TB/s = 295 FLOP/byte
+
+0.25 &lt;&lt; 295 &#8594; DEEPLY MEMORY BOUND (1,180x below compute regime)
+
+Time (HBM bound): 549 GB / 3,350 GB/s = 0.164 s
+Time (compute):   137 GFLOP / 100,000 GFLOPS = 0.001 s
+Compute utilization = 0.001 / 0.164 = 0.6%
+
+99.4% of time: stalled waiting for HBM data.
+This is why naive GEMM is a teaching artifact &#8212; never used in production.</div>
+
+<h3 id="s722">7.2.2 Tiled GEMM &#8212; The Fix</h3>
+<p>Load a tile of A and B into SMEM, compute partial results entirely in registers, then advance to the next tile. This is tiling (blocking) &#8212; the algorithm behind every production GEMM implementation.</p>
+<div class="formula">TILED GEMM ANALYSIS (TILE_SIZE=32, M=N=K=4096, BF16):
+
+Tile loads 32x32 elements of A and B into SMEM (shared across 32 threads each).
+Accumulator stays in registers across all K/32=128 tile iterations.
+
+HBM traffic per output element:
+  Naive: K reads of A-row + K reads of B-col = 4096+4096 = 8,192 reads
+  Tiled: K/TILE_SIZE tile iterations, each element shared across TILE_SIZE threads
+         = 128 tiles * 2 elements / 32 threads = 8 reads &#8594; 1,024x less traffic
+
+Arithmetic Intensity (BF16 tiled):
+  FLOPs = 137 GFLOP (unchanged)
+  HBM   = 2 * 4096^2 * 2 bytes (BF16, each weight loaded once) = 67 GB
+  AI    = 137 GFLOP / 67 GB = 2,045 FLOP/byte
+
+  2,045 >> 295 FLOP/byte ridge point &#8594; COMPUTE BOUND &#10003;
+
+SMEM check: 2 tiles * 32 * 32 * 2 bytes = 4 KB per block &lt;&lt; 228 KB &#8594; 57 blocks/SM fit</div>
+
+<h3 id="s723">7.2.3 Tensor Cores &#8212; The Real GEMM Engine <span class="shipped">SHIPPED</span></h3>
+<div class="formula">TENSOR CORE INSTRUCTION (H100 WGMMA, BF16):
+
+Operation:  D[16x16] += A[16x16] * B[16x16]  (BF16 input, FP32 accumulation)
+Hardware:   4,096 multiply-adds per instruction (dedicated circuitry)
+Throughput: 4,096 MACs * 132 SMs / ~6 cycles / 1.98 GHz = 989 TFLOPS
+
+vs FP32 CUDA cores:  128 ops/SM/cycle * 132 * 1.98 GHz = 33 TFLOPS
+Tensor Core speedup: 989 / 33 = 30x for matrix multiply
+
+ALIGNMENT REQUIREMENTS:
+  Matrix dimensions:    multiples of 16 (BF16), multiples of 128 (FP8)
+  Leading dimension:    multiples of 8 (cache-line aligned for BF16)
+  Safe LLM convention:  d_model multiples of 64
+
+FAILURE MODE (silent 30x regression):
+  Non-aligned dim &#8594; Tensor Core falls back to FP32 CUDA core path
+  Kernel is "correct" but runs 30x slower &#8212; undetectable without profiling!
+
+VERIFY WITH NCU: sm__pipe_tensor_cycles_active.avg.pct_of_peak
+  &gt;60% &#8594; Good TC usage   |   &lt;30% &#8594; Alignment problem or wrong dtype</div>
+
+<div class="callout warn">
+<strong>The Hidden Alignment Tax &#8212; FFN Intermediate Dimensions</strong>
+SwiGLU FFN uses intermediate dim = 8/3 * d_model. For d_model=8192: 8/3*8192 &#8776; 21,845 &#8212; NOT divisible by 16. This silently disables Tensor Cores on all FFN kernels, regressing ~36% of model compute by 30x. Fix: round to nearest multiple of 64 (21,888 works). Verify every custom dimension before deployment.
+</div>
+
+<h3 id="s724">7.2.4 CUTLASS &#8212; NVIDIA's Templated GEMM Library <span class="shipped">SHIPPED</span></h3>
+<div class="formula">CUTLASS 3.x HIERARCHY:
+  ThreadblockTile (128x128x64) &#8594; one CUDA block, one SM
+    WarpTile (64x64x64)        &#8594; one warp's Tensor Core work
+      InstructionTile (16x16x16) &#8594; one WGMMA hardware instruction
+
+H100 3-STAGE SOFTWARE PIPELINE:
+  Stage N-1: TMA loads A+B tiles from HBM &#8594; SMEM  (async, zero SM cycles)
+  Stage N:   WGMMA executes on tile N              (Tensor Cores full speed)
+  Stage N+1: TMA pre-fetches tile N+1              (overlaps Stage N compute)
+  Result: Memory latency completely hidden &#8594; 75-85% MFU for aligned GEMM
+
+USE CUTLASS WHEN:
+  Custom epilogue: fuse quantization/scale/bias-inject after GEMM output
+  Unusual dtypes:  FP8 mixed precision with custom per-tensor descaling
+  Non-standard shapes: batch=1 decode GEMM (M=1) needing custom tile choices</div>
+
+<h2 id="s73">7.3 Memory Access Patterns and CUDA Graphs</h2>
+<div class="diagram-wrap" id="diag-coalescing"><figure>
+<svg viewBox="0 0 740 270" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="370" y="20" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">MEMORY COALESCING: ALIGNED vs STRIDED ACCESS</text>
+  <!-- Coalesced -->
+  <rect x="15" y="30" width="340" height="230" rx="8" fill="#e8fff0" stroke="#1a7a3a" stroke-width="1.5"/>
+  <text x="185" y="50" text-anchor="middle" fill="#1a7a3a" font-size="11" font-weight="bold" font-family="sans-serif">&#10003; COALESCED &#8212; 1 Transaction</text>
+  <text x="185" y="64" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">32 threads access 32 consecutive floats = 128 bytes</text>
+  <rect x="30" y="76" width="14" height="16" rx="2" fill="#1c2438"/><text x="37" y="88" text-anchor="middle" fill="#fff" font-size="7">T0</text>
+  <rect x="46" y="76" width="14" height="16" rx="2" fill="#1c2438"/><text x="53" y="88" text-anchor="middle" fill="#fff" font-size="7">T1</text>
+  <rect x="62" y="76" width="14" height="16" rx="2" fill="#1c2438"/><text x="69" y="88" text-anchor="middle" fill="#fff" font-size="7">T2</text>
+  <rect x="78" y="76" width="14" height="16" rx="2" fill="#1c2438"/><text x="85" y="88" text-anchor="middle" fill="#fff" font-size="7">T3</text>
+  <text x="120" y="87" fill="#888" font-size="9" font-family="sans-serif">...T31</text>
+  <line x1="185" y1="93" x2="185" y2="108" stroke="#1a7a3a" stroke-width="2"/>
+  <rect x="28" y="110" width="310" height="22" rx="3" fill="#1a7a3a" opacity=".8"/>
+  <text x="183" y="125" text-anchor="middle" fill="#fff" font-size="9.5" font-family="sans-serif">1 x 128-byte HBM transaction &#8212; all 128 bytes useful</text>
+  <rect x="28" y="146" width="310" height="30" rx="4" fill="#fff" stroke="#1a7a3a" stroke-width="1"/>
+  <text x="183" y="162" text-anchor="middle" fill="#1a7a3a" font-size="10" font-weight="bold" font-family="sans-serif">BW utilization: 100%</text>
+  <text x="183" y="174" text-anchor="middle" fill="#444" font-size="9" font-family="sans-serif">Pattern: data[threadIdx.x + blockIdx.x * blockDim.x]</text>
+  <rect x="28" y="192" width="310" height="55" rx="4" fill="#f0f8f0" stroke="#1a7a3a" stroke-width="1"/>
+  <text x="183" y="208" text-anchor="middle" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">For transpose: use SMEM buffer</text>
+  <text x="183" y="222" text-anchor="middle" fill="#2a4a8a" font-size="9" font-family="sans-serif">__shared__ float tile[32][33]; // +1 = no bank conflicts</text>
+  <text x="183" y="236" text-anchor="middle" fill="#2a4a8a" font-size="9" font-family="sans-serif">tile[ty][tx] = in[row*N+col];   // coalesced read</text>
+  <text x="183" y="248" text-anchor="middle" fill="#1a7a3a" font-size="8.5" font-family="sans-serif">out[col*M+row] = tile[tx][ty];  // coalesced write after transpose</text>
+  <!-- Strided -->
+  <rect x="385" y="30" width="340" height="230" rx="8" fill="#fff0f0" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="555" y="50" text-anchor="middle" fill="#c0392b" font-size="11" font-weight="bold" font-family="sans-serif">&#10008; STRIDED &#8212; 32 Transactions</text>
+  <text x="555" y="64" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">32 threads access elements stride-N apart in memory</text>
+  <rect x="400" y="76" width="14" height="16" rx="2" fill="#c0392b"/><text x="407" y="88" text-anchor="middle" fill="#fff" font-size="7">T0</text>
+  <rect x="430" y="76" width="14" height="16" rx="2" fill="#c0392b"/><text x="437" y="88" text-anchor="middle" fill="#fff" font-size="7">T1</text>
+  <rect x="460" y="76" width="14" height="16" rx="2" fill="#c0392b"/><text x="467" y="88" text-anchor="middle" fill="#fff" font-size="7">T2</text>
+  <rect x="490" y="76" width="14" height="16" rx="2" fill="#c0392b"/><text x="497" y="88" text-anchor="middle" fill="#fff" font-size="7">T3</text>
+  <text x="540" y="87" fill="#888" font-size="9" font-family="sans-serif">...T31</text>
+  <rect x="400" y="110" width="14" height="16" rx="2" fill="#c0392b" opacity=".7"/>
+  <rect x="420" y="110" width="14" height="16" rx="2" fill="#c0392b" opacity=".7"/>
+  <rect x="440" y="110" width="14" height="16" rx="2" fill="#c0392b" opacity=".7"/>
+  <rect x="460" y="110" width="14" height="16" rx="2" fill="#c0392b" opacity=".7"/>
+  <text x="500" y="122" fill="#888" font-size="8.5" font-family="sans-serif">x 32 separate 128B transactions!</text>
+  <rect x="395" y="143" width="322" height="30" rx="4" fill="#fff" stroke="#c0392b" stroke-width="1"/>
+  <text x="556" y="158" text-anchor="middle" fill="#c0392b" font-size="9.5" font-weight="bold" font-family="sans-serif">BW utilization: 3.1% (4 bytes used / 128 bytes fetched)</text>
+  <text x="556" y="170" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">32x more HBM transactions for identical data volume</text>
+  <rect x="395" y="186" width="322" height="60" rx="4" fill="#fff8f8" stroke="#c0392b" stroke-width="1"/>
+  <text x="556" y="202" text-anchor="middle" fill="#c0392b" font-size="9.5" font-weight="bold" font-family="sans-serif">COMMON CAUSES:</text>
+  <text x="556" y="216" text-anchor="middle" fill="#444" font-size="9" font-family="sans-serif">Column-major read of row-major matrix</text>
+  <text x="556" y="229" text-anchor="middle" fill="#444" font-size="9" font-family="sans-serif">Embedding table gather (non-consecutive indices)</text>
+  <text x="556" y="242" text-anchor="middle" fill="#444" font-size="9" font-family="sans-serif">Attention transposed K access without SMEM staging</text>
+</svg>
+<figcaption><strong>Figure 7.4</strong> &#8212; Memory coalescing: aligned vs. strided access. Coalesced: 32 threads, 32 consecutive floats, 1 HBM transaction, 100% bandwidth utilization. Strided: 32 separate 128-byte transactions each carrying 4 useful bytes &#8212; 3.1% efficiency. The transpose fix uses SMEM with +1 column padding to eliminate bank conflicts while keeping both reads and writes coalesced.</figcaption>
+</figure></div>
+
+<div class="formula">CUDA GRAPHS &#8212; Eliminating Kernel Launch Overhead
+
+PROBLEM: Each standard CUDA kernel launch costs ~5 microseconds of CPU overhead.
+  LLaMA-3 70B decode: 6 kernels/layer * 80 layers = 480 launches per step
+  Total overhead: 480 * 5us = 2.4ms
+
+  At TPOT=25ms: 9.6% overhead   |   At TPOT=10ms: 24% &#8212; launch overhead DOMINATES!
+
+SOLUTION:
+// CAPTURE (once at startup, ~100-200ms cost):
+cudaStreamBeginCapture(stream, cudaStreamCaptureModeGlobal);
+  launch_qkv_gemm(stream, ...);         // Recorded, NOT executed
+  launch_flash_attention(stream, ...);  // Recorded
+  // ... all 480 kernels
+cudaStreamEndCapture(stream, &amp;graph);
+cudaGraphInstantiate(&amp;graphExec, graph, nullptr, nullptr, 0);
+
+// REPLAY every decode step (~0.024ms overhead):
+cudaGraphLaunch(graphExec, stream);
+
+Before: 2.4ms launch overhead   After: 0.024ms (100x reduction)
+TPOT improvement: 10-30% on decode workloads
+
+LIMITATION: Graph is STATIC &#8212; batch size and tensor shapes cannot change
+SOLUTION:   Capture one graph per (batch_size, seq_len) configuration (vLLM approach)</div>
+
+<h2 id="s74">7.4 HIP &#8212; CUDA on AMD Hardware</h2>
+<p>HIP (Heterogeneous Interface for Portability) is AMD's CUDA-equivalent programming model for ROCm. The API is ~95% identical to CUDA; the performance expertise lies in understanding the hardware differences.</p>
+<div class="formula">CUDA &#8594; HIP KEY TRANSLATIONS:
+  cudaMalloc()           &#8594; hipMalloc()           (identical)
+  __syncthreads()        &#8594; __syncthreads()       (identical)
+  __shfl_xor_sync(mask)  &#8594; __shfl_xor()          (HIP has no mask arg)
+  cudaGraph*             &#8594; hipGraph*              (identical)
+  #include &lt;cuda_runtime.h&gt;  &#8594;  #include &lt;hip/hip_runtime.h&gt;
+  nvcc kernel.cu         &#8594; hipcc kernel.hip
+  AUTO-MIGRATION: hipify-clang source.cu --output-dir hip_src/ (~95% coverage)
+
+CRITICAL HARDWARE DIFFERENCES (H100 vs MI300X):
+  Feature              H100 SXM5            MI300X              Impact
+  &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
+  Warp/Wavefront        32 threads           64 threads           TILE multiples of 64!
+  SMEM per unit         228 KB/SM            64 KB/CU             Smaller tiles on AMD
+  L2 Cache              50 MB                256 MB               5x better reuse
+  HBM                   80 GB, 3.35 TB/s     192 GB, 5.3 TB/s     MI300X wins both
+  Tensor Op             WGMMA (16x16x16)     MFMA (16x16x4)       Different intrinsics
+  Reduction loop steps  5 (log2 32)          6 (log2 64)          Add one HIP iteration</div>
+
+<h2 id="s75">7.5 Triton &#8212; Python-Level GPU Kernel Programming</h2>
+<p>Triton (OpenAI, 2019) allows writing high-performance GPU kernels in Python-like syntax. Unlike CUDA &#8212; which programs at the thread level &#8212; Triton programs at the <em>tile level</em>: you describe operations on tiles, and the compiler manages thread assignment, SMEM staging, and memory coalescing automatically.</p>
+<div class="callout green">
+<strong>Why Triton Is the Primary Tool for Custom AI Kernels</strong>
+Meta's KernelEvolve, OpenAI's custom attention kernels, and HuggingFace's kernel library all use Triton. It achieves 85&#8211;95% of cuBLAS throughput with 10&#8211;20x less code. <code>tl.dot()</code> automatically lowers to WGMMA Tensor Core instructions &#8212; no manual TC intrinsics required.
+</div>
+<div class="formula">// TRITON PROGRAMMING MODEL &#8212; vector addition:
+@triton.jit
+def add_kernel(x_ptr, y_ptr, out_ptr, n_elements, BLOCK_SIZE: tl.constexpr):
+    pid = tl.program_id(axis=0)                  # Which tile? (like blockIdx.x)
+    offsets = pid * BLOCK_SIZE + tl.arange(0, BLOCK_SIZE)
+    mask = offsets &lt; n_elements
+    x = tl.load(x_ptr + offsets, mask=mask)      # Auto-coalesced HBM load
+    y = tl.load(y_ptr + offsets, mask=mask)      # Stays in registers
+    tl.store(out_ptr + offsets, x + y, mask=mask)
+
+# No threadIdx, no __syncthreads, no warp management needed.
+# Triton compiles tile operations to optimal CUDA/HIP with auto SMEM staging.</div>
+
+<h3 id="s752">7.5.2 Triton GEMM with Auto-Tuning</h3>
+<div class="formula">@triton.autotune(
+    configs=[
+        triton.Config({'BLOCK_M': 128, 'BLOCK_N': 256, 'BLOCK_K': 64,  'num_stages': 3}),
+        triton.Config({'BLOCK_M': 128, 'BLOCK_N': 128, 'BLOCK_K': 32,  'num_stages': 4}),
+        triton.Config({'BLOCK_M': 64,  'BLOCK_N': 256, 'BLOCK_K': 32,  'num_stages': 4}),
+    ],
+    key=['M', 'N', 'K'],
+)
+@triton.jit
+def matmul_kernel(A, B, C, M, N, K, sa_m, sa_k, sb_k, sb_n, sc_m, sc_n,
+                  BLOCK_M: tl.constexpr, BLOCK_N: tl.constexpr, BLOCK_K: tl.constexpr):
+    pid_m, pid_n = tl.program_id(0), tl.program_id(1)
+    offs_m = pid_m * BLOCK_M + tl.arange(0, BLOCK_M)
+    offs_n = pid_n * BLOCK_N + tl.arange(0, BLOCK_N)
+    offs_k = tl.arange(0, BLOCK_K)
+    acc = tl.zeros((BLOCK_M, BLOCK_N), dtype=tl.float32)  # Accumulator in registers!
+    a_ptrs = A + offs_m[:,None]*sa_m + offs_k[None,:]*sa_k
+    b_ptrs = B + offs_k[:,None]*sb_k + offs_n[None,:]*sb_n
+    for k in range(0, K, BLOCK_K):
+        a = tl.load(a_ptrs, mask=offs_k[None,:] &lt; K-k, other=0.0)
+        b = tl.load(b_ptrs, mask=offs_k[:,None] &lt; K-k, other=0.0)
+        acc += tl.dot(a, b)   # &#8592; compiles to WGMMA Tensor Core instructions!
+        a_ptrs += BLOCK_K*sa_k;  b_ptrs += BLOCK_K*sb_k
+    c_ptrs = C + offs_m[:,None]*sc_m + offs_n[None,:]*sc_n
+    tl.store(c_ptrs, acc.to(tl.bfloat16), mask=(offs_m[:,None]&lt;M)&amp;(offs_n[None,:]&lt;N))
+
+# SMEM budget: num_stages*(BLOCK_M+BLOCK_N)*BLOCK_K*2 bytes &lt;= 228 KB (H100)
+# Performance: 85-95% of cuBLAS for aligned shapes with BLOCK_M=128, BLOCK_N=128</div>
+
+<h3 id="s754">7.5.4 Fused Kernels &#8212; The Primary Triton Use Case</h3>
+<div class="formula">// FUSED RMSNorm + Linear &#8212; eliminates one HBM round-trip:
+// Unfused: Read X &#8594; Write X_norm &#8594; Read X_norm &#8594; Write Y  (4 HBM ops)
+// Fused:   Read X &#8594; Write Y                                    (2 HBM ops)
+
+@triton.jit
+def fused_rmsnorm_linear(X_ptr, W_norm_ptr, W_lin_ptr, Y_ptr, B, T, D, outD, eps,
+                          BLOCK_D: tl.constexpr, BLOCK_OUT: tl.constexpr):
+    b, t = tl.program_id(0), tl.program_id(1)
+    offs_d = tl.arange(0, BLOCK_D)
+    x = tl.load(X_ptr + (b*T+t)*D + offs_d, mask=offs_d &lt; D)  # ONE HBM read
+    rms = tl.sqrt(tl.sum(x*x, 0) / D + eps)                  # In registers
+    x_normed = x / rms * tl.load(W_norm_ptr + offs_d, mask=offs_d &lt; D)
+    offs_out = tl.arange(0, BLOCK_OUT)
+    W = tl.load(W_lin_ptr + offs_d[:,None]*outD + offs_out[None,:], ...)
+    y = tl.sum(x_normed[:,None] * W, axis=0)
+    tl.store(Y_ptr + (b*T+t)*outD + offs_out, y, ...)          # ONE HBM write
+
+# Eliminates 2 HBM round-trips (write X_norm + read X_norm) &#8594; 1.5-2x speedup</div>
+
+<h2 id="s76">7.6 Key LLM Kernels in Production</h2>
+<table>
+<tr><th>Kernel</th><th>Type</th><th>Bottleneck (Prefill)</th><th>Bottleneck (Decode)</th><th>~% Time</th><th>Primary Optimization</th></tr>
+<tr><td>QKV Projection GEMM</td><td>GEMM</td><td>Compute</td><td>Memory BW</td><td>25%</td><td>Tensor Core efficiency, FP8</td></tr>
+<tr><td>Flash Attention</td><td>Custom</td><td>Compute</td><td>Memory BW</td><td>20%</td><td>FAv3, GQA, FP8 mode</td></tr>
+<tr><td>Output Projection</td><td>GEMM</td><td>Compute</td><td>Memory BW</td><td>8%</td><td>Standard optimized GEMM</td></tr>
+<tr><td>FFN Gate + Up GEMMs</td><td>GEMM</td><td>Compute</td><td>Memory BW</td><td>24%</td><td>Fuse with SiLU activation</td></tr>
+<tr><td>FFN Down GEMM</td><td>GEMM</td><td>Compute</td><td>Memory BW</td><td>12%</td><td>Standard optimized GEMM</td></tr>
+<tr><td>RMSNorm x2, SiLU, Residual</td><td>Elementwise</td><td>Memory BW</td><td>Memory BW</td><td>&lt;1%</td><td>Fuse with adjacent GEMM</td></tr>
+<tr><td>AllReduce (TP only)</td><td>Collective</td><td>Network</td><td>Network</td><td>Variable</td><td>Overlap with compute (Ch 14)</td></tr>
+</table>
+<div class="callout">
+<strong>The 85% Rule: Optimize GEMM, Not Elementwise Ops</strong>
+~85% of LLM inference compute time is GEMM kernels. Perfectly optimizing standalone RMSNorm delivers under 1% improvement. One 10% MFU gain in GEMM (70% &#8594; 77%) delivers 8.5x more value than the same relative gain in RMSNorm. Always compute expected gain = (fraction_of_runtime) &#215; (speedup &#8722; 1) before allocating engineering effort.
+</div>
+<h3 id="s762">7.6.2 Flash Attention v3 &#8212; The Most Important Custom Kernel <span class="shipped">SHIPPED</span></h3>
+<div class="diagram-wrap" id="diag-flashattn"><figure>
+<svg viewBox="0 0 740 340" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="370" y="20" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">FLASH ATTENTION v3 &#8212; H100 WGMMA+TMA Producer-Consumer Pipeline</text>
+  <!-- Standard attention -->
+  <rect x="15" y="32" width="280" height="290" rx="8" fill="#fff0f0" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="155" y="52" text-anchor="middle" fill="#c0392b" font-size="11" font-weight="bold" font-family="sans-serif">&#10008; STANDARD ATTENTION</text>
+  <text x="155" y="66" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">Materializes full NxN matrix in HBM</text>
+  <rect x="38" y="78" width="100" height="100" rx="4" fill="#c0392b" opacity=".15" stroke="#c0392b"/>
+  <text x="88" y="122" text-anchor="middle" fill="#c0392b" font-size="11" font-weight="bold" font-family="sans-serif">N x N</text>
+  <text x="88" y="138" text-anchor="middle" fill="#c0392b" font-size="10" font-family="sans-serif">Attention Matrix</text>
+  <text x="88" y="154" text-anchor="middle" fill="#c0392b" font-size="9.5" font-family="sans-serif">Written to HBM!</text>
+  <rect x="25" y="198" width="256" height="48" rx="5" fill="#fff" stroke="#c0392b" stroke-width="1"/>
+  <text x="153" y="216" text-anchor="middle" fill="#c0392b" font-size="10" font-weight="bold" font-family="sans-serif">S=8192, H100: N^2 * 2 bytes = 10.7 GB</text>
+  <text x="153" y="230" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">per forward pass (attention scores only!)</text>
+  <text x="153" y="244" text-anchor="middle" fill="#c0392b" font-size="9" font-family="sans-serif">Memory: O(N^2) &#8594; context length severely limited</text>
+  <rect x="25" y="258" width="256" height="48" rx="4" fill="#fff0f0"/>
+  <text x="153" y="275" text-anchor="middle" fill="#c0392b" font-size="9.5" font-family="sans-serif">HBM I/O cost: 10.7 GB*2 / 3.35 TB/s</text>
+  <text x="153" y="290" text-anchor="middle" fill="#c0392b" font-size="10" font-weight="bold" font-family="sans-serif">= 6.4ms just for attention memory I/O</text>
+  <text x="153" y="305" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">FAv1: 35% peak | FAv2: 55% peak</text>
+  <!-- Flash Attention v3 -->
+  <rect x="315" y="32" width="410" height="290" rx="8" fill="#e8fff0" stroke="#1a7a3a" stroke-width="2"/>
+  <text x="520" y="52" text-anchor="middle" fill="#1a7a3a" font-size="11" font-weight="bold" font-family="sans-serif">&#10003; FLASH ATTENTION v3 (H100)</text>
+  <text x="520" y="66" text-anchor="middle" fill="#666" font-size="9.5" font-family="sans-serif">Tiles computation in SMEM &#8212; NxN matrix never materializes</text>
+  <!-- SMEM tile region -->
+  <rect x="328" y="78" width="385" height="140" rx="4" fill="#f0f4fa" stroke="#2a6099" stroke-width="1"/>
+  <text x="520" y="95" text-anchor="middle" fill="#2a6099" font-size="9.5" font-weight="bold" font-family="sans-serif">SMEM (228 KB/SM) &#8212; Tile sizes stay resident</text>
+  <!-- Producer warp group: TMA -->
+  <rect x="336" y="104" width="175" height="48" rx="4" fill="#1a3a6b"/>
+  <text x="423" y="120" text-anchor="middle" fill="#e3b341" font-size="9.5" font-weight="bold" font-family="sans-serif">PRODUCER: TMA Engine</text>
+  <text x="423" y="134" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">Async loads K+V tiles HBM&#8594;SMEM</text>
+  <text x="423" y="146" text-anchor="middle" fill="#79d99a" font-size="8.5" font-family="sans-serif">Zero SM cycles consumed</text>
+  <!-- Consumer warp group: WGMMA -->
+  <rect x="520" y="104" width="175" height="48" rx="4" fill="#1a7a3a" opacity=".85"/>
+  <text x="607" y="120" text-anchor="middle" fill="#e3b341" font-size="9.5" font-weight="bold" font-family="sans-serif">CONSUMER: WGMMA</text>
+  <text x="607" y="134" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">Q*K^T on SMEM tile N</text>
+  <text x="607" y="146" text-anchor="middle" fill="#79d99a" font-size="8.5" font-family="sans-serif">Runs simultaneously!</text>
+  <!-- Arrow between -->
+  <line x1="511" y1="128" x2="520" y2="128" stroke="#e3b341" stroke-width="2"/>
+  <text x="515" y="124" text-anchor="middle" fill="#e3b341" font-size="8" font-family="sans-serif">&#8596;</text>
+  <!-- Accumulator tile -->
+  <rect x="336" y="162" width="360" height="42" rx="3" fill="#1a7a3a" opacity=".7"/>
+  <text x="516" y="180" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">O tile accumulator &#8212; stays in FP32 registers across all K/V tiles</text>
+  <text x="516" y="196" text-anchor="middle" fill="#c8f0d8" font-size="8.5" font-family="sans-serif">Online softmax with running correction (no re-read from HBM)</text>
+  <!-- FAv3 stats -->
+  <rect x="328" y="225" width="388" height="85" rx="5" fill="#fff" stroke="#1a7a3a" stroke-width="1"/>
+  <text x="522" y="243" text-anchor="middle" fill="#1c2438" font-size="10" font-weight="bold" font-family="sans-serif">FAv3 H100-Specific Innovations</text>
+  <text x="334" y="260" fill="#1a7a3a" font-size="9.5" font-family="sans-serif">&#8226; WGMMA producer-consumer pipeline: TMA + WGMMA run simultaneously</text>
+  <text x="334" y="274" fill="#1a7a3a" font-size="9.5" font-family="sans-serif">&#8226; FP8 Q*K^T: 2x faster WGMMA throughput with online descaling</text>
+  <text x="334" y="288" fill="#1a7a3a" font-size="9.5" font-family="sans-serif">&#8226; Achieved: 0.75 PFLOPS = 75% of H100 BF16 peak (vs FAv2: 55%)</text>
+  <text x="334" y="302" fill="#888" font-size="9" font-family="sans-serif">&#8226; Memory: O(N) &#8594; context 8K&#8594;256K now feasible on single GPU</text>
+  <!-- Performance bar -->
+  <rect x="15" y="330" width="710" height="7" rx="3" fill="#eee"/>
+  <rect x="15" y="330" width="109" height="7" rx="3" fill="#c0392b"/>
+  <rect x="15" y="330" width="196" height="7" rx="3" fill="#e3b341"/>
+  <rect x="15" y="330" width="267" height="7" rx="3" fill="#1a7a3a"/>
+  <text x="64" y="326" text-anchor="middle" fill="#c0392b" font-size="8" font-family="sans-serif">FAv1: 35%</text>
+  <text x="200" y="326" text-anchor="middle" fill="#a07800" font-size="8" font-family="sans-serif">FAv2: 55%</text>
+  <text x="340" y="326" text-anchor="middle" fill="#1a7a3a" font-size="8" font-family="sans-serif">FAv3: 75% of H100 BF16 peak</text>
+</svg>
+<figcaption><strong>Figure 7.5</strong> &#8212; Flash Attention v3 vs. standard attention. Standard attention materializes an N&#215;N matrix in HBM: at S=8,192 tokens, that is 10.7 GB and 6.4ms of HBM I/O per forward pass. FAv3 tiles Q, K, V computation into SMEM &#8212; the result accumulator stays in FP32 registers across all tile iterations. The H100-specific WGMMA+TMA producer-consumer pipeline runs memory loading and compute simultaneously, reaching 75% of BF16 peak.</figcaption>
+</figure></div>
+
+<h2 id="s77">7.7 Profiling GPU Kernels with Nsight Compute</h2>
+<h3>7.7.1 The Five-Step NCU Analysis Protocol</h3>
+<div class="formula">NCU 5-STEP KERNEL OPTIMIZATION PROTOCOL:
+
+Step 1: BASELINE &#8212; establish ground truth
+  ncu --set basic --kernel-name "my_kernel" -o baseline python run.py
+  Record: TFLOPS achieved, HBM BW%, L2 hit rate, occupancy, wall time
+
+Step 2: ROOFLINE CLASSIFICATION
+  ncu --section SpeedOfLight_RooflineChart --kernel-name "my_kernel" python run.py
+  Decision tree:
+    Point below MEMORY roof   &#8594; memory-bandwidth-bound  &#8594; fix data movement
+    Point below COMPUTE roof  &#8594; compute-bound           &#8594; fix arithmetic efficiency
+    Point near BOTH roofs     &#8594; well-optimized; look for the lower ceiling
+
+Step 3: DEEP-DIVE THE BOTTLENECK
+  Memory-bound:   ncu --section MemoryWorkloadAnalysis ...
+    Check: L1/L2 hit rates, uncoalesced access %, SMEM bank conflicts
+  Compute-bound:  ncu --section ComputeWorkloadAnalysis ...
+    Check: TC utilization %, warp stall reasons, instruction mix
+
+Step 4: APPLY IN PRIORITY ORDER
+  1. Fix uncoalesced memory access          (5-20x speedup)  &#8592; highest ROI
+  2. Align shapes / switch to BF16/FP8     (2-30x speedup if hitting CUDA cores)
+  3. Increase SMEM tile size               (2-5x speedup)
+  4. Tune occupancy / reduce register use  (1.2-2x speedup)
+  5. Software pipelining / async copies    (1.3-1.8x speedup)
+
+Step 5: VALIDATE AND ITERATE
+  Re-run ncu. Did bottleneck improve? Did resolving it expose the next one?
+  Correctness check: compare output tensors numerically against reference.</div>
+
+<h3>7.7.2 Critical NCU Metrics Reference</h3>
+<div class="formula">KEY NSIGHT COMPUTE METRICS FOR AI KERNEL OPTIMIZATION:
+
+TENSOR CORE UTILIZATION:
+  sm__pipe_tensor_cycles_active.avg.pct_of_peak
+  Target: &gt;60% for GEMM kernels
+  Red flag: &lt;30% &#8594; wrong dtype, misaligned shape, or not using tl.dot/WMMA API
+
+MEMORY EFFICIENCY:
+  dram__bytes_read.avg                        &#8212; actual HBM traffic
+  Theoretical minimum (decode):              weight_size * 1 (each weight loaded once)
+  Red flag: actual &gt; 3x theoretical          &#8592; uncoalesced access or excessive recompute
+
+WARP STALL REASONS (what warps wait for):
+  smsp__warp_issue_stall_long_scoreboard     &#8212; waiting for HBM data &#8594; increase tile
+  smsp__warp_issue_stall_barrier            &#8212; __syncthreads() overhead &#8594; pipeline better
+  smsp__warp_issue_stall_mio_throttle       &#8212; memory instruction queue full
+
+  long_scoreboard &gt;20 cycles/warp &#8594; more arithmetic between memory ops
+  barrier         &gt;10 cycles/warp &#8594; overlap loads with computation
+
+OCCUPANCY:
+  sm__warps_active.avg.pct_of_peak_sustained_active &#8212; achieved occupancy %
+  launch__occupancy_limit_registers                   &#8212; registers are binding
+  launch__occupancy_limit_shared_memory              &#8212; SMEM is binding</div>
+
+<h2 id="s78">7.8 Advanced Kernel Techniques</h2>
+<h3>7.8.1 Persistent Kernels &#8212; For Ultra-Low Latency Decode</h3>
+<div class="formula">PERSISTENT KERNEL PATTERN (TPOT targets &lt; 5ms):
+
+Standard: Launch new kernel every decode step
+  480 launches * 5us = 2.4ms overhead (at TPOT=5ms that is 48% of total time!)
+
+Persistent: ONE kernel launch, loops internally
+  Launch once &#8594; loop forever &#8594; 0 launch overhead on subsequent steps
+
+__global__ void persistent_decode(volatile int* step_counter, KVCache* kv, ...) {
+    while (true) {
+        while (atomicRead(step_counter) == my_last_step) { /* spin wait */ }
+        int step = atomicRead(step_counter);
+        execute_decode_step(kv, step, ...);
+        atomicStore(completion_counter, step);
+    }
+}
+
+TRADEOFF: Holds SM slots permanently &#8594; reduces scheduler flexibility
+BEST FOR: TPOT targets &lt;5ms where launch overhead &gt;20% of total time
+ALTERNATIVE: CUDA Graphs (80-90% of persistent kernel benefit, more flexible)</div>
+
+<h3>7.8.2 Tensor Memory Accelerator (TMA) &#8212; H100-Specific <span class="shipped">SHIPPED</span></h3>
+<div class="formula">TMA: DEDICATED HBM &#8594; SMEM DMA ENGINE (H100 ONLY)
+
+WITHOUT TMA (A100 and earlier):
+  Compute warps issue LD/ST instructions to copy HBM &#8594; SMEM
+  During loading: Tensor Cores sit idle &#8594; TC utilization = 0% while copying!
+
+WITH TMA (H100):
+  TMA hardware unit copies HBM &#8594; SMEM asynchronously, consuming ZERO SM cycles
+  Compute warps run WGMMA on tile N while TMA loads tile N+1 in background
+  Result: near-100% TC utilization &#8212; loading is "free" compute time
+
+// Setup: encode tensor layout once
+CUtensorMap tensorMap;
+cuTensorMapEncodeTiled(&amp;tensorMap, CU_TENSOR_MAP_DATA_TYPE_FLOAT16,
+                       2, addr, {M, N}, {TILE_M, TILE_N}, ...);
+
+// In kernel: async tile copy (TMA engine does the work)
+__pipeline_memcpy_async(&amp;smem_tile[0][0], &amp;tensorMap, tile_coords);
+__pipeline_commit();
+wgmma_execute(&amp;output, &amp;smem_prev_A, &amp;smem_prev_B);  // Compute previous tile
+__pipeline_wait_prior(0);                               // Wait for new tile
+
+This is the exact hardware mechanism enabling FAv3's 75% peak efficiency.
+FAv2 on A100: 55% peak &#8212; the 20% gap is entirely explained by missing TMA.</div>
+
+<h2 id="s79">7.9 The Kernel Ecosystem &#8212; Library Selection Guide</h2>
+<div class="diagram-wrap" id="diag-evolution"><figure>
+<svg viewBox="0 0 740 250" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="370" y="20" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">KERNEL LIBRARY HIERARCHY AND SELECTION DECISION TREE</text>
+  <!-- Timeline -->
+  <line x1="40" y1="75" x2="700" y2="75" stroke="#1c2438" stroke-width="2.5"/>
+  <!-- cuBLAS -->
+  <circle cx="80" cy="75" r="10" fill="#1c2438"/>
+  <text x="80" y="50" text-anchor="middle" fill="#1c2438" font-size="10" font-weight="bold" font-family="sans-serif">cuBLAS</text>
+  <text x="80" y="63" text-anchor="middle" fill="#666" font-size="9" font-family="sans-serif">2007</text>
+  <text x="80" y="95" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Closed-source</text>
+  <text x="80" y="108" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Peak GEMM perf</text>
+  <text x="80" y="121" text-anchor="middle" fill="#1a7a3a" font-size="9" font-family="sans-serif">Use: std GEMM</text>
+  <!-- CUTLASS -->
+  <circle cx="260" cy="75" r="10" fill="#7b2d8b"/>
+  <text x="260" y="50" text-anchor="middle" fill="#7b2d8b" font-size="10" font-weight="bold" font-family="sans-serif">CUTLASS 3.x</text>
+  <text x="260" y="63" text-anchor="middle" fill="#666" font-size="9" font-family="sans-serif">2017-present</text>
+  <text x="260" y="95" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Open-source GEMM</text>
+  <text x="260" y="108" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Custom epilogue</text>
+  <text x="260" y="121" text-anchor="middle" fill="#7b2d8b" font-size="9" font-family="sans-serif">Use: custom GEMM</text>
+  <!-- Triton -->
+  <circle cx="450" cy="75" r="13" fill="#e3b341"/>
+  <text x="450" y="50" text-anchor="middle" fill="#a07800" font-size="10" font-weight="bold" font-family="sans-serif">Triton</text>
+  <text x="450" y="63" text-anchor="middle" fill="#666" font-size="9" font-family="sans-serif">2019-present</text>
+  <text x="450" y="95" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Python-level kernel</text>
+  <text x="450" y="108" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Auto-tunes shapes</text>
+  <text x="450" y="121" text-anchor="middle" fill="#1a7a3a" font-size="9" font-weight="bold" font-family="sans-serif">Use: custom ops &#8592;</text>
+  <!-- torch.compile -->
+  <circle cx="640" cy="75" r="13" fill="#1a7a3a"/>
+  <text x="640" y="50" text-anchor="middle" fill="#1a7a3a" font-size="10" font-weight="bold" font-family="sans-serif">torch.compile</text>
+  <text x="640" y="63" text-anchor="middle" fill="#666" font-size="9" font-family="sans-serif">2022-present</text>
+  <text x="640" y="95" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Auto-generates</text>
+  <text x="640" y="108" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Triton kernels</text>
+  <text x="640" y="121" text-anchor="middle" fill="#1a7a3a" font-size="9" font-weight="bold" font-family="sans-serif">Use: zero-code fusion</text>
+  <!-- Decision tree -->
+  <rect x="20" y="140" width="700" height="100" rx="8" fill="#f3f5f8" stroke="#1c2438" stroke-width="1.5"/>
+  <text x="370" y="158" text-anchor="middle" fill="#1c2438" font-size="11" font-weight="bold" font-family="sans-serif">DECISION HIERARCHY</text>
+  <text x="30" y="175" fill="#1c2438" font-size="10" font-family="sans-serif">Standard GEMM?</text>
+  <text x="120" y="175" fill="#1a7a3a" font-size="10" font-weight="bold" font-family="sans-serif">cuBLAS/rocBLAS</text>
+  <text x="250" y="175" fill="#888" font-size="9.5" font-family="sans-serif">(already optimal)</text>
+  <text x="420" y="175" fill="#1c2438" font-size="10" font-family="sans-serif">Attention?</text>
+  <text x="480" y="175" fill="#1a7a3a" font-size="10" font-weight="bold" font-family="sans-serif">Flash Attention v3</text>
+  <text x="620" y="175" fill="#888" font-size="9.5" font-family="sans-serif">(GQA, FP8, causal)</text>
+  <text x="30" y="193" fill="#1c2438" font-size="10" font-family="sans-serif">Elementwise/Norm?</text>
+  <text x="140" y="193" fill="#1a7a3a" font-size="10" font-weight="bold" font-family="sans-serif">torch.compile</text>
+  <text x="230" y="193" fill="#888" font-size="9.5" font-family="sans-serif">(auto-fuses adjacent ops)</text>
+  <text x="420" y="193" fill="#1c2438" font-size="10" font-family="sans-serif">Custom op?</text>
+  <text x="490" y="193" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">Triton</text>
+  <text x="528" y="193" fill="#888" font-size="9.5" font-family="sans-serif">&#8594; target 70%+ roofline</text>
+  <text x="655" y="193" fill="#7b2d8b" font-size="10" font-weight="bold" font-family="sans-serif">then CUTLASS</text>
+  <text x="30" y="211" fill="#1c2438" font-size="10" font-family="sans-serif">AllReduce/Collective?</text>
+  <text x="160" y="211" fill="#2a6099" font-size="10" font-weight="bold" font-family="sans-serif">NCCL (Ch 14)</text>
+  <text x="250" y="211" fill="#888" font-size="9.5" font-family="sans-serif">&#8212; always overlap with compute using CUDA streams, never block on it</text>
+  <text x="30" y="229" fill="#1c2438" font-size="10" font-family="sans-serif">H100-specific features (TMA, WGMMA not in Triton)?</text>
+  <text x="320" y="229" fill="#888" font-size="10" font-weight="bold" font-family="sans-serif">Raw CUDA</text>
+  <text x="390" y="229" fill="#888" font-size="9.5" font-family="sans-serif">&#8212; last resort, expert-only, used for Flash Attention v3 internals</text>
+</svg>
+<figcaption><strong>Figure 7.6</strong> &#8212; GPU kernel library hierarchy and selection decision tree. The correct tool depends on operation type. cuBLAS handles standard GEMM. Flash Attention v3 handles attention. torch.compile provides zero-code operator fusion for elementwise ops. Triton is the workhorse for custom operators. CUTLASS when Triton cannot achieve roofline ceiling. Raw CUDA only for H100-specific hardware features not yet in Triton's API.</figcaption>
+</figure></div>
+
+<h2 id="cookbook">7.10 Profiling Cookbook</h2>
+<div class="cookbook">
+<div class="cookbook-label">&#128300; Profiling Cookbook &#8212; GPU Kernel Diagnosis</div>
+<pre><span class="cmt"># &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
+# SYMPTOM: Training MFU is 40%; target is 65%
+# GOAL: Identify the binding kernel-level bottleneck
+# &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</span>
+
+<span class="cmt"># STEP 1: Timeline profiling &#8212; find the slow kernel</span>
+<span class="cmd">nsys profile \
+  --trace=cuda,nvtx \
+  --output=training_profile \
+  python train.py --max-steps=50</span>
+<span class="out"># Open in Nsight Systems GUI. Look for:
+# - CPU-GPU gaps (CPU-bound issue or launch overhead)
+# - Specific kernels that are 10x longer than neighbors</span>
+
+<span class="cmt"># STEP 2: Roofline-classify the slow kernel</span>
+<span class="cmd">ncu \
+  --section SpeedOfLight_RooflineChart \
+  --kernel-name "flash_attention_fwd_kernel" \
+  --launch-skip 20 --launch-count 3 \
+  -o roofline_analysis python train.py</span>
+<span class="out"># Both SOL &lt;60%: occupancy or launch overhead issue
+# Compute SOL &gt; Memory SOL: compute-bound &#8594; check TC utilization
+# Memory SOL &gt; Compute SOL: memory-bound &#8594; check coalescing, tile size</span>
+
+<span class="cmt"># STEP 3: Full deep-dive analysis</span>
+<span class="cmd">ncu \
+  --set full \
+  --section SpeedOfLight_RooflineChart \
+  --section MemoryWorkloadAnalysis \
+  --section ComputeWorkloadAnalysis \
+  --section WarpStateStatistics \
+  --kernel-name "flash_attention_fwd_kernel" \
+  --launch-skip 10 --launch-count 1 \
+  -o deep_analysis python inference_bench.py</span>
+
+<span class="cmt"># STEP 4: Query Tensor Core utilization</span>
+<span class="cmd">ncu --import deep_analysis.ncu-rep \
+    --query-metrics "sm__pipe_tensor_cycles_active.avg.pct_of_peak"</span>
+<span class="out"># &lt;30%: Not using TCs &#8594; check dtype (must be BF16/FP16/FP8), alignment (mult of 16)
+# 30-60%: TC used but memory-feeding is bottleneck &#8594; increase tile size
+# &gt;60%: Good TC usage &#8594; check if SMEM tiling and pipelining are optimal</span>
+
+<span class="cmt"># STEP 5: AMD equivalent (omniperf + rocprof)</span>
+<span class="cmd">omniperf profile --name my_kernel -- python model.py
+omniperf analyze -p workload_dir/ --filter-dispatch-id "0:20" --roof-only</span>
+<span class="out"># AMD key metrics:
+# SQ_INSTS_VALU    &#8594; vector ALU ops (SM throughput equivalent)
+# TCC_HIT/MISS     &#8594; L2 cache hit rate (MI300X target: &gt;80% for small models)
+# SQ_WAIT_INST_ANY &#8594; stall cycles (equivalent to NCU long_scoreboard)
+# MFMA utilization &#8594; TC equivalent: omniperf &#8594; Compute &#8594; MFMA Utilization %</span>
+
+<span class="cmt"># DECISION TREE SUMMARY:</span>
+<span class="out"># TC &lt;30%          &#8594; Fix dtype / alignment FIRST     (2-30x speedup)
+# Uncoalesced &gt;10% &#8594; Fix memory access pattern      (5-20x speedup)
+# Occupancy &lt;30%   &#8594; Reduce SMEM or registers       (1.5-3x speedup)
+# Barrier stalls   &#8594; Pipeline loads with compute    (1.3-1.8x speedup)
+# HBM &gt;3x minimum  &#8594; Increase tile / add SMEM reuse (2-5x speedup)</span></pre>
+</div>
+
+<h2 id="worked">Worked Example: Quantifying the Cost of a Slow Kernel</h2>
+<div class="worked">
+<div class="worked-label">Worked Example 7.1 &#8212; From 40% MFU to 65% MFU: The Full Cost Math</div>
+<h4>Setup</h4>
+<p>A 512-GPU training cluster running LLaMA-3 70B achieves 40% MFU due to suboptimal kernel configuration: no FP8, misaligned FFN dimensions, Tensor Core utilization at 45%. Target: 65% MFU through three specific kernel interventions. Hardware: 512&#215; H100 SXM5 at $3/GPU-hour (cloud reserved). Training run: 1,000,000 optimizer steps.</p>
+<h4>Step 1: Baseline Throughput</h4>
+<div class="formula">H100 BF16 peak: 989 TFLOPS per GPU
+Current achieved: 40% * 989 = 395.6 TFLOPS/GPU
+512-GPU aggregate: 512 * 395.6 = 202,547 TFLOPS
+
+Model FLOPs per step (LLaMA-3 70B, seq=4096, batch=2048):
+  FLOPs &#8776; 6 * P * S * B = 6 * 70e9 * 4096 * 2048 = 3.53 * 10^18 FLOPs
+
+Step time (current):
+  t = 3.53e18 / (202,547 * 10^12) = 17.4 seconds/step</div>
+
+<h4>Step 2: Target Throughput After Optimization</h4>
+<div class="formula">Target MFU: 65%
+Target throughput: 65% * 989 = 642.9 TFLOPS/GPU
+512-GPU aggregate: 512 * 642.9 = 329,165 TFLOPS
+
+Step time (optimized):
+  t = 3.53e18 / (329,165 * 10^12) = 10.7 seconds/step
+
+Speedup: 17.4 / 10.7 = 1.63x faster training</div>
+
+<h4>Step 3: Cost Savings</h4>
+<div class="formula">TRAINING RUN COST (1,000,000 steps):
+
+Before optimization:
+  Total time = 1e6 * 17.4s = 17,400,000 s = 4,833 hours
+  Cost = 4,833 hours * 512 GPUs * $3/GPU-hr = $7,426,560
+
+After optimization:
+  Total time = 1e6 * 10.7s = 10,700,000 s = 2,972 hours
+  Cost = 2,972 * 512 * $3 = $4,565,760
+
+SAVINGS: $7,426,560 - $4,565,760 = $2,860,800 (~$2.9M saved per run)
+
+THREE INTERVENTIONS DELIVERING THE 40% &#8594; 65% MFU JUMP:
+  1. Enable FP8 + Transformer Engine:      +8-12% MFU
+     (2x GEMM throughput; auto per-layer scaling, zero code changes)
+  2. Fix aligned dimensions (mult of 64):  +5-10% MFU
+     (TC utilization 45% &#8594; 75%+; eliminates silent CUDA core fallback)
+  3. torch.compile with max-autotune:      +5-8% MFU
+     (fusion of elementwise ops; CUDA Graph capture for fixed shapes)
+  Combined expected gain: +18-30% MFU &#8594; 58-70% MFU from 40% baseline</div>
+
+<h4>Step 4: Engineering ROI</h4>
+<div class="formula">Engineering investment:
+  2 engineers * 6 weeks * $250/hr fully loaded = $240,000
+
+First-run savings: $2,860,800
+
+ROI = ($2,860,800 - $240,000) / $240,000 = 10.9x return in first run alone
+
+At 2 major training runs per quarter: $11.4M/year savings
+Kernel optimization at cluster scale is the highest-ROI systems
+engineering investment available to a Principal Performance Architect.</div>
+</div>
+
+<div class="qref" id="qref">
+<h4>Chapter 7 Quick Reference &#8212; Numbers to Know Cold</h4>
+<table>
+<tr><th>Parameter</th><th>H100 SXM5</th><th>MI300X</th><th>Performance Impact</th></tr>
+<tr><td>BF16 Tensor Core peak</td><td>989 TFLOPS</td><td>~1,307 TFLOPS</td><td>Training throughput ceiling</td></tr>
+<tr><td>FP32 CUDA core peak</td><td>33 TFLOPS</td><td>~41 TFLOPS</td><td>Cost of misaligned GEMM</td></tr>
+<tr><td>TC vs CUDA core ratio</td><td>30x</td><td>~32x</td><td>Silent 30x regression if not aligned</td></tr>
+<tr><td>SMEM per SM/CU</td><td>228 KB</td><td>64 KB</td><td>AMD requires smaller tiles</td></tr>
+<tr><td>Register file per SM</td><td>65,536 x 32b</td><td>~65,536 x 32b</td><td>Similar occupancy arithmetic</td></tr>
+<tr><td>L2 Cache</td><td>50 MB</td><td>256 MB</td><td>MI300X: 5x reuse advantage</td></tr>
+<tr><td>HBM bandwidth</td><td>3.35 TB/s</td><td>5.3 TB/s</td><td>Decode throughput ceiling</td></tr>
+<tr><td>Warp / Wavefront</td><td>32 threads</td><td>64 threads</td><td>Tile sizing multiples</td></tr>
+<tr><td>Kernel launch overhead</td><td>~5 &#956;s</td><td>~5 &#956;s</td><td>480 launches = 2.4ms/step</td></tr>
+<tr><td>CUDA Graph overhead</td><td>~0.024ms</td><td>~0.024ms</td><td>100x vs standard launches</td></tr>
+<tr><td>Alignment requirement</td><td>Mult of 16 (64 safe)</td><td>Mult of 16</td><td>Required for TC enablement</td></tr>
+<tr><td>FAv3 achieved efficiency</td><td>75% of BF16 peak</td><td>FAv2: ~60%</td><td>Attention throughput ceiling</td></tr>
+<tr><td>Triton vs cuBLAS</td><td>85-95% parity</td><td>85-95% parity</td><td>10-20x less code</td></tr>
+<tr><td>HBM latency</td><td>~500 cycles</td><td>~500 cycles</td><td>Hidden by occupancy (&gt;50%)</td></tr>
+</table>
+</div>
+
+<div class="takeaways" id="takeaways">
+  <h3>Key Takeaways</h3>
+  <div class="takeaway-group">
+    <div class="tg-label">Core Concepts</div>
+    <ul>
+      <li>The CUDA thread hierarchy (grid &#8594; block &#8594; warp &#8594; thread) maps directly to hardware. The warp (32 threads) is the actual scheduling unit; occupancy is how many warps stay resident to hide ~500-cycle HBM latency.</li>
+      <li>Naive GEMM achieves 0.6% compute utilization: arithmetic intensity of 0.25 FLOP/byte is 1,180x below the H100 ridge point of 295 FLOP/byte. Tiling raises AI to ~2,045 FLOP/byte, converting the kernel from deeply memory-bound to compute-bound.</li>
+      <li>Tensor Cores deliver 30x more throughput than FP32 CUDA cores for matrix multiply &#8212; but only when operands are BF16/FP16/FP8 AND matrix dimensions are multiples of 16. Non-aligned shapes silently fall back to the CUDA core path at 30x regression.</li>
+      <li>Triton programs at the tile level, auto-targets Tensor Cores via <code>tl.dot()</code>, and achieves 85&#8211;95% of cuBLAS throughput. It is the primary tool for custom AI operators including fused elementwise+GEMM sequences.</li>
+    </ul>
+  </div>
+  <div class="takeaway-group">
+    <div class="tg-label">Cost &amp; Productivity Impact</div>
+    <ul>
+      <li>Improving MFU from 40% to 65% on a 512-GPU training run saves ~$2.9M per 1M-step run at $3/GPU-hr. Engineering investment: ~$240K. First-run ROI: 10.9x. Three interventions deliver this: FP8, dimension alignment, and torch.compile.</li>
+      <li>CUDA Graphs eliminate 2.4ms of kernel launch overhead per decode step (480 launches &#215; 5&#956;s). At TPOT=10ms that overhead is 24% of total decode time &#8212; a 10&#8211;30% TPOT improvement with zero changes to the model or kernel implementation.</li>
+      <li>Fusing RMSNorm+Linear in Triton eliminates 2 HBM round-trips (write and re-read intermediate X_norm), delivering 1.5&#8211;2x speedup on that sequence. Operator fusion is the highest-leverage elementwise optimization pattern.</li>
+    </ul>
+  </div>
+  <div class="takeaway-group">
+    <div class="tg-label">Principal-Level Insight</div>
+    <ul>
+      <li>100% occupancy is NOT the optimization goal. A kernel with 50% occupancy and large tiles (high arithmetic intensity) consistently outperforms one at 100% occupancy with small tiles. Always measure end-to-end throughput; occupancy is a diagnostic tool, not the objective.</li>
+      <li>Flash Attention v3's 75% peak efficiency (vs FAv2's 55%) comes entirely from H100-specific hardware: the WGMMA+TMA producer-consumer pipeline runs memory loading and compute simultaneously. This is not available on A100. Kernel performance is hardware-generation-specific &#8212; every new GPU generation requires re-profiling and re-optimization of critical kernels.</li>
+      <li>The kernel selection hierarchy is: cuBLAS &#8594; FlashAttention &#8594; torch.compile &#8594; Triton &#8594; CUTLASS &#8594; raw CUDA. Each step down adds engineering cost. Most custom operators stop at Triton. Raw CUDA is reserved for hardware-specific features (TMA, WGMMA) not yet exposed in Triton's API &#8212; a shrinking set with each Triton release.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="review-questions" id="review">
+  <h3>Review Questions</h3>
+  <div class="rq-tier foundational">
+    <div class="rq-tier-label"><span class="rq-badge">Foundational</span> Build the mental model &#8212; no math required</div>
+    <ol>
+      <li>Explain why warp divergence degrades performance. A causal attention mask sets the upper triangle of the attention matrix to negative infinity. Why does naive attention suffer from warp divergence on this mask, and how does Flash Attention's tiling approach eliminate it?</li>
+      <li>You observe a GPU kernel with 30% occupancy and 25% compute utilization. A colleague says "just increase occupancy to 100% by reducing SMEM usage per block." Why might this make performance <em>worse</em> rather than better? What should you measure instead to validate the change?</li>
+      <li>A model architect sets the hidden dimension of a new transformer to d_model=6,000. What kernel performance problem does this create, and how would you detect it using Nsight Compute? What simple change fixes it?</li>
+    </ol>
+  </div>
+  <div class="rq-tier intermediate">
+    <div class="rq-tier-label"><span class="rq-badge">Intermediate</span> Apply and calculate &#8212; production context</div>
+    <ol>
+      <li>A CUDA kernel on H100 uses 48 registers/thread and 48 KB SMEM/block, with blockSize=256. H100 limits: 65,536 regs/SM, 228 KB SMEM/SM, max 2,048 threads/SM. (a) Calculate achieved occupancy. (b) Which resource is the binding constraint? (c) What single change yields the largest occupancy improvement, and what is the tradeoff risk?</li>
+      <li>An LLM inference system before CUDA Graphs has TPOT=22ms with 480 kernel launches per decode step. After CUDA Graphs, TPOT drops to 19.5ms. (a) What was the kernel launch overhead before? (b) Is this consistent with the ~5&#956;s/launch number? (c) If TPOT target is 8ms, what fraction would launch overhead represent without CUDA Graphs?</li>
+      <li>You profile a Triton attention kernel and find: Tensor Core utilization=12%, Memory throughput=78% of HBM peak. (a) Classify the bottleneck. (b) What three specific changes to the kernel would you attempt first, and in what order? (c) After fixing TC utilization to 68%, memory throughput drops to 45%. What happened, and is this a regression?</li>
+    </ol>
+  </div>
+  <div class="rq-tier principal">
+    <div class="rq-tier-label"><span class="rq-badge">Principal Level</span> Design, decide, and defend &#8212; architecture reviews</div>
+    <ol>
+      <li><strong>Custom operator strategy for a new architecture:</strong> Your team is deploying Mamba-2 (a state-space model) alongside transformer decoders. Mamba-2's core is a selective scan &#8212; not a standard GEMM or attention. (a) Walk through the kernel selection hierarchy for selective scan. (b) Estimate the arithmetic intensity of a selective scan and determine which side of the H100 roofline it likely falls on. (c) Design a Triton kernel strategy: specify tile dimensions, memory access patterns, and expected efficiency vs. roofline. Justify every number with reference to H100 hardware specs.</li>
+      <li><strong>Multi-GPU kernel overlap design:</strong> A training system on 8&#215;H100 with TP=8 has this per-layer sequence: QKV GEMM &#8594; AllReduce &#8594; Attention &#8594; FFN GEMMs &#8594; AllReduce. Current MFU is 52% due to AllReduce blocking compute. Design a kernel overlap strategy using CUDA streams and async collectives to reach 70%+ MFU. What synchronization constraints limit perfect overlap? Quantify expected improvement with numbers, including AllReduce latency for a 70B model parameter shard size.</li>
+      <li><strong>TCO-driven kernel investment ranking:</strong> Three kernel projects: (A) rewrite attention in raw CUDA/TMA &#8212; +15% MFU, 3 engineer-months; (B) fix GEMM alignment across all layers &#8212; +8% MFU, 2 weeks; (C) persistent decode kernel &#8212; &#8722;18% TPOT, inference-only, 6 weeks. Cluster: 60% training, 40% inference, $4M/month hardware. Rank by ROI with full dollar-savings calculation for each project. Which do you fund first, which do you defer, and under what conditions would your ranking change?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="ch-end">
+  &#8212;&#8212;&#8212; End of Chapter 7 &#8212;&#8212;&#8212;<br>
+  <a href="ch08.html">Next: Chapter 8 &#8212; Quantization &amp; Precision Optimization: From FP32 to FP4 &#8594;</a>
+</div>
+
+</div><!-- .page -->
+</body>
+</html>

@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 13 — Speculative Decoding & Mixture of Experts | AI/ML Infrastructure from Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
+.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
+.mem-tier-body{flex:1}
+.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
+.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+.fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+
+/* Content class additions for chapters with custom styling */
+.ch-hdr{margin-bottom:32px;padding-bottom:18px;border-bottom:2px solid #e3b341}
+.pullquote{border-left:4px solid #e3b341;padding:10px 20px;margin:20px 0 24px;background:#fffbf0;font-style:italic;color:#333;border-radius:0 6px 6px 0}
+.pullquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.objectives-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:16px 0}
+.obj-card{background:#f0f6ff;border:1px solid #c5cfe0;border-radius:7px;padding:12px 16px}
+.obj-card h4{color:#2a4a8a;font-style:normal;font-size:12px;margin:0 0 6px}
+.obj-card ul{margin-left:14px}.obj-card li{font-size:11.5px;margin-bottom:3px}
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.card{background:#fff;border:1px solid #d8d4c8;border-radius:6px;padding:13px 16px}
+.card h4{color:#1c2438;font-style:normal;font-size:12.5px;margin:0 0 6px}
+.card .eq{background:#0d1117;color:#b8ddf0;padding:8px 12px;border-radius:4px;font-family:'Courier New',monospace;font-size:10px;margin:6px 0;white-space:pre-wrap}
+.card .note{font-size:11px;color:#666;margin-top:6px}
+.key-facts{background:#f3f5f8;border:2px solid #1c2438;border-radius:8px;padding:14px 18px;margin:16px 0}
+.key-facts h4{color:#1c2438;margin:0 0 8px;font-style:normal}
+.big-eq{text-align:center;font-family:'Courier New',monospace;font-size:15px;color:#1c2438;font-weight:bold;padding:14px;background:#f3f5f8;border-radius:7px;border:2px solid #e3b341;margin:12px 0}
+.tag{display:inline-block;font-family:sans-serif;font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;margin:1px}
+.tag.compute{background:#dbeafe;color:#1e40af}
+.tag.memory{background:#ede9fe;color:#6d28d9}
+.tag.inference{background:#fef3c7;color:#92400e}
+.sc,.sg,.sdiv{display:block}
+.nav-brand,.on,.active{font-weight:700}
+</style>
+</head>
+<body>
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="ch12.html">&#8592; Ch 12</a>
+  <a href="ch14.html">Ch 14 &#8594;</a>
+  <a href="ch06.html">Ch 6</a>
+  <a href="ch11.html">Ch 11</a>
+  <a href="ch17.html">Ch 17</a>
+</div>
+<div id="sidebar">
+  <h4>Chapter 13</h4>
+  <a href="#s1">13.1 Speculative Decoding — Exploiting Verif</a>
+  <a href="#s2">13.2 Draft Model Variants — Four Approaches</a>
+  <a href="#s3">13.3 Mixture of Experts — Architecture and R</a>
+  <a href="#s4">13.4 MoE Infrastructure — Expert Parallelism</a>
+  <a href="#s5">13.5 Profiling Cookbook — Diagnosing in Prod</a>
+  <a href="#s6">13.6 Combining Speculative Decoding and MoE</a>
+  <a href="#s7">13.7 Disaggregated Prefill-Decode — The Next</a>
+  <a href="#s8">13.8 Worked Example: Deploying Speculative D</a>
+</div>
+<div class="page">
+<!-- ── CHAPTER HEADER ─────────────────────────────────────────────── -->
+<div class="ch-label">Chapter 13 · Part IV — Advanced Inference</div>
+<h1 class="ch-title">Speculative Decoding &amp; Mixture of Experts</h1>
+<div class="ch-subtitle">Breaking the Sequential Bottleneck — Draft-Verify Loops, Expert Routing, and Infrastructure at Scale</div>
+<div class="ch-meta">
+    <span>📖 ~55 pages</span>
+    <span>🔗 Prereqs: Ch 6 (Inference), Ch 11 (KV Cache), Ch 4 (Memory)</span>
+    <span>➡ Next: Ch 14 (Networking &amp; Collective Comm.)</span>
+  </div>
+<div class="ch-divider"></div>
+
+<div class="pullquote">
+  "The two most important techniques in modern LLM inference are speculative decoding and Mixture of Experts — one exploits the asymmetry between verification and generation; the other exploits the asymmetry between model knowledge and active computation. Both break the fundamental cost model your intuition was built on."
+  <cite>— Production Inference Engineering Principle</cite>
+</div>
+
+<p>Standard autoregressive decoding has a deep structural flaw: every token requires a full forward pass through the entire model, and these passes are <em>sequential</em> — token N cannot start until token N−1 is complete. At batch size 1, a 70B model on H100 runs at approximately 0.6% GPU compute utilization. The GPU is spending 99.4% of its time waiting for memory. This chapter covers the two most powerful techniques for attacking this problem from opposite directions.</p>
+
+<p><strong>Speculative decoding</strong> exploits the asymmetry between <em>generation</em> and <em>verification</em>. A small draft model proposes K tokens cheaply; the large target model verifies all K in a single parallel forward pass. If the draft is right often enough, you get K tokens per iteration instead of 1 — at a fraction of the cost increase. <strong>Mixture of Experts (MoE)</strong> restructures the model itself: instead of one dense FFN that all tokens pass through, MoE has N specialized experts, routing each token to only K of them. DeepSeek-V3 has 671B total parameters but processes each token through only ~37B — achieving frontier quality at LLaMA-3 70B active compute cost. Together, these techniques represent the production frontier for inference efficiency in 2024–2026.</p>
+
+<div class="objectives" id="objectives">
+  <h4>Learning Objectives</h4>
+  <div class="obj-grid">
+    <div class="obj-col found">
+      <h5>🟢 Foundational</h5>
+      <ul>
+        <li>Explain the draft-verify loop and why output quality is preserved</li>
+        <li>Describe how MoE replaces a dense FFN and why it reduces compute</li>
+        <li>Understand why expert load balance matters for throughput</li>
+      </ul>
+    </div>
+    <div class="obj-col inter">
+      <h5>🟡 Intermediate</h5>
+      <ul>
+        <li>Derive the speculative decoding speedup formula and calculate for given α, K, c</li>
+        <li>Calculate All-to-All communication volume for a given MoE EP configuration</li>
+        <li>Profile acceptance rate and expert balance using production metrics</li>
+      </ul>
+    </div>
+    <div class="obj-col princ">
+      <h5>🟣 Principal Level</h5>
+      <ul>
+        <li>Design optimal spec decode configuration for a production serving system</li>
+        <li>Architect expert placement strategy minimizing cross-node All-to-All</li>
+        <li>Quantify when disaggregated prefill-decode justifies infrastructure complexity</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SECTION 1 ═══════════════════════════════════════════════════ -->
+<h2 id="s1">13.1 Speculative Decoding — Exploiting Verification Asymmetry</h2>
+
+<h3>13.1.1 Why LLM Decode Is Memory-Bound</h3>
+
+<p>Before understanding why speculative decoding works, you need to understand exactly <em>why</em> standard decoding is so inefficient. At batch size 1, each decode step requires loading the full model weights from HBM — once, to process exactly one token.</p>
+
+<div class="formula">DECODE MEMORY-BOUND ANALYSIS (LLaMA-3 70B, batch=1, BF16):
+
+Model memory footprint:
+  70B parameters × 2 bytes/param (BF16) = 140 GB in HBM
+
+Per-token computation:
+  FLOPs per token = 2 × N_params = 2 × 70×10⁹ = 140 GFLOPs
+  Memory read required = 140 GB (entire model must be streamed)
+
+H100 SXM5 specs [SHIPPED]:
+  Peak BF16 FLOPS:      989 TFLOPS
+  HBM3 bandwidth:       3.35 TB/s
+
+Arithmetic Intensity (AI):
+  AI = FLOPs / Memory_bytes = 140 GFLOPs / 140 GB = 1.0 FLOP/byte
+
+H100 ridge point: ~295 FLOP/byte (where compute = bandwidth limited)
+Actual AI: 1.0 FLOP/byte  ←  295× BELOW ridge point
+
+Time analysis:
+  Time (memory-bound):    140 GB / 3.35 TB/s = 41.8 ms/token
+  Time (compute-bound):   140 GFLOPs / 989 TFLOPS = 0.14 ms/token
+  Actual bottleneck: MEMORY — by 295× margin
+
+GPU compute utilization: 0.14ms / 41.8ms = 0.34% ← the GPU is nearly idle!</div>
+
+<p>The conclusion is stark: at batch size 1, the H100 is 99.7% idle waiting for memory. Speculative decoding attacks this by ensuring that each time we load the full 140 GB model from memory, we extract more than one token of value from that load.</p>
+
+<h3 id="s1-2">13.1.2 The Draft-Verify Loop</h3>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 420" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:780px;display:block;margin:0 auto">
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#1c2438"/>
+    </marker>
+    <marker id="arr2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#27ae60"/>
+    </marker>
+    <marker id="arr3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#c0392b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="780" height="420" fill="#f3f5f8" rx="8"/>
+
+  <!-- Title -->
+  <text x="390" y="26" font-family="sans-serif" font-size="12" font-weight="700" fill="#1c2438" text-anchor="middle" letter-spacing="1">SPECULATIVE DECODING — DRAFT-VERIFY LOOP</text>
+
+  <!-- DRAFT PHASE box -->
+  <rect x="20" y="45" width="350" height="165" rx="6" fill="#e8f4e8" stroke="#27ae60" stroke-width="2"/>
+  <text x="195" y="64" font-family="sans-serif" font-size="10" font-weight="700" fill="#27ae60" text-anchor="middle" letter-spacing="1">① DRAFT PHASE  (Small Model — Fast)</text>
+
+  <!-- Draft tokens -->
+  <rect x="35" y="75" width="310" height="35" rx="4" fill="white" stroke="#27ae60" stroke-width="1"/>
+  <text x="190" y="90" font-family="sans-serif" font-size="9" fill="#333" text-anchor="middle">Draft model M_q (7B) — Sequential K=5 steps</text>
+  <text x="190" y="103" font-family="'Courier New',monospace" font-size="10" fill="#27ae60" text-anchor="middle">Context → t₁ → t₂ → t₃ → t₄ → t₅</text>
+
+  <!-- Time annotation -->
+  <rect x="35" y="120" width="310" height="25" rx="3" fill="rgba(39,174,96,0.12)"/>
+  <text x="190" y="136" font-family="sans-serif" font-size="9" fill="#1a7a3a" text-anchor="middle">Time: 5 × (14 GB / 3.35 TB/s) ≈ 21 ms  |  7B × 2B = 14 GB loaded/step</text>
+
+  <!-- Model size note -->
+  <rect x="35" y="155" width="145" height="40" rx="3" fill="white" stroke="#aaa" stroke-width="1"/>
+  <text x="112" y="172" font-family="sans-serif" font-size="9" fill="#555" text-anchor="middle">Draft: 7B (14 GB)</text>
+  <text x="112" y="185" font-family="sans-serif" font-size="8.5" fill="#888" text-anchor="middle">10× less memory than target</text>
+  <rect x="198" y="155" width="147" height="40" rx="3" fill="rgba(39,174,96,0.1)" stroke="#27ae60" stroke-width="1"/>
+  <text x="271" y="172" font-family="sans-serif" font-size="9" fill="#27ae60" text-anchor="middle">α = P(draft accepted)</text>
+  <text x="271" y="185" font-family="sans-serif" font-size="8.5" fill="#555" text-anchor="middle">chat: 0.65–0.82  code: 0.85–0.95</text>
+
+  <!-- VERIFY PHASE box -->
+  <rect x="410" y="45" width="350" height="165" rx="6" fill="#fef3e2" stroke="#e3b341" stroke-width="2"/>
+  <text x="585" y="64" font-family="sans-serif" font-size="10" font-weight="700" fill="#a55000" text-anchor="middle" letter-spacing="1">② VERIFY PHASE  (Target Model — ONE Pass)</text>
+
+  <rect x="425" y="75" width="320" height="35" rx="4" fill="white" stroke="#e3b341" stroke-width="1"/>
+  <text x="585" y="90" font-family="sans-serif" font-size="9" fill="#333" text-anchor="middle">Target model M_p (70B) — ALL K+1 positions in PARALLEL</text>
+  <text x="585" y="103" font-family="'Courier New',monospace" font-size="10" fill="#a55000" text-anchor="middle">Context + [t₁,t₂,t₃,t₄,t₅] → p̂(t₁), p̂(t₂), …, p̂(t₆)</text>
+
+  <rect x="425" y="120" width="320" height="25" rx="3" fill="rgba(227,179,65,0.15)"/>
+  <text x="585" y="136" font-family="sans-serif" font-size="9" fill="#a55000" text-anchor="middle">Time: 1× forward pass ≈ 42 ms  |  Same cost regardless of K!</text>
+
+  <rect x="425" y="155" width="145" height="40" rx="3" fill="white" stroke="#aaa" stroke-width="1"/>
+  <text x="497" y="172" font-family="sans-serif" font-size="9" fill="#555" text-anchor="middle">Target: 70B (140 GB)</text>
+  <text x="497" y="185" font-family="sans-serif" font-size="8.5" fill="#888" text-anchor="middle">Loaded once per K tokens</text>
+  <rect x="578" y="155" width="147" height="40" rx="3" fill="rgba(227,179,65,0.15)" stroke="#e3b341" stroke-width="1"/>
+  <text x="651" y="172" font-family="sans-serif" font-size="9" fill="#a55000" text-anchor="middle">KEY INSIGHT</text>
+  <text x="651" y="185" font-family="sans-serif" font-size="8.5" fill="#555" text-anchor="middle">Verify K tokens at cost of 1!</text>
+
+  <!-- Arrow between phases -->
+  <line x1="370" y1="127" x2="408" y2="127" stroke="#1c2438" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="389" y="121" font-family="sans-serif" font-size="8" fill="#1c2438" text-anchor="middle">draft</text>
+  <text x="389" y="133" font-family="sans-serif" font-size="8" fill="#1c2438" text-anchor="middle">tokens</text>
+
+  <!-- ACCEPT/REJECT Phase -->
+  <rect x="20" y="230" width="740" height="90" rx="6" fill="#f8f0ff" stroke="#7b2d8b" stroke-width="2"/>
+  <text x="390" y="248" font-family="sans-serif" font-size="10" font-weight="700" fill="#7b2d8b" text-anchor="middle" letter-spacing="1">③ ACCEPT / REJECT  (Preserves Exact Target Distribution)</text>
+
+  <!-- Token chips -->
+  <rect x="38" y="260" width="68" height="42" rx="5" fill="#e8fff0" stroke="#27ae60" stroke-width="2"/>
+  <text x="72" y="278" font-family="sans-serif" font-size="10" font-weight="700" fill="#1a7a3a" text-anchor="middle">t₁</text>
+  <text x="72" y="292" font-family="sans-serif" font-size="8" fill="#1a7a3a" text-anchor="middle">✓ ACCEPT</text>
+  <text x="72" y="303" font-family="sans-serif" font-size="7.5" fill="#888" text-anchor="middle">p/q ≥ rand</text>
+
+  <rect x="118" y="260" width="68" height="42" rx="5" fill="#e8fff0" stroke="#27ae60" stroke-width="2"/>
+  <text x="152" y="278" font-family="sans-serif" font-size="10" font-weight="700" fill="#1a7a3a" text-anchor="middle">t₂</text>
+  <text x="152" y="292" font-family="sans-serif" font-size="8" fill="#1a7a3a" text-anchor="middle">✓ ACCEPT</text>
+  <text x="152" y="303" font-family="sans-serif" font-size="7.5" fill="#888" text-anchor="middle">p/q ≥ rand</text>
+
+  <rect x="198" y="260" width="68" height="42" rx="5" fill="#e8fff0" stroke="#27ae60" stroke-width="2"/>
+  <text x="232" y="278" font-family="sans-serif" font-size="10" font-weight="700" fill="#1a7a3a" text-anchor="middle">t₃</text>
+  <text x="232" y="292" font-family="sans-serif" font-size="8" fill="#1a7a3a" text-anchor="middle">✓ ACCEPT</text>
+  <text x="232" y="303" font-family="sans-serif" font-size="7.5" fill="#888" text-anchor="middle">p/q ≥ rand</text>
+
+  <rect x="278" y="260" width="68" height="42" rx="5" fill="#fff0f0" stroke="#c0392b" stroke-width="2"/>
+  <text x="312" y="278" font-family="sans-serif" font-size="10" font-weight="700" fill="#c0392b" text-anchor="middle">t₄</text>
+  <text x="312" y="292" font-family="sans-serif" font-size="8" fill="#c0392b" text-anchor="middle">✗ REJECT</text>
+  <text x="312" y="303" font-family="sans-serif" font-size="7.5" fill="#888" text-anchor="middle">resample</text>
+
+  <rect x="358" y="260" width="68" height="42" rx="5" fill="#f0f0f0" stroke="#aaa" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="392" y="278" font-family="sans-serif" font-size="10" fill="#aaa" text-anchor="middle">t₅</text>
+  <text x="392" y="292" font-family="sans-serif" font-size="8" fill="#aaa" text-anchor="middle">— SKIP —</text>
+  <text x="392" y="303" font-family="sans-serif" font-size="7.5" fill="#bbb" text-anchor="middle">after reject</text>
+
+  <!-- Result annotation -->
+  <rect x="445" y="258" width="300" height="48" rx="4" fill="rgba(123,45,139,0.08)" stroke="#7b2d8b" stroke-width="1"/>
+  <text x="595" y="275" font-family="sans-serif" font-size="9.5" font-weight="700" fill="#7b2d8b" text-anchor="middle">Iteration result: 3 accepted + 1 resampled = 4 tokens</text>
+  <text x="595" y="291" font-family="sans-serif" font-size="8.5" fill="#555" text-anchor="middle">Total time: 21ms (draft) + 42ms (verify) = 63ms</text>
+  <text x="595" y="303" font-family="sans-serif" font-size="8.5" fill="#1a7a3a" font-weight="700" text-anchor="middle">TPOT: 63ms/4 = 15.8ms  vs  41.8ms standard = 2.6× speedup</text>
+
+  <!-- Guarantee box -->
+  <rect x="20" y="335" width="740" height="45" rx="5" fill="#1c2438" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="390" y="355" font-family="sans-serif" font-size="9.5" fill="#e3b341" text-anchor="middle" font-weight="700">OUTPUT DISTRIBUTION GUARANTEE:</text>
+  <text x="390" y="370" font-family="sans-serif" font-size="9" fill="#ccc" text-anchor="middle">Accept criterion min(1, p_i/q_i) + residual resampling on rejection → output is statistically IDENTICAL to standard decoding. Not an approximation.</text>
+
+  <!-- Time axis -->
+  <text x="390" y="408" font-family="sans-serif" font-size="8.5" fill="#888" text-anchor="middle">Standard: 5 × 41.8ms = 209ms for 5 tokens  |  Speculative: 63ms for 4 tokens  |  Throughput: 3.3× improvement</text>
+</svg>
+<figcaption>Fig 13.1 — The Speculative Decoding draft-verify loop. The target model (70B) is loaded from HBM exactly once per iteration to verify K draft tokens in parallel — the same cost as generating 1 token. At α=0.75 and K=5, this delivers 2.4–2.6× TPOT improvement with zero quality degradation.</figcaption>
+</div>
+
+<h3>13.1.3 The Speedup Formula — Derived from First Principles</h3>
+
+<div class="formula">SPEEDUP DERIVATION:
+
+Let:
+  α  = acceptance rate (P(any individual draft token is accepted))
+  K  = draft tokens proposed per iteration
+  c  = cost_draft / cost_target = ratio of forward pass times
+       (7B draft / 70B target: c ≈ 7/70 = 0.10)
+
+Expected tokens accepted per iteration:
+  E[tokens] = Σ_{i=0}^{K} (i+1) × P(exactly i accepted)
+            = (1 - α^{K+1}) / (1 - α)
+
+  Intuition: if α=1.0 all the time, E[tokens] = K+1 (perfect, always accept all)
+             if α=0.0 all the time, E[tokens] = 1 (always reject first token)
+
+Time per iteration (normalized to T_target = 1):
+  T_iter = K × T_draft + T_target = K × c + 1
+
+Speedup over standard (1 token per T_target):
+  Speedup = E[tokens] / T_iter
+           = [(1 - α^{K+1}) / (1 - α)] / (K × c + 1)
+
+PROFITABILITY CONDITION (when is spec decode worth it?):
+  Speedup > 1.0
+  ⟺ (1 - α^{K+1}) / (1 - α) > (K × c + 1)
+  ⟺ E[tokens] > K × c + 1
+
+  For c=0.10, K=5: need E[tokens] > 1.5 → need α > 0.26
+  For c=0.10, K=3: need E[tokens] > 1.3 → need α > 0.19
+  In practice: if model families are related (7B → 70B), α ≥ 0.65 almost always
+
+NUMERICAL EXAMPLES (c = 0.10):
+  K=5, α=0.60:  E=2.10,  T_norm=1.50  → Speedup = 1.40×
+  K=5, α=0.70:  E=2.83,  T_norm=1.50  → Speedup = 1.89×
+  K=5, α=0.80:  E=3.48,  T_norm=1.50  → Speedup = 2.32×
+  K=5, α=0.90:  E=4.21,  T_norm=1.50  → Speedup = 2.81×
+  K=5, α=0.95:  E=4.58,  T_norm=1.50  → Speedup = 3.05×
+
+  K=8, α=0.80:  E=4.36,  T_norm=1.80  → Speedup = 2.42×  ← K=8 barely better than K=5!
+  K=8, α=0.90:  E=5.70,  T_norm=1.80  → Speedup = 3.17×
+
+KEY INSIGHT: Speedup is FAR more sensitive to α than to K.
+  Increasing K from 5→8 at α=0.80: 2.32→2.42 = +4% improvement
+  Increasing α from 0.80→0.90 at K=5: 2.32→2.81 = +21% improvement
+  Invest in improving acceptance rate (better draft model, EAGLE), not just K.</div>
+
+<!-- ── SPEEDUP CURVE DIAGRAM ──────────────────────────────────────── -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 720 310" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:720px;display:block;margin:0 auto">
+  <rect width="720" height="310" fill="#f3f5f8" rx="8"/>
+  <text x="360" y="24" font-family="sans-serif" font-size="11" font-weight="700" fill="#1c2438" text-anchor="middle">SPECULATIVE DECODING SPEEDUP vs ACCEPTANCE RATE α</text>
+  <text x="360" y="37" font-family="sans-serif" font-size="9" fill="#888" text-anchor="middle">c = 0.10 (draft model is 10× cheaper than target)</text>
+
+  <!-- Axes -->
+  <line x1="70" y1="250" x2="680" y2="250" stroke="#1c2438" stroke-width="1.5"/>
+  <line x1="70" y1="250" x2="70" y2="55" stroke="#1c2438" stroke-width="1.5"/>
+
+  <!-- X axis labels -->
+  <text x="70"  y="264" font-family="sans-serif" font-size="9" fill="#555" text-anchor="middle">0.5</text>
+  <text x="132" y="264" font-family="sans-serif" font-size="9" fill="#555" text-anchor="middle">0.55</text>
+  <text x="194" y="264" font-family="sans-serif" font-size="9" fill="#555" text-anchor="middle">0.60</text>
+  <text x="256" y="264" font-family="sans-serif" font-size="9" fill="#555" text-anchor="middle">0.65</text>
+  <text x="318" y="264" font-family="sans-serif" font-size="9" fill="#555" text-anchor="middle">0.70</text>
+  <text x="380" y="264" font-family="sans-serif" font-size="9" fill="#555" text-anchor="middle">0.75</text>
+  <text x="442" y="264" font-family="sans-serif" font-size="9" fill="#555" text-anchor="middle">0.80</text>
+  <text x="504" y="264" font-family="sans-serif" font-size="9" fill="#555" text-anchor="middle">0.85</text>
+  <text x="566" y="264" font-family="sans-serif" font-size="9" fill="#555" text-anchor="middle">0.90</text>
+  <text x="628" y="264" font-family="sans-serif" font-size="9" fill="#555" text-anchor="middle">0.95</text>
+  <text x="375" y="278" font-family="sans-serif" font-size="9" fill="#555" text-anchor="middle">Acceptance Rate α</text>
+
+  <!-- Y axis labels (speedup 1×–4×) -->
+  <!-- 1× = y250, 2× = y178, 3× = y106, 4× = y34 -->
+  <text x="62" y="253" font-family="sans-serif" font-size="9" fill="#555" text-anchor="end">1×</text>
+  <text x="62" y="181" font-family="sans-serif" font-size="9" fill="#555" text-anchor="end">2×</text>
+  <text x="62" y="109" font-family="sans-serif" font-size="9" fill="#555" text-anchor="end">3×</text>
+  <text x="62" y="57"  font-family="sans-serif" font-size="9" fill="#555" text-anchor="end">4×</text>
+  <text x="20" y="155" font-family="sans-serif" font-size="9" fill="#555" text-anchor="middle" transform="rotate(-90,20,155)">Throughput Speedup</text>
+
+  <!-- Grid lines -->
+  <line x1="70" y1="181" x2="680" y2="181" stroke="#ddd" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="70" y1="109" x2="680" y2="109" stroke="#ddd" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <!-- K=3 curve (green, lighter) — speedup = (1-α^4)/(1-α) / (3×0.1+1) = /1.3 -->
+  <!-- α: 0.5→0.55→0.60→0.65→0.70→0.75→0.80→0.85→0.90→0.95 -->
+  <!-- E = (1-α^4)/(1-α), speedup = E/1.3 -->
+  <!-- 0.5: E=1.9375/0.5=1.875, sp=1.442; 0.55: 2.07, sp=1.59; 0.6: 2.25, sp=1.73 -->
+  <!-- 0.65: 2.48, sp=1.90; 0.70: 2.74, sp=2.11; 0.75: 3.06, sp=2.35 -->
+  <!-- 0.80: 3.36, sp=2.59; 0.85: 3.73, sp=2.87; 0.90: 4.09, sp=3.15; 0.95: 4.52, sp=3.48 -->
+  <!-- map: sp=1×→y250; sp=4×→y34; 1 unit = (250-34)/3 = 72 -->
+  <!-- y = 250 - (sp-1)*72 -->
+  <!-- K3: y=250-(1.44-1)*72=218, 250-(1.59-1)*72=207,250-(1.73-1)*72=197 -->
+  <polyline points="70,218 132,207 194,197 256,183 318,169 380,151 442,132 504,113 566,94 628,71"
+    fill="none" stroke="#27ae60" stroke-width="2" stroke-dasharray="6,3"/>
+
+  <!-- K=5 curve (gold) — /1.5 -->
+  <!-- 0.5: E=1.96875/0.5=... wait, for K=5: E=(1-α^6)/(1-α) -->
+  <!-- 0.5: (1-0.0156)/0.5=1.969, sp=1.313; 0.55: (1-0.0277)/0.45=2.161, sp=1.44 -->
+  <!-- 0.60: (1-0.0467)/0.40=2.383, sp=1.59; 0.65: 2.623, sp=1.75 -->
+  <!-- 0.70: 2.898, sp=1.93; 0.75: 3.215, sp=2.14; 0.80: 3.584, sp=2.39 -->
+  <!-- 0.85: 4.007, sp=2.67; 0.90: 4.507, sp=3.01; 0.95: 4.824, sp=3.22 -->
+  <polyline points="70,232 132,221 194,207 256,194 318,181 380,166 442,148 504,127 566,103 628,88"
+    fill="none" stroke="#e3b341" stroke-width="3"/>
+
+  <!-- K=8 curve (navy blue) — /1.8 -->
+  <!-- K=8: E=(1-α^9)/(1-α) -->
+  <!-- 0.5: (1-0.00195)/0.5=1.996, sp=1.109; 0.60: 2.497, sp=1.387 -->
+  <!-- 0.70: 3.162, sp=1.757; 0.75: 3.59, sp=1.994; 0.80: 4.11, sp=2.28 -->
+  <!-- 0.85: 4.80, sp=2.67; 0.90: 5.68, sp=3.16; 0.95: 6.24, sp=3.47 -->
+  <polyline points="70,241 132,234 194,225 256,212 318,197 380,181 442,163 504,138 566,107 628,81"
+    fill="none" stroke="#1c2438" stroke-width="2" stroke-dasharray="8,3"/>
+
+  <!-- Production zone shading -->
+  <rect x="380" y="55" width="300" height="200" fill="rgba(39,174,96,0.05)" stroke="none"/>
+  <text x="530" y="72" font-family="sans-serif" font-size="8.5" fill="#1a7a3a" text-anchor="middle">Production zone</text>
+  <text x="530" y="82" font-family="sans-serif" font-size="8" fill="#1a7a3a" text-anchor="middle">(chat: α≥0.75, code: α≥0.85)</text>
+
+  <!-- Annotation for K=5 at α=0.80 -->
+  <circle cx="442" cy="148" r="5" fill="#e3b341"/>
+  <line x1="442" y1="148" x2="470" y2="125" stroke="#a55000" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="478" y="122" font-family="sans-serif" font-size="8.5" fill="#a55000" text-anchor="start">K=5, α=0.80 → 2.39×</text>
+
+  <!-- Annotation for K=5 at α=0.90 -->
+  <circle cx="566" cy="103" r="5" fill="#e3b341"/>
+  <line x1="566" y1="103" x2="594" y2="88" stroke="#a55000" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="600" y="86" font-family="sans-serif" font-size="8.5" fill="#a55000" text-anchor="start">K=5, α=0.90 → 3.0×</text>
+
+  <!-- Legend -->
+  <line x1="80" y1="290" x2="110" y2="290" stroke="#27ae60" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="115" y="294" font-family="sans-serif" font-size="9" fill="#555">K=3</text>
+  <line x1="155" y1="290" x2="185" y2="290" stroke="#e3b341" stroke-width="3"/>
+  <text x="190" y="294" font-family="sans-serif" font-size="9" fill="#555">K=5 (recommended)</text>
+  <line x1="300" y1="290" x2="330" y2="290" stroke="#1c2438" stroke-width="2" stroke-dasharray="8,3"/>
+  <text x="335" y="294" font-family="sans-serif" font-size="9" fill="#555">K=8 (diminishing returns)</text>
+</svg>
+<figcaption>Fig 13.2 — Speculative decoding speedup as a function of acceptance rate α for K=3, 5, and 8. Note that K=8 provides minimal improvement over K=5 at low α. The production sweet spot is K=5 with α≥0.75, achievable with a same-family draft model (e.g., LLaMA-3 8B drafting for LLaMA-3 70B).</figcaption>
+</div>
+
+<!-- ══ SECTION 2 ═══════════════════════════════════════════════════ -->
+<h2 id="s2">13.2 Draft Model Variants — Four Approaches</h2>
+
+<p>The core algorithm is the same for all variants; what differs is how draft tokens are generated. The tradeoff is memory overhead vs acceptance rate vs deployment complexity.</p>
+
+<table>
+  <thead>
+    <tr><th>Approach</th><th>Draft Source</th><th>Memory Overhead</th><th>Acceptance Rate α</th><th>Typical Speedup</th><th>Best Use Case</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>Separate Small Model</strong></td><td>Same-family smaller model (e.g. LLaMA-3 8B → 70B)</td><td class="warn">+16 GB (BF16 8B)</td><td class="good">0.75–0.92</td><td class="good">2.3–3.6×</td><td>Code generation, structured output</td></tr>
+    <tr><td><strong>EAGLE / EAGLE-2</strong></td><td>~200M param head on target hidden state</td><td class="good">~400 MB</td><td class="good">0.85–0.93</td><td class="good">3.0–3.96×</td><td>Best overall; fine-tune on 200K samples</td></tr>
+    <tr><td><strong>Medusa Heads</strong></td><td>4–5 MLP heads on frozen target</td><td class="good">~2 GB</td><td>0.65–0.80</td><td>2.0–2.5×</td><td>Memory-constrained; one-day fine-tune</td></tr>
+    <tr><td><strong>NGram / Lookup</strong></td><td>Prompt n-gram pattern matching</td><td class="good">~0 MB</td><td>0.40–0.70</td><td class="warn">1.3–1.7×</td><td>RAG workloads, document Q&amp;A, zero cost</td></tr>
+  </tbody>
+</table>
+
+<div class="callout blue">
+  <strong>EAGLE: Why Hidden-State Drafts Win</strong>
+  Standard spec decode uses the draft model's <em>output tokens</em> to generate proposals. EAGLE uses the target model's <em>last hidden state</em> as additional context for the draft head — giving it access to the target's internal representation of what comes next. This is why EAGLE achieves α=0.85–0.93 even with a ~200M param draft head, vs ~0.80–0.88 for a 7B separate model. The fine-tuning requirement is modest: 1 GPU-hour on 200K samples.
+</div>
+
+<div class="callout">
+  <strong>Draft Model Selection Constraint — Non-Negotiable</strong>
+  Draft and target models MUST share an identical vocabulary and tokenizer. If tokenization differs even by one token ID remapping, the accepted tokens represent different text than the target expected — producing corrupted output. This is why Mistral-7B is the canonical draft for Mixtral-8×7B, not an unrelated 7B model. Before deploying any spec decode configuration, verify: <code>draft_tokenizer.vocab == target_tokenizer.vocab</code>.
+</div>
+
+<!-- ══ SECTION 3 ═══════════════════════════════════════════════════ -->
+<h2 id="s3">13.3 Mixture of Experts — Architecture and Routing</h2>
+
+<h3>13.3.1 The Dense FFN Problem and MoE Solution</h3>
+
+<p>In a standard transformer, every token passes through the same Feed-Forward Network (FFN) at every layer. This is computationally straightforward but wasteful: a token about astrophysics and a token about cooking both activate the same FFN weights, even though those tasks require entirely different specialized knowledge. The MoE insight is to replace one monolithic FFN with N smaller specialized expert FFNs, routing each token to only the K most relevant ones.</p>
+
+<div class="formula">DENSE vs MoE COMPUTE COMPARISON:
+
+Dense FFN:
+  FFN_dense(x) = W₂ · GELU(W₁ · x)
+  W₁ ∈ R^{4d × d},  W₂ ∈ R^{d × 4d}
+  
+  FLOPs per token: 2 × 2 × d × 4d = 16d²
+  Memory required: 8d² parameters (all loaded every token)
+
+MoE FFN:
+  FFN_MoE(x) = Σᵢ∈top_K(x)  gᵢ(x) · Expert_i(x)
+  
+  Expert_i = independent FFN with its own weights
+  gᵢ(x) = router weight (Softmax output, renormalized over top-K)
+  
+  FLOPs per token: K × 16d² (only K experts execute)
+  Memory required: N × 8d² total, but only K × 8d² loaded per token
+
+COST COMPARISON (d=4096, N=8 experts, K=2):
+  Dense: compute = 16 × 4096² = 268 MFLOPs/token
+         memory = 8 × 4096² × 2 bytes = 134 MB loaded per token
+  MoE:   compute = 2 × 268 = 536 MFLOPs/token (2× more than dense!)
+         But expert FFNs are 1/8 the size of dense FFN
+         So total MoE weights = 8 × 134/8 = 134 MB total, 2/8 × 134 = 33 MB per token
+
+KEY INSIGHT: MoE has SAME total parameter count flexibility, but only loads
+K/N of the expert weights per token. The quality comes from having 8× more
+parameter capacity, but compute cost is only 2× (K/1 = 2× a single dense FFN).
+
+ACTUAL MODEL COMPARISON [SHIPPED]:
+  Model           Total Params  Active/Token  MMLU   GPU Memory (BF16)
+  ──────────────────────────────────────────────────────────────────────
+  LLaMA-3 70B       70B          70B          80.3%    140 GB (2× H100)
+  Mixtral 8×7B      47B          13B          70.6%     94 GB (2× H100)
+  Mixtral 8×22B    141B          39B          77.8%    282 GB (4× H100)
+  DeepSeek-V3      671B          37B          88.5%   1342 GB (10× H100!)
+  GPT-4 (est)     ~1.8T (MoE)  ~220B (est)   86.4%    ~3.6 TB (est)
+
+PRINCIPLE: Memory scales with total params. Compute scales with active params.
+DeepSeek-V3: frontier quality at LLaMA-3 70B compute, but requires 10× H100s!</div>
+
+<h3>13.3.2 Router Mechanics — How Tokens Are Assigned</h3>
+
+<div class="formula">ROUTER ALGORITHM (per transformer layer, N experts, top-K routing):
+
+Input: token hidden state x ∈ R^{d_model}
+
+Step 1 — Score all experts:
+  logits = W_router · x        [W_router ∈ R^{N × d_model}]
+  scores = Softmax(logits)     [scores ∈ R^N, sum = 1.0]
+
+Step 2 — Select top-K experts:
+  top_k_indices = argsort(scores)[-K:]
+  top_k_weights = scores[top_k_indices]
+  top_k_weights /= sum(top_k_weights)  # Renormalize to sum=1
+
+Step 3 — Compute MoE output:
+  output = Σᵢ∈top_k_indices  top_k_weights[i] × Expert_i(x)
+
+DEEPSEEK-V3 INNOVATION — Shared + Routed Experts:
+  Total: 64 routed experts + 2 shared experts
+  Top-K: top-6 from routed + all 2 shared = K_total = 8 active per token
+  Shared experts ALWAYS activate (learn universal patterns)
+  Routed experts specialize (prevent expert collapse)
+  
+  Sparsity: 6/64 = 9.4% of routed experts active per token
+  This is why DeepSeek-V3 can scale to 671B total with 37B active.</div>
+
+<!-- ── MoE ROUTING DIAGRAM ─────────────────────────────────────────── -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 760 360" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:0 auto">
+  <defs>
+    <marker id="a1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#1c2438"/>
+    </marker>
+    <marker id="a2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#27ae60"/>
+    </marker>
+    <marker id="a3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#7b2d8b"/>
+    </marker>
+  </defs>
+  <rect width="760" height="360" fill="#f3f5f8" rx="8"/>
+  <text x="380" y="24" font-family="sans-serif" font-size="12" font-weight="700" fill="#1c2438" text-anchor="middle">MoE ROUTING — TOKEN DISPATCH AND EXPERT EXECUTION</text>
+
+  <!-- Input token -->
+  <rect x="30" y="140" width="90" height="80" rx="6" fill="#1c2438"/>
+  <text x="75" y="176" font-family="sans-serif" font-size="9.5" fill="#e3b341" text-anchor="middle" font-weight="700">INPUT</text>
+  <text x="75" y="190" font-family="sans-serif" font-size="9" fill="white" text-anchor="middle">Token hidden</text>
+  <text x="75" y="202" font-family="sans-serif" font-size="9" fill="white" text-anchor="middle">state x</text>
+  <text x="75" y="215" font-family="sans-serif" font-size="8" fill="#aaa" text-anchor="middle">[d_model]</text>
+
+  <!-- Router box -->
+  <rect x="155" y="130" width="110" height="100" rx="6" fill="#fffbf0" stroke="#e3b341" stroke-width="2"/>
+  <text x="210" y="155" font-family="sans-serif" font-size="10" font-weight="700" fill="#a55000" text-anchor="middle">ROUTER</text>
+  <text x="210" y="170" font-family="'Courier New',monospace" font-size="8.5" fill="#555" text-anchor="middle">W_router · x</text>
+  <text x="210" y="182" font-family="'Courier New',monospace" font-size="8.5" fill="#555" text-anchor="middle">Softmax(logits)</text>
+  <text x="210" y="196" font-family="sans-serif" font-size="8" fill="#888" text-anchor="middle">scores ∈ R^N</text>
+  <text x="210" y="212" font-family="sans-serif" font-size="8" fill="#888" text-anchor="middle">select top-K</text>
+  <text x="210" y="224" font-family="sans-serif" font-size="8" fill="#1a7a3a" font-weight="700" text-anchor="middle">O(N × d) compute</text>
+
+  <!-- Arrow: input → router -->
+  <line x1="120" y1="180" x2="153" y2="180" stroke="#1c2438" stroke-width="2" marker-end="url(#a1)"/>
+
+  <!-- 8 Experts -->
+  <!-- Expert 1 (selected) -->
+  <rect x="310" y="48" width="80" height="42" rx="4" fill="#e8fff0" stroke="#27ae60" stroke-width="2"/>
+  <text x="350" y="65" font-family="sans-serif" font-size="9" font-weight="700" fill="#1a7a3a" text-anchor="middle">Expert 1</text>
+  <text x="350" y="79" font-family="sans-serif" font-size="8" fill="#1a7a3a" text-anchor="middle">g=0.42 ✓ ACTIVE</text>
+  <line x1="265" y1="160" x2="308" y2="69" stroke="#27ae60" stroke-width="1.5" marker-end="url(#a2)"/>
+
+  <!-- Expert 2 (not selected) -->
+  <rect x="310" y="100" width="80" height="42" rx="4" fill="#f8f8f8" stroke="#ccc" stroke-width="1"/>
+  <text x="350" y="117" font-family="sans-serif" font-size="9" fill="#aaa" text-anchor="middle">Expert 2</text>
+  <text x="350" y="131" font-family="sans-serif" font-size="8" fill="#bbb" text-anchor="middle">g=0.09 — skip</text>
+
+  <!-- Expert 3 (not selected) -->
+  <rect x="310" y="152" width="80" height="42" rx="4" fill="#f8f8f8" stroke="#ccc" stroke-width="1"/>
+  <text x="350" y="169" font-family="sans-serif" font-size="9" fill="#aaa" text-anchor="middle">Expert 3</text>
+  <text x="350" y="183" font-family="sans-serif" font-size="8" fill="#bbb" text-anchor="middle">g=0.07 — skip</text>
+
+  <!-- Expert 4 (not selected) -->
+  <rect x="310" y="204" width="80" height="42" rx="4" fill="#f8f8f8" stroke="#ccc" stroke-width="1"/>
+  <text x="350" y="221" font-family="sans-serif" font-size="9" fill="#aaa" text-anchor="middle">Expert 4</text>
+  <text x="350" y="235" font-family="sans-serif" font-size="8" fill="#bbb" text-anchor="middle">g=0.12 — skip</text>
+
+  <!-- Expert 5 (selected) -->
+  <rect x="310" y="256" width="80" height="42" rx="4" fill="#e8fff0" stroke="#27ae60" stroke-width="2"/>
+  <text x="350" y="273" font-family="sans-serif" font-size="9" font-weight="700" fill="#1a7a3a" text-anchor="middle">Expert 5</text>
+  <text x="350" y="287" font-family="sans-serif" font-size="8" fill="#1a7a3a" text-anchor="middle">g=0.30 ✓ ACTIVE</text>
+  <line x1="265" y1="200" x2="308" y2="277" stroke="#27ae60" stroke-width="1.5" marker-end="url(#a2)"/>
+
+  <!-- Expert 6, 7, 8 (not selected) -->
+  <rect x="310" y="308" width="80" height="32" rx="4" fill="#f8f8f8" stroke="#ccc" stroke-width="1"/>
+  <text x="350" y="329" font-family="sans-serif" font-size="9" fill="#bbb" text-anchor="middle">E6, E7, E8 …</text>
+
+  <!-- Router → experts lines (dashed for inactive) -->
+  <line x1="265" y1="170" x2="308" y2="121" stroke="#ccc" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="265" y1="175" x2="308" y2="173" stroke="#ccc" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="265" y1="185" x2="308" y2="225" stroke="#ccc" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Combine box -->
+  <rect x="430" y="130" width="110" height="100" rx="6" fill="#f0f0ff" stroke="#7b2d8b" stroke-width="2"/>
+  <text x="485" y="160" font-family="sans-serif" font-size="10" font-weight="700" fill="#7b2d8b" text-anchor="middle">COMBINE</text>
+  <text x="485" y="175" font-family="'Courier New',monospace" font-size="8.5" fill="#555" text-anchor="middle">output =</text>
+  <text x="485" y="187" font-family="'Courier New',monospace" font-size="8.5" fill="#555" text-anchor="middle">g₁·E₁(x)</text>
+  <text x="485" y="199" font-family="'Courier New',monospace" font-size="8.5" fill="#555" text-anchor="middle">+ g₅·E₅(x)</text>
+  <text x="485" y="213" font-family="sans-serif" font-size="8" fill="#888" text-anchor="middle">weighted sum</text>
+  <text x="485" y="224" font-family="sans-serif" font-size="8" fill="#7b2d8b" font-weight="700" text-anchor="middle">K/N = 2/8 = 25% active</text>
+
+  <!-- Active experts → Combine arrows -->
+  <line x1="390" y1="69" x2="428" y2="155" stroke="#27ae60" stroke-width="1.5" marker-end="url(#a3)"/>
+  <line x1="390" y1="277" x2="428" y2="195" stroke="#27ae60" stroke-width="1.5" marker-end="url(#a3)"/>
+
+  <!-- Output -->
+  <rect x="580" y="140" width="95" height="80" rx="6" fill="#1c2438"/>
+  <text x="627" y="176" font-family="sans-serif" font-size="9.5" fill="#e3b341" text-anchor="middle" font-weight="700">OUTPUT</text>
+  <text x="627" y="190" font-family="sans-serif" font-size="9" fill="white" text-anchor="middle">Same shape</text>
+  <text x="627" y="202" font-family="sans-serif" font-size="9" fill="white" text-anchor="middle">as input x</text>
+  <text x="627" y="216" font-family="sans-serif" font-size="8" fill="#aaa" text-anchor="middle">[d_model]</text>
+  <line x1="540" y1="180" x2="578" y2="180" stroke="#7b2d8b" stroke-width="2" marker-end="url(#a1)"/>
+
+  <!-- K=2 annotation -->
+  <rect x="310" y="316" width="80" height="35" rx="4" fill="rgba(123,45,139,0.08)" stroke="#7b2d8b" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="350" y="337" font-family="sans-serif" font-size="8" fill="#7b2d8b" text-anchor="middle">K=2 of 8</text>
+
+  <!-- Summary strip -->
+  <rect x="30" y="330" width="270" height="24" rx="4" fill="#1c2438"/>
+  <text x="165" y="346" font-family="sans-serif" font-size="9" fill="#e3b341" text-anchor="middle">Compute cost: K × FFN_dense  |  Quality: f(N × FFN_dense)</text>
+</svg>
+<figcaption>Fig 13.3 — MoE routing for a single token through 8 experts with K=2. The router scores all N experts in O(N×d) compute, selects the top-K, executes those experts in parallel, and combines outputs. The 6 non-selected experts contribute zero compute but their weights remain in memory.</figcaption>
+</div>
+
+<h3>13.3.3 Expert Collapse and Load Balancing</h3>
+
+<p>Without explicit balancing constraints, MoE training degenerates into <em>expert collapse</em> — a positive-feedback loop where the router concentrates tokens on a few experts, those experts improve fastest due to more gradient signal, and the router routes even more tokens to them. The end result: a model with 8 experts that behaves like a model with 1–2.</p>
+
+<div class="formula">LOAD BALANCE LOSS (Auxiliary Loss Approach):
+
+L_total = L_LM + λ × L_balance
+
+Where:
+  L_LM      = standard language modeling loss (cross-entropy)
+  λ         = balance coefficient (typically 0.01–0.1)
+  
+  L_balance = α × N × Σᵢ (fᵢ × Pᵢ)
+  
+  fᵢ = fraction of tokens dispatched to expert i in current batch
+  Pᵢ = average router probability assigned to expert i
+  N  = number of experts
+  
+  Perfect balance: fᵢ = Pᵢ = 1/N for all i → L_balance = 1/N
+  Collapsed state: f₁=1, f₂…fₙ=0 → L_balance = 1 (N× higher)
+
+CAPACITY FACTOR (Inference guardrail):
+
+  capacity_i = (batch_size × K / N) × capacity_factor
+
+  capacity_factor = 1.0: zero token dropping (wastes HBM)
+  capacity_factor = 1.25: allows 25% overflow (standard production)
+  
+  Tokens exceeding capacity: dropped or passed through residual only
+  
+DEEPSEEK-V3 INNOVATION — Auxiliary-Loss-Free Load Balancing:
+  Maintains per-expert bias term b_i, updated each step:
+  
+  router_score_i = g_i(x) + b_i       (biased routing)
+  update: if expert_i overloaded → b_i -= γ
+          if expert_i underloaded → b_i += γ
+  
+  γ = 0.001 (very small updates, prevents routing oscillation)
+  
+  Result: Near-perfect load balance without adding noise to L_LM.
+  This is why DeepSeek-V3 can scale to 256 experts with stable training.</div>
+
+<!-- ══ SECTION 4 ═══════════════════════════════════════════════════ -->
+<h2 id="s4">13.4 MoE Infrastructure — Expert Parallelism and All-to-All</h2>
+
+<h3>13.4.1 Expert Parallelism: A New Dimension</h3>
+
+<p>Dense models use Tensor Parallelism (TP) and Pipeline Parallelism (PP) during inference. MoE introduces a third dimension: Expert Parallelism (EP), where different experts reside on different GPUs. This enables serving a 671B MoE model, but introduces a communication pattern that is fundamentally different from TP AllReduce — and in many ways more expensive.</p>
+
+<div class="formula">EXPERT PARALLEL COMMUNICATION: All-to-All vs AllReduce
+
+ALLREDUCE (Tensor Parallelism):
+  ALL GPUs send SAME data to ALL GPUs
+  Pattern: symmetric, predictable, well-pipelined by NCCL
+  Algorithm: Ring-AllReduce, latency-bound for small messages
+  Use: aggregate partial GEMM results across TP group
+
+ALL-TO-ALL (Expert Parallelism):
+  Each GPU sends DIFFERENT data to EACH OTHER GPU
+  Pattern: IRREGULAR — depends on routing decisions for this batch!
+  Message sizes vary per GPU pair (depends on token distribution)
+  Cannot be predicted statically → NCCL scheduling is harder
+
+TOKEN DISPATCH SEQUENCE (EP=8, 8 experts, 1 per GPU):
+
+  Step 1: LOCAL ROUTING
+    Each GPU runs router on its local token batch
+    → Get (token_id, expert_id) pairs for all local tokens
+  
+  Step 2: ALL-TO-ALL DISPATCH
+    GPU 0 sends tokens for Expert 1 → GPU 1
+    GPU 0 sends tokens for Expert 5 → GPU 5
+    (simultaneously all GPUs send to all other GPUs)
+    Volume = batch × K × d_model × 2 bytes (total, split across EP-1 peers)
+  
+  Step 3: LOCAL EXPERT COMPUTE
+    Each GPU runs GEMM for its local expert on received tokens
+    GEMM: [tokens_received, d_model] × [d_model, d_ff]
+    Problem: with EP=8 and K=2, each GPU receives only batch×K/EP tokens!
+    At batch=32: 32 × 2 / 8 = 8 tokens per expert → tiny GEMM!
+  
+  Step 4: ALL-TO-ALL COMBINE
+    Each GPU sends computed results back to originating GPUs
+    Same volume as dispatch (Step 2)
+  
+  Step 5: WEIGHTED COMBINATION
+    Each GPU combines results from its token's top-K experts
+
+COMMUNICATION VOLUME (per MoE layer):
+  Dispatch  = batch × seq_len × K × d_model × 2 bytes
+  Combine   = same
+  Total     = 2 × batch × seq_len × K × d_model × 2 bytes
+  
+  LLaMA-scale MoE (batch=32, seq=4096, K=2, d=4096, BF16):
+    = 2 × 32 × 4096 × 2 × 4096 × 2 = 8.6 GB per MoE layer per step!
+  
+  For 32 MoE layers: 8.6 GB × 32 = 275 GB per forward pass
+  At IB HDR (50 GB/s effective): 275/50 = 5.5 seconds — untenable!
+  At NVLink within-node (900 GB/s): 275/900 = 0.31 seconds — acceptable</div>
+
+<!-- ── ALL-TO-ALL TOPOLOGY DIAGRAM ──────────────────────────────── -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:0 auto">
+  <defs>
+    <marker id="aarr" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#1c2438"/>
+    </marker>
+    <marker id="aarr2" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#c0392b"/>
+    </marker>
+  </defs>
+  <rect width="760" height="340" fill="#f3f5f8" rx="8"/>
+  <text x="380" y="22" font-family="sans-serif" font-size="11" font-weight="700" fill="#1c2438" text-anchor="middle">EXPERT PLACEMENT STRATEGIES — COMMUNICATION COST IMPACT</text>
+
+  <!-- LEFT: Naive cross-node placement (BAD) -->
+  <rect x="20" y="35" width="340" height="285" rx="6" fill="white" stroke="#c0392b" stroke-width="2"/>
+  <text x="190" y="55" font-family="sans-serif" font-size="10" font-weight="700" fill="#c0392b" text-anchor="middle">❌ NAIVE: Experts spread across nodes</text>
+  <text x="190" y="68" font-family="sans-serif" font-size="8.5" fill="#888" text-anchor="middle">All-to-All crosses InfiniBand (50 GB/s) on every step</text>
+
+  <!-- Node 1 with E1-E2 -->
+  <rect x="35" y="80" width="150" height="60" rx="4" fill="#ffe8e8" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="110" y="98" font-family="sans-serif" font-size="9" fill="#c0392b" text-anchor="middle" font-weight="700">Node 1  (GPU 0–1)</text>
+  <rect x="45" y="105" width="55" height="25" rx="3" fill="white" stroke="#c0392b" stroke-width="1"/>
+  <text x="72" y="121" font-family="sans-serif" font-size="8.5" fill="#c0392b" text-anchor="middle">Expert 1</text>
+  <rect x="110" y="105" width="55" height="25" rx="3" fill="white" stroke="#c0392b" stroke-width="1"/>
+  <text x="137" y="121" font-family="sans-serif" font-size="8.5" fill="#c0392b" text-anchor="middle">Expert 2</text>
+
+  <!-- Node 2 with E3-E4 -->
+  <rect x="190" y="80" width="150" height="60" rx="4" fill="#ffe8e8" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="265" y="98" font-family="sans-serif" font-size="9" fill="#c0392b" text-anchor="middle" font-weight="700">Node 2  (GPU 2–3)</text>
+  <rect x="200" y="105" width="55" height="25" rx="3" fill="white" stroke="#c0392b" stroke-width="1"/>
+  <text x="227" y="121" font-family="sans-serif" font-size="8.5" fill="#c0392b" text-anchor="middle">Expert 3</text>
+  <rect x="265" y="105" width="55" height="25" rx="3" fill="white" stroke="#c0392b" stroke-width="1"/>
+  <text x="292" y="121" font-family="sans-serif" font-size="8.5" fill="#c0392b" text-anchor="middle">Expert 4</text>
+
+  <!-- IB crossing arrow (bad) -->
+  <line x1="190" y1="117" x2="190" y2="117" stroke="#c0392b" stroke-width="1"/>
+  <path d="M 185 148 Q 190 170 195 148" fill="none" stroke="#c0392b" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#aarr2)"/>
+  <text x="190" y="175" font-family="sans-serif" font-size="8" fill="#c0392b" text-anchor="middle" font-weight="700">InfiniBand: 50 GB/s</text>
+  <text x="190" y="186" font-family="sans-serif" font-size="8" fill="#c0392b" text-anchor="middle">EVERY token crosses this link!</text>
+
+  <!-- More nodes -->
+  <rect x="35" y="200" width="305" height="30" rx="4" fill="#ffe8e8" stroke="#c0392b" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="187" y="220" font-family="sans-serif" font-size="8.5" fill="#c0392b" text-anchor="middle">Node 3: Expert 5-6  |  Node 4: Expert 7-8</text>
+
+  <!-- Cost annotation -->
+  <rect x="35" y="242" width="305" height="60" rx="4" fill="rgba(192,57,43,0.08)"/>
+  <text x="187" y="259" font-family="sans-serif" font-size="9" fill="#c0392b" font-weight="700" text-anchor="middle">All-to-All cost (cross-node IB):</text>
+  <text x="187" y="273" font-family="sans-serif" font-size="8.5" fill="#555" text-anchor="middle">275 GB ÷ 50 GB/s = 5.5 sec per forward pass</text>
+  <text x="187" y="287" font-family="sans-serif" font-size="8.5" fill="#c0392b" font-weight="700" text-anchor="middle">18× slower than NVLink — UNACCEPTABLE</text>
+
+  <!-- RIGHT: Optimal within-node placement (GOOD) -->
+  <rect x="400" y="35" width="340" height="285" rx="6" fill="white" stroke="#27ae60" stroke-width="2"/>
+  <text x="570" y="55" font-family="sans-serif" font-size="10" font-weight="700" fill="#27ae60" text-anchor="middle">✓ OPTIMAL: All experts within NVLink domain</text>
+  <text x="570" y="68" font-family="sans-serif" font-size="8.5" fill="#888" text-anchor="middle">EP=8 on one 8-GPU node → All-to-All stays on NVLink</text>
+
+  <!-- Single node with all 8 experts -->
+  <rect x="415" y="80" width="310" height="120" rx="4" fill="#e8fff0" stroke="#27ae60" stroke-width="2"/>
+  <text x="570" y="98" font-family="sans-serif" font-size="9" fill="#27ae60" text-anchor="middle" font-weight="700">Node 1  (8 GPUs, NVLink 4.0, 900 GB/s)</text>
+
+  <!-- 8 expert boxes -->
+  <rect x="422" y="106" width="65" height="28" rx="3" fill="white" stroke="#27ae60" stroke-width="1"/>
+  <text x="454" y="124" font-family="sans-serif" font-size="8" fill="#1a7a3a" text-anchor="middle">Expert 1</text>
+  <rect x="495" y="106" width="65" height="28" rx="3" fill="white" stroke="#27ae60" stroke-width="1"/>
+  <text x="527" y="124" font-family="sans-serif" font-size="8" fill="#1a7a3a" text-anchor="middle">Expert 2</text>
+  <rect x="568" y="106" width="65" height="28" rx="3" fill="white" stroke="#27ae60" stroke-width="1"/>
+  <text x="600" y="124" font-family="sans-serif" font-size="8" fill="#1a7a3a" text-anchor="middle">Expert 3</text>
+  <rect x="641" y="106" width="65" height="28" rx="3" fill="white" stroke="#27ae60" stroke-width="1"/>
+  <text x="673" y="124" font-family="sans-serif" font-size="8" fill="#1a7a3a" text-anchor="middle">Expert 4</text>
+
+  <rect x="422" y="142" width="65" height="28" rx="3" fill="white" stroke="#27ae60" stroke-width="1"/>
+  <text x="454" y="160" font-family="sans-serif" font-size="8" fill="#1a7a3a" text-anchor="middle">Expert 5</text>
+  <rect x="495" y="142" width="65" height="28" rx="3" fill="white" stroke="#27ae60" stroke-width="1"/>
+  <text x="527" y="160" font-family="sans-serif" font-size="8" fill="#1a7a3a" text-anchor="middle">Expert 6</text>
+  <rect x="568" y="142" width="65" height="28" rx="3" fill="white" stroke="#27ae60" stroke-width="1"/>
+  <text x="600" y="160" font-family="sans-serif" font-size="8" fill="#1a7a3a" text-anchor="middle">Expert 7</text>
+  <rect x="641" y="142" width="65" height="28" rx="3" fill="white" stroke="#27ae60" stroke-width="1"/>
+  <text x="673" y="160" font-family="sans-serif" font-size="8" fill="#1a7a3a" text-anchor="middle">Expert 8</text>
+
+  <!-- NVLink label -->
+  <line x1="487" y1="186" x2="653" y2="186" stroke="#27ae60" stroke-width="2.5"/>
+  <text x="570" y="200" font-family="sans-serif" font-size="8.5" fill="#27ae60" font-weight="700" text-anchor="middle">NVLink 4.0: 900 GB/s bidirectional</text>
+
+  <!-- Across nodes (DP) -->
+  <rect x="415" y="215" width="310" height="30" rx="4" fill="rgba(42,96,153,0.08)" stroke="#2a6099" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="570" y="235" font-family="sans-serif" font-size="8.5" fill="#2a6099" text-anchor="middle">DP across nodes: AllReduce only (gradient sync, infrequent)</text>
+
+  <!-- Cost annotation -->
+  <rect x="415" y="255" width="310" height="57" rx="4" fill="rgba(39,174,96,0.08)"/>
+  <text x="570" y="272" font-family="sans-serif" font-size="9" fill="#27ae60" font-weight="700" text-anchor="middle">All-to-All cost (within-node NVLink):</text>
+  <text x="570" y="286" font-family="sans-serif" font-size="8.5" fill="#555" text-anchor="middle">275 GB ÷ 900 GB/s = 0.31 sec per forward pass</text>
+  <text x="570" y="300" font-family="sans-serif" font-size="8.5" fill="#27ae60" font-weight="700" text-anchor="middle">18× faster — viable for production</text>
+</svg>
+<figcaption>Fig 13.4 — Expert placement strategies. Naive cross-node All-to-All over InfiniBand (50 GB/s effective) is 18× slower than within-node NVLink All-to-All (900 GB/s). The critical constraint: Expert Parallelism degree EP must fit within one NVLink domain (EP ≤ 8 for H100 DGX nodes).</figcaption>
+</div>
+
+<h3>13.4.2 The Small-Batch Expert Problem</h3>
+
+<p>Even with perfect NVLink placement, MoE inference at typical batch sizes faces a serious compute efficiency problem: each expert receives only a small fraction of the total batch.</p>
+
+<div class="formula">PER-EXPERT GEMM SIZE (Batch=32, N=8 experts, K=2):
+
+Tokens per expert (perfectly balanced): 32 × 2 / 8 = 8 tokens
+
+Dense FFN (batch=32):
+  GEMM: [32, 4096] × [4096, 14336]
+  Arithmetic Intensity: 32 × 4096 × 14336 × 2 / (4096 × 14336 × 2 + 32 × 14336 × 2)
+                      ≈ 32 FLOP/byte (very memory-bound, but manageable)
+
+MoE expert (batch=8 per expert):
+  GEMM: [8, 4096] × [4096, 14336]
+  Arithmetic Intensity ≈ 8 FLOP/byte  (4× worse than dense at batch=32!)
+  
+  H100 ridge point: ~295 FLOP/byte
+  Expert AI = 8 << 295 → EXTREMELY memory-bandwidth limited
+
+Implications:
+  GPU compute utilization per expert: ~5% (vs ~10-15% for dense at batch=32)
+  
+  Mitigation strategy 1: "Expert batching" — aggregate requests from 
+    multiple concurrent users into one expert call (requires scheduling)
+  
+  Mitigation strategy 2: Increase overall batch size until per-expert
+    tokens exceed ~64 for reasonable GEMM efficiency
+    
+  Target per-expert batch for efficiency: ≥ 64 tokens
+  Required total batch: 64 × N / K = 64 × 8 / 2 = 256 tokens minimum!</div>
+
+<!-- ══ SECTION 5 ═══════════════════════════════════════════════════ -->
+<h2 id="s5">13.5 Profiling Cookbook — Diagnosing in Production</h2>
+
+<div class="cookbook">
+  <h4>🔬 Spec Decode: Diagnosing Low Acceptance Rate</h4>
+  <p><strong>Symptom:</strong> Speculative decoding enabled but TPOT improvement less than 1.5×.</p>
+  <p><strong>Step 1 — Measure actual acceptance rate:</strong></p>
+  <pre class="formula" style="margin:8px 0">
+# vLLM (0.5+): track via prometheus metrics
+curl http://localhost:8000/metrics | grep speculative
+# Look for: vllm:spec_decode_draft_acceptance_rate
+# Healthy: ≥ 0.70 for chat, ≥ 0.85 for code
+# Unhealthy: < 0.50 → spec decode likely hurting performance!
+
+# Verify expected speedup:
+alpha = 0.55; K = 5; c = 0.10
+E_tokens = (1 - alpha**(K+1)) / (1 - alpha)  # = 1.87
+speedup = E_tokens / (K*c + 1)               # = 1.87/1.5 = 1.25×
+# If observed < formula → overhead in batch management or KV sync</pre>
+  <p><strong>Decision tree:</strong></p>
+  <ul>
+    <li>α &lt; 0.50 on creative/diverse workloads → disable spec decode, use continuous batching instead</li>
+    <li>α &lt; 0.65 on code tasks → wrong draft model (must be same tokenizer family)</li>
+    <li>α ≥ 0.80 but speedup still low → K too high (try K=3), or draft overhead high (check GPU memory)</li>
+    <li>α varies widely across requests → segment by request type; apply spec decode only to code/SQL queries</li>
+  </ul>
+</div>
+
+<div class="cookbook">
+  <h4>🔬 MoE: Diagnosing Expert Load Imbalance</h4>
+  <p><strong>Symptom:</strong> P99 TTFT elevated, all GPUs show 95%+ SM utilization, but throughput 30–40% below theoretical.</p>
+  <pre class="formula" style="margin:8px 0">
+# DCGM metrics for expert utilization:
+dcgmi dmon -e 1001,1002,1006,1007 -d 1000 -c 10
+# 1001: SM_ACTIVE, 1002: SM_OCCUPANCY, 1006: DRAM_ACTIVE, 1007: NVLink BW
+
+# vLLM expert balance metrics:
+curl http://localhost:8000/metrics | grep moe_expert
+# vllm:moe_expert_load{expert_id="0"} 0.125  ← balanced (1/8)
+# vllm:moe_expert_load{expert_id="4"} 0.450  ← HOT EXPERT!
+
+# Python diagnostic script:
+expert_loads = [0.10, 0.09, 0.11, 0.08, 0.45, 0.07, 0.05, 0.05]
+mean_load = sum(expert_loads) / len(expert_loads)   # = 0.125
+max_load  = max(expert_loads)                       # = 0.45
+imbalance_ratio = max_load / mean_load              # = 3.6 → ALERT!
+# Threshold: alert if imbalance_ratio > 2.0</pre>
+  <p><strong>Root causes and fixes:</strong></p>
+  <ul>
+    <li><em>Training imbalance:</em> auxiliary balance loss weight too low (λ &lt; 0.01) → retrain or use DeepSeek-V3's auxiliary-loss-free method</li>
+    <li><em>Workload mismatch:</em> production traffic contains domain(s) that training underrepresented → add capacity factor (1.5×) for hot experts</li>
+    <li><em>EP placement:</em> "hot" expert on a GPU with NVLink congestion from TP traffic → re-assign expert placement based on topology profiling</li>
+  </ul>
+</div>
+
+<!-- ══ SECTION 6 ═══════════════════════════════════════════════════ -->
+<h2 id="s6">13.6 Combining Speculative Decoding and MoE</h2>
+
+<p>Deploying spec decode on MoE targets (e.g., Mixtral 8×7B) introduces two complications: draft model selection and verification cost. The verification forward pass on the target now includes All-to-All routing for all K draft tokens simultaneously — but since they are batched as a single prefill, this is generally efficient.</p>
+
+<table>
+  <thead><tr><th>Target Model</th><th>Recommended Draft</th><th>Why</th><th>Expected Speedup</th></tr></thead>
+  <tbody>
+    <tr><td>Mixtral 8×7B (47B total)</td><td>Mistral-7B (dense)</td><td class="good">Same tokenizer; 7B is 10× cheaper</td><td class="good">~2.1× TPOT</td></tr>
+    <tr><td>Mixtral 8×22B (141B total)</td><td>Mixtral 8×7B or Mistral-7B</td><td>7B: same vocab; 8×7B: better α</td><td>1.8–2.3×</td></tr>
+    <tr><td>DeepSeek-V3 (671B total)</td><td>DeepSeek-V2-Lite (16B)</td><td>Same vocabulary and architecture family</td><td>~2.0×</td></tr>
+    <tr><td>Any MoE</td><td class="bad">Unrelated model</td><td class="bad">Different tokenizer → corrupted output</td><td class="bad">FAILS</td></tr>
+  </tbody>
+</table>
+
+<div class="callout green">
+  <strong>KV Cache with MoE — No Special Handling Needed</strong>
+  Attention layers in MoE models are identical to dense transformers — the MoE structure only affects the FFN sublayers. KV cache allocation, paged attention, and prefix caching work exactly the same as for dense models. Both draft and target KV caches have standard shape: [layers, heads, seq_len, head_dim]. No MoE-specific KV logic required.
+</div>
+
+<!-- ══ SECTION 7 ═══════════════════════════════════════════════════ -->
+<h2 id="s7">13.7 Disaggregated Prefill-Decode — The Next Frontier</h2>
+
+<p>Speculative decoding optimizes decode throughput within a single GPU pool. A complementary technique — <em>disaggregated prefill-decode</em> — attacks TTFT and TPOT simultaneously by recognizing that prefill and decode have fundamentally different hardware requirements and should run on separate, specialized GPU pools.</p>
+
+<div class="formula">THE PREFILL/DECODE HARDWARE MISMATCH:
+
+PREFILL (prompt processing):
+  Computes attention over the full prompt: O(S²) FLOPs
+  Processes all S tokens simultaneously: large GEMM
+  Regime: COMPUTE-BOUND (high arithmetic intensity)
+  Optimal hardware: maximize FLOPS (high SM count, high FLOPS/dollar)
+  H100 utilization during prefill: 60–80%
+
+DECODE (token generation):
+  Single token per step, batch-limited
+  Arithmetic Intensity: ~1 FLOP/byte (deeply memory-bound)
+  Regime: MEMORY-BANDWIDTH-BOUND
+  Optimal hardware: maximize HBM capacity and bandwidth
+  H100 utilization during decode: 0.3–5%
+
+THE PROBLEM WITH COLOCATED P/D:
+  Running both on the same GPU pool = hardware utilization compromise
+  GPUs are sized for compute (because prefill needs it)
+  But 80–95% of serving wall time is decode (where compute is wasted)
+  
+  Result: GPU fleet sized by prefill compute, underutilized for decode
+
+DISAGGREGATED ARCHITECTURE (NVIDIA Dynamo / DistServe):
+  
+  Prefill pool (P-nodes):  fewer, compute-optimized GPUs
+                            H100 SXM5 or A100 (high FLOPS/dollar)
+                            Handles all prompt processing
+  
+  Decode pool (D-nodes):   more, HBM-optimized GPUs
+                            H200 (higher HBM BW) or custom (large HBM)
+                            Handles all token generation
+  
+  KV Transfer:             after prefill, KV cache transferred P → D
+                            over NVLink/InfiniBand
+                            Volume: 2 × n_layers × n_heads × S × d_head × 2 bytes
+                            LLaMA-3 70B, S=2048: ~8 GB per request (significant!)
+
+PRODUCTION RESULTS (Meta DistServe, NVIDIA Dynamo):
+  TTFT improvement:   ~3× (prefill no longer blocked by decode queue)
+  TPOT improvement:   ~1.5× (decode pool optimized for bandwidth)
+  Overall throughput: ~1.35× at 2:1 decode-to-prefill node ratio
+  Cost reduction:     ~27% at scale (right-sizing each pool independently)
+  
+WHEN TO INVEST: Justification threshold ~3× request volume above baseline
+  At &lt;500 requests/min: colocated P/D simpler and sufficient
+  At &gt;2000 requests/min with SLA constraints: disaggregation justified</div>
+
+<!-- ──  WORKED EXAMPLE  ─────────────────────────────────────────── -->
+<h2 id="s8">13.8 Worked Example: Deploying Speculative Decoding for a Code Assistant</h2>
+
+<div class="worked">
+  <div class="worked-label">Worked Example — Principal Level</div>
+  <p><strong>Scenario:</strong> You are deploying a LLaMA-3 70B code assistant on 2× H100 SXM5 (160 GB total HBM). Current throughput: 1,200 tok/s at batch=16, TPOT=85ms. SLA requires TPOT ≤ 40ms. Your traffic is 70% code completion, 30% chat.</p>
+  <p><strong>Step 1: Establish baseline arithmetic intensity</strong></p>
+  <div class="formula" style="margin:8px 0">70B model, BF16: 140 GB loaded per decode step
+TPOT = 140 GB / 3.35 TB/s ≈ 41.8 ms (memory-bound at batch=1)
+At batch=16: 16 × 140 GB... wait, batch doesn't increase memory load for weights
+  but DOES increase arithmetic intensity:
+  AI = 2 × 70B × batch / (140 GB × batch) ≈ 1 FLOP/byte still at batch=16
+
+Actually: at batch=16, each token still requires the same 140 GB weight load
+but you get 16 tokens processed simultaneously:
+  TPOT at batch=16 ≈ 41.8 ms / 1 = ~42 ms per batch iteration
+  Throughput = 16 tokens / 42 ms = 381 tok/s ← low utilization
+
+Measured TPOT=85ms > 42ms theoretical → 2× memory overhead from KV cache
+  at batch=16, seq=2048, 80 layers: KV size = 2 × 80 × 8 × 2048 × 128 × 2B ≈ 84 GB
+  Total HBM access per step: 140 GB (weights) + 84 GB (KV) = 224 GB
+  Expected TPOT = 224 / 3,350 ≈ 67 ms ← close to observed 85ms (overhead explained)</div>
+  <p><strong>Step 2: Configure speculative decoding</strong></p>
+  <div class="formula" style="margin:8px 0">Draft model: LLaMA-3 8B (same tokenizer family) [SHIPPED]
+  Memory: 8B × 2 bytes = 16 GB additional HBM
+  Total: 140 GB (70B) + 16 GB (8B) = 156 GB of 160 GB available ✓ (tight!)
+
+Expected acceptance rates (from production data):
+  Code completion (70%): α = 0.88
+  Chat (30%):            α = 0.72
+  Blended α = 0.70 × 0.88 + 0.30 × 0.72 = 0.616 + 0.216 = 0.832
+
+Speedup calculation (K=5, c = 16/140 = 0.114):
+  E[tokens] = (1 - 0.832^6) / (1 - 0.832) = (1 - 0.334) / 0.168 = 3.96
+  T_iter = K × c + 1 = 5 × 0.114 + 1 = 1.57
+  Speedup = 3.96 / 1.57 = 2.52×
+
+New TPOT = 85ms / 2.52 = 33.7ms ← MEETS SLA of 40ms ✓
+
+New throughput = 16 tokens / 33.7ms × 2.52 = ~1,200 tok/s (but we get more tokens/iter!)
+Actually: throughput ≈ original × speedup = 1200 × 2.52 = ~3,024 tok/s</div>
+  <p><strong>Step 3: Memory safety check and production configuration</strong></p>
+  <div class="formula" style="margin:8px 0">HBM budget: 160 GB total
+  - 70B model (BF16):      140 GB
+  - 8B draft model (BF16):  16 GB
+  - Available for KV cache:   4 GB  ← PROBLEM! Only 4 GB for KV cache
+
+  Fix: Use FP8 quantization for 70B model:
+    70B × 1 byte = 70 GB (FP8)
+    Available for KV + draft: 160 - 70 - 16 = 74 GB for KV cache
+    At batch=16, seq=2048: ~84 GB KV needed → still tight
+
+  Better fix: FP8 weights + BF16 activations + INT8 KV cache:
+    70B FP8 weights = 70 GB
+    8B BF16 draft   = 16 GB
+    KV INT8         = 42 GB (half of BF16)
+    Total: 128 GB ✓ — 32 GB headroom for OS and overheads
+
+vLLM production config:
+  --model meta-llama/Llama-3-70b-instruct
+  --speculative-model meta-llama/Llama-3-8b-instruct
+  --num-speculative-tokens 5
+  --quantization fp8
+  --kv-cache-dtype fp8_e5m2
+  --tensor-parallel-size 2
+  --gpu-memory-utilization 0.92</div>
+  <p><strong>Business impact:</strong> 2.52× throughput improvement means serving 2.52× the request volume on the same hardware. At $3/GPU-hr × 2 GPUs × 720 hr/month = $4,320/month infrastructure cost. Without spec decode, doubling capacity requires 2 additional GPUs: $4,320 additional spend. Spec decode eliminates that cost — saving <strong>$51,840/year</strong> on a single 2-GPU deployment.</p>
+</div>
+
+<!-- ══ EXPERT LOAD DISTRIBUTION DIAGRAM ═════════════════════════ -->
+<h2>13.9 Expert Load Distribution — Visualizing Imbalance</h2>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:720px;display:block;margin:0 auto">
+  <rect width="720" height="260" fill="#f3f5f8" rx="8"/>
+  <text x="360" y="24" font-family="sans-serif" font-size="11" font-weight="700" fill="#1c2438" text-anchor="middle">MoE EXPERT LOAD DISTRIBUTION — BALANCED vs IMBALANCED</text>
+
+  <!-- BALANCED (left) -->
+  <text x="180" y="48" font-family="sans-serif" font-size="10" font-weight="700" fill="#1a7a3a" text-anchor="middle">✓ Healthy: Load-Balanced</text>
+
+  <!-- Ideal line -->
+  <line x1="30" y1="200" x2="350" y2="200" stroke="#ccc" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="28" y="197" font-family="sans-serif" font-size="8" fill="#888" text-anchor="end">12.5%</text>
+  <text x="28" y="215" font-family="sans-serif" font-size="8" fill="#888" text-anchor="end">0%</text>
+
+  <!-- 8 bars — balanced: each ~12.5% -->
+  <!-- bar heights: 200 - (load / 0.3) * 150 -->
+  <!-- 0.125 → 62px from top; bar bottom=200 -->
+  <rect x="45"  y="138" width="30" height="62" fill="#27ae60" rx="3"/>
+  <rect x="85"  y="136" width="30" height="64" fill="#27ae60" rx="3"/>
+  <rect x="125" y="140" width="30" height="60" fill="#27ae60" rx="3"/>
+  <rect x="165" y="137" width="30" height="63" fill="#27ae60" rx="3"/>
+  <rect x="205" y="139" width="30" height="61" fill="#27ae60" rx="3"/>
+  <rect x="245" y="136" width="30" height="64" fill="#27ae60" rx="3"/>
+  <rect x="285" y="140" width="30" height="60" fill="#27ae60" rx="3"/>
+  <rect x="325" y="138" width="30" height="62" fill="#27ae60" rx="3"/>
+
+  <!-- X labels -->
+  <text x="60"  y="215" font-family="sans-serif" font-size="8" fill="#555" text-anchor="middle">E1</text>
+  <text x="100" y="215" font-family="sans-serif" font-size="8" fill="#555" text-anchor="middle">E2</text>
+  <text x="140" y="215" font-family="sans-serif" font-size="8" fill="#555" text-anchor="middle">E3</text>
+  <text x="180" y="215" font-family="sans-serif" font-size="8" fill="#555" text-anchor="middle">E4</text>
+  <text x="220" y="215" font-family="sans-serif" font-size="8" fill="#555" text-anchor="middle">E5</text>
+  <text x="260" y="215" font-family="sans-serif" font-size="8" fill="#555" text-anchor="middle">E6</text>
+  <text x="300" y="215" font-family="sans-serif" font-size="8" fill="#555" text-anchor="middle">E7</text>
+  <text x="340" y="215" font-family="sans-serif" font-size="8" fill="#555" text-anchor="middle">E8</text>
+
+  <!-- Stats -->
+  <rect x="30" y="225" width="320" height="25" rx="4" fill="rgba(39,174,96,0.1)"/>
+  <text x="190" y="241" font-family="sans-serif" font-size="9" fill="#1a7a3a" text-anchor="middle">Max/Mean ratio: 1.1× | All experts within 20% of mean | Throughput: nominal</text>
+
+  <!-- IMBALANCED (right) -->
+  <text x="550" y="48" font-family="sans-serif" font-size="10" font-weight="700" fill="#c0392b" text-anchor="middle">✗ Hot Expert: Expert 4 Overloaded</text>
+
+  <!-- Ideal line -->
+  <line x1="400" y1="200" x2="710" y2="200" stroke="#ccc" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="398" y="197" font-family="sans-serif" font-size="8" fill="#888" text-anchor="end">12.5%</text>
+
+  <!-- 8 bars — Expert 4 is hot: 45%, others ~7.8% each -->
+  <!-- 0.078: 200 - 0.078/0.5 × 175 = 200-27 = 173 → height 27 -->
+  <!-- 0.450: 200 - 0.45/0.5 × 175 = 200-157 = 43 → height 157 -->
+  <rect x="415" y="173" width="30" height="27" fill="#e3b341" rx="3"/>
+  <rect x="455" y="173" width="30" height="27" fill="#e3b341" rx="3"/>
+  <rect x="495" y="175" width="30" height="25" fill="#e3b341" rx="3"/>
+  <rect x="535" y="43"  width="30" height="157" fill="#c0392b" rx="3"/>
+  <text x="550" y="38" font-family="sans-serif" font-size="8.5" fill="#c0392b" font-weight="700" text-anchor="middle">45%!</text>
+  <rect x="575" y="171" width="30" height="29" fill="#e3b341" rx="3"/>
+  <rect x="615" y="174" width="30" height="26" fill="#e3b341" rx="3"/>
+  <rect x="655" y="175" width="30" height="25" fill="#e3b341" rx="3"/>
+  <rect x="695" y="173" width="30" height="27" fill="#e3b341" rx="3"/>
+
+  <!-- Overflow cap marker -->
+  <rect x="535" y="55" width="30" height="8" fill="rgba(192,57,43,0.3)" rx="2"/>
+  <text x="550" y="63" font-family="sans-serif" font-size="7" fill="#c0392b" text-anchor="middle">overflow!</text>
+
+  <!-- X labels -->
+  <text x="430" y="215" font-family="sans-serif" font-size="8" fill="#555" text-anchor="middle">E1</text>
+  <text x="470" y="215" font-family="sans-serif" font-size="8" fill="#555" text-anchor="middle">E2</text>
+  <text x="510" y="215" font-family="sans-serif" font-size="8" fill="#555" text-anchor="middle">E3</text>
+  <text x="550" y="215" font-family="sans-serif" font-size="8" fill="#c0392b" font-weight="700" text-anchor="middle">E4 🔥</text>
+  <text x="590" y="215" font-family="sans-serif" font-size="8" fill="#555" text-anchor="middle">E5</text>
+  <text x="630" y="215" font-family="sans-serif" font-size="8" fill="#555" text-anchor="middle">E6</text>
+  <text x="670" y="215" font-family="sans-serif" font-size="8" fill="#555" text-anchor="middle">E7</text>
+  <text x="710" y="215" font-family="sans-serif" font-size="8" fill="#555" text-anchor="middle">E8</text>
+
+  <!-- Stats -->
+  <rect x="400" y="225" width="310" height="25" rx="4" fill="rgba(192,57,43,0.1)"/>
+  <text x="555" y="241" font-family="sans-serif" font-size="9" fill="#c0392b" text-anchor="middle">Max/Mean ratio: 3.6× | Tokens dropped at E4 | Throughput: −34% (invisible in GPU util!)</text>
+</svg>
+<figcaption>Fig 13.5 — Expert load distribution in balanced vs. hot-expert MoE deployments. The insidious aspect of expert imbalance: all 8 GPUs may show 95%+ SM utilization while throughput is 34% below theoretical. Expert 4's tokens overflow its capacity factor buffer and are dropped silently. Monitor <code>vllm:moe_expert_load</code> continuously.</figcaption>
+</div>
+
+<!-- ══ KEY TAKEAWAYS ═══════════════════════════════════════════════ -->
+<div class="takeaways" id="takeaways">
+  <h3>Key Takeaways</h3>
+  <div class="takeaway-group">
+    <div class="tg-label">Core Concepts</div>
+    <ul>
+      <li>Speculative decoding is exact — not an approximation. The accept/reject criterion (min(1, p_i/q_i) with residual resampling) guarantees output is statistically identical to standard autoregressive decoding. It is safe to deploy without quality regression testing.</li>
+      <li>Speedup is most sensitive to acceptance rate α. Increasing K from 5→8 at α=0.80 yields only +4% speedup improvement. Increasing α from 0.80→0.90 at K=5 yields +21%. Invest in better draft models (EAGLE, same-family smaller model), not just larger K.</li>
+      <li>MoE decouples quality from compute. Quality scales with total parameters; compute cost scales with active parameters (K/N fraction). DeepSeek-V3 achieves 88.5% MMLU (frontier quality) at ~37B active params per token — comparable compute to LLaMA-3 40B dense, but with 671B total knowledge capacity.</li>
+      <li>Expert load imbalance is a silent performance killer. A 3.6× imbalance (one expert receiving 45% of traffic) causes 34% throughput degradation while all GPU utilization metrics appear healthy. Only expert-level routing metrics expose this failure mode.</li>
+    </ul>
+  </div>
+  <div class="takeaway-group">
+    <div class="tg-label">Cost &amp; Productivity Impact</div>
+    <ul>
+      <li>Speculative decoding at α=0.83, K=5 delivers 2.52× TPOT reduction on a mixed code/chat workload — eliminating the need for hardware scaling to meet a 40ms TPOT SLA. On a 2×H100 deployment at $3/GPU-hr, that saves ~$52K/year in additional hardware cost.</li>
+      <li>Expert Parallelism within a single NVLink domain (EP=8, within-node) achieves 18× lower All-to-All latency than cross-node InfiniBand placement. This is not a marginal improvement — it is the difference between a viable and unviable MoE deployment.</li>
+      <li>Disaggregated prefill-decode reduces infrastructure cost by ~27% at scale by right-sizing compute-optimized and HBM-optimized GPU pools independently. Justified at &gt;2000 requests/minute with tight TTFT SLAs.</li>
+    </ul>
+  </div>
+  <div class="takeaway-group">
+    <div class="tg-label">Principal-Level Insight</div>
+    <ul>
+      <li>The combined optimization stack (FP8 + speculative decoding + disaggregated P/D + MoE architecture) delivers 5–10× throughput improvement over a BF16 dense baseline — but these techniques interact. Speculative decoding on MoE targets is slightly less efficient due to routing overhead in the verification pass; expect 85–90% of the speedup you'd get on a comparable dense target.</li>
+      <li>Draft model selection is constrained by tokenizer compatibility, not model architecture. Before any spec decode deployment, verify identical vocabularies. Any tokenizer mismatch produces corrupted output that may be subtle (slightly wrong probability distributions) rather than obviously wrong (garbage tokens), making it dangerous to test only on simple prompts.</li>
+      <li>Per-expert batch size is the hidden bottleneck in MoE inference efficiency. For production MoE serving at EP=8, you need total batch ≥ 256 tokens to achieve reasonable arithmetic intensity per expert (≥ 64 tokens each). Below this threshold, each expert GEMM operates at AI ≈ 8 FLOP/byte — 37× below H100's ridge point — wasting 97% of compute capacity.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══ REVIEW QUESTIONS ════════════════════════════════════════════ -->
+<div class="review-questions" id="review">
+  <h3>Review Questions</h3>
+
+  <div class="rq-tier foundational">
+    <div class="rq-tier-label">
+      <span class="rq-badge">Foundational</span>
+      Build the mental model — no math required
+    </div>
+    <ol>
+      <li>Speculative decoding claims to produce output "statistically identical" to standard autoregressive decoding. Explain in plain English why this is true — what happens at each position when the draft token is accepted vs. rejected? What would go wrong if you always accepted draft tokens unconditionally?</li>
+      <li>A dense 70B model and a MoE model with 8 experts and K=2 active per token both produce the same output hidden state dimension. Explain how the MoE model can have better quality than the dense model at the same compute cost per token, and why it still requires more GPU memory to serve.</li>
+      <li>You are told that "all GPUs in our MoE cluster show 96% SM utilization but throughput is 30% below expected." Without looking at any other metrics, name the most likely root cause and describe which single monitoring metric would confirm or deny your hypothesis.</li>
+    </ol>
+  </div>
+
+  <div class="rq-tier intermediate">
+    <div class="rq-tier-label">
+      <span class="rq-badge">Intermediate</span>
+      Apply and calculate — production context
+    </div>
+    <ol>
+      <li>A legal document summarization service uses LLaMA-3 70B. Production measurement shows acceptance rate α=0.55 with K=5 and draft cost ratio c=0.10. (a) Calculate the theoretical speedup. (b) Is speculative decoding worth deploying at this acceptance rate? (c) The team proposes switching to K=8 to "get more tokens per iteration" — calculate the speedup for K=8 at α=0.55 and explain the result.</li>
+      <li>You are deploying Mixtral 8×7B with EP=8 (one expert per GPU) across a 2-node server with 8 GPUs per node and NVLink 4.0 (900 GB/s). Batch=64 requests, seq_len=1024, d_model=4096, K=2, BF16. (a) Calculate the All-to-All communication volume per MoE layer per forward pass. (b) At what fraction of token dispatch would cross-node traffic begin if experts were distributed uniformly across all 16 GPUs instead of 8?</li>
+      <li>A Mixtral 8×7B deployment monitoring shows Expert 3 consistently receives 38% of tokens while others share the remaining 62% evenly. The model was trained with auxiliary balance loss (λ=0.01). Capacity factor = 1.25. Calculate the token overflow rate at Expert 3 for a batch of 512 tokens (K=2) and explain the impact on output quality.</li>
+    </ol>
+  </div>
+
+  <div class="rq-tier principal">
+    <div class="rq-tier-label">
+      <span class="rq-badge">Principal Level</span>
+      Design, decide, and defend — architecture reviews
+    </div>
+    <ol>
+      <li><strong>Spec Decode + MoE Architecture Design:</strong> Your team is deploying DeepSeek-V3 (671B total, 37B active, 64 routed + 2 shared experts, top-6 routing from routed). You have a budget for 12× H100 SXM5 (80 GB each = 960 GB total). (a) What is the minimum viable spec decode configuration? Identify the draft model, K value, and justify the choice with memory math. (b) What EP configuration and node topology do you recommend for the 64 routed experts across 12 GPUs? Show the All-to-All communication volume per layer. (c) What monitoring setup would you implement on Day 1 to detect expert imbalance before it impacts SLAs?</li>
+      <li><strong>Disaggregated P/D Sizing:</strong> A production serving system handles 3,000 requests/minute with average prompt length 1,500 tokens and average output length 800 tokens. Current setup: 32× H100 colocated. TTFT P99 = 800ms (SLA = 300ms). You are proposing disaggregated prefill-decode. (a) Estimate the ratio of prefill compute to decode compute. (b) How would you size the P-pool vs D-pool? (c) What is the KV transfer volume per second and can it be served over InfiniBand HDR (200 Gbps)? Justify your architecture with numbers.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="ch-end">
+  ── End of Chapter 13 ──<br>
+  <span style="font-size:9px;letter-spacing:1px">AI/ML Infrastructure from Silicon to Scale · Venkat Vinjam · vvinjamu.github.io/silicon-to-scale</span><br>
+  <span style="font-size:9px;margin-top:4px;display:block">Next: Chapter 14 — Networking &amp; Collective Communication: InfiniBand, RoCE, and NCCL</span>
+</div>
+
+</div><!-- end .page -->
+
+<script>
+function downloadHTML(){
+  var b=new Blob([document.documentElement.outerHTML],{type:'text/html;charset=utf-8'});
+  var u=URL.createObjectURL(b);var a=document.createElement('a');
+  a.href=u;a.download='ch13_speculative_moe.html';a.click();URL.revokeObjectURL(u);
+}
+window.addEventListener('scroll',function(){
+  var st=window.scrollY||document.documentElement.scrollTop;
+  var dh=document.documentElement.scrollHeight-window.innerHeight;
+  var p=dh>0?Math.min(100,Math.round((st/dh)*100)):0;
+  var f=document.getElementById('sfill');var l=document.getElementById('pct-label');
+  if(f)f.style.width=p+'%';if(l)l.textContent=p+'% read';
+},{passive:true});
+(function(){
+  var links=document.querySelectorAll('#sidebar .sa');
+  var secs=[];
+  links.forEach(function(l){
+    var id=l.getAttribute('href').replace('#','');
+    var el=document.getElementById(id);
+    if(el)secs.push({el:el,lk:l});
+  });
+  window.addEventListener('scroll',function(){
+    var pos=window.scrollY+60;
+    var act=null;
+    for(var i=secs.length-1;i>=0;i--){
+      if(secs[i].el.getBoundingClientRect().top+window.scrollY<=pos){act=secs[i].lk;break;}
+    }
+    links.forEach(function(l){l.classList.remove('on')});
+    if(act)act.classList.add('on');
+  },{passive:true});
+})();
+</script>
+
+</body>
+</html>
+</div>
+</body>
+</html>

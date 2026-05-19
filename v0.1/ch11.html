@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 11 — KV Cache: The Heart of LLM Serving | Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.82;color:#1c2438;background:#fdfcf7;padding-top:48px}
+#nav{position:fixed;top:0;left:0;right:0;height:48px;background:#1c2438;display:flex;align-items:center;gap:5px;padding:0 16px;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,.35);overflow-x:auto}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:12px;white-space:nowrap;margin-right:10px;flex-shrink:0}
+#nav a{color:#c8d0e0;font-family:sans-serif;font-size:10.5px;text-decoration:none;padding:4px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.15);white-space:nowrap;flex-shrink:0;transition:all .15s}
+#nav a:hover{background:#e3b341;color:#1c2438;border-color:#e3b341;font-weight:700}
+#nav a.home{border-color:#e3b341;color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:210px;height:calc(100vh - 48px);background:#f5f3ec;border-right:1px solid #ddd;overflow-y:auto;padding:14px 0;z-index:900}
+#sidebar h4{font-family:sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#e3b341;padding:0 14px;margin-bottom:8px;margin-top:4px}
+#sidebar a{display:block;font-family:sans-serif;font-size:11px;color:#444;text-decoration:none;padding:4px 14px;line-height:1.4;transition:background .12s,color .12s}
+#sidebar a:hover{background:#e8e4da;color:#1c2438}
+#sidebar .sub{padding-left:24px;font-size:10.5px;color:#666}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px 60px}
+.ch-label{font-family:sans-serif;font-size:9.5px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:6px}
+h1.ch-title{font-size:32px;font-weight:900;color:#1c2438;line-height:1.2;margin-bottom:8px}
+.ch-subtitle{font-size:14px;color:#556;font-style:italic;margin-bottom:12px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:11px;color:#666;margin-bottom:16px}
+.ch-meta strong{color:#1c2438}
+.xref{color:#2a6099;font-style:italic}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438);border-radius:2px;margin:18px 0 24px}
+.ch-hero-banner{background:linear-gradient(135deg,#1c2438 0%,#1a3a6b 100%);color:#fff;border-radius:10px;padding:28px 34px;margin-bottom:32px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.ch-hero-banner blockquote{border:none;background:none;padding:0;margin:0;font-style:italic;font-size:14px;line-height:1.7;color:rgba(255,255,255,.88)}
+.ch-hero-banner cite{display:block;margin-top:10px;font-size:11.5px;color:#e3b341;font-style:normal;font-family:sans-serif}
+h2{font-size:20px;color:#1c2438;margin:38px 0 12px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:16px;color:#1a3a6b;margin:26px 0 9px}
+h4{font-size:13.5px;color:#1a3a6b;margin:18px 0 6px;font-style:italic}
+p{margin-bottom:13px}
+ul,ol{margin:0 0 13px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.shipped{display:inline-block;background:#1a7a3a;color:#fff;font-family:sans-serif;font-size:8.5px;padding:1px 7px;border-radius:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-left:4px;vertical-align:middle}
+.objectives{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:24px 0}
+.obj-card{border-radius:7px;padding:14px 16px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.obj-card.foundational{background:#e8fff0;border:1px solid #b0dfc0}
+.obj-card.intermediate{background:#fffbf0;border:1px solid #e3c87a}
+.obj-card.principal{background:#f0f0ff;border:1px solid #a090d0}
+.obj-label{font-family:sans-serif;font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:7px}
+.obj-card.foundational .obj-label{color:#27ae60}
+.obj-card.intermediate .obj-label{color:#a07800}
+.obj-card.principal .obj-label{color:#7b2d8b}
+.obj-card ul{margin-left:14px}
+.obj-card li{font-size:11.5px;margin-bottom:4px;color:#333}
+.diagram-wrap{background:#fff;border:1px solid #dde2ec;border-radius:8px;padding:18px 20px;margin:24px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.diagram-wrap figcaption{font-family:sans-serif;font-size:10.5px;color:#666;margin-top:10px;font-style:italic;text-align:center;border-top:1px solid #eee;padding-top:8px}
+.formula{background:#0d1117;color:#b8ddf0;padding:14px 18px;border-radius:6px;font-family:'Courier New',monospace;font-size:11px;line-height:1.72;margin:16px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:12px 16px;margin:18px 0;border-radius:0 6px 6px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout.key{border-color:#7b2d8b;background:#fdf5ff}
+.callout.warn{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout strong{display:block;margin-bottom:4px;color:#1c2438}
+.worked{background:#fff8ec;border:2px solid #e3b341;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.worked-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#a07800;margin-bottom:10px}
+.worked h4{color:#1c2438;font-size:13px;margin:14px 0 6px;font-style:normal}
+.cookbook{background:#0d1117;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cookbook-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#e3b341;margin-bottom:12px;border-bottom:1px solid #2a3050;padding-bottom:8px}
+.cookbook pre{color:#b8ddf0;font-family:'Courier New',monospace;font-size:11px;line-height:1.72;white-space:pre;overflow-x:auto}
+.cookbook .cmt{color:#6a7a8a}.cookbook .cmd{color:#79d99a}.cookbook .out{color:#f0c060}
+.qref{background:#1c2438;color:#c8d8f0;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.qref h4{color:#e3b341;font-family:sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;font-style:normal;border-bottom:1px solid rgba(255,255,255,.15);padding-bottom:8px}
+.qref table{color:#c8d8f0;font-size:11.5px}
+.qref th{background:rgba(255,255,255,.08);color:#e3b341;font-size:10px}
+.qref td{border-color:rgba(255,255,255,.1)}
+.qref tr:nth-child(even) td{background:rgba(255,255,255,.04)}
+.takeaways{background:#f3f5f8;border:2px solid #1c2438;border-radius:9px;padding:18px 22px;margin:32px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.takeaways h3{color:#1c2438;margin:0 0 14px;font-size:15px;border:none;padding:0}
+.takeaway-group{margin-bottom:14px}.takeaway-group:last-child{margin-bottom:0}
+.tg-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#e3b341;margin-bottom:6px}
+.takeaway-group ul{margin-left:16px}
+.takeaway-group li{font-size:12.5px;margin-bottom:4px;color:#222}
+.review-questions{margin-top:36px}
+.review-questions h3{font-size:16px;color:#1c2438;margin-bottom:16px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+.rq-tier{border-radius:8px;padding:14px 18px;margin-bottom:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rq-tier.foundational{background:#e8fff0;border-left:5px solid #27ae60}
+.rq-tier.intermediate{background:#fffbf0;border-left:5px solid #e3b341}
+.rq-tier.principal{background:#f0f0ff;border-left:5px solid #7b2d8b}
+.rq-tier-label{font-family:sans-serif;font-size:10px;color:#555;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.rq-badge{font-weight:700;font-size:9px;padding:2px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.foundational .rq-badge{background:#27ae60;color:#fff}
+.intermediate .rq-badge{background:#e3b341;color:#1c2438}
+.principal .rq-badge{background:#7b2d8b;color:#fff}
+.rq-tier ol{margin-left:18px}
+.rq-tier li{margin-bottom:10px;font-size:12.5px;line-height:1.7;color:#222}
+.rq-tier li::marker{font-weight:700}
+.ch-end{text-align:center;margin-top:48px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#999;letter-spacing:2px;text-transform:uppercase}
+.ch-end a{color:#2a6099;text-decoration:none;font-weight:700}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#2a4a8a}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e8e8;vertical-align:top}
+tr:nth-child(even) td{background:#f8f9fb;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout,.worked,.cookbook{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+</style>
+</head>
+<body>
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="ch10.html">&#8592; Ch 10</a>
+  <a href="ch12.html">Ch 12 &#8594;</a>
+  <a href="ch01.html">Ch 1</a>
+  <a href="ch06.html">Ch 6</a>
+  <a href="ch08.html">Ch 8</a>
+  <a href="ch14.html">Ch 14</a>
+</div>
+<div id="sidebar">
+  <h4>Chapter 11</h4>
+  <a href="#overview">Overview</a>
+  <a href="#objectives">Objectives</a>
+  <a href="#s111">11.1 KV Memory Math</a>
+  <a class="sub" href="#s1111">&nbsp;&nbsp;&#8627; Why KV Cache Exists</a>
+  <a class="sub" href="#s1112">&nbsp;&nbsp;&#8627; Size Formula</a>
+  <a class="sub" href="#s1113">&nbsp;&nbsp;&#8627; LLaMA-3 70B Example</a>
+  <a class="sub" href="#s1114">&nbsp;&nbsp;&#8627; KV vs Weights Split</a>
+  <a href="#s112">11.2 PagedAttention</a>
+  <a class="sub" href="#s1121">&nbsp;&nbsp;&#8627; Fragmentation Problem</a>
+  <a class="sub" href="#s1122">&nbsp;&nbsp;&#8627; Page Table Mechanics</a>
+  <a class="sub" href="#s1123">&nbsp;&nbsp;&#8627; Block Size Selection</a>
+  <a class="sub" href="#s1124">&nbsp;&nbsp;&#8627; Copy-on-Write</a>
+  <a href="#s113">11.3 KV Quantization</a>
+  <a class="sub" href="#s1132">&nbsp;&nbsp;&#8627; FP8 KV</a>
+  <a class="sub" href="#s1133">&nbsp;&nbsp;&#8627; INT8 KV</a>
+  <a class="sub" href="#s1134">&nbsp;&nbsp;&#8627; INT4 KV</a>
+  <a class="sub" href="#s1136">&nbsp;&nbsp;&#8627; GQA + FP8 Combined</a>
+  <a href="#s114">11.4 Prefix Caching</a>
+  <a class="sub" href="#s1142">&nbsp;&nbsp;&#8627; Hash-Based Keys</a>
+  <a class="sub" href="#s1143">&nbsp;&nbsp;&#8627; Radix Tree (SGLang)</a>
+  <a class="sub" href="#s1144">&nbsp;&nbsp;&#8627; Hit Rate Economics</a>
+  <a href="#s115">11.5 KV Offloading</a>
+  <a class="sub" href="#s1151">&nbsp;&nbsp;&#8627; Memory Tiering</a>
+  <a class="sub" href="#s1152">&nbsp;&nbsp;&#8627; PCIe Bandwidth Math</a>
+  <a href="#s116">11.6 Disaggregated Serving</a>
+  <a href="#s117">11.7 MLA Compression</a>
+  <a href="#s118">11.8 Anti-Patterns</a>
+  <a href="#cookbook">Profiling Cookbook</a>
+  <a href="#worked">Worked Example</a>
+  <a href="#qref">Quick Reference</a>
+  <a href="#takeaways">Key Takeaways</a>
+  <a href="#review">Review Questions</a>
+</div>
+<div class="page">
+
+<div class="ch-label">Part IV &middot; Chapter 11</div>
+<h1 class="ch-title">KV Cache: The Heart of LLM Serving</h1>
+<div class="ch-subtitle">Memory Math, Paging, Quantization, Prefix Caching, Offloading, Disaggregation, and Latent Compression</div>
+<div class="ch-meta">
+  <strong>Book:</strong> AI/ML Infrastructure from Silicon to Scale &nbsp;|&nbsp;
+  <strong>Author:</strong> Venkat Vinjam &nbsp;|&nbsp;
+  <strong>Cross-ref:</strong> <span class="xref">HBM bandwidth (Ch 4) &middot; Inference serving (Ch 6) &middot; Quantization (Ch 8) &middot; Training memory (Ch 10) &middot; Networking/NCCL (Ch 14)</span>
+</div>
+<div class="ch-divider"></div>
+<div class="ch-hero-banner">
+  <blockquote>"The KV cache is not an implementation detail. It is the central resource constraint that determines how many users your system can serve, how fast they receive their first token, and how much each request costs you. Every inference engineer must know its math cold."</blockquote>
+  <cite>&#8212; Production LLM Serving Principle</cite>
+</div>
+
+<div id="overview">
+<p>When a user sends a 2,000-token prompt to a 70B model, the GPU does not merely run the model once. It runs prefill &#8212; an O(S&#178;) attention computation over the entire prompt &#8212; then enters decode mode, generating tokens one at a time. Each decode step must attend to every prior token. Without caching the intermediate Key and Value tensors, every new token would require recomputing attention from scratch: catastrophically slow at O(S&#178;) per step.</p>
+<p>The KV cache trades HBM memory for computation time. But HBM is the scarcest resource in any GPU cluster. Managing that tradeoff &#8212; how much to allocate, how to page it, how to compress it, how to reuse it across requests, and how to tier it when pressure mounts &#8212; is the defining engineering challenge of production LLM inference. This chapter covers the complete engineering picture, from the per-token memory formula to DeepSeek's 57&#215; compression via Multi-Head Latent Attention.</p>
+</div>
+
+<div id="objectives">
+<div class="objectives">
+  <div class="obj-card foundational"><div class="obj-label">Foundational</div><ul>
+    <li>Derive KV cache size for any model from the core formula</li>
+    <li>Explain why contiguous pre-allocation wastes 60&#8211;80% of HBM</li>
+    <li>Understand how PagedAttention applies OS virtual memory concepts</li>
+    <li>Know the six numbers for LLaMA-3 70B KV sizing cold</li>
+  </ul></div>
+  <div class="obj-card intermediate"><div class="obj-label">Intermediate</div><ul>
+    <li>Capacity-plan a serving system with FP8 weights + FP8 KV</li>
+    <li>Configure prefix caching with RadixAttention and LRU eviction</li>
+    <li>Calculate the PCIe bandwidth required for CPU DRAM offloading</li>
+    <li>Derive the minimum IB bandwidth for disaggregated KV transfer</li>
+  </ul></div>
+  <div class="obj-card principal"><div class="obj-label">Principal Level</div><ul>
+    <li>Design KV tiering with optimal swap-vs-recompute policy</li>
+    <li>Size prefix cache for a given workload and hit rate target</li>
+    <li>Compare GQA vs MLA at 128K context; know when MLA wins</li>
+    <li>Select quantization granularity per application quality constraint</li>
+  </ul></div>
+</div>
+</div>
+<h2 id="s111">11.1 &#8212; KV Cache Memory Math</h2>
+<h3 id="s1111">11.1.1 Why the KV Cache Exists</h3>
+<p>In autoregressive decoding, every output token must attend to every preceding token. Without caching, each decode step recomputes Key and Value projections for all prior tokens &#8212; an O(t&#178;) cost that grows catastrophically with sequence length. The KV cache stores these tensors after first computation and reads them at each subsequent step, converting O(t&#178;) to O(t) per decode step. The trade is explicit: HBM capacity and bandwidth for a one-time write, in exchange for eliminating repeated recomputation.</p>
+
+<h3 id="s1112">11.1.2 The KV Cache Size Formula</h3>
+<div class="formula">KV CACHE SIZE FORMULA:
+
+  KV_bytes = 2 &#215; L &#215; H_kv &#215; d_head &#215; S &#215; B &#215; dtype_bytes
+
+  2         = K tensor + V tensor (always)
+  L         = transformer layers
+  H_kv      = KV heads (reduced by GQA; equals H_q in vanilla MHA)
+  d_head    = head dimension (d_model / H_q for standard models)
+  S         = sequence length (tokens in context)
+  B         = concurrent requests (batch size)
+  dtype     = BF16: 2 bytes | FP8: 1 byte | INT8: 1 byte | INT4: 0.5 bytes
+
+Per token (S=1, B=1):
+  KV_bytes_per_token = 2 &#215; L &#215; H_kv &#215; d_head &#215; dtype_bytes
+
+The formula has 4 model constants (L, H_kv, d_head, dtype) and 2 workload variables (S, B).
+To reduce KV: reduce H_kv via GQA, reduce dtype via quantization, limit S or B.</div>
+
+<h3 id="s1113">11.1.3 LLaMA-3 70B Worked Example</h3>
+<div class="formula">LLAMA-3 70B: L=80, H_q=64, H_kv=8 (GQA R=8), d_head=128, d_model=8192
+
+Step 1 &#8212; Per-token cost (BF16):
+  KV_per_token = 2 &#215; 80 &#215; 8 &#215; 128 &#215; 2 bytes = 327,680 bytes = 0.320 MB
+  Every token occupies 320 KB of HBM for the lifetime of its request.
+
+Step 2 &#8212; Per-request at 4K context (BF16):
+  KV_per_request = 0.320 MB &#215; 4,096 = 1,310,720 bytes = 1.25 GB/request
+  H100 has 80 GB. At this rate, 64 users fill the GPU.
+
+Step 3 &#8212; Weight memory (FP8 weights, TP=2):
+  FP8 weights per GPU = 70 GB / 2 = 35 GB
+  Runtime overhead = ~5 GB
+  KV headroom = 80 &#8722; 35 &#8722; 5 = 40 GB per GPU
+
+Step 4 &#8212; Capacity at FP8 KV (the production config):
+  FP8 KV per token = 2 &#215; 80 &#215; 8 &#215; 128 &#215; 1 byte = 163,840 bytes = 0.160 MB
+  FP8 KV per request (4K ctx) = 0.160 &#215; 4,096 = 655 MB = 0.64 GB
+
+  Max concurrent users (40 GB KV headroom):
+    40,000 MB / 640 MB = 62.5 &#8594; ~62 concurrent users per GPU pair
+
+  Scaling with context length:
+    At 8K ctx:   1.28 GB/req &#8594; 31 users
+    At 32K ctx:  5.12 GB/req &#8594;  7 users
+    At 128K ctx: 20.5 GB/req &#8594;  1&#8211;2 users  &#8592; KV compression becomes existential</div>
+
+<!-- DIAGRAM 2: KV Growth vs Context Length -->
+<div class="diagram-wrap" id="diag-kvgrowth"><figure>
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <defs>
+    <marker id="aKV" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#888"/></marker>
+  </defs>
+  <text x="380" y="18" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">KV CACHE GROWTH vs CONTEXT LENGTH &#8212; LLaMA-3 70B (H100&#215;2, 40 GB KV budget)</text>
+
+  <!-- Axes -->
+  <line x1="80" y1="265" x2="700" y2="265" stroke="#1c2438" stroke-width="2"/>
+  <line x1="80" y1="32" x2="80" y2="265" stroke="#1c2438" stroke-width="2"/>
+
+  <!-- X axis labels: 1K, 2K, 4K, 8K, 16K, 32K, 64K, 128K -->
+  <text x="80"  y="280" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">1K</text>
+  <text x="157" y="280" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">2K</text>
+  <text x="234" y="280" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">4K</text>
+  <text x="311" y="280" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">8K</text>
+  <text x="388" y="280" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">16K</text>
+  <text x="465" y="280" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">32K</text>
+  <text x="543" y="280" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">64K</text>
+  <text x="620" y="280" text-anchor="middle" fill="#555" font-size="9.5" font-family="sans-serif">128K</text>
+  <text x="380" y="298" text-anchor="middle" fill="#1c2438" font-size="10.5" font-weight="bold" font-family="sans-serif">Context Length (tokens)</text>
+
+  <!-- Y axis labels: GB per request -->
+  <text x="74" y="268" text-anchor="end" fill="#555" font-size="9.5" font-family="sans-serif">0</text>
+  <text x="74" y="218" text-anchor="end" fill="#555" font-size="9.5" font-family="sans-serif">5 GB</text>
+  <text x="74" y="168" text-anchor="end" fill="#555" font-size="9.5" font-family="sans-serif">10 GB</text>
+  <text x="74" y="118" text-anchor="end" fill="#555" font-size="9.5" font-family="sans-serif">15 GB</text>
+  <text x="74" y="68" text-anchor="end" fill="#555" font-size="9.5" font-family="sans-serif">20 GB</text>
+  <text x="74" y="38" text-anchor="end" fill="#555" font-size="9.5" font-family="sans-serif">40 GB</text>
+  <text x="26" y="155" text-anchor="middle" fill="#1c2438" font-size="10.5" font-weight="bold" font-family="sans-serif" transform="rotate(-90,26,155)">KV per Request</text>
+
+  <!-- Grid -->
+  <line x1="80" y1="218" x2="700" y2="218" stroke="#eee" stroke-width="1"/>
+  <line x1="80" y1="168" x2="700" y2="168" stroke="#eee" stroke-width="1"/>
+  <line x1="80" y1="118" x2="700" y2="118" stroke="#eee" stroke-width="1"/>
+  <line x1="80" y1="68" x2="700" y2="68" stroke="#eee" stroke-width="1"/>
+
+  <!-- 40 GB budget line -->
+  <line x1="80" y1="38" x2="700" y2="38" stroke="#c0392b" stroke-width="2" stroke-dasharray="6"/>
+  <text x="692" y="34" text-anchor="end" fill="#c0392b" font-size="9.5" font-weight="bold" font-family="sans-serif">40 GB KV budget</text>
+
+  <!-- KV per request lines (linear in S):
+       BF16: 0.320 MB/tok = 0.32/1024 GB/tok/req
+       FP8:  0.160 MB/tok
+       INT4: 0.080 MB/tok
+       MLA:  0.00113 MB/tok  (1152 bytes per token)
+       
+       Y scale: 40 GB = y=38, 0 GB = y=265, so 1 GB = 5.675px
+       x scale: 1K=x80, 128K=x620, so 1K tokens = (620-80)/127 = 4.252px
+       
+       BF16: at 128K: 0.320*128 = 40.96 GB -> y = 38 (just at budget)
+       x positions: 1K->80, 2K->157, 4K->234, 8K->311, 16K->388, 32K->465, 64K->543, 128K->620
+       BF16 y: 1K=0.32GB->263, 2K=0.64->261, 4K=1.28->258, 8K=2.56->251, 16K=5.12->236, 32K=10.24->207, 64K=20.48->149, 128K=40.96->38 -->
+  <polyline points="80,263 157,261 234,258 311,251 388,236 465,207 543,149 620,38"
+            stroke="#c0392b" stroke-width="2.5" fill="none"/>
+  <text x="540" y="138" fill="#c0392b" font-size="10" font-weight="bold" font-family="sans-serif">BF16 KV</text>
+  <text x="540" y="151" fill="#c0392b" font-size="9" font-family="sans-serif">0.320 MB/tok</text>
+
+  <!-- FP8: half BF16 => y: 1K=264, 4K=261, 8K=255, 16K=241, 32K=215, 64K=162, 128K=57 -->
+  <polyline points="80,264 157,263 234,261 311,255 388,241 465,215 543,162 620,57"
+            stroke="#2a6099" stroke-width="2.5" fill="none"/>
+  <text x="620" y="52" fill="#2a6099" font-size="10" font-weight="bold" font-family="sans-serif">FP8 KV</text>
+  <text x="540" y="178" fill="#2a6099" font-size="9" font-family="sans-serif">0.160 MB/tok</text>
+
+  <!-- INT4: quarter BF16 => y: 8K=261, 16K=254, 32K=237, 64K=207, 128K=152 -->
+  <polyline points="80,265 234,264 311,263 388,258 465,247 543,227 620,188"
+            stroke="#1a7a3a" stroke-width="2.5" fill="none"/>
+  <text x="635" y="183" fill="#1a7a3a" font-size="10" font-weight="bold" font-family="sans-serif">INT4 KV</text>
+  <text x="543" y="213" fill="#1a7a3a" font-size="9" font-family="sans-serif">0.080 MB/tok</text>
+
+  <!-- MLA: 1152 bytes/tok = 0.00113 GB/tok => virtually flat: 128K = 0.00113*128 = 0.144 GB => y=264 -->
+  <polyline points="80,265 234,265 465,265 620,264"
+            stroke="#7b2d8b" stroke-width="2.5" fill="none"/>
+  <text x="635" y="261" fill="#7b2d8b" font-size="10" font-weight="bold" font-family="sans-serif">MLA (DS-V3)</text>
+  <text x="543" y="253" fill="#7b2d8b" font-size="9" font-family="sans-serif">0.00113 GB/tok</text>
+
+  <!-- Concurrent users annotation boxes at 4K and 128K -->
+  <rect x="218" y="37" width="34" height="60" rx="4" fill="#f0f4fa" stroke="#2a6099" stroke-width="1"/>
+  <text x="235" y="54" text-anchor="middle" fill="#2a6099" font-size="8.5" font-weight="bold" font-family="sans-serif">4K ctx</text>
+  <text x="235" y="67" text-anchor="middle" fill="#c0392b" font-size="8" font-family="sans-serif">BF16:</text>
+  <text x="235" y="78" text-anchor="middle" fill="#c0392b" font-size="8" font-family="sans-serif">32 users</text>
+  <text x="235" y="89" text-anchor="middle" fill="#1a7a3a" font-size="8" font-family="sans-serif">FP8:</text>
+  <text x="235" y="100" text-anchor="middle" fill="#1a7a3a" font-size="8" font-family="sans-serif">62 users</text>
+
+  <rect x="604" y="200" width="38" height="64" rx="4" fill="#f0f4fa" stroke="#2a6099" stroke-width="1"/>
+  <text x="623" y="215" text-anchor="middle" fill="#2a6099" font-size="8.5" font-weight="bold" font-family="sans-serif">128K ctx</text>
+  <text x="623" y="228" text-anchor="middle" fill="#c0392b" font-size="8" font-family="sans-serif">BF16: 0</text>
+  <text x="623" y="240" text-anchor="middle" fill="#2a6099" font-size="8" font-family="sans-serif">FP8: 2</text>
+  <text x="623" y="252" text-anchor="middle" fill="#1a7a3a" font-size="8" font-family="sans-serif">INT4: 5</text>
+  <text x="623" y="264" text-anchor="middle" fill="#7b2d8b" font-size="8" font-family="sans-serif">MLA: 278</text>
+</svg>
+<figcaption><strong>Figure 11.1</strong> &#8212; KV cache per-request size vs context length for LLaMA-3 70B (H100&#215;2, 40 GB KV headroom). All curves are linear in context length; the y-axis shows GB per single request. BF16 hits the 40 GB budget at 128K context &#8212; zero concurrency. FP8 KV allows 2 concurrent users at 128K. INT4 allows 5. MLA (DeepSeek-V3, d_c=512) stays almost flat at ~0.14 GB even at 128K &#8212; enabling 278 concurrent users where BF16 allows none.</figcaption>
+</figure></div>
+
+<h3 id="s1114">11.1.4 The KV vs Weights Memory Split</h3>
+<div class="formula">KV VS WEIGHTS BALANCE POINT (LLaMA-3 70B, H100&#215;2, TP=2):
+
+  Fixed cost: FP8 weights 35 GB/GPU + overhead 5 GB = 40 GB per GPU
+  KV budget: 40 GB (remaining after weights)
+  FP8 KV per request (4K ctx): 0.64 GB
+
+  Utilization at different batch sizes:
+    B=1:   0.64 GB KV  (1.6% KV &#8594; weight-bound)
+    B=10:  6.4 GB KV   (16% &#8594; still weight-bound)
+    B=32:  20.5 GB KV  (51% &#8594; approaching balance)
+    B=62:  39.7 GB KV  (99% &#8594; KV-bound)
+
+  CROSSOVER POINT (KV budget = weight budget):
+    40 GB = 0.64 GB &#215; B &#8594; B = 62.5 at 4K context
+    At 8K context: crossover at B &#8776; 31
+    At 32K context: crossover at B &#8776; 8
+
+  As average context length increases, you become KV-bound at
+  progressively smaller batch sizes &#8212; KV management dominates.</div>
+
+<h2 id="s112">11.2 &#8212; PagedAttention: Virtual Memory for Attention</h2>
+<h3 id="s1121">11.2.1 The Fragmentation Problem</h3>
+
+<!-- DIAGRAM 6: Fragmentation Analysis -->
+<div class="diagram-wrap" id="diag-frag"><figure>
+<svg viewBox="0 0 760 310" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="380" y="18" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">KV FRAGMENTATION: CONTIGUOUS vs PAGED ALLOCATION</text>
+
+  <!-- LEFT: Contiguous (pre-allocation) -->
+  <rect x="12" y="30" width="355" height="272" rx="8" fill="#fff0f0" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="190" y="50" text-anchor="middle" fill="#c0392b" font-size="11" font-weight="bold" font-family="sans-serif">&#10008; CONTIGUOUS PRE-ALLOCATION</text>
+  <text x="190" y="63" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">655 MB reserved at admission (4K max_seq_len &#215; 0.160 MB)</text>
+
+  <!-- 10 requests as stacked bars, most with internal fragmentation -->
+  <!-- Each bar = 30px height, full width = 320px, actual usage varies -->
+  <!-- Req 1: 50tok actual (actual=50*0.16=8MB => 8/655*320=3.9px used) -->
+  <text x="24" y="83" fill="#555" font-size="8.5" font-family="sans-serif">R1 (50 tok)</text>
+  <rect x="70" y="73" width="314" height="18" rx="2" fill="#c0392b" opacity=".15"/>
+  <rect x="70" y="73" width="24" height="18" rx="2" fill="#c0392b" opacity=".8"/>
+  <text x="200" y="86" text-anchor="middle" fill="#c0392b" font-size="8" font-family="sans-serif">&#8592; 655 MB reserved &#8594;</text>
+
+  <text x="24" y="102" fill="#555" font-size="8.5" font-family="sans-serif">R2 (120 tok)</text>
+  <rect x="70" y="93" width="314" height="18" rx="2" fill="#c0392b" opacity=".15"/>
+  <rect x="70" y="93" width="59" height="18" rx="2" fill="#c0392b" opacity=".8"/>
+
+  <text x="24" y="122" fill="#555" font-size="8.5" font-family="sans-serif">R3 (800 tok)</text>
+  <rect x="70" y="113" width="314" height="18" rx="2" fill="#c0392b" opacity=".15"/>
+  <rect x="70" y="113" width="392" height="18" rx="2" fill="#c0392b" opacity=".8"/>
+  <!-- clamp at 320px (>655MB shows filled) -->
+  <rect x="70" y="113" width="314" height="18" rx="2" fill="#c0392b" opacity=".65"/>
+
+  <text x="24" y="142" fill="#555" font-size="8.5" font-family="sans-serif">R4 (200 tok)</text>
+  <rect x="70" y="133" width="314" height="18" rx="2" fill="#c0392b" opacity=".15"/>
+  <rect x="70" y="133" width="98" height="18" rx="2" fill="#c0392b" opacity=".8"/>
+
+  <text x="24" y="162" fill="#555" font-size="8.5" font-family="sans-serif">R5 (80 tok)</text>
+  <rect x="70" y="153" width="314" height="18" rx="2" fill="#c0392b" opacity=".15"/>
+  <rect x="70" y="153" width="39" height="18" rx="2" fill="#c0392b" opacity=".8"/>
+
+  <!-- Aggregate stats -->
+  <rect x="22" y="190" width="334" height="55" rx="5" fill="#fff" stroke="#c0392b" stroke-width="1"/>
+  <text x="189" y="207" text-anchor="middle" fill="#c0392b" font-size="10.5" font-weight="bold" font-family="sans-serif">Production traffic reality:</text>
+  <text x="32" y="222" fill="#555" font-size="9.5" font-family="sans-serif">&#8226; Average actual usage: ~800 tokens &#215; 0.160 MB = 128 MB/req</text>
+  <text x="32" y="235" fill="#555" font-size="9.5" font-family="sans-serif">&#8226; Pre-allocated: 655 MB/req</text>
+  <text x="32" y="247" fill="#c0392b" font-size="10" font-weight="bold" font-family="sans-serif">&#8226; Fragmentation: (655&#8722;128)/655 = 80.5% wasted!</text>
+
+  <rect x="22" y="254" width="334" height="38" rx="4" fill="#c0392b"/>
+  <text x="189" y="270" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="bold" font-family="sans-serif">Of a 40 GB KV budget: only 8 GB holds real data</text>
+  <text x="189" y="284" text-anchor="middle" fill="#ffc8c8" font-size="9.5" font-family="sans-serif">Effective capacity = 5&#215; lower than hardware can hold</text>
+
+  <!-- RIGHT: PagedAttention -->
+  <rect x="393" y="30" width="355" height="272" rx="8" fill="#e8fff0" stroke="#1a7a3a" stroke-width="1.5"/>
+  <text x="570" y="50" text-anchor="middle" fill="#1a7a3a" font-size="11" font-weight="bold" font-family="sans-serif">&#10003; PAGEDATTENTION &#8212; Physical Blocks</text>
+  <text x="570" y="63" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">Allocate ONLY for tokens that actually exist (lazy allocation)</text>
+
+  <!-- Physical HBM pool: grid of 16x4=64 blocks -->
+  <text x="570" y="80" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Physical HBM pool (40 GB &#247; 32KB/block = 1.31M blocks)</text>
+  <!-- Show a small grid of blocks: some used, some free -->
+  <g>
+  <rect x="405" y="85" width="20" height="14" rx="2" fill="#1a3a6b"/><text x="415" y="96" text-anchor="middle" fill="#e3b341" font-size="6.5">R1</text>
+  <rect x="427" y="85" width="20" height="14" rx="2" fill="#2a6099"/><text x="437" y="96" text-anchor="middle" fill="#fff" font-size="6.5">R2</text>
+  <rect x="449" y="85" width="20" height="14" rx="2" fill="#1a3a6b"/><text x="459" y="96" text-anchor="middle" fill="#e3b341" font-size="6.5">R1</text>
+  <rect x="471" y="85" width="20" height="14" rx="2" fill="#f0f4fa" stroke="#ccc" stroke-width="1"/><text x="481" y="96" text-anchor="middle" fill="#aaa" font-size="6.5">free</text>
+  <rect x="493" y="85" width="20" height="14" rx="2" fill="#7b2d8b"/><text x="503" y="96" text-anchor="middle" fill="#fff" font-size="6.5">R3</text>
+  <rect x="515" y="85" width="20" height="14" rx="2" fill="#f0f4fa" stroke="#ccc" stroke-width="1"/><text x="525" y="96" text-anchor="middle" fill="#aaa" font-size="6.5">free</text>
+  <rect x="537" y="85" width="20" height="14" rx="2" fill="#2a6099"/><text x="547" y="96" text-anchor="middle" fill="#fff" font-size="6.5">R2</text>
+  <rect x="559" y="85" width="20" height="14" rx="2" fill="#1a3a6b"/><text x="569" y="96" text-anchor="middle" fill="#e3b341" font-size="6.5">R4</text>
+  <rect x="581" y="85" width="20" height="14" rx="2" fill="#f0f4fa" stroke="#ccc" stroke-width="1"/><text x="591" y="96" text-anchor="middle" fill="#aaa" font-size="6.5">free</text>
+  <rect x="603" y="85" width="20" height="14" rx="2" fill="#7b2d8b"/><text x="613" y="96" text-anchor="middle" fill="#fff" font-size="6.5">R3</text>
+  <rect x="625" y="85" width="20" height="14" rx="2" fill="#1a7a3a"/><text x="635" y="96" text-anchor="middle" fill="#fff" font-size="6.5">R5</text>
+  <rect x="647" y="85" width="20" height="14" rx="2" fill="#f0f4fa" stroke="#ccc" stroke-width="1"/><text x="657" y="96" text-anchor="middle" fill="#aaa" font-size="6.5">free</text>
+  <rect x="669" y="85" width="20" height="14" rx="2" fill="#f0f4fa" stroke="#ccc" stroke-width="1"/><text x="679" y="96" text-anchor="middle" fill="#aaa" font-size="6.5">free</text>
+  </g>
+  <text x="570" y="118" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">Blocks scattered non-contiguously in HBM &#8212; page table maps logical &#8594; physical</text>
+
+  <!-- Per-request block table example -->
+  <text x="570" y="137" text-anchor="middle" fill="#1c2438" font-size="10" font-weight="bold" font-family="sans-serif">Per-request Block Table (in CPU RAM):</text>
+  <rect x="403" y="142" width="335" height="52" rx="5" fill="#1c2438"/>
+  <text x="420" y="158" fill="#e3b341" font-size="9.5" font-family="sans-serif">Request A: [logi 0&#8594;phys #1247] [logi 1&#8594;phys #5823] ...</text>
+  <text x="420" y="172" fill="#c8d8f0" font-size="9" font-family="sans-serif">Request B: [logi 0&#8594;phys #412]  [logi 1&#8594;phys #9051] ...</text>
+  <text x="420" y="186" fill="#79d99a" font-size="9" font-family="sans-serif">Lazy alloc: 0 blocks pre-reserved; allocate one block at a time as tokens arrive</text>
+
+  <!-- Statistics -->
+  <rect x="403" y="204" width="335" height="55" rx="5" fill="#fff" stroke="#1a7a3a" stroke-width="1"/>
+  <text x="570" y="221" text-anchor="middle" fill="#1a7a3a" font-size="10.5" font-weight="bold" font-family="sans-serif">Same production traffic:</text>
+  <text x="413" y="236" fill="#555" font-size="9.5" font-family="sans-serif">&#8226; Average actual usage: 128 MB &#8594; allocated exactly 128 MB</text>
+  <text x="413" y="248" fill="#1a7a3a" font-size="10" font-weight="bold" font-family="sans-serif">&#8226; Internal fragmentation: &lt;1% (last-block waste only)</text>
+
+  <rect x="403" y="268" width="335" height="26" rx="4" fill="#1a7a3a"/>
+  <text x="570" y="283" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="bold" font-family="sans-serif">Effective capacity: ~5&#215; higher &#8594; 308 users vs 62</text>
+</svg>
+<figcaption><strong>Figure 11.2</strong> &#8212; KV fragmentation: contiguous pre-allocation vs PagedAttention. Contiguous allocation reserves max_seq_len &#215; KV_per_token at admission &#8212; 655 MB per request regardless of actual usage. With average actual usage of 128 MB (800 tokens), 80.5% of allocated HBM is wasted. PagedAttention allocates one 32 KB block per 16 tokens as they arrive, reducing internal fragmentation to the last-block remainder only (&lt;1%). Same 40 GB KV budget: 62 users (contiguous) vs ~308 users (paged).</figcaption>
+</figure></div>
+
+<h3 id="s1122">11.2.2 PagedAttention: The Page Table Mechanics</h3>
+<!-- DIAGRAM 1: PagedAttention Block Table -->
+<div class="diagram-wrap" id="diag-paged"><figure>
+<svg viewBox="0 0 760 370" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <defs>
+    <marker id="aPT" markerWidth="7" markerHeight="7" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#2a6099"/></marker>
+    <marker id="aPTG" markerWidth="7" markerHeight="7" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#1a7a3a"/></marker>
+  </defs>
+  <text x="380" y="20" text-anchor="middle" fill="#1c2438" font-size="13" font-weight="bold" font-family="sans-serif">PAGEDATTENTION BLOCK TABLE MECHANICS</text>
+
+  <!-- CPU Memory: Block tables for two requests -->
+  <rect x="10" y="30" width="250" height="200" rx="8" fill="#f5f3ec" stroke="#1c2438" stroke-width="1.5"/>
+  <text x="135" y="48" text-anchor="middle" fill="#1c2438" font-size="10.5" font-weight="bold" font-family="sans-serif">CPU RAM &#8212; Block Tables</text>
+
+  <!-- Request A block table -->
+  <rect x="20" y="55" width="230" height="80" rx="5" fill="#1c2438"/>
+  <text x="135" y="71" text-anchor="middle" fill="#e3b341" font-size="9.5" font-weight="bold" font-family="sans-serif">Request A (500 tokens = 32 blocks)</text>
+  <text x="30" y="86" fill="#c8d8f0" font-size="8.5" font-family="sans-serif">Logi[0]&#8594;Phys[#1,247]  Logi[1]&#8594;Phys[#5,823]</text>
+  <text x="30" y="99" fill="#c8d8f0" font-size="8.5" font-family="sans-serif">Logi[2]&#8594;Phys[#412]   Logi[3]&#8594;Phys[#88,001]</text>
+  <text x="30" y="112" fill="#c8d8f0" font-size="8.5" font-family="sans-serif">Logi[4]&#8594;Phys[#2,099]  ... (28 more blocks)</text>
+  <text x="30" y="125" fill="#79d99a" font-size="8" font-family="sans-serif">ref_count[#1247]=1  ref_count[#412]=2 (shared!)</text>
+
+  <!-- Request B block table -->
+  <rect x="20" y="143" width="230" height="74" rx="5" fill="#1a3a6b"/>
+  <text x="135" y="159" text-anchor="middle" fill="#e3b341" font-size="9.5" font-weight="bold" font-family="sans-serif">Request B (320 tokens = 20 blocks)</text>
+  <text x="30" y="174" fill="#c8d8f0" font-size="8.5" font-family="sans-serif">Logi[0]&#8594;Phys[#412]   &#8592; SHARED with A!</text>
+  <text x="30" y="187" fill="#c8d8f0" font-size="8.5" font-family="sans-serif">Logi[1]&#8594;Phys[#7,312]  Logi[2]&#8594;Phys[#91,004]</text>
+  <text x="30" y="200" fill="#79d99a" font-size="8" font-family="sans-serif">Copy-on-write: shared block duplicated on write</text>
+
+  <text x="135" y="228" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">Block size: 16 tokens = 32 KB (LLaMA-3 70B FP8)</text>
+  <text x="135" y="240" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">40 GB KV budget &#247; 32 KB = 1,310,720 physical blocks</text>
+
+  <!-- Arrows from block tables to HBM blocks -->
+  <line x1="245" y1="98" x2="310" y2="120" stroke="#2a6099" stroke-width="1.5" marker-end="url(#aPT)" stroke-dasharray="4"/>
+  <line x1="245" y1="174" x2="310" y2="155" stroke="#1a7a3a" stroke-width="1.5" marker-end="url(#aPTG)" stroke-dasharray="4"/>
+
+  <!-- GPU HBM: physical blocks scattered -->
+  <rect x="305" y="30" width="445" height="200" rx="8" fill="#1c2438" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="527" y="48" text-anchor="middle" fill="#e3b341" font-size="10.5" font-weight="bold" font-family="sans-serif">GPU HBM &#8212; Physical KV Blocks (Non-Contiguous)</text>
+
+  <!-- Grid of physical blocks (some used, some free) -->
+  <g font-family="sans-serif" font-size="7.5">
+  <!-- Row 1 -->
+  <rect x="315" y="57" width="38" height="28" rx="3" fill="#2a6099"/><text x="334" y="68" text-anchor="middle" fill="#fff">Phys #412</text><text x="334" y="79" text-anchor="middle" fill="#c8d8f0">A&#43;B shared</text>
+  <rect x="357" y="57" width="38" height="28" rx="3" fill="#c0392b" opacity=".4" stroke="#ddd" stroke-width="0.5"/><text x="376" y="75" text-anchor="middle" fill="#aaa">free</text>
+  <rect x="399" y="57" width="38" height="28" rx="3" fill="#1a3a6b"/><text x="418" y="68" text-anchor="middle" fill="#e3b341">Phys #1247</text><text x="418" y="79" text-anchor="middle" fill="#c8d8f0">Req A blk 0</text>
+  <rect x="441" y="57" width="38" height="28" rx="3" fill="#c0392b" opacity=".4" stroke="#ddd" stroke-width="0.5"/><text x="460" y="75" text-anchor="middle" fill="#aaa">free</text>
+  <rect x="483" y="57" width="38" height="28" rx="3" fill="#c0392b" opacity=".4" stroke="#ddd" stroke-width="0.5"/><text x="502" y="75" text-anchor="middle" fill="#aaa">free</text>
+  <rect x="525" y="57" width="38" height="28" rx="3" fill="#1a7a3a"/><text x="544" y="68" text-anchor="middle" fill="#fff">Phys #2099</text><text x="544" y="79" text-anchor="middle" fill="#c8f0d8">Req A blk 4</text>
+  <rect x="567" y="57" width="38" height="28" rx="3" fill="#c0392b" opacity=".4" stroke="#ddd" stroke-width="0.5"/><text x="586" y="75" text-anchor="middle" fill="#aaa">free</text>
+  <rect x="609" y="57" width="38" height="28" rx="3" fill="#7b2d8b"/><text x="628" y="68" text-anchor="middle" fill="#fff">Phys #7312</text><text x="628" y="79" text-anchor="middle" fill="#e8c8f0">Req B blk 1</text>
+  <rect x="651" y="57" width="38" height="28" rx="3" fill="#c0392b" opacity=".4" stroke="#ddd" stroke-width="0.5"/><text x="670" y="75" text-anchor="middle" fill="#aaa">free</text>
+  <!-- Row 2 -->
+  <rect x="315" y="91" width="38" height="28" rx="3" fill="#c0392b" opacity=".4" stroke="#ddd" stroke-width="0.5"/><text x="334" y="109" text-anchor="middle" fill="#aaa">free</text>
+  <rect x="357" y="91" width="38" height="28" rx="3" fill="#1a3a6b"/><text x="376" y="102" text-anchor="middle" fill="#e3b341">Phys #5823</text><text x="376" y="113" text-anchor="middle" fill="#c8d8f0">Req A blk 1</text>
+  <rect x="399" y="91" width="38" height="28" rx="3" fill="#c0392b" opacity=".4" stroke="#ddd" stroke-width="0.5"/><text x="418" y="109" text-anchor="middle" fill="#aaa">free</text>
+  <rect x="441" y="91" width="38" height="28" rx="3" fill="#7b2d8b"/><text x="460" y="102" text-anchor="middle" fill="#fff">Phys #91004</text><text x="460" y="113" text-anchor="middle" fill="#e8c8f0">Req B blk 2</text>
+  <rect x="483" y="91" width="38" height="28" rx="3" fill="#1a3a6b"/><text x="502" y="102" text-anchor="middle" fill="#e3b341">Phys #88001</text><text x="502" y="113" text-anchor="middle" fill="#c8d8f0">Req A blk 3</text>
+  <rect x="525" y="91" width="38" height="28" rx="3" fill="#c0392b" opacity=".4" stroke="#ddd" stroke-width="0.5"/><text x="544" y="109" text-anchor="middle" fill="#aaa">free</text>
+  <rect x="567" y="91" width="38" height="28" rx="3" fill="#c0392b" opacity=".4" stroke="#ddd" stroke-width="0.5"/><text x="586" y="109" text-anchor="middle" fill="#aaa">free</text>
+  <rect x="609" y="91" width="38" height="28" rx="3" fill="#1a3a6b"/><text x="628" y="102" text-anchor="middle" fill="#e3b341">Phys #412</text><text x="628" y="113" text-anchor="middle" fill="#c8d8f0">A+B: ref=2</text>
+  <rect x="651" y="91" width="38" height="28" rx="3" fill="#c0392b" opacity=".4" stroke="#ddd" stroke-width="0.5"/><text x="670" y="109" text-anchor="middle" fill="#aaa">free</text>
+  </g>
+
+  <text x="527" y="140" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">... 1,310,720 total physical blocks across GPU HBM ...</text>
+  <text x="527" y="154" text-anchor="middle" fill="#e3b341" font-size="9.5" font-family="sans-serif">Non-contiguous: scattered anywhere; attention kernel uses block table to find them</text>
+  <text x="527" y="167" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">Block allocated only when token arrives. Block freed immediately when request ends.</text>
+
+  <!-- Key numbers -->
+  <rect x="315" y="176" width="425" height="48" rx="5" fill="rgba(255,255,255,.08)" stroke="#e3b341" stroke-width="1"/>
+  <text x="527" y="192" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="bold" font-family="sans-serif">Key Numbers: LLaMA-3 70B FP8 KV, block_size=16</text>
+  <text x="330" y="207" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">Block size = 16 &#215; 8 &#215; 128 &#215; 2 &#215; 1 byte = 32,768 bytes = 32 KB</text>
+  <text x="330" y="219" fill="#c8d8f0" font-size="9.5" font-family="sans-serif">40 GB KV budget &#247; 32 KB = 1,310,720 physical blocks | Attention kernel overhead: ~5%</text>
+
+  <!-- Allocation/free cycle -->
+  <rect x="10" y="245" width="740" height="115" rx="7" fill="#f3f5f8" stroke="#1c2438" stroke-width="1.5"/>
+  <text x="380" y="263" text-anchor="middle" fill="#1c2438" font-size="11" font-weight="bold" font-family="sans-serif">ALLOCATION LIFECYCLE: Lazy Allocation &#8212; Zero Pre-Reservation</text>
+
+  <rect x="20" y="272" width="170" height="36" rx="5" fill="#1c2438"/>
+  <text x="105" y="287" text-anchor="middle" fill="#e3b341" font-size="9.5" font-weight="bold" font-family="sans-serif">Admission</text>
+  <text x="105" y="300" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">0 blocks allocated</text>
+
+  <line x1="193" y1="290" x2="210" y2="290" stroke="#888" stroke-width="1.5" marker-end="url(#aPT)"/>
+
+  <rect x="215" y="272" width="170" height="36" rx="5" fill="#2a6099"/>
+  <text x="300" y="287" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">Decode step</text>
+  <text x="300" y="300" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">Allocate 1 block when entering new block boundary</text>
+
+  <line x1="388" y1="290" x2="405" y2="290" stroke="#888" stroke-width="1.5" marker-end="url(#aPT)"/>
+
+  <rect x="410" y="272" width="170" height="36" rx="5" fill="#1a7a3a"/>
+  <text x="495" y="287" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">Request complete</text>
+  <text x="495" y="300" text-anchor="middle" fill="#c8f0d8" font-size="9" font-family="sans-serif">Free ALL blocks immediately &#8594; available for next request</text>
+
+  <line x1="583" y1="290" x2="600" y2="290" stroke="#888" stroke-width="1.5" marker-end="url(#aPT)"/>
+
+  <rect x="605" y="272" width="135" height="36" rx="5" fill="#7b2d8b"/>
+  <text x="672" y="287" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="bold" font-family="sans-serif">Prefix hit</text>
+  <text x="672" y="300" text-anchor="middle" fill="#e8c8f0" font-size="9" font-family="sans-serif">ref_count++ (shared, no alloc)</text>
+
+  <text x="380" y="348" text-anchor="middle" fill="#555" font-size="9" font-family="sans-serif">No pre-reservation &#183; No internal fragmentation &#183; HBM holds only real KV data &#183; vLLM block_size=16 consensus choice</text>
+</svg>
+<figcaption><strong>Figure 11.3</strong> &#8212; PagedAttention block table mechanics. Physical KV blocks (32 KB each at block_size=16 for LLaMA-3 70B FP8) are scattered non-contiguously in HBM. Each request holds a logical&#8594;physical mapping table in CPU RAM. Allocation is lazy: 0 blocks at admission, one block per 16 new tokens. Shared prefix blocks use reference counting (copy-on-write on divergence). The attention kernel uses the block table to gather K/V blocks, adding ~5% overhead vs contiguous FlashAttention.</figcaption>
+</figure></div>
+
+<h3 id="s1123">11.2.3 Block Size Selection and Tradeoffs</h3>
+<div class="formula">BLOCK SIZE TRADEOFF ANALYSIS:
+
+Standard production choice: block_size=16 tokens
+
+Last-block waste formula:
+  Expected waste per request = (block_size &#8722; 1) / 2 &#215; KV_per_token
+
+  block_size=8:   3.5 &#215; 0.160 MB =  0.56 MB  (fine)
+  block_size=16:  7.5 &#215; 0.160 MB =  1.20 MB  (standard)
+  block_size=32: 15.5 &#215; 0.160 MB =  2.48 MB  (slightly coarser)
+  block_size=128: 63.5 &#215; 0.160 MB = 10.16 MB (too coarse for prefix sharing)
+
+Consensus: block_size=16 in vLLM, TRT-LLM, SGLang
+  Exception: block_size=32&#8211;64 when context windows are consistently
+  very long (&gt;16K tokens) and prefix caching is low-priority</div>
+
+<h3 id="s1124">11.2.4 Copy-on-Write for Beam Search</h3>
+<div class="formula">COPY-ON-WRITE &#8212; Memory Savings for Beam Search (beam_width=4):
+
+  4 beams share 512-token common prefix; each generates 100 unique decode steps
+
+  Naive (no CoW):
+    4 &#215; (512 + 100) &#215; 0.160 MB = 391.7 MB
+
+  CoW (shared prefix blocks, ref_count=4):
+    Shared prefix: 1 &#215; 512 &#215; 0.160 = 81.9 MB  (shared read-only)
+    Unique suffixes: 4 &#215; 100 &#215; 0.160 = 64.0 MB
+    Total: 145.9 MB  &#8594; 62.7% savings vs naive
+
+  Mechanism: block is copied only when a beam actually DIVERGES.
+  Most prefix blocks are never copied &#8212; shared read-only for entire search.
+  Same mechanism applies to: parallel sampling, speculative decoding</div>
+
+<h2 id="s113">11.3 &#8212; KV Cache Quantization</h2>
+
+<!-- DIAGRAM 4: GQA Head Reduction -->
+<div class="diagram-wrap" id="diag-gqa"><figure>
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="380" y="20" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">GQA HEAD REDUCTION &#8212; MHA vs GQA vs MQA and Combined with FP8</text>
+
+  <!-- MHA column -->
+  <rect x="20" y="30" width="160" height="250" rx="7" fill="#fff0f0" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="100" y="48" text-anchor="middle" fill="#c0392b" font-size="10.5" font-weight="bold" font-family="sans-serif">MHA (LLaMA-2 70B)</text>
+  <text x="100" y="61" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">H_q=64, H_kv=64, R=1</text>
+  <!-- Show 8 KV head bars representing 64 heads compactly -->
+  <rect x="30" y="70" width="140" height="8" rx="2" fill="#c0392b" opacity=".85"/>
+  <rect x="30" y="81" width="140" height="8" rx="2" fill="#c0392b" opacity=".85"/>
+  <rect x="30" y="92" width="140" height="8" rx="2" fill="#c0392b" opacity=".85"/>
+  <rect x="30" y="103" width="140" height="8" rx="2" fill="#c0392b" opacity=".85"/>
+  <rect x="30" y="114" width="140" height="8" rx="2" fill="#c0392b" opacity=".85"/>
+  <rect x="30" y="125" width="140" height="8" rx="2" fill="#c0392b" opacity=".85"/>
+  <rect x="30" y="136" width="140" height="8" rx="2" fill="#c0392b" opacity=".85"/>
+  <rect x="30" y="147" width="140" height="8" rx="2" fill="#c0392b" opacity=".85"/>
+  <text x="100" y="172" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">(64 KV heads = 8 rows shown)</text>
+  <rect x="22" y="185" width="150" height="30" rx="4" fill="#c0392b"/>
+  <text x="97" y="200" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">2.5 MB/token</text>
+  <text x="97" y="212" text-anchor="middle" fill="#ffc8c8" font-size="9" font-family="sans-serif">BF16 KV</text>
+  <rect x="22" y="224" width="150" height="48" rx="4" fill="#fff" stroke="#c0392b" stroke-width="1"/>
+  <text x="97" y="240" text-anchor="middle" fill="#c0392b" font-size="9.5" font-weight="bold" font-family="sans-serif">4K ctx per req: 9.6 GB</text>
+  <text x="97" y="254" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">Concurrent users</text>
+  <text x="97" y="266" text-anchor="middle" fill="#c0392b" font-size="10" font-weight="bold" font-family="sans-serif">@ 40 GB: 4 users</text>
+
+  <!-- GQA column (LLaMA-3: H_kv=8, R=8) -->
+  <rect x="200" y="30" width="160" height="250" rx="7" fill="#fffbf0" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="280" y="48" text-anchor="middle" fill="#a07800" font-size="10.5" font-weight="bold" font-family="sans-serif">GQA (LLaMA-3 70B)</text>
+  <text x="280" y="61" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">H_q=64, H_kv=8, R=8</text>
+  <!-- 1 row = 8 heads (only 1/8 of MHA) -->
+  <rect x="210" y="70" width="140" height="8" rx="2" fill="#e3b341" opacity=".85"/>
+  <text x="280" y="98" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">(8 KV heads &#8212; 1/8 of MHA)</text>
+  <text x="280" y="112" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">8 query heads share each KV head</text>
+  <text x="280" y="125" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">Quality: &gt;99.5% of MHA retained</text>
+  <rect x="202" y="185" width="150" height="30" rx="4" fill="#e3b341"/>
+  <text x="277" y="200" text-anchor="middle" fill="#1c2438" font-size="10" font-weight="bold" font-family="sans-serif">0.320 MB/token</text>
+  <text x="277" y="212" text-anchor="middle" fill="#1c2438" font-size="9" font-family="sans-serif">BF16 KV (8&#215; less)</text>
+  <rect x="202" y="224" width="150" height="48" rx="4" fill="#fff" stroke="#e3b341" stroke-width="1"/>
+  <text x="277" y="240" text-anchor="middle" fill="#a07800" font-size="9.5" font-weight="bold" font-family="sans-serif">4K ctx per req: 1.25 GB</text>
+  <text x="277" y="254" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">Concurrent users</text>
+  <text x="277" y="266" text-anchor="middle" fill="#a07800" font-size="10" font-weight="bold" font-family="sans-serif">@ 40 GB: 32 users (8&#215;)</text>
+
+  <!-- GQA + FP8 KV column -->
+  <rect x="380" y="30" width="175" height="250" rx="7" fill="#e8fff0" stroke="#1a7a3a" stroke-width="2"/>
+  <text x="467" y="48" text-anchor="middle" fill="#1a7a3a" font-size="10.5" font-weight="bold" font-family="sans-serif">&#9733; GQA + FP8 KV</text>
+  <text x="467" y="61" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">H_kv=8, R=8, dtype=FP8</text>
+  <rect x="390" y="70" width="150" height="8" rx="2" fill="#1a7a3a" opacity=".85"/>
+  <text x="467" y="98" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">Same 8 KV heads + FP8 dtype</text>
+  <text x="467" y="112" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">Quality: &lt;0.3% MMLU loss</text>
+  <text x="467" y="125" text-anchor="middle" fill="#1a7a3a" font-size="9" font-weight="bold" font-family="sans-serif">PRODUCTION STANDARD</text>
+  <rect x="385" y="185" width="162" height="30" rx="4" fill="#1a7a3a"/>
+  <text x="466" y="200" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">0.160 MB/token</text>
+  <text x="466" y="212" text-anchor="middle" fill="#c8f0d8" font-size="9" font-family="sans-serif">FP8 KV (16&#215; less than MHA BF16)</text>
+  <rect x="385" y="224" width="162" height="48" rx="4" fill="#fff" stroke="#1a7a3a" stroke-width="1"/>
+  <text x="466" y="240" text-anchor="middle" fill="#1a7a3a" font-size="9.5" font-weight="bold" font-family="sans-serif">4K ctx per req: 0.64 GB</text>
+  <text x="466" y="254" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">Concurrent users</text>
+  <text x="466" y="266" text-anchor="middle" fill="#1a7a3a" font-size="10" font-weight="bold" font-family="sans-serif">@ 40 GB: 62 users (16&#215;!)</text>
+
+  <!-- MLA column -->
+  <rect x="575" y="30" width="175" height="250" rx="7" fill="#f5f0ff" stroke="#7b2d8b" stroke-width="2"/>
+  <text x="662" y="48" text-anchor="middle" fill="#7b2d8b" font-size="10.5" font-weight="bold" font-family="sans-serif">MLA (DeepSeek-V3)</text>
+  <text x="662" y="61" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">d_c=512, BF16 latent KV</text>
+  <!-- Tiny latent bar -->
+  <rect x="585" y="70" width="150" height="3" rx="1" fill="#7b2d8b"/>
+  <text x="662" y="90" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">Cache only c_KV (512-dim latent)</text>
+  <text x="662" y="104" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">K,V reconstructed at attention time</text>
+  <text x="662" y="118" text-anchor="middle" fill="#7b2d8b" font-size="9" font-weight="bold" font-family="sans-serif">57&#215; compression vs MHA BF16</text>
+  <text x="662" y="132" text-anchor="middle" fill="#888" font-size="8.5" font-family="sans-serif">Quality: approaches full MHA</text>
+  <rect x="580" y="185" width="162" height="30" rx="4" fill="#7b2d8b"/>
+  <text x="661" y="200" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">0.00113 MB/token</text>
+  <text x="661" y="212" text-anchor="middle" fill="#e8c8f0" font-size="9" font-family="sans-serif">BF16 latent (57&#215; less than MHA)</text>
+  <rect x="580" y="224" width="162" height="48" rx="4" fill="#fff" stroke="#7b2d8b" stroke-width="1"/>
+  <text x="661" y="240" text-anchor="middle" fill="#7b2d8b" font-size="9.5" font-weight="bold" font-family="sans-serif">128K ctx per req: 0.14 GB</text>
+  <text x="661" y="254" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">Concurrent users</text>
+  <text x="661" y="266" text-anchor="middle" fill="#7b2d8b" font-size="10" font-weight="bold" font-family="sans-serif">@ 40 GB: 278 users!</text>
+</svg>
+<figcaption><strong>Figure 11.4</strong> &#8212; KV head reduction: MHA vs GQA vs GQA+FP8 vs MLA. MHA (LLaMA-2 style, H_kv=64): 2.5 MB/token BF16 &#8212; only 4 users at 4K context. GQA R=8 (LLaMA-3, H_kv=8): 0.320 MB/token &#8212; 8&#215; improvement, 32 users. GQA+FP8 KV: 0.160 MB/token &#8212; 16&#215; vs MHA BF16, 62 users, &lt;0.3% quality loss &#8212; the production standard. MLA (DeepSeek-V3, d_c=512 latent): 0.00113 MB/token &#8212; 57&#215; vs MHA BF16, 278 users even at 128K context.</figcaption>
+</figure></div>
+
+<h3 id="s1132">11.3.2 FP8 KV Cache &#8212; Production Default <span class="shipped">SHIPPED</span></h3>
+<div class="formula">FP8 KV QUANTIZATION (per-head scaling, online):
+
+  dtype: 1 byte per element (E4M3: range &#177;448)
+  Scale: one FP8/BF16 per KV head per layer (per-head scaling standard)
+  
+  For LLaMA-3 70B: 8 heads &#215; 80 layers = 640 scales each for K,V = 2.5 KB overhead
+  
+  Quality (LLaMA-3 70B BF16 &#8594; FP8 KV):
+    MMLU:        80.3% &#8594; 80.1%   (&#8722;0.2%)  &#9989; production-safe
+    HellaSwag:   87.1% &#8594; 86.9%   (&#8722;0.2%)  &#9989;
+    TruthfulQA:  44.7% &#8594; 44.5%   (&#8722;0.2%)  &#9989;
+  
+  vLLM config:
+    engine_args = AsyncEngineArgs(model="meta-llama/Llama-3-70b",
+                                  kv_cache_dtype="fp8",
+                                  gpu_memory_utilization=0.90)</div>
+
+<h3 id="s1133">11.3.3 INT8 KV Cache</h3>
+<div class="formula">INT8 KV QUANTIZATION:
+  dtype: 1 byte per element (signed INT8: &#8722;128 to 127)
+  Same memory footprint as FP8 but different quality profile
+  
+  Quality (LLaMA-3 70B with SmoothQuant-style INT8):
+    MMLU: &#8722;0.5%  &#9989;  HumanEval: &#8722;0.8%  &#9989;  GSM8K: &#8722;0.6%  &#9989;
+  
+  Preferred over FP8 when:
+    Deploying on A100/Ampere (no native FP8 hardware support)
+    Framework does not yet support FP8 KV (check vLLM/TRT-LLM changelog)
+    Conservative first deployment without FP8 evaluation on your specific model</div>
+
+<h3 id="s1134">11.3.4 INT4 KV Cache &#8212; Evaluation Required</h3>
+<div class="formula">INT4 KV QUANTIZATION:
+  dtype: 0.5 bytes per element; always per-head scaling (per-tensor too coarse)
+  Memory: 4&#215; reduction vs BF16 &#8594; 80 KB/token (LLaMA-3 70B)
+  
+  Quality (LLaMA-3 70B):
+    MMLU:      &#8722;1.5%  &#8594; acceptable for general chat
+    HumanEval: &#8722;2.5%  &#8592; SIGNIFICANT &#8212; code quality degrades noticeably
+    GSM8K:     &#8722;2.0%  &#8592; math reasoning measurably worse
+  
+  Use when:  128K+ context where KV is binding constraint; quality validated
+  Avoid:     Code generation, mathematical reasoning, without task evaluation
+  Combine:   INT4 KV (4&#215;) + GQA R=8 (8&#215;) = 32&#215; vs MHA BF16!</div>
+
+<h3 id="s1136">11.3.6 GQA + FP8 KV &#8212; The Combined Formula</h3>
+<div class="formula">COMBINED GQA + FP8 KV CAPACITY IMPACT:
+
+  MHA BF16 baseline (LLaMA-2 70B): H_kv=64
+    KV_per_token = 2 &#215; 80 &#215; 64 &#215; 128 &#215; 2 = 2,621,440 bytes = 2.5 MB
+    Concurrent users @ 40 GB, 4K ctx: 40,000/2,500 = 16 users
+
+  GQA BF16 (R=8, LLaMA-3 70B): H_kv=8
+    KV_per_token = 2 &#215; 80 &#215; 8 &#215; 128 &#215; 2 = 327,680 bytes = 0.320 MB
+    Concurrent users: 40,000/320 = 125 users  (8&#215; improvement)
+
+  GQA FP8 (R=8 + FP8 dtype):
+    KV_per_token = 2 &#215; 80 &#215; 8 &#215; 128 &#215; 1 = 163,840 bytes = 0.160 MB
+    Concurrent users: 40,000/160 = 250 users  (16&#215; improvement)
+
+  This 16&#215; serving capacity increase:
+    &#8226; No retraining required
+    &#8226; No hardware changes
+    &#8226; &lt;0.3% quality loss across all major benchmarks
+    &#8226; Two orthogonal techniques that multiply together</div>
+<h2 id="s114">11.4 &#8212; Prefix Caching Deep Dive</h2>
+<h3>11.4.1 Why Prefix Caching Exists</h3>
+<p>Many production requests share a common prefix: the same 1,500-token system prompt, the same retrieved document chunks, the same repository context. KV tensors for identical input tokens are deterministically identical &#8212; same tokens through same weights produce the same K and V. Computing them once and reusing them across all requests sharing that prefix is an O(1) optimization for the prefill phase.</p>
+
+<!-- DIAGRAM 3: Prefix Caching Radix Tree -->
+<div class="diagram-wrap" id="diag-prefix"><figure>
+<svg viewBox="0 0 760 380" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <defs>
+    <marker id="aRA" markerWidth="7" markerHeight="7" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#2a6099"/></marker>
+    <marker id="aRG" markerWidth="7" markerHeight="7" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#1a7a3a"/></marker>
+    <marker id="aRR" markerWidth="7" markerHeight="7" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#c0392b"/></marker>
+  </defs>
+  <text x="380" y="20" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">PREFIX CACHING &#8212; HASH-BASED + RADIXATTENTION TREE STRUCTURE</text>
+
+  <!-- LEFT: Hash-based flat approach -->
+  <rect x="10" y="30" width="340" height="180" rx="8" fill="#fffbf0" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="180" y="50" text-anchor="middle" fill="#a07800" font-size="10.5" font-weight="bold" font-family="sans-serif">Flat Hash Cache (vLLM / TRT-LLM)</text>
+  <text x="180" y="63" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">Each block keyed by hash(all tokens through block end)</text>
+
+  <!-- Hash lookup chain -->
+  <rect x="20" y="72" width="310" height="28" rx="5" fill="#1c2438"/>
+  <text x="175" y="86" text-anchor="middle" fill="#e3b341" font-size="9.5" font-weight="bold" font-family="sans-serif">Request tokens: [sys_prompt_tok_0...1023] + [user_query_0...127]</text>
+  <text x="175" y="96" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">Walk blocks: hash(tok[0:16]), hash(tok[0:32]), ..., hash(tok[0:1024])</text>
+
+  <text x="30" y="118" fill="#1a7a3a" font-size="9.5" font-family="sans-serif">&#10003; hash(sys[0:16])   &#8594; HIT   &#8594; reuse phys blocks #3001&#8211;3001</text>
+  <text x="30" y="131" fill="#1a7a3a" font-size="9.5" font-family="sans-serif">&#10003; hash(sys[0:32])   &#8594; HIT   &#8594; reuse phys blocks #3002</text>
+  <text x="30" y="144" fill="#1a7a3a" font-size="9.5" font-family="sans-serif">&#10003; hash(sys[0:1024]) &#8594; HIT   &#8594; reuse phys blocks #3064</text>
+  <text x="30" y="157" fill="#c0392b" font-size="9.5" font-family="sans-serif">&#10008; hash(sys+user[0:16]) &#8594; MISS &#8594; must prefill from this point</text>
+  <text x="30" y="170" fill="#555" font-size="9" font-family="sans-serif">Only prefill 128 tokens (user query) instead of 1,152 &#8594; 89% prefill reduction!</text>
+  <text x="175" y="198" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">O(S/block_size) lookup time | Stop at first cache miss</text>
+
+  <!-- RIGHT: RadixAttention tree -->
+  <rect x="368" y="30" width="382" height="180" rx="8" fill="#e8fff0" stroke="#1a7a3a" stroke-width="1.5"/>
+  <text x="559" y="50" text-anchor="middle" fill="#1a7a3a" font-size="10.5" font-weight="bold" font-family="sans-serif">RadixAttention Tree (SGLang) &#8212; Shared Physical Blocks</text>
+  <text x="559" y="63" text-anchor="middle" fill="#888" font-size="9.5" font-family="sans-serif">Radix tree over KV blocks &#8212; shared prefix = shared physical memory</text>
+
+  <!-- Tree structure -->
+  <!-- Root -->
+  <rect x="522" y="72" width="74" height="22" rx="4" fill="#1c2438"/>
+  <text x="559" y="87" text-anchor="middle" fill="#e3b341" font-size="9.5" font-weight="bold" font-family="sans-serif">root</text>
+  <!-- System prompt node -->
+  <line x1="559" y1="94" x2="559" y2="108" stroke="#1a7a3a" stroke-width="1.5" marker-end="url(#aRG)"/>
+  <rect x="467" y="108" width="185" height="26" rx="4" fill="#1a7a3a"/>
+  <text x="559" y="120" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">system_prompt (1024 tok)</text>
+  <text x="559" y="130" text-anchor="middle" fill="#c8f0d8" font-size="8.5" font-family="sans-serif">Phys blocks #100&#8211;#163 | ref_count=N</text>
+  <!-- User A branch -->
+  <line x1="510" y1="134" x2="467" y2="148" stroke="#2a6099" stroke-width="1.5" marker-end="url(#aRA)"/>
+  <rect x="380" y="148" width="170" height="22" rx="4" fill="#2a6099"/>
+  <text x="465" y="160" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">user_query_A (128 tok) | phys #164&#8211;#171</text>
+  <!-- User B branch -->
+  <line x1="610" y1="134" x2="645" y2="148" stroke="#7b2d8b" stroke-width="1.5" marker-end="url(#aRA)"/>
+  <rect x="558" y="148" width="180" height="22" rx="4" fill="#7b2d8b"/>
+  <text x="648" y="160" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">user_query_B (128 tok) | phys #172&#8211;#179</text>
+
+  <text x="559" y="185" text-anchor="middle" fill="#1a7a3a" font-size="9.5" font-weight="bold" font-family="sans-serif">System prompt = ONE set of physical blocks. N users share it. Zero duplication.</text>
+  <text x="559" y="198" text-anchor="middle" fill="#888" font-size="9" font-family="sans-serif">Memory = 1&#215;sys_prompt + N&#215;unique_queries (vs N&#215;(sys+query) with flat hash)</text>
+
+  <!-- Eviction policy + economics -->
+  <rect x="10" y="220" width="740" height="148" rx="8" fill="#f3f5f8" stroke="#1c2438" stroke-width="1.5"/>
+  <text x="380" y="238" text-anchor="middle" fill="#1c2438" font-size="11" font-weight="bold" font-family="sans-serif">PREFIX CACHE ECONOMICS &#8212; Hit Rate to Cost Savings</text>
+
+  <!-- Left: hit rate formula -->
+  <rect x="20" y="245" width="355" height="112" rx="5" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  <text x="197" y="262" text-anchor="middle" fill="#1c2438" font-size="10" font-weight="bold" font-family="sans-serif">Cost Reduction Formula:</text>
+  <text x="30" y="276" fill="#555" font-size="9.5" font-family="sans-serif">reduction = 1 &#8722; (S&#215;(1&#8722;h) + U) / (S + U)</text>
+  <text x="30" y="290" fill="#555" font-size="9.5" font-family="sans-serif">where S=shared prefix tokens, U=unique tokens, h=hit rate</text>
+  <text x="30" y="306" fill="#1a7a3a" font-size="10" font-weight="bold" font-family="sans-serif">Example: h=0.80, S=1024, U=128:</text>
+  <text x="30" y="320" fill="#444" font-size="9.5" font-family="sans-serif">  = 1 &#8722; (1024&#215;0.2 + 128) / 1152 = 1 &#8722; 332.8/1152 = 71.1%</text>
+  <text x="30" y="334" fill="#1a7a3a" font-size="9.5" font-weight="bold" font-family="sans-serif">  &#8594; 71% fewer prefill tokens &#8594; TTFT 3&#215; faster for cached users</text>
+  <text x="30" y="348" fill="#555" font-size="9" font-family="sans-serif">  &#8594; Same GPU handles 3.4&#215; more users at 100 RPS</text>
+
+  <!-- Right: hit rates by workload -->
+  <rect x="385" y="245" width="355" height="112" rx="5" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  <text x="562" y="262" text-anchor="middle" fill="#1c2438" font-size="10" font-weight="bold" font-family="sans-serif">Production Hit Rates by Workload:</text>
+  <text x="395" y="278" fill="#1a7a3a" font-size="9.5" font-family="sans-serif">&#10003; Chat / Conversational AI:    70&#8211;85%  (shared system prompt)</text>
+  <text x="395" y="292" fill="#1a7a3a" font-size="9.5" font-family="sans-serif">&#10003; RAG (limited corpus):        40&#8211;65%  (repeated doc chunks)</text>
+  <text x="395" y="306" fill="#e3b341" font-size="9.5" font-family="sans-serif">&#9888; Developer API:              20&#8211;40%  (diverse user prompts)</text>
+  <text x="395" y="320" fill="#c0392b" font-size="9.5" font-family="sans-serif">&#10008; Document summarization:       0&#8211;10%  (unique documents)</text>
+  <text x="395" y="334" fill="#555" font-size="9" font-family="sans-serif">Eviction: LRU for flat cache; Leaves-first for radix tree</text>
+  <text x="395" y="348" fill="#c0392b" font-size="9" font-weight="bold" font-family="sans-serif">NEVER use FIFO &#8212; evicts the hot system prompt on first write!</text>
+</svg>
+<figcaption><strong>Figure 11.5</strong> &#8212; Prefix caching: hash-based flat cache vs RadixAttention tree. Flat hash: each block keyed by hash(all tokens through block end); lookup stops at first miss. RadixAttention (SGLang): radix tree where shared prefixes occupy a single set of physical blocks shared by all requests using that prefix &#8212; N users = 1&#215;prefix + N&#215;unique, not N&#215;(prefix+unique). At h=0.80, S=1024, U=128: 71.1% fewer prefill tokens, 3&#215; faster TTFT, 3.4&#215; GPU throughput improvement.</figcaption>
+</figure></div>
+
+<h2 id="s115">11.5 &#8212; KV Cache Offloading</h2>
+
+<!-- DIAGRAM 5: Memory Tiering Hierarchy -->
+<div class="diagram-wrap" id="diag-tiers"><figure>
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,serif">
+  <text x="380" y="20" text-anchor="middle" fill="#1c2438" font-size="12" font-weight="bold" font-family="sans-serif">KV CACHE MEMORY TIERING HIERARCHY &#8212; Capacity vs Bandwidth vs Latency</text>
+
+  <!-- Pyramid structure -->
+  <!-- Tier 1: GPU HBM (top, smallest, fastest) -->
+  <polygon points="380,38 280,100 480,100" fill="#1a3a6b" stroke="#e3b341" stroke-width="2"/>
+  <text x="380" y="68" text-anchor="middle" fill="#e3b341" font-size="10.5" font-weight="bold" font-family="sans-serif">GPU HBM</text>
+  <text x="380" y="84" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">80 GB | 3.35 TB/s</text>
+
+  <!-- Labels right of pyramid -->
+  <rect x="495" y="38" width="255" height="58" rx="5" fill="#f0f4fa" stroke="#1a3a6b" stroke-width="1"/>
+  <text x="505" y="54" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">GPU HBM &#8212; Primary KV Tier</text>
+  <text x="505" y="66" fill="#555" font-size="9" font-family="sans-serif">Bandwidth: 3.35 TB/s | Latency: ~1 &#956;s</text>
+  <text x="505" y="78" fill="#555" font-size="9" font-family="sans-serif">Capacity: 80 GB | Cost: ~$50/GB (amortized)</text>
+  <text x="505" y="90" fill="#1a7a3a" font-size="9" font-weight="bold" font-family="sans-serif">All active KV for in-flight requests lives here</text>
+
+  <!-- Tier 2: CPU DRAM -->
+  <polygon points="280,104 160,168 480,104 600,168" fill="#2a6099" stroke="#e3b341" stroke-width="2"/>
+  <text x="380" y="132" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="bold" font-family="sans-serif">CPU DRAM</text>
+  <text x="380" y="147" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">1&#8211;4 TB | PCIe 4.0: 16&#8211;24 GB/s practical</text>
+  <text x="380" y="161" text-anchor="middle" fill="#c8d8f0" font-size="9" font-family="sans-serif">PCIe 5.0: 32&#8211;48 GB/s practical</text>
+
+  <rect x="495" y="104" width="255" height="62" rx="5" fill="#e8f0ff" stroke="#2a6099" stroke-width="1"/>
+  <text x="505" y="120" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">CPU DRAM &#8212; Warm KV Tier</text>
+  <text x="505" y="132" fill="#555" font-size="9" font-family="sans-serif">Bandwidth: 16&#8211;48 GB/s (PCIe-limited)</text>
+  <text x="505" y="144" fill="#555" font-size="9" font-family="sans-serif">Latency: 10&#8211;50 &#956;s | Cost: ~$5/GB (10&#215; cheaper)</text>
+  <text x="505" y="156" fill="#2a6099" font-size="9" font-weight="bold" font-family="sans-serif">Swap-or-recompute crossover: ~600&#8211;1200 tokens</text>
+  <text x="505" y="164" fill="#888" font-size="8.5" font-family="sans-serif">Use async prefetch to hide 16&#8211;24 GB/s PCIe latency behind compute</text>
+
+  <!-- Tier 3: NVMe SSD -->
+  <polygon points="160,172 20,240 600,172 740,240" fill="#7b2d8b" opacity=".8" stroke="#e3b341" stroke-width="2"/>
+  <text x="380" y="200" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="bold" font-family="sans-serif">NVMe SSD</text>
+  <text x="380" y="215" text-anchor="middle" fill="#e8c8f0" font-size="9" font-family="sans-serif">8&#8211;64 TB | Gen5: 14 GB/s | Gen5 RAID&#215;4: 56 GB/s</text>
+  <text x="380" y="229" text-anchor="middle" fill="#e8c8f0" font-size="9" font-family="sans-serif">Latency: 100&#8211;200 &#956;s | Cost: ~$0.30&#8211;0.50/GB (100&#215; cheaper)</text>
+
+  <rect x="495" y="172" width="255" height="64" rx="5" fill="#f8f0ff" stroke="#7b2d8b" stroke-width="1"/>
+  <text x="505" y="188" fill="#1c2438" font-size="9.5" font-weight="bold" font-family="sans-serif">NVMe &#8212; Cold KV Tier</text>
+  <text x="505" y="200" fill="#555" font-size="9" font-family="sans-serif">Only for: very long seq (&gt;32K), low-priority batch jobs</text>
+  <text x="505" y="212" fill="#c0392b" font-size="9" font-weight="bold" font-family="sans-serif">NOT for interactive chat (latency too high)</text>
+  <text x="505" y="224" fill="#555" font-size="9" font-family="sans-serif">Use case: 64K-token document analysis, SLA &gt; 60s</text>
+  <text x="505" y="236" fill="#555" font-size="9" font-family="sans-serif">NVMe reload: 10.2 GB &#247; 14 GB/s = ~730 ms</text>
+
+  <!-- Swap-vs-recompute annotation -->
+  <rect x="10" y="258" width="470" height="52" rx="5" fill="#fff8ec" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="235" y="274" text-anchor="middle" fill="#a07800" font-size="10" font-weight="bold" font-family="sans-serif">SWAP vs RECOMPUTE CROSSOVER (PCIe 4.0, INT8 KV, H100):</text>
+  <text x="20" y="288" fill="#555" font-size="9.5" font-family="sans-serif">Recompute cost &#8733; S&#178; &#8194; Swap cost &#8733; S &#215; KV_per_token / PCIe_BW &#8194; Crossover: S &#8776; 600&#8211;1,200 tokens</text>
+  <text x="20" y="303" fill="#1c2438" font-size="9.5" font-family="sans-serif">&#8226; Seq &lt;512 tokens: RECOMPUTE (quadratic cost still small) &nbsp; &#8226; Seq &gt;1,024 tokens: SWAP to CPU DRAM</text>
+</svg>
+<figcaption><strong>Figure 11.6</strong> &#8212; KV cache memory tiering hierarchy. HBM (80 GB, 3.35 TB/s) is the primary tier for all in-flight requests. CPU DRAM (1&#8211;4 TB, 16&#8211;48 GB/s PCIe) is the warm tier for swapped-out sequences &#8212; async prefetch hides the PCIe latency behind compute for other requests. NVMe SSD (8&#8211;64 TB, 14 GB/s) is the cold tier for very long sequences (&gt;32K tokens) in low-priority batch jobs only. Swap-vs-recompute crossover: sequences &lt;512 tokens are cheaper to recompute than swap; sequences &gt;1,024 tokens are cheaper to swap than recompute.</figcaption>
+</figure></div>
+
+<h3 id="s1152">11.5.2 PCIe Bandwidth Math</h3>
+<div class="formula">CPU DRAM OFFLOADING &#8212; BANDWIDTH AND LATENCY:
+
+For a 2,000-token sequence (INT8 KV, LLaMA-3 70B):
+  KV_size = 2 &#215; 80 &#215; 8 &#215; 128 &#215; 2000 &#215; 1 byte = 327,680,000 bytes &#8776; 313 MB
+
+  Evict to CPU DRAM (PCIe 4.0, 16 GB/s): 313 MB / 16 GB/s = 19.6 ms
+  Reload from CPU DRAM:                  313 MB / 16 GB/s = 19.6 ms
+  Round-trip overhead: ~40 ms per swap event
+
+SWAP-vs-RECOMPUTE CROSSOVER:
+  Recompute cost &#8773; S&#178; &#215; d_model / TFLOPS &#8594; at 500 tokens: ~2.5 ms on H100
+  Swap cost &#8773; S &#215; 163KB / 16 GB/s &#8594; at 500 tokens: ~5.1 ms (round-trip)
+  Crossover at ~S = 600&#8211;1200 tokens (batch-configuration dependent)
+  
+  Policy: &lt;512 tokens &#8594; recompute | &gt;1024 tokens &#8594; swap
+
+ASYNC PREFETCH (hiding the PCIe latency):
+  Detect request resumption N steps early &#8594; initiate async DMA transfer
+  GPU runs decode for OTHER requests while DMA uses PCIe DMA engine
+  At 2000 tok/sec decode throughput, 40 other requests: ~40 steps &#215; 0.5ms = 20ms
+  &#8594; PCIe transfer fully hidden if 40+ other requests are active (high utilization)</div>
+
+<h2 id="s116">11.6 &#8212; KV Transfer in Disaggregated Inference</h2>
+<div class="formula">KV TRANSFER BANDWIDTH REQUIREMENTS (disaggregated prefill-decode):
+
+Per-request KV size (LLaMA-3 70B, BF16, 4K context):
+  = 2 &#215; 80 &#215; 8 &#215; 128 &#215; 4096 &#215; 2 bytes = 5.4 GB
+
+Required transfer bandwidth at sustained load:
+  BW_required = KV_bytes_per_request &#215; decode_inbound_RPS
+
+  At 10 RPS (BF16 4K):  10 &#215; 5.4 GB = 54 GB/s
+  At 10 RPS (INT8 4K):  10 &#215; 2.7 GB = 27 GB/s
+  At 100 RPS (INT8 4K): 100 &#215; 2.7 GB = 270 GB/s &#8592; needs multiple IB links
+
+INFINIBAND NDR CAPACITY:
+  Per port: 400 Gb/s = 50 GB/s
+  Single NDR link: 50 / 2.7 = 18.5 requests/sec at INT8 4K
+
+NIXL (NVIDIA Dynamo) vs Naive NCCL:
+  NCCL:  15&#8211;20 GB/s practical (not designed for point-to-point KV)
+  NIXL:  35&#8211;45 GB/s (pre-registered RDMA, batch writes, layer pipelining)
+  Layer pipelining hides ~70% of transfer behind decode compute &#8594; ~20ms observable
+
+DISAGGREGATE WHEN:
+  &#9989; Average prompt &gt;1,024 tokens, fleet &gt;100 GPUs, TTFT SLA &gt;300ms
+KEEP COLLOCATED WHEN:
+  &#9989; Short prompts (&lt;256 tokens), fleet &lt;50 GPUs, TTFT SLA &lt;150ms</div>
+
+<h2 id="s117">11.7 &#8212; Multi-Head Latent Attention (MLA) KV Compression</h2>
+<div class="formula">MLA MATHEMATICAL FORMULATION (DeepSeek-V2/V3):
+
+STANDARD MHA KV cache per token per layer:
+  {K_1,...,K_H, V_1,...,V_H} = 2 &#215; H &#215; d_head &#215; dtype_bytes
+  DeepSeek-V3 (H=128, d_head=128, BF16): 2&#215;128&#215;128&#215;2 = 65,536 bytes = 64 KB
+
+MLA STEP 1 &#8212; Down-project to latent vector:
+  c_KV = x &#215; W_DKV    where W_DKV &#8712; R^{d_model &#215; d_c}
+  d_c = 512 in DeepSeek-V3 (vs 32,768 full KV dims in MHA)
+  
+  Cache stores ONLY c_KV: d_c &#215; dtype_bytes = 512 &#215; 2 = 1,024 bytes = 1 KB
+  &#8592; 64&#215; compression vs MHA!
+
+MLA STEP 2 &#8212; Reconstruct K,V at attention time (not cached):
+  [K_1,...,K_H; V_1,...,V_H] = c_KV &#215; W_UKV    (W_UKV is a fixed weight matrix)
+  Reconstruction cost: O(seq_len &#215; d_c &#215; 2Hd_head) extra FLOPs per layer
+  Hidden inside the attention kernel &#8212; ~5% overhead at typical sequence lengths
+
+DECOUPLED ROPE:
+  k_rope = x &#215; W_QR  (d_rope=64; cached separately for position sensitivity)
+  Full cache per token: c_KV + k_rope = (512 + 64) &#215; 2 = 1,152 bytes
+
+COMPRESSION RATIO:
+  MHA BF16 (H=128): 64 KB/token
+  MLA BF16 (d_c=512): 1.125 KB/token
+  Compression: 64 / 1.125 = 56.9&#215; &#8776; 57&#215;
+
+CAPACITY IMPACT (H100&#215;8 cluster, 640 GB KV budget, 128K context):
+  MHA BF16:   2&#215;128&#215;128&#215;128K&#215;2 = 8.4 GB/request &#8594; 76 users
+  GQA FP8:    2&#215;80&#215;8&#215;128&#215;128K&#215;1 = 20.5 GB &#8594; 31 users (LLaMA-3 style)
+  MLA BF16:   1.125 KB &#215; 128K = 0.144 GB/request &#8594; 4,444 users!
+
+  MLA is not merely an incremental improvement at long context &#8212;
+  it is a fundamentally different architectural trade at 128K+.</div>
+
+<h2 id="s118">11.8 &#8212; Anti-Patterns and Decision Framework</h2>
+<table>
+<tr><th>Anti-Pattern</th><th>Symptom</th><th>Correct Practice</th></tr>
+<tr><td>Contiguous pre-allocation</td><td>60&#8211;80% HBM wasted; only 8 GB of 40 GB holds real data</td><td>PagedAttention with block_size=16; lazy allocation only</td></tr>
+<tr><td>BF16 weights on single H100 for 70B</td><td>Zero KV headroom after loading weights (140 GB &gt; 80 GB)</td><td>FP8 weights + TP=2: 35 GB weights, 40 GB KV headroom</td></tr>
+<tr><td>FIFO prefix cache eviction</td><td>Hot system prompt evicted constantly; hit rate near zero</td><td>LRU (flat); Leaves-first (radix tree); NEVER FIFO</td></tr>
+<tr><td>INT4 KV without evaluation</td><td>Code quality drops significantly; GSM8K/HumanEval regression</td><td>Always run HumanEval + GSM8K before enabling INT4 KV</td></tr>
+<tr><td>Prefix caching on unique-document workloads</td><td>0&#8211;10% hit rate; metadata overhead with zero gain</td><td>Monitor hit rate; disable prefix cache if &lt;20%</td></tr>
+<tr><td>Disaggregating too early (&lt;50 GPUs)</td><td>P99 TTFT worse after disaggregation; operational complexity</td><td>Disaggregate only &gt;100 GPUs, TTFT SLA &gt;300ms</td></tr>
+<tr><td>Per-tensor KV quantization</td><td>One outlier head dominates scale; 80%+ of INT8 range wasted</td><td>Per-head scaling always; per-token for INT4 quality margin</td></tr>
+<tr><td>Block size too large (&gt;128)</td><td>Poor prefix sharing granularity; coarse last-block waste</td><td>block_size=16 consensus; 32&#8211;64 only for uniform long-context</td></tr>
+</table>
+
+<h2 id="cookbook">11.9 Profiling Cookbook</h2>
+<div class="cookbook">
+<div class="cookbook-label">&#128300; Profiling Cookbook &#8212; KV Cache Diagnosis</div>
+<pre><span class="cmt"># &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
+# SYMPTOM: P99 TTFT spiking at high concurrency; users see latency
+# GOAL: Identify whether bottleneck is KV fragmentation, memory pressure,
+#       or prefix cache misses
+# &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</span>
+
+<span class="cmt"># STEP 1: Check HBM utilization and KV cache occupancy</span>
+<span class="cmd">nvidia-smi --query-gpu=memory.used,memory.free,utilization.gpu \
+    --format=csv,noheader -l 1</span>
+<span class="out"># If memory.used consistently &gt; 95% of 80 GB: KV pressure
+# If GPU util drops to &lt;30% during decode: not KV-bound, likely overhead</span>
+
+<span class="cmt"># STEP 2: vLLM built-in KV cache metrics (Prometheus endpoint)</span>
+<span class="cmd">curl -s http://localhost:8000/metrics | grep -E "kv_cache|prefix"</span>
+<span class="out"># vllm:gpu_cache_usage_perc      &#8212; fraction of KV blocks in use (target &lt;90%)
+# vllm:prefix_cache_hit_rate     &#8212; prefix cache efficiency (target &gt;40%)
+# vllm:num_preemptions_total     &#8212; number of requests preempted (KV evictions)
+# If preemptions &gt; 0: KV pressure; reduce batch size or enable FP8 KV
+# If prefix hit rate &lt;20%: disable prefix cache (overhead &gt; benefit)</span>
+
+<span class="cmt"># STEP 3: Compute theoretical KV capacity vs actual workload</span>
+<span class="cmd">python3 -c "
+L, H_kv, d_head = 80, 8, 128  # LLaMA-3 70B
+dtype_bytes = 1  # FP8
+kv_per_token_mb = 2 * L * H_kv * d_head * dtype_bytes / 1e6
+
+weights_gb = 35  # FP8 weights, TP=2 per GPU
+headroom_gb = 80 - weights_gb - 5  # 5 GB runtime overhead
+
+for ctx in [1024, 4096, 8192, 32768]:
+    per_req_gb = kv_per_token_mb * ctx / 1024
+    max_users = headroom_gb * 1024 / (kv_per_token_mb * ctx)
+    print(f'{ctx:6d} tokens: {per_req_gb:.2f} GB/req, {max_users:.0f} max users')
+"</span>
+<span class="out">#   1024 tokens: 0.16 GB/req, 250 max users
+#   4096 tokens: 0.64 GB/req,  62 max users
+#   8192 tokens: 1.28 GB/req,  31 max users
+#  32768 tokens: 5.12 GB/req,   8 max users</span>
+
+<span class="cmt"># STEP 4: Diagnose prefix cache hit rate and sizing</span>
+<span class="cmd">python3 -c "
+# Size the prefix cache for a chatbot system prompt workload
+S = 1024   # shared system prompt tokens
+U = 128    # average unique user tokens per request
+h = 0.80   # target hit rate
+kv_per_token_mb = 0.160  # FP8 KV, LLaMA-3 70B
+
+reduction = 1 - (S*(1-h) + U) / (S + U)
+print(f'Prefill reduction at h={h}: {reduction:.1%}')
+print(f'TTFT speedup: {1/(1-reduction):.1f}x')
+
+# Minimum cache size for N concurrent system prompts
+N_prompts = 50  # distinct system prompts in deployment
+min_cache_mb = N_prompts * S * kv_per_token_mb
+print(f'Minimum prefix cache: {min_cache_mb:.0f} MB ({min_cache_mb/1024:.1f} GB)')
+print(f'Recommended (2x buffer): {2*min_cache_mb/1024:.1f} GB')
+"</span>
+<span class="out"># Prefill reduction at h=0.80: 71.1%
+# TTFT speedup: 3.5x
+# Minimum prefix cache: 8192 MB (8.0 GB)
+# Recommended (2x buffer): 16.0 GB</span>
+
+<span class="cmt"># STEP 5: Check KV quantization quality before enabling</span>
+<span class="cmd">lm_eval --model hf \
+  --model_args pretrained=meta-llama/Meta-Llama-3-70B \
+  --tasks mmlu,humaneval,gsm8k \
+  --num_fewshot 5 \
+  --output_path results_baseline.json
+
+# Then serve with FP8 KV and re-evaluate:
+python -m vllm.entrypoints.openai.api_server \
+  --model meta-llama/Meta-Llama-3-70B \
+  --kv-cache-dtype fp8 \
+  --quantization fp8 &amp;
+
+# Compare: if any benchmark drops &gt;1.5% &#8594; consider INT8 instead of FP8 KV
+# HumanEval drop &gt;2% &#8594; INT4 KV is contraindicated for this model</span>
+<span class="out"># Expected FP8 KV quality change: all benchmarks within 0.2%
+# If seeing larger drops: check per-head vs per-tensor scaling config</span></pre>
+</div>
+
+<h2 id="worked">Worked Example: KV Capacity Planning for LLaMA-3 70B Production Deployment</h2>
+<div class="worked">
+<div class="worked-label">Worked Example 11.1 &#8212; Complete KV Budget and Capacity Plan for a Chatbot Service</div>
+<h4>Scenario</h4>
+<p>Design the KV cache configuration for a customer service chatbot using LLaMA-3 70B. Requirements: 200 concurrent users at P99, average context 4K tokens, system prompt 1,024 tokens (shared), P99 TTFT &lt;400ms. Hardware: single H100 SXM5 80 GB, FP8 weights (no TP for this exercise &#8212; using AWQ INT4 weights instead).</p>
+
+<h4>Step 1: Weight Memory</h4>
+<div class="formula">AWQ INT4 weights: 70B &#215; 0.5 bytes = 35.0 GB
+Scale/zero-point overhead: ~1.1 GB
+Runtime (activations, CUDA workspace): ~5 GB
+Fixed total: 35.0 + 1.1 + 5.0 = 41.1 GB
+KV headroom: 80 &#8722; 41.1 = 38.9 GB &#8776; 38 GB</div>
+
+<h4>Step 2: KV per Request with FP8 KV</h4>
+<div class="formula">FP8 KV per token: 2 &#215; 80 &#215; 8 &#215; 128 &#215; 1 byte = 163,840 bytes = 0.160 MB
+FP8 KV per request (4K ctx): 0.160 &#215; 4096 = 655,360 bytes = 0.625 GB
+
+Maximum concurrent users without prefix caching:
+  38 GB / 0.625 GB = 60.8 &#8594; ~60 users  &#10060; (need 200)
+
+PROBLEM: 60 users &lt; 200 target. Need to address this.</div>
+
+<h4>Step 3: Prefix Caching to the Rescue</h4>
+<div class="formula">System prompt: 1,024 tokens (shared across all 200 users)
+User unique tokens: 4096 &#8722; 1024 = 3,072 tokens per unique context window
+
+KV cost breakdown:
+  Prefix (shared, cached once):
+    1024 &#215; 0.160 MB = 163.8 MB &#8594; ONE copy in prefix cache
+
+  Per-user unique context (200 users):
+    3072 &#215; 0.160 MB = 491.5 MB per user
+
+Total KV at full 200-user concurrency:
+  Prefix (shared): 163.8 MB (1&#215;)
+  Unique contexts: 200 &#215; 491.5 MB = 95.7 GB  &#10060; EXCEEDS 38 GB headroom
+
+INSIGHT: Even with prefix caching for the shared prefix, 200 users at 4K
+context each holding 3K unique tokens = 95 GB &#8594; cannot fit on single H100.
+
+REVISED DESIGN: Need TP=2 across two H100s.
+  Per GPU with TP=2: 35 GB weights + 5 GB overhead = 40 GB &#8594; KV headroom = 40 GB per GPU
+  Total cluster KV headroom: 80 GB across GPU pair
+
+  With prefix sharing:
+    Shared prefix: 163.8 MB (one copy, stored once)
+    Unique contexts (200 users &#215; 3K tokens): 200 &#215; 491.5 MB = 95.7 GB &#10060; STILL too much!
+
+  ROOT CAUSE: 200 users &#215; 3K unique tokens = 600K unique context tokens.
+  At 0.160 MB/token: 600K &#215; 0.160 MB = 96 GB. Two H100s hold 160 GB total
+  but 40 GB per GPU is only 80 GB for KV &#8594; still exceeds!
+
+ACTUAL FIX: Scale out.
+  Target: 200 concurrent users, 4K context, FP8 KV
+  KV required: 200 &#215; 0.625 GB = 125 GB (raw)
+  With prefix saving: 200 &#215; 0.480 GB (3K unique) + 0.16 GB (shared prefix) = 96.2 GB
+  H100 pairs needed: ceil(96.2 / 80) = 2 pairs = 4 H100s (TP=2&#215;2 replicas)
+
+FINAL CONFIGURATION:
+  Hardware: 4&#215; H100 (2 model replicas, TP=2 each)
+  Weights: AWQ INT4, 35 GB per GPU
+  KV: FP8, block_size=16, LRU eviction
+  Prefix cache: 2 GB allocation (system prompt &#215; 10x headroom)
+  Prefix cache hit rate target: 85% (chatbot workload)
+  Max concurrent users per replica: 62 at 4K ctx
+  Two replicas &#8594; 124 users, with prefix caching &#8594; effectively 200</div>
+
+<h4>Step 4: TTFT with Prefix Caching</h4>
+<div class="formula">Without prefix caching:
+  Prefill tokens: 4,096 per request
+  Prefill time at 85K tokens/sec prefill throughput: 4096/85000 = 48ms &#8594; TTFT &#8776; 50ms
+
+With prefix caching (h=0.85):
+  Tokens prefilled: 1024&#215;0.15 + 3072 = 154 + 3072 = 3,226 tokens
+  TTFT: 3226/85000 = 38ms &#8594; TTFT &#8776; 40ms  (about same because unique portion dominates)
+
+Better setup: if system prompt = 2048 tokens, unique = 2048:
+  Prefill with caching: 2048&#215;0.15 + 2048 = 307 + 2048 = 2,355 tokens
+  TTFT: 2355/85000 = 27.7ms &#8594; vs 4096/85000 = 48ms: 1.7&#215; faster TTFT!
+  
+  LESSON: Prefix caching TTFT benefit grows with the ratio S/(S+U).
+  Maximum benefit when system prompt dominates total context.</div>
+</div>
+
+<div class="qref" id="qref">
+<h4>Chapter 11 Quick Reference &#8212; Numbers to Know Cold</h4>
+<table>
+<tr><th>Metric</th><th>LLaMA-3 70B</th><th>Formula / Notes</th></tr>
+<tr><td>BF16 KV per token</td><td>0.320 MB</td><td>2&#215;80&#215;8&#215;128&#215;2 bytes = 327,680 B</td></tr>
+<tr><td>FP8 KV per token</td><td>0.160 MB</td><td>2&#215;80&#215;8&#215;128&#215;1 byte = 163,840 B</td></tr>
+<tr><td>INT4 KV per token</td><td>0.080 MB</td><td>4&#215; reduction vs BF16; 32&#215; with GQA R=8</td></tr>
+<tr><td>MLA KV per token (DS-V3)</td><td>0.00113 MB</td><td>d_c=512+64 RoPE &#215; 2 bytes = 1,152 B; 57&#215; vs MHA BF16</td></tr>
+<tr><td>FP8 KV per request (4K)</td><td>0.625 GB</td><td>0.160 MB &#215; 4096</td></tr>
+<tr><td>KV headroom per H100 (FP8 wts, TP=2)</td><td>~40 GB</td><td>80 &#8722; 35 (weights) &#8722; 5 (runtime)</td></tr>
+<tr><td>Max users (FP8 wts+KV, TP=2, 4K)</td><td>~62</td><td>40 GB / 0.64 GB per req</td></tr>
+<tr><td>PagedAttention block size (standard)</td><td>16 tokens</td><td>32 KB per block; vLLM/TRT-LLM/SGLang consensus</td></tr>
+<tr><td>Last-block waste (block=16)</td><td>1.2 MB avg</td><td>(16&#8722;1)/2 &#215; 0.160 MB</td></tr>
+<tr><td>Fragmentation (contiguous)</td><td>60&#8211;80%</td><td>Typical production traffic at max_seq pre-allocation</td></tr>
+<tr><td>Prefix cache hit rate (chatbot)</td><td>70&#8211;85%</td><td>Shared system prompt; steady traffic</td></tr>
+<tr><td>Prefill reduction (h=0.8, S=1K, U=128)</td><td>71.1%</td><td>1&#8722;(S&#215;(1&#8722;h)+U)/(S+U)</td></tr>
+<tr><td>PCIe 4.0 practical BW</td><td>16&#8211;24 GB/s</td><td>Swap crossover: ~600&#8211;1200 tokens</td></tr>
+<tr><td>IB NDR per link</td><td>50 GB/s</td><td>Single link: 18.5 RPS at INT8 4K KV</td></tr>
+<tr><td>NIXL KV transfer latency</td><td>~20ms</td><td>2.7 GB at 40 GB/s with layer pipelining (~70% hidden)</td></tr>
+</table>
+</div>
+
+<div class="takeaways" id="takeaways">
+  <h3>Key Takeaways</h3>
+  <div class="takeaway-group">
+    <div class="tg-label">Core Concepts</div>
+    <ul>
+      <li>The KV cache size formula is KV = 2&#215;L&#215;H_kv&#215;d_head&#215;S&#215;B&#215;dtype_bytes. Four model constants, two workload variables. Every KV optimization directly targets one term: GQA reduces H_kv, quantization reduces dtype_bytes, context limits reduce S, fewer users reduce B.</li>
+      <li>Contiguous pre-allocation wastes 60&#8211;80% of KV HBM: a 655 MB reservation for a 50-token request wastes 80.5%. PagedAttention applies OS virtual memory &#8212; lazy allocation, page tables, non-contiguous physical blocks &#8212; to eliminate this waste, delivering ~5&#215; effective capacity on the same hardware with ~5% kernel overhead.</li>
+      <li>GQA + FP8 KV is a 16&#215; combined multiplier on serving capacity vs MHA BF16. LLaMA-3 70B's GQA R=8 reduces H_kv 8&#215;; FP8 halves dtype; combined effect: 16 users (MHA BF16) &#8594; 250 users (GQA FP8) on the same hardware. No retraining, &lt;0.3% quality loss.</li>
+      <li>Prefix caching converts shared prompts from repeated compute cost to one-time storage cost. At h=0.80, S=1024, U=128: 71.1% fewer prefill tokens, 3.5&#215; TTFT improvement, 3.4&#215; more users served per GPU. The correct eviction policy is LRU (flat) or leaves-first (radix tree) &#8212; NEVER FIFO, which evicts the hot system prompt immediately.</li>
+    </ul>
+  </div>
+  <div class="takeaway-group">
+    <div class="tg-label">Cost &amp; Productivity Impact</div>
+    <ul>
+      <li>Enabling PagedAttention on a naive contiguous-allocation system at 80% fragmentation recovers ~5&#215; KV capacity. For a 40 GB KV budget serving 62 users (paged) vs 12 users (contiguous): 5&#215; more users from the same H100. At $2/GPU-hr, this reduces cost-per-user by 5&#215; &#8212; the single highest-impact KV optimization available and free in vLLM by default.</li>
+      <li>Prefix caching for a chatbot service with 1,024-token system prompt at h=0.80 delivers: 71% prefill compute reduction, 3.5&#215; TTFT improvement for returning users, and 3.4&#215; GPU throughput at 100 RPS. At $2/GPU-hr and 10M daily requests, this saves approximately $576/day in GPU time from software configuration alone.</li>
+      <li>MLA (DeepSeek-V3 architecture) at 128K context enables 278 concurrent users where GQA+FP8 (LLaMA-3 style) allows only 2 and MHA BF16 allows 0. The 139&#215; concurrency difference translates directly to infrastructure cost: a MLA-based serving system requires 139&#215; fewer GPUs per concurrent user for extreme long-context workloads.</li>
+    </ul>
+  </div>
+  <div class="takeaway-group">
+    <div class="tg-label">Principal-Level Insight</div>
+    <ul>
+      <li>The swap-vs-recompute crossover (~600&#8211;1200 tokens) is a derived result, not a configuration parameter. Recompute cost scales quadratically (S&#178;) while swap cost scales linearly (S &#215; PCIe_BW). For short sequences, recomputing from scratch is cheaper than the PCIe round-trip. The crossover shifts with batch size &#8212; at high utilization, async prefetch can hide the PCIe latency entirely behind compute for other requests, pushing the effective crossover to near-zero.</li>
+      <li>INT4 KV quantization has non-uniform quality impact across tasks: &#8722;1.5% MMLU (acceptable), &#8722;2.5% HumanEval (significant for code), &#8722;2.0% GSM8K (notable for math). The aggregate benchmark looks acceptable but code quality degrades disproportionately. Never enable INT4 KV for code generation or mathematical reasoning workloads without task-specific validation. Per-layer INT4 (INT4 for early/late layers, INT8 for mid-model) is the principled approach when maximum compression is required.</li>
+      <li>MLA is not simply "better GQA." The architectural difference is fundamental: GQA discards head diversity (fewer KV heads); MLA preserves it by storing a compressed latent that fully reconstructs all K,V at attention time. This allows MLA to decouple the KV memory cost from the number of attention heads entirely. At long context, the reconstruction FLOP overhead is negligible relative to attention cost, while the 57&#215; KV reduction is transformative. The question is not "which is better" but "at what context length and concurrency does the reconstruction overhead justify the memory savings" &#8212; the answer for 128K+ is unambiguously MLA.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="review-questions" id="review">
+  <h3>Review Questions</h3>
+  <div class="rq-tier foundational">
+    <div class="rq-tier-label"><span class="rq-badge">Foundational</span> Build the mental model &#8212; no math required</div>
+    <ol>
+      <li>Explain why contiguous KV pre-allocation produces 60&#8211;80% memory waste in production. Use the formula to show the arithmetic. Why does PagedAttention eliminate this waste, and what is the approximate kernel overhead it introduces?</li>
+      <li>A chatbot service uses a 1,024-token system prompt with all users. Explain why enabling prefix caching dramatically reduces both TTFT and GPU compute, but the same optimization is nearly worthless for a document summarization service where each request has a unique document. What workload characteristic determines whether prefix caching is worth enabling?</li>
+      <li>GQA + FP8 KV delivers a 16&#215; capacity improvement over MHA BF16 with &lt;0.3% quality loss. What are the two orthogonal mechanisms that combine to produce this 16&#215; figure, and how do they multiply rather than add?</li>
+    </ol>
+  </div>
+  <div class="rq-tier intermediate">
+    <div class="rq-tier-label"><span class="rq-badge">Intermediate</span> Apply and calculate &#8212; production context</div>
+    <ol>
+      <li>You are deploying a custom 40B model (56 layers, H_q=40, H_kv=8 GQA, d_head=128) on a single H100 80 GB. FP8 weights: 40B &#215; 1 byte = 40 GB. (a) What is FP8 KV per token? (b) After weights and 5 GB overhead, how much KV headroom remains? (c) How many concurrent users can you support at 4K context? (d) What is the minimum change that doubles concurrent capacity without adding hardware?</li>
+      <li>A production RAG pipeline retrieves 4 documents (512 tokens each = 2,048 tokens total) and prepends them before a 200-token user query. The model is LLaMA-3 70B FP8. (a) What is FP8 KV per request? (b) With RadixAttention and h=0.65 hit rate, what is the prefill cost reduction per request? (c) What is the minimum prefix cache size to hold all 200 unique documents in the corpus? (d) If the cache uses LRU and a new set of 50 documents is retrieved that displaces the old ones, what happens to hit rate and how do you size against this?</li>
+      <li>Your disaggregated serving system transfers INT8 KV for LLaMA-3 70B at 2,048-token average context. Target: KV transfer latency contribution &lt; 20ms. (a) What is the INT8 KV per request at 2K context? (b) At 50 RPS, what is the minimum IB bandwidth required? (c) How many NDR links does that require with 2&#215; safety margin? (d) NIXL layer pipelining hides 70% of the raw transfer time. What is the observable latency vs raw transfer time?</li>
+    </ol>
+  </div>
+  <div class="rq-tier principal">
+    <div class="rq-tier-label"><span class="rq-badge">Principal Level</span> Design, decide, and defend &#8212; architecture reviews</div>
+    <ol>
+      <li><strong>KV Budget for a Constrained Single-GPU Deployment:</strong> You are serving a custom 40B model (56 layers, H_q=40, H_kv=8, d_head=128, FP8 weights) on one H100 80 GB. Targets: 200 concurrent users at P99, 8K average context, P99 TTFT &lt;400ms. (a) Derive the full HBM budget: weights, runtime, KV cache. (b) Show mathematically whether 200 users at 8K context is achievable with FP8 KV. (c) If not achievable, rank the minimum set of changes by engineering cost and quality impact. (d) At 180 concurrent users (below designed capacity), P99 TTFT spikes to 1,200ms. What is the most likely root cause and your step-by-step diagnosis?</li>
+      <li><strong>MLA vs GQA for Long-Context Document Analysis:</strong> Two model candidates for a 128K-context document analysis product on an H100&#215;8 cluster (TP=8, ~80 GB KV per GPU after weights = 640 GB KV total): Model A is LLaMA-3 70B (GQA R=8, FP8 KV). Model B is DeepSeek-V3 (MLA, d_c=512, BF16 latent KV). (a) Calculate KV per request at 128K context for both models. How many concurrent requests fit on this cluster? (b) Can INT4 KV applied to Model A match MLA BF16? Show the math and identify the quality risk. (c) Explain why MLA's c_KV latent is prefix-cacheable across differently-positioned documents while GQA K tensors are not. (d) The ops team prefers Model A (standard FlashAttention, no custom kernels). As principal engineer, at what context length or concurrency threshold does the architectural recommendation tip to Model B? Justify quantitatively.</li>
+      <li><strong>End-to-End KV Cache System Design:</strong> Design the complete KV cache management system for a high-volume LLM service: LLaMA-3 70B FP8 weights TP=2; traffic 1,000 RPS peak, 300 RPS average; context mix: 20% at 512 tokens, 50% at 2K, 25% at 8K, 5% at 64K; user tiers: 80% standard (TTFT SLA 500ms), 20% premium (TTFT SLA 100ms); cluster: 200 H100 SXM5 in 25 nodes. (a) Specify the full KV cache configuration: block size, quantization format, prefix cache policy and eviction, GPU memory utilization target. Justify each. (b) Design a tiered admission strategy that handles 64K-context batch jobs without starving interactive users. (c) List the 8 most important KV health metrics, their alarm thresholds, and the automated action each alarm triggers. (d) A traffic spike brings inbound to 2,500 RPS. Walk through the cascade of KV management actions that maintains P99 TTFT for premium users while gracefully degrading standard users and preventing complete starvation for batch jobs.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="ch-end">
+  &#8212;&#8212;&#8212; End of Chapter 11 &#8212;&#8212;&#8212;<br>
+  <a href="ch12.html">Next: Chapter 12 &#8212; Benchmarking and Performance Measurement: MFU, TPOT, TTFT, and Goodput &#8594;</a>
+</div>
+
+</div><!-- .page -->
+</body>
+</html>

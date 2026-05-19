@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 14 — Networking & Collective Communication | AI/ML Infrastructure from Silicon to Scale</title>
+<style>/* ── RESET &amp; BASE ─────────────────────────────────────── */
+
+/* ── PRINT CSS ──────────────────────────────────────────── */
+
+/* ── TOP NAV (cross-chapter) ────────────────────────────── */
+
+/* ── LEFT SIDEBAR (section anchors) ────────────────────── */
+
+/* ── MAIN CONTENT ───────────────────────────────────────── */
+.page{max-width:820px;margin:0 auto 0 216px;padding:36px 48px 80px}
+
+/* ── CHAPTER HEADER ─────────────────────────────────────── */
+.ch-label{font-family:sans-serif;font-size:9.5px;letter-spacing:3px;
+          text-transform:uppercase;color:#e3b341;margin-bottom:6px}
+h1.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.2;margin-bottom:8px}
+.ch-subtitle{font-size:13.5px;color:#556;font-style:italic;margin-bottom:14px}
+.ch-meta{display:flex;gap:20px;flex-wrap:wrap;font-family:sans-serif;font-size:10.5px;
+         color:#777;margin-bottom:14px}
+.ch-meta strong{color:#1c2438}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438,transparent);
+            border:none;margin:14px 0 22px;border-radius:2px}
+
+/* ── OPENING QUOTE ──────────────────────────────────────── */
+blockquote.pullquote{border-left:4px solid #e3b341;background:#fffbf0;
+                     padding:13px 18px;margin:22px 0 26px;border-radius:0 6px 6px 0;
+                     font-style:italic;font-size:13px;color:#333;line-height:1.7;
+                     -webkit-print-color-adjust:exact;print-color-adjust:exact}
+blockquote.pullquote cite{display:block;margin-top:7px;font-size:11px;
+                          font-style:normal;color:#888;font-family:sans-serif}
+
+/* ── LEARNING OBJECTIVES ────────────────────────────────── */
+.objectives{background:#f0f6ff;border:1px solid #aac4e8;border-radius:8px;
+            padding:16px 20px;margin:20px 0 28px;
+            -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.objectives h3{font-family:sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;
+               text-transform:uppercase;color:#2a6099;margin-bottom:10px}
+.objectives ul{margin-left:16px;list-style:none}
+.objectives li{font-size:12.5px;margin-bottom:6px;padding-left:18px;position:relative;color:#223}
+.objectives li::before{content:"→";position:absolute;left:0;color:#e3b341;font-weight:700}
+.objectives li strong{color:#1c2438}
+
+/* ── SECTION HEADERS ────────────────────────────────────── */
+h2{font-size:19px;color:#1c2438;margin:36px 0 10px;
+   border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:12.5px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 20px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.section-anchor{scroll-margin-top:56px}
+
+/* ── CODE / FORMULA BLOCKS ─────────────────────────────── */
+pre.formula{background:#0d1117;color:#b8ddf0;font-family:'Courier New',monospace;
+            font-size:10.5px;line-height:1.7;padding:14px 17px;border-radius:6px;
+            margin:14px 0;white-space:pre;overflow-x:auto;border:1px solid #1e3a5f;
+            -webkit-print-color-adjust:exact;print-color-adjust:exact}
+pre.formula .cm{color:#6a7a8a}
+pre.formula .hl{color:#ffd700;font-weight:600}
+pre.formula .ok{color:#4ec94e}
+pre.formula .warn{color:#f78166}
+pre.formula .kw{color:#c792ea}
+code{background:#f0f2f5;padding:1px 4px;border-radius:3px;
+     font-family:'Courier New',monospace;font-size:11px}
+
+/* ── CALLOUTS ───────────────────────────────────────────── */
+.callout{border-radius:6px;padding:12px 16px;margin:14px 0;font-size:12.5px;
+         line-height:1.65;border-left:4px solid #e3b341;background:#fffbf0;
+         -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout strong{display:block;font-family:sans-serif;font-size:10px;letter-spacing:1px;
+                text-transform:uppercase;margin-bottom:5px;color:#b06000}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.blue strong{color:#2a6099}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.green strong{color:#1a7a3a}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.red strong{color:#c0392b}
+.callout.purple{border-color:#7b2d8b;background:#fdf5ff}
+.callout.purple strong{color:#7b2d8b}
+
+/* ── TABLES ─────────────────────────────────────────────── */
+.table-wrap{overflow-x:auto;margin:14px 0}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;
+   font-family:sans-serif;font-size:10.5px;
+   -webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e8e8;vertical-align:top}
+tr:nth-child(even) td{background:#f8f9fb;
+                      -webkit-print-color-adjust:exact;print-color-adjust:exact}
+td.good{color:#1a7a3a;font-weight:600}
+td.bad{color:#c0392b;font-weight:600}
+td.warn{color:#a55000;font-weight:600}
+
+/* ── DIAGRAMS ───────────────────────────────────────────── */
+.diagram-wrap{margin:20px 0;background:#f3f5f8;border:1px solid #d0d6e2;
+              border-radius:8px;padding:14px;text-align:center;
+              -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.diagram-wrap figcaption{font-family:sans-serif;font-size:10.5px;color:#556;
+                         margin-top:9px;font-style:italic}
+
+/* ── WORKED EXAMPLE ─────────────────────────────────────── */
+.worked{background:#f8fff0;border:2px solid #27ae60;border-radius:8px;
+        padding:16px 20px;margin:22px 0;
+        -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.worked-label{font-family:sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;
+              text-transform:uppercase;color:#27ae60;margin-bottom:8px}
+.worked h4{color:#1a5030;font-style:normal;margin-top:8px}
+
+/* ── PROFILING COOKBOOK ─────────────────────────────────── */
+.cookbook{background:#fff8f0;border:2px solid #d4820a;border-radius:8px;
+          padding:16px 20px;margin:22px 0;
+          -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cookbook-label{font-family:sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;
+                text-transform:uppercase;color:#d4820a;margin-bottom:8px}
+
+/* ── SPEC LABELS ────────────────────────────────────────── */
+.shipped{display:inline-block;background:#e8fff0;color:#1a7a3a;font-family:sans-serif;
+         font-size:9px;padding:1px 6px;border-radius:10px;margin-left:5px;
+         font-weight:700;vertical-align:middle}
+.announced{display:inline-block;background:#fff8e0;color:#a55000;font-family:sans-serif;
+           font-size:9px;padding:1px 6px;border-radius:10px;margin-left:5px;
+           font-weight:700;vertical-align:middle}
+.roadmap{display:inline-block;background:#f0e8ff;color:#6a3a9a;font-family:sans-serif;
+         font-size:9px;padding:1px 6px;border-radius:10px;margin-left:5px;
+         font-weight:700;vertical-align:middle}
+
+/* ── KEY TAKEAWAYS ──────────────────────────────────────── */
+.takeaways{background:#f3f5f8;border:2px solid #1c2438;border-radius:9px;
+           padding:18px 22px;margin:32px 0;
+           -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.takeaways h3{color:#1c2438;margin:0 0 14px;font-size:15px;border:none;padding:0}
+.takeaway-group{margin-bottom:14px}
+.takeaway-group:last-child{margin-bottom:0}
+.tg-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;
+          letter-spacing:1px;color:#e3b341;margin-bottom:6px}
+.takeaway-group ul{margin-left:16px}
+.takeaway-group li{font-size:12.5px;margin-bottom:4px;color:#222}
+
+/* ── REVIEW QUESTIONS ───────────────────────────────────── */
+.review-questions{margin-top:36px}
+.review-questions h3{font-size:16px;color:#1c2438;margin-bottom:16px;
+                     border-bottom:2px solid #e3b341;padding-bottom:5px}
+.rq-tier{border-radius:8px;padding:14px 18px;margin-bottom:14px;
+         -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rq-tier.foundational{background:#e8fff0;border-left:5px solid #27ae60}
+.rq-tier.intermediate{background:#fffbf0;border-left:5px solid #e3b341}
+.rq-tier.principal{background:#f0f0ff;border-left:5px solid #7b2d8b}
+.rq-tier-label{font-family:sans-serif;font-size:10px;color:#555;margin-bottom:10px;
+               display:flex;align-items:center;gap:8px}
+.rq-badge{font-weight:700;font-size:9px;padding:2px 9px;border-radius:10px;
+          text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.foundational .rq-badge{background:#27ae60;color:#fff}
+.intermediate .rq-badge{background:#e3b341;color:#1c2438}
+.principal .rq-badge{background:#7b2d8b;color:#fff}
+.rq-tier ol{margin-left:18px}
+.rq-tier li{margin-bottom:10px;font-size:12.5px;line-height:1.7;color:#222}
+.rq-tier li::marker{font-weight:700}
+
+/* ── CHAPTER END MARK ───────────────────────────────────── */
+.ch-end{text-align:center;margin-top:36px;padding-top:18px;
+        border-top:1px solid #eee;font-family:sans-serif;
+        font-size:10px;color:#bbb;letter-spacing:2px;text-transform:uppercase}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
+.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
+.mem-tier-body{flex:1}
+.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
+.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+.fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+</style>
+</head>
+<body>
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="ch13.html">&#8592; Ch 13</a>
+  <a href="ch15.html">Ch 15 &#8594;</a>
+  <a href="ch06.html">Ch 6</a>
+  <a href="ch10.html">Ch 10</a>
+  <a href="ch17.html">Ch 17</a>
+</div>
+<div id="sidebar">
+  <h4>Chapter 14</h4>
+  <a href="#s14-1">14.1 The Complete Communication Stack</a>
+  <a href="#s14-2">14.2 NVLink and NVSwitch — Intra-Node Fabric</a>
+  <a href="#s14-3">14.3 InfiniBand — The Inter-Node Standard</a>
+  <a href="#s14-4">14.4 RoCEv2 — Ethernet-Based RDMA</a>
+  <a href="#s14-5">14.5 Network Topology — Fat-Tree and Rail-Opt</a>
+  <a href="#s14-6">14.6 NCCL — Complete Configuration Guide</a>
+  <a href="#s14-7">14.7 Collective Communication Optimization</a>
+  <a href="#s14-8">14.8 Parallelism-to-Network Mapping</a>
+  <a href="#s14-9">14.9 Scaling Efficiency — Measuring Network I</a>
+  <a href="#profiling">Profiling &amp; Diagnostic Cookbook</a>
+  <a href="#worked">Worked Example</a>
+</div>
+<div class="page">
+<!-- CHAPTER HEADER -->
+<div class="ch-label">Part VI · Infrastructure at Scale &nbsp;·&nbsp; Chapter 14</div>
+<h1 class="ch-title">Networking &amp; Collective Communication</h1>
+<div class="ch-subtitle">NVLink, InfiniBand, RoCE, and NCCL — The Arteries of Distributed AI</div>
+<div class="ch-meta">
+  <span>📖 <strong>~55 pages</strong></span>
+  <span>🎯 <strong>Level:</strong> All (Foundational → Principal)</span>
+  <span>🔗 <strong>Prereqs:</strong> Ch 3 (GPU arch), Ch 10 (training), Ch 13 (MoE)</span>
+  <span>⏱ <strong>Est. read:</strong> 90 min</span>
+</div>
+<hr class="ch-divider">
+
+<blockquote class="pullquote">
+"A 10,000-GPU cluster is not 10,000 individual computers. It is a single parallel computer
+whose performance is determined not just by the GPUs, but by the bandwidth and latency
+of the wires between them."
+<cite>— Distributed Systems Architecture Principle</cite>
+</blockquote>
+
+<!-- OVERVIEW -->
+<div id="overview" class="section-anchor"></div>
+<p>When 1,024 GPUs train a 70B model together, every single training step requires terabytes
+of gradient data to move between GPUs at microsecond latency. The network is not secondary
+infrastructure — it is a <strong>first-class performance component</strong>. A well-configured
+InfiniBand cluster achieves 85% scaling efficiency at 1,024 GPUs; a poorly configured one
+might achieve 40%. That 45-point gap translates directly to $3M per year in wasted compute
+on a 1,000-GPU cluster at $3/GPU-hr.</p>
+
+<p>This chapter builds the complete picture from silicon interconnect to collective algorithm.
+By the end, you will be able to design the networking layer for a 10,000-GPU training cluster,
+tune NCCL for maximum throughput on both InfiniBand and RoCE fabrics, diagnose scaling
+efficiency regressions, and justify every topology and configuration decision quantitatively.</p>
+
+<div class="objectives">
+  <h3>Learning Objectives by Level</h3>
+  <ul>
+    <li><strong>Foundational:</strong> Understand why networking is a bottleneck in distributed training,
+    what NVLink vs InfiniBand vs RoCE are for, and how AllReduce moves gradients between GPUs.</li>
+    <li><strong>Intermediate:</strong> Calculate AllReduce time for any message size and topology.
+    Configure NCCL environment variables for production clusters. Diagnose congestion and
+    topology mismatches with profiling tools.</li>
+    <li><strong>Principal:</strong> Design the full networking stack for multi-thousand GPU training clusters.
+    Justify IB vs RoCE tradeoffs with TCO math. Map 4D parallelism to physical topology.
+    Analyze and recover from scaling efficiency regressions in production.</li>
+  </ul>
+</div>
+
+
+<!-- ═══ §14.1 COMMUNICATION STACK ═══════════════════════ -->
+<h2 id="s14-1" class="section-anchor">14.1 The Complete Communication Stack</h2>
+
+<p>Before optimizing anything, you need a mental model of the communication hierarchy.
+Every byte of gradient data, every activation tensor, every KV cache transfer in a
+distributed AI system passes through one of five communication levels — each with
+wildly different bandwidth, latency, and software API. The core insight that shapes
+every parallelism decision is this: <strong>optimize at the lowest possible level.</strong>
+NVLink is 18× faster than InfiniBand for the same bandwidth. This is not a minor
+optimization opportunity — it is the difference between Tensor Parallelism being
+viable or catastrophic.</p>
+
+<div class="diagram-wrap">
+<figure>
+<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px">
+  <defs>
+    <linearGradient id="g0" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1c2438"/>
+      <stop offset="100%" stop-color="#2a4580"/>
+    </linearGradient>
+  </defs>
+  <!-- Title -->
+  <text x="380" y="22" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#1c2438">AI Cluster Communication Hierarchy</text>
+
+  <!-- Level rows: y positions 40, 90, 140, 195, 255, 315 -->
+  <!-- LEVEL 0 -->
+  <rect x="20" y="36" width="720" height="44" rx="5" fill="#1c2438" opacity=".92"/>
+  <text x="36" y="52" font-family="sans-serif" font-size="10" font-weight="700" fill="#e3b341">LEVEL 0 — WITHIN SM</text>
+  <text x="36" y="66" font-family="sans-serif" font-size="10" fill="#ccd">Registers → SMEM → L1</text>
+  <text x="440" y="52" font-family="sans-serif" font-size="10" fill="#aef">BW: ~80–100 TB/s aggregate</text>
+  <text x="440" y="66" font-family="sans-serif" font-size="10" fill="#aef">Latency: 1–30 cycles · API: CUDA warp primitives</text>
+
+  <!-- LEVEL 1 -->
+  <rect x="36" y="88" width="688" height="44" rx="5" fill="#1e2d50"/>
+  <text x="50" y="104" font-family="sans-serif" font-size="10" font-weight="700" fill="#e3b341">LEVEL 1 — WITHIN GPU (HBM)</text>
+  <text x="50" y="118" font-family="sans-serif" font-size="10" fill="#ccd">SMEM ↔ HBM via L2</text>
+  <text x="440" y="104" font-family="sans-serif" font-size="10" fill="#aef">H100: 3.35 TB/s · H200: 4.8 TB/s · B200: 8 TB/s</text>
+  <text x="440" y="118" font-family="sans-serif" font-size="10" fill="#aef">Latency: ~400–800 cycles · API: CUDA global memory</text>
+
+  <!-- LEVEL 2 -->
+  <rect x="52" y="140" width="656" height="48" rx="5" fill="#0a2a1a"/>
+  <text x="66" y="157" font-family="sans-serif" font-size="10" font-weight="700" fill="#4ec94e">LEVEL 2 — GPU-TO-GPU INTRA-NODE (NVLink + NVSwitch)</text>
+  <text x="66" y="171" font-family="sans-serif" font-size="10" fill="#8ef8be">H100: 900 GB/s (8-GPU full mesh) · B200: 1.8 TB/s</text>
+  <text x="440" y="157" font-family="sans-serif" font-size="10" fill="#8ef8be">Latency: &lt;1 μs · API: NCCL / CUDA peer access</text>
+  <text x="440" y="171" font-family="sans-serif" font-size="10" fill="#4ec94e" font-weight="700">→ Tensor Parallelism AllReduce MUST use this level</text>
+
+  <!-- LEVEL 3 -->
+  <rect x="68" y="196" width="624" height="48" rx="5" fill="#1a1a00"/>
+  <text x="82" y="213" font-family="sans-serif" font-size="10" font-weight="700" fill="#ffd700">LEVEL 3 — NODE-TO-NODE INTER-NODE (IB NDR or RoCEv2)</text>
+  <text x="82" y="227" font-family="sans-serif" font-size="10" fill="#ffe97a">400 Gbps/port × 8 NICs = 400 GB/s per node</text>
+  <text x="440" y="213" font-family="sans-serif" font-size="10" fill="#ffe97a">IB: ~1 μs · RoCE: ~3–5 μs · API: NCCL / RDMA verbs</text>
+  <text x="440" y="227" font-family="sans-serif" font-size="10" fill="#ffd700" font-weight="700">→ Data Parallel gradient sync, Pipeline activations</text>
+
+  <!-- LEVEL 4 -->
+  <rect x="84" y="252" width="592" height="48" rx="5" fill="#2a1515"/>
+  <text x="98" y="269" font-family="sans-serif" font-size="10" font-weight="700" fill="#f78166">LEVEL 4 — CROSS-CLUSTER / STORAGE (Ethernet)</text>
+  <text x="98" y="283" font-family="sans-serif" font-size="10" fill="#f5c0b0">100–400 Gbps per node · Latency: 1–10 ms</text>
+  <text x="440" y="269" font-family="sans-serif" font-size="10" fill="#f5c0b0">API: POSIX I/O, object storage SDK</text>
+  <text x="440" y="283" font-family="sans-serif" font-size="10" fill="#f78166">→ Dataset loading, checkpoint I/O</text>
+
+  <!-- KEY RULE box -->
+  <rect x="84" y="312" width="592" height="50" rx="5" fill="#fffbf0" stroke="#e3b341" stroke-width="2"/>
+  <text x="100" y="330" font-family="sans-serif" font-size="10" font-weight="700" fill="#b06000">⚡ KEY RULE: Optimize at the LOWEST possible level</text>
+  <text x="100" y="345" font-family="sans-serif" font-size="10" fill="#333">TP AllReduce on NVLink (L2) = 18× faster than InfiniBand (L3). Every MB of TP traffic that</text>
+  <text x="100" y="359" font-family="sans-serif" font-size="10" fill="#333">crosses IB adds catastrophic overhead. This is WHY Tensor Parallelism MUST stay within a single node.</text>
+
+  <!-- Bandwidth comparison bar -->
+  <text x="380" y="394" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#888">Bandwidth comparison (log scale): Storage 40GB/s &lt;&lt; IB 50GB/s &lt; NVLink 900GB/s &lt;&lt;&lt; HBM 3.35TB/s</text>
+</svg>
+<figcaption>Fig 14.1 — The 5-level communication hierarchy in AI clusters. The 2-decade bandwidth gap between levels forces parallelism strategies to match communication to the fastest available interconnect.</figcaption>
+</figure>
+</div>
+
+<div class="callout green">
+<strong>Why This Hierarchy Exists</strong>
+The bandwidth gap between levels is not arbitrary — it reflects physics and cost.
+NVLink at 900 GB/s requires wide, short copper traces on the same substrate.
+InfiniBand at 50 GB/s requires high-quality SerDes over DAC cables or fiber across rooms.
+Storage networks at 40 GB/s share infrastructure with general traffic. Each boundary
+is a physical constraint, and every performance optimization strategy in distributed
+training is ultimately about respecting these boundaries.
+</div>
+
+
+<!-- ═══ §14.2 NVLINK & NVSWITCH ══════════════════════════ -->
+<h2 id="s14-2" class="section-anchor">14.2 NVLink and NVSwitch — Intra-Node Fabric</h2>
+
+<p>NVLink is NVIDIA's proprietary high-speed GPU-to-GPU interconnect. It is the single most
+important hardware feature enabling Tensor Parallelism in production. Without it, TP would
+require every AllReduce to cross InfiniBand — making the TP latency budget 18× worse and
+rendering TP at any scale infeasible for most models.</p>
+
+<h3>14.2.1 NVLink Architecture <span class="shipped">SHIPPED H100</span><span class="shipped">SHIPPED B200</span></h3>
+
+<pre class="formula">
+<span class="cm">── NVLink Physical Specifications ──────────────────────────────────────</span>
+
+NVLink 4.0 (H100 / H200):
+  Links per GPU:          18 NVLink links
+  Bandwidth per link:     50 GB/s bidirectional
+  Total BW per GPU:       18 × 50 = <span class="hl">900 GB/s bidirectional</span>
+  Protocol:               NVIDIA proprietary (NOT PCIe)
+  Connection topology:    GPU → NVSwitch ASIC (not direct GPU-GPU)
+  Used for:               Tensor Parallelism, Tensor Parallel AllReduce
+
+NVLink 5.0 (B200 / GB200):
+  Bandwidth per link:     100 GB/s bidirectional
+  Total BW per GPU:       18 × 100 = <span class="hl">1,800 GB/s = 1.8 TB/s</span>
+  Improvement:            <span class="ok">2× over NVLink 4.0</span>
+  NVLink-C2C (GB200):     CPU-GPU unified memory at 900 GB/s
+
+<span class="cm">── NVLink vs PCIe Comparison ───────────────────────────────────────────</span>
+
+  PCIe Gen5 x16:          ~128 GB/s (one direction only)
+  NVLink 4.0:             900 GB/s bidirectional (450 GB/s each way)
+  <span class="hl">NVLink speedup:         ~7× over PCIe for GPU-GPU transfers</span>
+
+  This 7× difference is why NVLink-C2C (Grace Blackwell) enables viable
+  unified CPU-GPU memory: 900 GB/s CPU-GPU is only 7× slower than
+  intra-GPU HBM access, making CPU DRAM a usable overflow tier.
+</pre>
+
+<h3>14.2.2 NVSwitch — The Full-Bisection Fabric</h3>
+
+<p>NVSwitch is a dedicated ASIC that implements an all-to-all NVLink fabric inside a
+DGX/HGX node. The critical word is <em>full bisection bandwidth</em>: any GPU can
+communicate with any other GPU simultaneously at the maximum NVLink bandwidth.
+This is what makes AllReduce inside a node so fast — there is no contention.</p>
+
+<div class="diagram-wrap">
+<figure>
+<svg viewBox="0 0 700 360" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:700px">
+  <text x="350" y="22" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#1c2438">DGX H100: NVSwitch Full-Bisection Fabric (8 GPUs, 4 NVSwitches)</text>
+
+  <!-- GPUs left column -->
+  <rect x="20" y="50" width="80" height="34" rx="4" fill="#1c6040" stroke="#4ec94e" stroke-width="1.5"/>
+  <text x="60" y="67" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#fff">GPU 0</text>
+  <text x="60" y="79" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#8ef8be">80GB HBM3</text>
+
+  <rect x="20" y="100" width="80" height="34" rx="4" fill="#1c6040" stroke="#4ec94e" stroke-width="1.5"/>
+  <text x="60" y="117" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#fff">GPU 1</text>
+  <text x="60" y="129" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#8ef8be">80GB HBM3</text>
+
+  <rect x="20" y="150" width="80" height="34" rx="4" fill="#1c6040" stroke="#4ec94e" stroke-width="1.5"/>
+  <text x="60" y="167" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#fff">GPU 2</text>
+  <text x="60" y="179" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#8ef8be">80GB HBM3</text>
+
+  <rect x="20" y="200" width="80" height="34" rx="4" fill="#1c6040" stroke="#4ec94e" stroke-width="1.5"/>
+  <text x="60" y="217" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#fff">GPU 3</text>
+  <text x="60" y="229" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#8ef8be">80GB HBM3</text>
+
+  <!-- GPUs right column -->
+  <rect x="600" y="50" width="80" height="34" rx="4" fill="#1c6040" stroke="#4ec94e" stroke-width="1.5"/>
+  <text x="640" y="67" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#fff">GPU 4</text>
+  <text x="640" y="79" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#8ef8be">80GB HBM3</text>
+
+  <rect x="600" y="100" width="80" height="34" rx="4" fill="#1c6040" stroke="#4ec94e" stroke-width="1.5"/>
+  <text x="640" y="117" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#fff">GPU 5</text>
+  <text x="640" y="129" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#8ef8be">80GB HBM3</text>
+
+  <rect x="600" y="150" width="80" height="34" rx="4" fill="#1c6040" stroke="#4ec94e" stroke-width="1.5"/>
+  <text x="640" y="167" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#fff">GPU 6</text>
+  <text x="640" y="179" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#8ef8be">80GB HBM3</text>
+
+  <rect x="600" y="200" width="80" height="34" rx="4" fill="#1c6040" stroke="#4ec94e" stroke-width="1.5"/>
+  <text x="640" y="217" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#fff">GPU 7</text>
+  <text x="640" y="229" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#8ef8be">80GB HBM3</text>
+
+  <!-- NVSwitch boxes -->
+  <rect x="240" y="45" width="100" height="50" rx="5" fill="#2a1a5a" stroke="#a0c4ff" stroke-width="1.5"/>
+  <text x="290" y="67" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#a0c4ff">NVSwitch 0</text>
+  <text x="290" y="82" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#8090d0">13.6 TB/s</text>
+
+  <rect x="360" y="45" width="100" height="50" rx="5" fill="#2a1a5a" stroke="#a0c4ff" stroke-width="1.5"/>
+  <text x="410" y="67" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#a0c4ff">NVSwitch 1</text>
+  <text x="410" y="82" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#8090d0">13.6 TB/s</text>
+
+  <rect x="240" y="155" width="100" height="50" rx="5" fill="#2a1a5a" stroke="#a0c4ff" stroke-width="1.5"/>
+  <text x="290" y="177" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#a0c4ff">NVSwitch 2</text>
+  <text x="290" y="192" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#8090d0">13.6 TB/s</text>
+
+  <rect x="360" y="155" width="100" height="50" rx="5" fill="#2a1a5a" stroke="#a0c4ff" stroke-width="1.5"/>
+  <text x="410" y="177" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#a0c4ff">NVSwitch 3</text>
+  <text x="410" y="192" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#8090d0">NVLS capable</text>
+
+  <!-- Lines: GPUs to NVSwitches (simplified) -->
+  <!-- GPU 0-3 left to all 4 switches -->
+  <line x1="100" y1="67" x2="240" y2="67" stroke="#4ec94e" stroke-width="1.2" opacity=".7"/>
+  <line x1="100" y1="117" x2="240" y2="67" stroke="#4ec94e" stroke-width="1.2" opacity=".5"/>
+  <line x1="100" y1="167" x2="240" y2="177" stroke="#4ec94e" stroke-width="1.2" opacity=".7"/>
+  <line x1="100" y1="217" x2="240" y2="177" stroke="#4ec94e" stroke-width="1.2" opacity=".5"/>
+  <line x1="100" y1="67" x2="360" y2="67" stroke="#4ec94e" stroke-width="1.2" opacity=".5"/>
+  <line x1="100" y1="117" x2="360" y2="67" stroke="#4ec94e" stroke-width="1.2" opacity=".4"/>
+  <line x1="100" y1="167" x2="360" y2="177" stroke="#4ec94e" stroke-width="1.2" opacity=".5"/>
+  <line x1="100" y1="217" x2="360" y2="177" stroke="#4ec94e" stroke-width="1.2" opacity=".4"/>
+  <!-- GPU 4-7 right to all 4 switches -->
+  <line x1="600" y1="67" x2="460" y2="67" stroke="#4ec94e" stroke-width="1.2" opacity=".7"/>
+  <line x1="600" y1="117" x2="460" y2="67" stroke="#4ec94e" stroke-width="1.2" opacity=".5"/>
+  <line x1="600" y1="167" x2="460" y2="177" stroke="#4ec94e" stroke-width="1.2" opacity=".7"/>
+  <line x1="600" y1="217" x2="460" y2="177" stroke="#4ec94e" stroke-width="1.2" opacity=".5"/>
+  <line x1="600" y1="67" x2="340" y2="67" stroke="#4ec94e" stroke-width="1.2" opacity=".5"/>
+  <line x1="600" y1="117" x2="340" y2="67" stroke="#4ec94e" stroke-width="1.2" opacity=".4"/>
+  <line x1="600" y1="167" x2="340" y2="177" stroke="#4ec94e" stroke-width="1.2" opacity=".5"/>
+  <line x1="600" y1="217" x2="340" y2="177" stroke="#4ec94e" stroke-width="1.2" opacity=".4"/>
+
+  <!-- Stats box -->
+  <rect x="200" y="265" width="300" height="70" rx="5" fill="#fffbf0" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="350" y="283" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#b06000">Full Bisection Bandwidth: 7.2 TB/s</text>
+  <text x="350" y="298" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">8 GPUs × 900 GB/s = 7.2 TB/s total NVLink fabric</text>
+  <text x="350" y="313" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">Any GPU → Any GPU at 128 GB/s (900 GB/s ÷ 7 peers)</text>
+  <text x="350" y="328" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1a7a3a" font-weight="700">NVLS: NVSwitch performs AllReduce IN hardware</text>
+</svg>
+<figcaption>Fig 14.2 — DGX H100 NVSwitch fabric. Four NVSwitch 3.0 ASICs create full bisection bandwidth: any-to-any GPU communication at full 900 GB/s simultaneously. NVLS offloads AllReduce computation to NVSwitch hardware.</figcaption>
+</figure>
+</div>
+
+<h3>14.2.3 NVLS — NVLink SHARP (In-Network AllReduce) <span class="shipped">SHIPPED H100</span></h3>
+
+<p>NVLS offloads AllReduce computation onto NVSwitch hardware, freeing GPU SM cycles.
+Without NVLS, the GPU's streaming multiprocessors must execute the reduction loop
+on every gradient element. With NVLS, the NVSwitch sums all values in dedicated
+combinatorial logic — the GPU SM touches zero cycles of the AllReduce.</p>
+
+<pre class="formula">
+<span class="cm">── NVLS AllReduce vs Standard Software AllReduce ────────────────────────</span>
+
+WITHOUT NVLS (software ring on GPU SMs):
+  Each GPU executes: result = my_grad + recv_grad  (N-1 times in ring)
+  SM cycles consumed: 5–15% of total step time for AllReduce
+  Latency (8 GPU intra-node): ~8–12 ms for 1B parameter gradient
+
+WITH NVLS (NVSwitch hardware reduction):
+  GPUs send shards to NVSwitch simultaneously
+  NVSwitch dedicated logic sums all shards → broadcasts result
+  <span class="ok">GPU SM cycles consumed: ZERO (hardware does the math)</span>
+  Latency improvement: ~40% lower vs software ring
+  Effective BW improvement: ~2× (no reduce overhead)
+
+ENABLING NVLS:
+  export NCCL_NVLS_ENABLE=1          <span class="cm"># Enable (default on H100+)</span>
+  export NCCL_ALGO=NVLS              <span class="cm"># Force NVLS (or leave auto)</span>
+
+  <span class="cm"># Verify NVLS is active:</span>
+  NCCL_DEBUG=INFO python train.py 2&gt;&amp;1 | grep "NVLS"
+  <span class="cm"># Expect: "NCCL INFO Channel 00 : ... NVLS"</span>
+
+  <span class="hl">NCCL 2.27 (2025) enhancement: Symmetric memory</span>
+  GPUs register identical virtual addresses → AllReduce uses
+  single-copy zero-copy semantics → <span class="ok">7–9× latency reduction</span>
+  for small collectives (&lt;256KB) — critical for TP per-layer AllReduce
+</pre>
+
+
+<!-- ═══ §14.3 INFINIBAND ══════════════════════════════════ -->
+<h2 id="s14-3" class="section-anchor">14.3 InfiniBand — The Inter-Node Standard</h2>
+
+<p>When gradients must leave a node, they enter the inter-node fabric. InfiniBand (IB) is
+the dominant technology for AI training clusters in 2025–2026, used in NVIDIA DGX SuperPOD,
+most cloud provider HPC instances, and the majority of frontier model training runs.
+Its key properties — low latency (~1 μs), high bandwidth (400 Gbps per port),
+and native RDMA (Remote Direct Memory Access) — make it purpose-built for this workload.</p>
+
+<h3>14.3.1 InfiniBand Stack Architecture <span class="shipped">SHIPPED NDR 400G</span></h3>
+
+<pre class="formula">
+<span class="cm">── InfiniBand End-to-End Stack ──────────────────────────────────────────</span>
+
+PyTorch / NCCL / application
+        ↓
+NCCL library  (collective operations: AllReduce, AllGather, ReduceScatter)
+        ↓
+IB Verbs API  (libibverbs: queue pairs, completion queues, memory regions)
+        ↓
+RDMA kernel driver  (mlx5_core, ib_uverbs — Mellanox/NVIDIA kernel modules)
+        ↓
+Host Channel Adapter (HCA) — the GPU node NIC
+  Mellanox ConnectX-7 (NDR 400G): most common H100 cluster NIC
+  NVIDIA BlueField-3 DPU: NIC + ARM CPU + security in one package
+        ↓
+InfiniBand Switch Fabric
+  Quantum2 (NDR 400G):   64 ports, 40 Tbps aggregate, SHARP-capable
+  Quantum-X800 (XDR 800G): 2× bandwidth, 2025+ [<span class="warn">ANNOUNCED</span>]
+        ↓
+Remote HCA → Remote NCCL → Remote GPU HBM (via GPUDirect RDMA)
+
+<span class="cm">── NDR 400G Specifications (current standard, 2025–2026) ────────────────</span>
+
+  Port rate:              400 Gbps per port = 50 GB/s per direction
+  Typical config:         8 × ConnectX-7 NICs per DGX node
+  Per-node BW:            <span class="hl">8 × 50 GB/s = 400 GB/s bidirectional</span>
+  Switch latency:         ~100 ns per hop
+  End-to-end latency:     ~1 μs (2–3 hops in fat-tree)
+  RDMA:                   YES — NIC writes directly to remote GPU HBM
+  SHARP:                  YES — in-switch AllReduce computation
+
+<span class="cm">── IB Addressing ────────────────────────────────────────────────────────</span>
+
+  LID (Local Identifier):   16-bit address within subnet
+  GID (Global Identifier):  128-bit address (subnet manager assigns)
+  QP  (Queue Pair):         communication endpoint (TX QP + RX QP)
+  Each NCCL channel = one IB Queue Pair
+</pre>
+
+<h3>14.3.2 IB SHARP — In-Network AllReduce <span class="shipped">SHIPPED Quantum2</span></h3>
+
+<p>IB SHARP (Scalable Hierarchical Aggregation and Reduction Protocol) performs AllReduce
+inside InfiniBand switches — the inter-node analog of NVLS. Without SHARP, gradient
+data traverses the network twice (scatter phase + gather phase). With SHARP, switches
+aggregate in dedicated compute units, cutting network traffic by 50% and latency by 30–40%.</p>
+
+<pre class="formula">
+<span class="cm">── IB SHARP Mechanism ───────────────────────────────────────────────────</span>
+
+WITHOUT SHARP (traditional ring AllReduce):
+  Phase 1 (ReduceScatter): GPU sends gradient chunks around the ring  →  crosses EVERY link
+  Phase 2 (AllGather):     Aggregated result distributed back         →  crosses EVERY link again
+  Total network traffic:   2 × gradient_size × (N-1)/N ≈ 2G per step
+
+WITH SHARP (in-switch aggregation):
+  GPUs send to nearest aggregation switch
+  Switch compute units sum partial results
+  Switch broadcasts final result downward
+  <span class="ok">Network traffic reduction: ~50%</span>
+  <span class="ok">Latency reduction: ~30–40% (fewer hops)</span>
+  <span class="ok">GPU SM cycles freed: SMs compute while SHARP runs</span>
+
+SHARP CONFIGURATION:
+  export NCCL_SHARP_ENABLE=1
+  export SHARP_COLL_LOCK_ON_COMM_INIT=1    <span class="cm"># Pre-allocate resources at init</span>
+  export NCCL_SHARP_GROUP_SIZE_THRESH=16   <span class="cm"># Use SHARP only for groups ≥ 16 ranks</span>
+  export NCCL_ALGO=SHARP                   <span class="cm"># Or leave auto — NCCL selects for large msgs</span>
+
+SHARP LIMITATIONS:
+  <span class="warn">Only InfiniBand</span> — not available on RoCEv2 Ethernet
+  Requires SHARP daemon (sharpd) on every node
+  Best for large-message AllReduce (&gt;1MB)
+  Small messages (&lt;64KB) → use Tree algorithm instead
+</pre>
+
+
+<!-- ═══ §14.4 ROCE ═══════════════════════════════════════ -->
+<h2 id="s14-4" class="section-anchor">14.4 RoCEv2 — Ethernet-Based RDMA</h2>
+
+<p>Meta, Microsoft, Google, and other hyperscalers have built some of the world's largest
+AI training clusters on RoCEv2 (RDMA over Converged Ethernet) rather than InfiniBand.
+The technical reasons — and the specific engineering challenges Meta had to solve to
+make RoCE work at 24,576-GPU scale — are a masterclass in infrastructure tradeoffs.</p>
+
+<h3>14.4.1 IB vs RoCE Decision Framework</h3>
+
+<div class="table-wrap">
+<table>
+<thead><tr>
+  <th>Dimension</th><th>InfiniBand NDR 400G</th><th>RoCEv2 (400G Ethernet)</th><th>Winner</th>
+</tr></thead>
+<tbody>
+<tr><td>End-to-end latency</td><td class="good">~1 μs</td><td class="warn">~3–5 μs</td><td>IB</td></tr>
+<tr><td>Port bandwidth</td><td>400 Gbps (50 GB/s)</td><td>400 Gbps (50 GB/s)</td><td>Tie</td></tr>
+<tr><td>Switch unit cost</td><td class="warn">HIGH (Quantum2 ~$100K+)</td><td class="good">LOW (Ethernet ~$20K)</td><td>RoCE</td></tr>
+<tr><td>NIC cost</td><td class="warn">HIGH</td><td class="good">MEDIUM</td><td>RoCE</td></tr>
+<tr><td>Vendor ecosystem</td><td class="warn">NVIDIA/Mellanox dominated</td><td class="good">Multi-vendor (Broadcom, Intel, Marvell)</td><td>RoCE</td></tr>
+<tr><td>Congestion control</td><td class="good">Built-in hardware CC</td><td class="warn">Requires explicit PFC + DCQCN config</td><td>IB</td></tr>
+<tr><td>SHARP (in-network compute)</td><td class="good">YES (Quantum2+)</td><td class="bad">NO</td><td>IB</td></tr>
+<tr><td>Multi-tenant cloud</td><td class="warn">Limited isolation</td><td class="good">Excellent (standard L2/L3 VLAN)</td><td>RoCE</td></tr>
+<tr><td>Operational tooling</td><td class="warn">IB-specific (ibstat, opensm)</td><td class="good">Standard (netstat, tcpdump, etc.)</td><td>RoCE</td></tr>
+<tr><td>TCO at 1,000+ nodes</td><td>Lower if SHARP savings dominate</td><td>Lower if switch cost dominates</td><td>Context-dependent</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout blue">
+<strong>Meta's Choice at 24,576-GPU Scale (Llama 3/4)</strong>
+Meta selected RoCEv2 for their Grand Teton / RSC clusters. Their reasoning:
+(1) Switch cost savings at 24K+ GPUs offset the 4× latency penalty,
+(2) Standard Ethernet integrates with existing datacenter operations tooling,
+(3) Supply chain diversification across multiple NIC/switch vendors,
+(4) Network fabric shared with inference and general datacenter traffic.
+The challenge: Meta had to <em>invent</em> a new congestion control protocol (CTS)
+to make RoCE reliable at this scale — a 2-year engineering investment.
+</div>
+
+<h3>14.4.2 Making Ethernet Lossless: PFC and DCQCN</h3>
+
+<p>RDMA requires lossless transport — a single dropped packet causes retransmission
+that can stall an entire AllReduce ring, multiplying latency by 10×. Standard Ethernet
+drops packets whenever switch buffers overflow. Two complementary mechanisms prevent this:</p>
+
+<pre class="formula">
+<span class="cm">── MECHANISM 1: Priority Flow Control (PFC) ─────────────────────────────</span>
+
+When switch output buffer reaches threshold:
+  Switch sends PAUSE frame to upstream sender
+  Sender halts transmission for PAUSE duration
+  <span class="ok">Result: No packet drops — lossless behavior</span>
+
+<span class="warn">Problem: Head-of-Line Blocking (HOL)</span>
+  PAUSE blocks ALL flows in the same priority class
+  Unrelated traffic (storage, management) pauses alongside RDMA
+  Cascading PFC storms can dark out entire racks
+
+Mitigation:
+  Isolate RDMA on a dedicated priority queue (priority 3)
+  mlnx_qos -i eth0 --pfc 0,0,0,1,0,0,0,0   <span class="cm"># PFC on priority 3 only</span>
+
+<span class="cm">── MECHANISM 2: DCQCN (Data Center Quantized Congestion Notification) ───</span>
+
+DCQCN prevents PFC storms by rate-limiting BEFORE buffers fill:
+
+  Step 1: Switch detects congestion → marks packets with ECN
+  Step 2: Receiver sends CNP (Congestion Notification Packet) to sender
+  Step 3: Sender reduces transmission rate (CNPQ algorithm)
+  Step 4: Rate recovers gradually when congestion clears
+  <span class="ok">Result: Buffer utilization stays low → PFC rarely triggers</span>
+
+Configuration (Mellanox ConnectX NIC):
+  mlnx_qos -i eth0 --dscp2prio "set,106,3"    <span class="cm"># DSCP 106 → priority 3</span>
+  cma_roce_tos=106   <span class="cm"># in /etc/rdma/rdma.conf</span>
+</pre>
+
+<h3>14.4.3 Meta's CTS Protocol — Receiver-Driven Admission <span class="shipped">SHIPPED Meta RSC</span></h3>
+
+<p>Meta discovered that DCQCN reacts <em>after</em> congestion develops — at 400G speeds,
+switch buffers can fill in microseconds before DCQCN responds. Their solution, published
+at SIGCOMM 2024, is a receiver-driven admission protocol called CTS (Clear to Send)
+built into their NCCLX fork:</p>
+
+<pre class="formula">
+<span class="cm">── Meta CTS Protocol (NCCLX fork) ──────────────────────────────────────</span>
+
+PROBLEM with standard DCQCN at 400G:
+  ECN marking happens AFTER switch buffers start filling
+  At 400G: buffers fill in ~1 μs before DCQCN reacts
+  Brief but frequent drops → NCCL retransmissions → 3–5× slower
+
+CTS SOLUTION — receiver-driven admission control:
+
+  Phase 1 (SENDER requests):
+    "I have N bytes to send to GPU_X"
+    Sender WAITS — does NOT start transmitting immediately
+
+  Phase 2 (RECEIVER grants):
+    GPU_X checks available receive buffer space
+    If space: sends 5-byte CTS packet back to sender
+
+  Phase 3 (SENDER transmits):
+    Only after CTS received does RDMA write begin
+    Switch buffers NEVER overflow → PFC never triggers
+
+  <span class="ok">Result: Switch buffer utilization 10× lower than standard RoCE</span>
+  <span class="ok">Zero packet drops under normal operation</span>
+  <span class="ok">~90% scaling efficiency at 24,576 GPUs (vs ~60% without CTS)</span>
+
+Implementation: NCCLX = Meta's NCCL fork with CTS
+Used for: All Llama 3 and Llama 4 training runs
+Published: SIGCOMM 2024 — "Reconfiguring Meta's production AI cluster"
+</pre>
+
+
+<!-- ═══ §14.5 TOPOLOGY ════════════════════════════════════ -->
+<h2 id="s14-5" class="section-anchor">14.5 Network Topology — Fat-Tree and Rail-Optimized Fabrics</h2>
+
+<p>Bandwidth numbers tell only half the story. The <em>topology</em> — how switches and
+cables are physically connected — determines whether that bandwidth is actually available
+to training workloads. The wrong topology can cut effective AllReduce throughput by 30–50%
+even on a 400G fabric.</p>
+
+<div class="diagram-wrap">
+<figure>
+<svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:720px">
+  <text x="360" y="22" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#1c2438">Fat-Tree Topology (2-level, 64-node example) + Rail-Optimization</text>
+
+  <!-- SPINE switches (top row) -->
+  <text x="160" y="50" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#7b2d8b">SPINE LAYER</text>
+  <rect x="60" y="56" width="80" height="30" rx="4" fill="#7b2d8b" stroke="#bc8cff" stroke-width="1.5"/>
+  <text x="100" y="75" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#fff">Spine S0</text>
+  <rect x="160" y="56" width="80" height="30" rx="4" fill="#7b2d8b" stroke="#bc8cff" stroke-width="1.5"/>
+  <text x="200" y="75" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#fff">Spine S1</text>
+  <rect x="260" y="56" width="80" height="30" rx="4" fill="#7b2d8b" stroke="#bc8cff" stroke-width="1.5"/>
+  <text x="300" y="75" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#fff">Spine S2</text>
+  <rect x="360" y="56" width="80" height="30" rx="4" fill="#7b2d8b" stroke="#bc8cff" stroke-width="1.5"/>
+  <text x="400" y="75" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#fff">Spine S3</text>
+
+  <!-- LEAF switches (middle row) -->
+  <text x="160" y="132" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#e3b341">LEAF / RAIL LAYER</text>
+  <!-- Rail 0 (colored specially) -->
+  <rect x="30" y="138" width="88" height="30" rx="4" fill="#1c6040" stroke="#4ec94e" stroke-width="2"/>
+  <text x="74" y="157" text-anchor="middle" font-family="sans-serif" font-size="9.5" font-weight="700" fill="#fff">Rail 0 (NIC-0)</text>
+  <rect x="130" y="138" width="88" height="30" rx="4" fill="#1c4060" stroke="#58a6ff" stroke-width="2"/>
+  <text x="174" y="157" text-anchor="middle" font-family="sans-serif" font-size="9.5" font-weight="700" fill="#fff">Rail 1 (NIC-1)</text>
+  <rect x="230" y="138" width="88" height="30" rx="4" fill="#601c40" stroke="#e86eaf" stroke-width="2"/>
+  <text x="274" y="157" text-anchor="middle" font-family="sans-serif" font-size="9.5" font-weight="700" fill="#fff">Rail 2 (NIC-2)</text>
+  <rect x="330" y="138" width="88" height="30" rx="4" fill="#5a4010" stroke="#ffd700" stroke-width="2"/>
+  <text x="374" y="157" text-anchor="middle" font-family="sans-serif" font-size="9.5" font-weight="700" fill="#fff">Rail 3 (NIC-3)</text>
+
+  <!-- Spine-to-leaf connections (all spines to all rails) -->
+  <line x1="100" y1="86" x2="74" y2="138" stroke="#bc8cff" stroke-width="1" opacity=".6"/>
+  <line x1="100" y1="86" x2="174" y2="138" stroke="#bc8cff" stroke-width="1" opacity=".4"/>
+  <line x1="100" y1="86" x2="274" y2="138" stroke="#bc8cff" stroke-width="1" opacity=".4"/>
+  <line x1="100" y1="86" x2="374" y2="138" stroke="#bc8cff" stroke-width="1" opacity=".4"/>
+  <line x1="200" y1="86" x2="74" y2="138" stroke="#bc8cff" stroke-width="1" opacity=".4"/>
+  <line x1="200" y1="86" x2="174" y2="138" stroke="#bc8cff" stroke-width="1" opacity=".6"/>
+  <line x1="200" y1="86" x2="274" y2="138" stroke="#bc8cff" stroke-width="1" opacity=".4"/>
+  <line x1="200" y1="86" x2="374" y2="138" stroke="#bc8cff" stroke-width="1" opacity=".4"/>
+  <line x1="300" y1="86" x2="74" y2="138" stroke="#bc8cff" stroke-width="1" opacity=".4"/>
+  <line x1="300" y1="86" x2="174" y2="138" stroke="#bc8cff" stroke-width="1" opacity=".4"/>
+  <line x1="300" y1="86" x2="274" y2="138" stroke="#bc8cff" stroke-width="1" opacity=".6"/>
+  <line x1="300" y1="86" x2="374" y2="138" stroke="#bc8cff" stroke-width="1" opacity=".4"/>
+  <line x1="400" y1="86" x2="374" y2="138" stroke="#bc8cff" stroke-width="1" opacity=".6"/>
+
+  <!-- GPU nodes (bottom row) -->
+  <text x="200" y="205" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#1c2438">SERVER NODES (each has 4 NICs, one per Rail)</text>
+  <!-- Node A -->
+  <rect x="30" y="212" width="90" height="50" rx="4" fill="#f3f5f8" stroke="#1c2438" stroke-width="1.5"/>
+  <text x="75" y="228" text-anchor="middle" font-family="sans-serif" font-size="9.5" font-weight="700" fill="#1c2438">Node A</text>
+  <rect x="35" y="233" width="16" height="12" rx="2" fill="#1c6040"/>
+  <rect x="55" y="233" width="16" height="12" rx="2" fill="#1c4060"/>
+  <rect x="75" y="233" width="16" height="12" rx="2" fill="#601c40"/>
+  <rect x="95" y="233" width="16" height="12" rx="2" fill="#5a4010"/>
+  <text x="75" y="256" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#556">8× GPU, 4× NIC</text>
+
+  <!-- Node B -->
+  <rect x="135" y="212" width="90" height="50" rx="4" fill="#f3f5f8" stroke="#1c2438" stroke-width="1.5"/>
+  <text x="180" y="228" text-anchor="middle" font-family="sans-serif" font-size="9.5" font-weight="700" fill="#1c2438">Node B</text>
+  <rect x="140" y="233" width="16" height="12" rx="2" fill="#1c6040"/>
+  <rect x="160" y="233" width="16" height="12" rx="2" fill="#1c4060"/>
+  <rect x="180" y="233" width="16" height="12" rx="2" fill="#601c40"/>
+  <rect x="200" y="233" width="16" height="12" rx="2" fill="#5a4010"/>
+  <text x="180" y="256" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#556">8× GPU, 4× NIC</text>
+
+  <!-- Node C, D abbreviated -->
+  <rect x="240" y="212" width="60" height="50" rx="4" fill="#f3f5f8" stroke="#888" stroke-width="1"/>
+  <text x="270" y="240" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#888">Node C … N</text>
+
+  <!-- Leaf-to-node connections (color coded by rail) -->
+  <line x1="74" y1="168" x2="43" y2="212" stroke="#4ec94e" stroke-width="2"/>
+  <line x1="74" y1="168" x2="148" y2="212" stroke="#4ec94e" stroke-width="2"/>
+  <line x1="174" y1="168" x2="63" y2="212" stroke="#58a6ff" stroke-width="2"/>
+  <line x1="174" y1="168" x2="168" y2="212" stroke="#58a6ff" stroke-width="2"/>
+  <line x1="274" y1="168" x2="83" y2="212" stroke="#e86eaf" stroke-width="2"/>
+  <line x1="374" y1="168" x2="103" y2="212" stroke="#ffd700" stroke-width="2"/>
+
+  <!-- Rail legend -->
+  <rect x="460" y="140" width="250" height="110" rx="5" fill="#fffbf0" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="480" y="158" font-family="sans-serif" font-size="10" font-weight="700" fill="#b06000">Rail-Optimized Key Insight:</text>
+  <text x="480" y="174" font-family="sans-serif" font-size="9.5" fill="#333">GPU-i on ALL nodes → SAME Rail switch</text>
+  <rect x="480" y="182" width="10" height="10" rx="2" fill="#1c6040"/>
+  <text x="496" y="191" font-family="sans-serif" font-size="9" fill="#333">Rail 0: NIC-0 from every node</text>
+  <rect x="480" y="196" width="10" height="10" rx="2" fill="#1c4060"/>
+  <text x="496" y="205" font-family="sans-serif" font-size="9" fill="#333">Rail 1: NIC-1 from every node</text>
+  <rect x="480" y="210" width="10" height="10" rx="2" fill="#601c40"/>
+  <text x="496" y="219" font-family="sans-serif" font-size="9" fill="#333">Rail 2: NIC-2 from every node</text>
+  <rect x="480" y="224" width="10" height="10" rx="2" fill="#5a4010"/>
+  <text x="496" y="233" font-family="sans-serif" font-size="9" fill="#333">Rail 3: NIC-3 from every node</text>
+  <text x="480" y="244" font-family="sans-serif" font-size="9" fill="#1a7a3a" font-weight="700">No cross-rail traffic = no hotspots</text>
+
+  <!-- Oversubscription box -->
+  <rect x="460" y="265" width="250" height="80" rx="5" fill="#f0f0ff" stroke="#7b2d8b" stroke-width="1.5"/>
+  <text x="480" y="283" font-family="sans-serif" font-size="10" font-weight="700" fill="#7b2d8b">Oversubscription Ratio:</text>
+  <text x="480" y="298" font-family="sans-serif" font-size="9" fill="#333">1:1 (non-blocking) — AI training standard</text>
+  <text x="480" y="312" font-family="sans-serif" font-size="9" fill="#556">2:1 — acceptable, some spine contention</text>
+  <text x="480" y="326" font-family="sans-serif" font-size="9" fill="#c0392b">4:1 — causes 30-50% throughput loss in AllReduce</text>
+  <text x="480" y="340" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="700">DGX SuperPOD: 1:1 fat-tree with NDR 400G</text>
+</svg>
+<figcaption>Fig 14.3 — Fat-tree topology with rail optimization. Each NIC port on every node connects to a dedicated "rail" leaf switch. GPU-to-GPU AllReduce traffic stays on the same rail, eliminating spine contention and hotspots.</figcaption>
+</figure>
+</div>
+
+<pre class="formula">
+<span class="cm">── Rail-Optimized Topology: Why It Matters ──────────────────────────────</span>
+
+Without rail optimization (random NIC-to-switch assignment):
+  GPU-0 on Node A sends via Rail0 → Spine → Rail2 → GPU-0 on Node B
+  GPU-1's traffic also crosses same spine links → <span class="warn">hotspot at spine</span>
+  Queue buildup → ECN → retransmissions → <span class="warn">30–50% throughput loss</span>
+
+With rail optimization (GPU-i → Rail-i always):
+  GPU-0 (all nodes) → Rail0 ONLY → no cross-rail traffic
+  Each rail carries exactly 1/N_rails of total AllReduce traffic
+  <span class="ok">Spine switches: balanced load, no hotspots</span>
+  <span class="ok">Effective AllReduce bandwidth: full 400 GB/s utilized</span>
+
+NCCL configuration for rail-optimized topology:
+  export NCCL_IB_HCA=mlx5_0,mlx5_1,mlx5_2,mlx5_3  <span class="cm"># GPU 0→mlx5_0, GPU 1→mlx5_1, etc.</span>
+  <span class="cm"># CRITICAL: ordering must match GPU-to-NIC PCIe topology</span>
+  <span class="cm"># Verify: NCCL_TOPO_DUMP_FILE=/tmp/topo.xml python -c "import torch.distributed"</span>
+</pre>
+
+
+<!-- ═══ §14.6 NCCL ═══════════════════════════════════════ -->
+<h2 id="s14-6" class="section-anchor">14.6 NCCL — Complete Configuration Guide</h2>
+
+<p>NCCL (NVIDIA Collective Communication Library) is the software layer that abstracts
+all hardware differences — NVLink, InfiniBand, RoCE — into a unified collective API.
+Understanding NCCL is non-negotiable for distributed training performance. An unconfigured
+NCCL on a well-built InfiniBand cluster can achieve only 40–50% of available bandwidth.
+A properly configured NCCL consistently achieves 85–95%.</p>
+
+<h3>14.6.1 Collective Primitives Reference</h3>
+
+<div class="diagram-wrap">
+<figure>
+<svg viewBox="0 0 720 350" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:720px">
+  <text x="360" y="20" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#1c2438">NCCL Collective Primitives (4-GPU example)</text>
+
+  <!-- AllReduce -->
+  <text x="80" y="48" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#1c2438">AllReduce</text>
+  <text x="80" y="60" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#556">Input: V_i / Output: ΣV</text>
+  <!-- 4 GPU boxes before -->
+  <rect x="20" y="66" width="30" height="18" rx="2" fill="#1c6040" stroke="#4ec94e"/>
+  <text x="35" y="79" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">G0:A</text>
+  <rect x="55" y="66" width="30" height="18" rx="2" fill="#1c4060" stroke="#58a6ff"/>
+  <text x="70" y="79" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">G1:B</text>
+  <rect x="90" y="66" width="30" height="18" rx="2" fill="#601c40" stroke="#e86eaf"/>
+  <text x="105" y="79" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">G2:C</text>
+  <rect x="125" y="66" width="30" height="18" rx="2" fill="#5a4010" stroke="#ffd700"/>
+  <text x="140" y="79" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">G3:D</text>
+  <!-- Arrow -->
+  <text x="80" y="104" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#e3b341">↓</text>
+  <!-- After -->
+  <rect x="20" y="108" width="30" height="18" rx="2" fill="#1c2438" stroke="#e3b341"/>
+  <text x="35" y="121" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#fff">A+B+C+D</text>
+  <rect x="55" y="108" width="30" height="18" rx="2" fill="#1c2438" stroke="#e3b341"/>
+  <text x="70" y="121" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#fff">A+B+C+D</text>
+  <rect x="90" y="108" width="30" height="18" rx="2" fill="#1c2438" stroke="#e3b341"/>
+  <text x="105" y="121" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#fff">A+B+C+D</text>
+  <rect x="125" y="108" width="30" height="18" rx="2" fill="#1c2438" stroke="#e3b341"/>
+  <text x="140" y="121" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#fff">A+B+C+D</text>
+  <text x="80" y="142" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#1a7a3a" font-weight="700">Use: DP gradient sync, TP output</text>
+
+  <!-- AllGather -->
+  <text x="250" y="48" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#1c2438">AllGather</text>
+  <text x="250" y="60" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#556">Input: shard / Output: full</text>
+  <rect x="190" y="66" width="30" height="18" rx="2" fill="#1c6040" stroke="#4ec94e"/>
+  <text x="205" y="79" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">G0:A₀</text>
+  <rect x="225" y="66" width="30" height="18" rx="2" fill="#1c4060" stroke="#58a6ff"/>
+  <text x="240" y="79" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">G1:A₁</text>
+  <rect x="260" y="66" width="30" height="18" rx="2" fill="#601c40" stroke="#e86eaf"/>
+  <text x="275" y="79" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">G2:A₂</text>
+  <rect x="295" y="66" width="30" height="18" rx="2" fill="#5a4010" stroke="#ffd700"/>
+  <text x="310" y="79" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">G3:A₃</text>
+  <text x="250" y="104" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#e3b341">↓</text>
+  <rect x="190" y="108" width="30" height="18" rx="2" fill="#1c2438" stroke="#e3b341"/>
+  <text x="205" y="121" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#fff">A₀A₁A₂A₃</text>
+  <rect x="225" y="108" width="30" height="18" rx="2" fill="#1c2438" stroke="#e3b341"/>
+  <text x="240" y="121" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#fff">A₀A₁A₂A₃</text>
+  <rect x="260" y="108" width="30" height="18" rx="2" fill="#1c2438" stroke="#e3b341"/>
+  <text x="275" y="121" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#fff">A₀A₁A₂A₃</text>
+  <rect x="295" y="108" width="30" height="18" rx="2" fill="#1c2438" stroke="#e3b341"/>
+  <text x="310" y="121" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#fff">A₀A₁A₂A₃</text>
+  <text x="250" y="142" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#1a7a3a" font-weight="700">Use: FSDP weight reconstruct, CP KV</text>
+
+  <!-- ReduceScatter -->
+  <text x="450" y="48" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#1c2438">ReduceScatter</text>
+  <text x="450" y="60" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#556">Input: full / Output: shard of sum</text>
+  <rect x="390" y="66" width="30" height="18" rx="2" fill="#1c2438" stroke="#e3b341"/>
+  <text x="405" y="79" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#fff">G0:A+B+C+D</text>
+  <rect x="425" y="66" width="30" height="18" rx="2" fill="#1c2438" stroke="#e3b341"/>
+  <text x="440" y="79" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#fff">G1:A+B+C+D</text>
+  <rect x="460" y="66" width="30" height="18" rx="2" fill="#1c2438" stroke="#e3b341"/>
+  <text x="475" y="79" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#fff">G2:A+B+C+D</text>
+  <rect x="495" y="66" width="30" height="18" rx="2" fill="#1c2438" stroke="#e3b341"/>
+  <text x="510" y="79" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#fff">G3:A+B+C+D</text>
+  <text x="450" y="104" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#e3b341">↓</text>
+  <rect x="390" y="108" width="30" height="18" rx="2" fill="#1c6040" stroke="#4ec94e"/>
+  <text x="405" y="121" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#fff">shard 0</text>
+  <rect x="425" y="108" width="30" height="18" rx="2" fill="#1c4060" stroke="#58a6ff"/>
+  <text x="440" y="121" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#fff">shard 1</text>
+  <rect x="460" y="108" width="30" height="18" rx="2" fill="#601c40" stroke="#e86eaf"/>
+  <text x="475" y="121" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#fff">shard 2</text>
+  <rect x="495" y="108" width="30" height="18" rx="2" fill="#5a4010" stroke="#ffd700"/>
+  <text x="510" y="121" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#fff">shard 3</text>
+  <text x="450" y="142" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#1a7a3a" font-weight="700">Use: FSDP gradient sharding</text>
+
+  <!-- All-to-All -->
+  <text x="640" y="48" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#1c2438">All-to-All</text>
+  <text x="640" y="60" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#556">Input: unique per peer</text>
+  <rect x="580" y="66" width="30" height="18" rx="2" fill="#1c2438" stroke="#c0392b"/>
+  <text x="595" y="75" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#fff">G0:[1,2,3,4]</text>
+  <text x="595" y="82" text-anchor="middle" font-family="sans-serif" font-size="6.5" fill="#f78166">for G0,G1,G2,G3</text>
+  <rect x="615" y="66" width="30" height="18" rx="2" fill="#1c2438" stroke="#c0392b"/>
+  <rect x="650" y="66" width="30" height="18" rx="2" fill="#1c2438" stroke="#c0392b"/>
+  <rect x="685" y="66" width="30" height="18" rx="2" fill="#1c2438" stroke="#c0392b"/>
+  <text x="640" y="104" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#e3b341">↓</text>
+  <text x="640" y="120" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#333">Each GPU receives</text>
+  <text x="640" y="132" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#333">designated shard from all others</text>
+  <text x="640" y="142" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#c0392b" font-weight="700">Use: MoE expert token routing</text>
+
+  <!-- Bandwidth formulas -->
+  <rect x="20" y="165" width="680" height="50" rx="5" fill="#f3f5f8" stroke="#1c2438" stroke-width="1"/>
+  <text x="360" y="183" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#1c2438">Ring AllReduce Bandwidth Formula</text>
+  <text x="360" y="200" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">Time = 2 × (N−1)/N × M / BW_per_node</text>
+  <text x="360" y="212" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#556">At N=1024, M=4GB (2B param × BF16), BW=400Gbps: Time ≈ 164ms — why gradient accumulation matters</text>
+
+  <!-- Algorithm decision tree -->
+  <rect x="20" y="228" width="680" height="90" rx="5" fill="#fffbf0" stroke="#e3b341" stroke-width="1.5"/>
+  <text x="36" y="247" font-family="sans-serif" font-size="10" font-weight="700" fill="#b06000">NCCL Algorithm Selection Logic:</text>
+  <text x="36" y="263" font-family="sans-serif" font-size="9.5" fill="#333">NVLink topology, msg &gt;128KB → <tspan font-weight="700" fill="#1a7a3a">NVLS</tspan> (NVSwitch hardware, 2× speed)   |   NVLink, msg &lt;16KB → <tspan font-weight="700">Tree</tspan> (low latency)</text>
+  <text x="36" y="279" font-family="sans-serif" font-size="9.5" fill="#333">IB topology, SHARP avail, msg &gt;1MB → <tspan font-weight="700" fill="#2a6099">SHARP</tspan> (in-switch, 50% less traffic)  |   IB, msg &lt;64KB → <tspan font-weight="700">Tree</tspan></text>
+  <text x="36" y="295" font-family="sans-serif" font-size="9.5" fill="#333">RoCE topology → <tspan font-weight="700">Ring</tspan> (SHARP not available)   |   1000+ ranks, NCCL 2.23+ → <tspan font-weight="700" fill="#7b2d8b">PAT</tspan> (Parallel Aggregated Trees)</text>
+  <text x="36" y="311" font-family="sans-serif" font-size="9" fill="#556">Default: NCCL auto-selects. Override via: export NCCL_ALGO=Ring|Tree|NVLS|SHARP|PAT</text>
+</svg>
+<figcaption>Fig 14.4 — NCCL collective primitives with their use cases and algorithm selection logic. AllReduce bandwidth = (N−1)/N × BW — at 1024 GPUs this is ≈99% of peak, so the bottleneck is bandwidth not the formula.</figcaption>
+</figure>
+</div>
+
+<h3>14.6.2 Complete NCCL Production Environment Variables</h3>
+
+<pre class="formula">
+<span class="cm">── NCCL Production Configuration Reference ─────────────────────────────</span>
+
+<span class="cm"># ── Debug and Diagnostics ──────────────────────────────────────────</span>
+export NCCL_DEBUG=WARN                  <span class="cm"># WARN | INFO | TRACE</span>
+export NCCL_DEBUG_FILE=/tmp/nccl_%h_%p.log  <span class="cm"># Per-host per-process log</span>
+<span class="cm"># NCCL_DEBUG=INFO reveals: algorithm selection, topology detection, ring order</span>
+
+<span class="cm"># ── Transport Selection ────────────────────────────────────────────</span>
+export NCCL_IB_DISABLE=0               <span class="cm"># 0=enable IB/RoCE, 1=force TCP socket</span>
+export NCCL_IB_HCA=mlx5_0,mlx5_2,mlx5_4,mlx5_6  <span class="cm"># Which HCAs (match to GPUs!)</span>
+export NCCL_SOCKET_IFNAME=eth0         <span class="cm"># Fallback interface if IB unavailable</span>
+
+<span class="cm"># ── InfiniBand / RoCE Performance ──────────────────────────────────</span>
+export NCCL_IB_CUDA_SUPPORT=1          <span class="cm"># Enable GPUDirect RDMA — CRITICAL</span>
+export NCCL_NET_GDR_LEVEL=2            <span class="cm"># 0=off, 1=same PCIe root, 2=system-wide</span>
+export NCCL_IB_GID_INDEX=3             <span class="cm"># RoCE GID (check: ibv_devinfo -d mlx5_0)</span>
+export NCCL_IB_TC=106                  <span class="cm"># DSCP for ECN marking on RoCE</span>
+export NCCL_IB_QPS_PER_CONNECTION=4   <span class="cm"># QPs per NIC (1=default, 4=recommended 400G)</span>
+
+<span class="cm"># ── Algorithm and Protocol ─────────────────────────────────────────</span>
+export NCCL_ALGO=Ring                  <span class="cm"># Ring|Tree|CollNet|NVLS|PAT|auto</span>
+export NCCL_PROTO=Simple               <span class="cm"># Simple|LL|LL128 (Simple=IB, LL128=NVLink small)</span>
+
+<span class="cm"># ── Channels and Buffer ────────────────────────────────────────────</span>
+export NCCL_MIN_NCHANNELS=4
+export NCCL_MAX_NCHANNELS=8            <span class="cm"># More channels = more BW used</span>
+export NCCL_BUFFSIZE=4194304           <span class="cm"># 4MB buffer/channel (larger=better for big msgs)</span>
+
+<span class="cm"># ── SHARP (IB in-network) + NVLS (NVSwitch) ──────────────────────</span>
+export NCCL_SHARP_ENABLE=1             <span class="cm"># IB SHARP for inter-node</span>
+export SHARP_COLL_LOCK_ON_COMM_INIT=1
+export NCCL_NVLS_ENABLE=1             <span class="cm"># NVLink SHARP for intra-node</span>
+
+<span class="cm"># ── Timeout and Stability ──────────────────────────────────────────</span>
+export NCCL_TIMEOUT=300                <span class="cm"># Watchdog timeout (seconds)</span>
+<span class="cm"># Increase to 1800 for large-cluster checkpoint operations</span>
+
+<span class="hl">NCCL 2.27 (2025) — Key new defaults:</span>
+<span class="ok">  Symmetric memory: auto-enabled — 7-9× latency reduction for small collectives</span>
+<span class="ok">  Direct NIC (Grace Blackwell): proxy threads eliminated → 10% step time reduction</span>
+</pre>
+
+<h3>14.6.3 GPUDirect RDMA — The Zero-Copy Path</h3>
+
+<p>GPUDirect RDMA allows the InfiniBand NIC to read from and write to GPU HBM directly,
+bypassing the CPU and host DRAM entirely. Without it, every NCCL send operation requires
+a GPU→CPU→NIC data hop, consuming 16 CPU cores and adding 2–3 μs latency. With it,
+data moves GPU HBM → NIC DMA queue → network in a single transaction.</p>
+
+<pre class="formula">
+<span class="cm">── Data Path Comparison: With vs Without GPUDirect RDMA ─────────────────</span>
+
+WITHOUT GPUDirect (legacy):
+  GPU HBM → [PCIe] → CPU copy buffer → [PCIe] → NIC DMA → network
+  Extra latency:  +2–3 μs per collective message
+  CPU overhead:   16 cores per DGX node (1 proxy thread per NIC × 8 + buffers)
+  BW bottleneck:  Limited by PCIe Gen5 = 128 GB/s (NIC bandwidth underutilized)
+
+WITH GPUDirect RDMA:
+  GPU HBM → [PCIe P2P BAR mapping] → NIC DMA → network
+  Latency:        ~0.5 μs (direct memory-mapped DMA)
+  CPU overhead:   2–4 cores (metadata only, no data movement)
+  <span class="ok">Freed CPU cores: 12 per DGX node</span>
+  Performance:    <span class="ok">10–20% improvement on communication-bound steps</span>
+
+VERIFICATION:
+  nvidia-smi topo -p2p r          <span class="cm"># Should show OK/PIX/NV#, not HOST</span>
+  NCCL_DEBUG=INFO python train.py 2&gt;&amp;1 | grep "GDR"
+  <span class="cm"># Expected: "NCCL INFO GDR enabled"</span>
+  
+  <span class="cm"># Benchmark NIC-to-GPU bandwidth:</span>
+  ib_write_bw -d mlx5_0 -x 3 --report_gbits      <span class="cm"># server</span>
+  ib_write_bw -d mlx5_0 -x 3 &lt;server&gt; --report_gbits  <span class="cm"># client</span>
+  <span class="cm"># Target: ~380–395 Gbps (95%+ of 400G line rate)</span>
+</pre>
+
+
+<!-- ═══ §14.7 OPTIMIZATION ═══════════════════════════════ -->
+<h2 id="s14-7" class="section-anchor">14.7 Collective Communication Optimization</h2>
+
+<h3>14.7.1 Compute-Communication Overlap</h3>
+
+<p>The highest-leverage networking optimization is not choosing the right algorithm —
+it is ensuring that communication never <em>blocks</em> computation. A training step
+where AllReduce runs sequentially after the backward pass wastes 100% of the
+communication time as dead GPU cycles. The goal is to make AllReduce invisible
+by overlapping it with the next computation.</p>
+
+<pre class="formula">
+<span class="cm">── Overlap Strategy: Sequential vs Pipelined ────────────────────────────</span>
+
+WITHOUT OVERLAP (naive DDP):
+  ┌────────────────────────────────────────────────────────────┐
+  │  Forward (compute)  │  Backward (compute)  │  AllReduce   │
+  └────────────────────────────────────────────────────────────┘
+  Total: T_fwd + T_bwd + T_allreduce
+  AllReduce fraction: typically 20–40% of step time = GPU dead time
+
+WITH OVERLAP (DDP gradient bucketing):
+  ┌────────────────────────────────────────────────────────────┐
+  │  Forward Pass  │  Backward Pass (layer N)  │              │
+  │                │  + AllReduce (bucket 0)    │              │
+  │                │       + AllReduce (bucket 1)│             │
+  └────────────────────────────────────────────────────────────┘
+  Total: T_fwd + max(T_bwd, T_allreduce)
+  <span class="ok">Speedup: up to 1.3× for communication-heavy models</span>
+
+DDP CONFIGURATION for maximum overlap:
+  model = torch.nn.parallel.DistributedDataParallel(
+      model,
+      bucket_cap_mb=25,           <span class="cm"># Gradient bucket size MB (tune per model)</span>
+      gradient_as_bucket_view=True,  <span class="cm"># Zero-copy gradient bucketing</span>
+      static_graph=True,          <span class="cm"># Optimize for fixed computation graph</span>
+  )
+
+FSDP CONFIGURATION for forward+backward overlap:
+  model = FSDP(
+      model,
+      forward_prefetch=True,      <span class="cm"># AllGather next layer while computing current</span>
+      backward_prefetch=BackwardPrefetch.BACKWARD_PRE,  <span class="cm"># Prefetch during backward</span>
+      limit_all_gathers=True,     <span class="cm"># Prevent OOM from too many inflight AllGathers</span>
+  )
+</pre>
+
+<h3>14.7.2 Gradient Accumulation — Amortizing Communication</h3>
+
+<pre class="formula">
+<span class="cm">── Gradient Accumulation: Reducing AllReduce Frequency ──────────────────</span>
+
+WITHOUT accumulation (accum_steps=1, frequent communication):
+  1000 training steps → 1000 AllReduce operations
+  AllReduce fraction of time: ~25–40% (too high)
+
+WITH accumulation (accum_steps=8, batched communication):
+  125 "super-steps" → 125 AllReduce operations (8× fewer)
+  AllReduce fraction of time: ~4–6%  <span class="ok">(excellent)</span>
+
+Global batch size unchanged:
+  micro_batch_per_gpu=4, accum_steps=8, world_size=512
+  Global batch = 4 × 8 × 512 = <span class="hl">16,384 tokens per update</span>
+
+PyTorch FSDP implementation:
+  for step, batch in enumerate(loader):
+      ctx = model.no_sync() if (step % accum_steps != 0) else nullcontext()
+      with ctx:
+          loss = model(batch) / accum_steps  <span class="cm"># Normalize gradient</span>
+          loss.backward()              <span class="cm"># Grad accumulated, no AllReduce</span>
+
+      if (step + 1) % accum_steps == 0:
+          optimizer.step()             <span class="cm"># AllReduce fires HERE (once per 8 steps)</span>
+          optimizer.zero_grad()
+</pre>
+
+<!-- ═══ §14.8 PARALLELISM MAP ═══════════════════════════════ -->
+<h2 id="s14-8" class="section-anchor">14.8 Parallelism-to-Network Mapping</h2>
+
+<p>This is the section where networking and ML training architecture converge.
+Every parallelism strategy generates a specific communication pattern.
+The physical fabric it uses — NVLink or InfiniBand — determines whether that
+communication is an imperceptible overhead or a catastrophic bottleneck.</p>
+
+<div class="diagram-wrap">
+<figure>
+<svg viewBox="0 0 720 310" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:720px">
+  <text x="360" y="20" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#1c2438">4D Parallelism → Network Fabric Mapping</text>
+
+  <!-- Headers -->
+  <rect x="10" y="30" width="700" height="22" rx="3" fill="#1c2438"/>
+  <text x="80" y="45" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#e3b341">Parallelism</text>
+  <text x="200" y="45" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#e3b341">Collective Op</text>
+  <text x="330" y="45" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#e3b341">Network Required</text>
+  <text x="490" y="45" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#e3b341">Frequency</text>
+  <text x="640" y="45" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#e3b341">Why</text>
+
+  <!-- TP row -->
+  <rect x="10" y="56" width="700" height="32" rx="2" fill="#0a2a1a"/>
+  <text x="80" y="68" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#4ec94e">TP (Tensor Parallel)</text>
+  <text x="80" y="81" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#8ef8be">degree 1–8</text>
+  <text x="200" y="75" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#ccd">AllReduce</text>
+  <text x="330" y="68" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#4ec94e">NVLink ONLY</text>
+  <text x="330" y="81" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#4ec94e">MUST stay intra-node</text>
+  <text x="490" y="75" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#ccd">2× per transformer layer</text>
+  <text x="635" y="68" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#f78166">Over IB: 160 ops/fwd</text>
+  <text x="635" y="81" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#f78166">= 80ms latency (+2000%)</text>
+
+  <!-- PP row -->
+  <rect x="10" y="92" width="700" height="32" rx="2" fill="#1a1a00"/>
+  <text x="80" y="104" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#ffd700">PP (Pipeline Parallel)</text>
+  <text x="80" y="117" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#ffe97a">stage-per-node</text>
+  <text x="200" y="105" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#ccd">P2P Send/Recv</text>
+  <text x="200" y="117" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#aaa">activations</text>
+  <text x="330" y="110" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#ffd700">InfiniBand / RoCE</text>
+  <text x="490" y="110" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#ccd">Once per micro-batch per stage</text>
+  <text x="635" y="110" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#ccd">Low frequency, ~1ms tolerance</text>
+
+  <!-- DP row -->
+  <rect x="10" y="128" width="700" height="32" rx="2" fill="#0a1a2a"/>
+  <text x="80" y="140" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#58a6ff">DP (Data Parallel)</text>
+  <text x="80" y="153" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#a0c4ff">FSDP / ZeRO</text>
+  <text x="200" y="140" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#ccd">AllReduce or</text>
+  <text x="200" y="153" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#aaa">AllGather+ReduceScatter</text>
+  <text x="330" y="145" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#58a6ff">InfiniBand / RoCE</text>
+  <text x="490" y="145" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#ccd">Once per step (or gradient bucket)</text>
+  <text x="635" y="145" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#ccd">Large messages, BW-dominated</text>
+
+  <!-- EP row -->
+  <rect x="10" y="164" width="700" height="32" rx="2" fill="#2a1515"/>
+  <text x="80" y="176" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#f78166">EP (Expert Parallel)</text>
+  <text x="80" y="189" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#f5c0b0">MoE routing</text>
+  <text x="200" y="182" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#ccd">All-to-All</text>
+  <text x="330" y="176" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#4ec94e">NVLink if EP≤8</text>
+  <text x="330" y="189" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#f78166">IB required if EP&gt;8</text>
+  <text x="490" y="176" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#ccd">Per MoE layer (every 2–4 layers)</text>
+  <text x="635" y="182" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#ccd">Hardest to optimize at scale</text>
+
+  <!-- CP row -->
+  <rect x="10" y="200" width="700" height="32" rx="2" fill="#101830"/>
+  <text x="80" y="212" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#bc8cff">CP (Context Parallel)</text>
+  <text x="80" y="225" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#d8c0ff">long sequence</text>
+  <text x="200" y="218" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#ccd">AllGather (K,V)</text>
+  <text x="330" y="218" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#bc8cff">InfiniBand / RoCE</text>
+  <text x="490" y="218" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#ccd">Once per attention layer</text>
+  <text x="635" y="218" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#ccd">Sequence shards across nodes</text>
+
+  <!-- Physical layout example -->
+  <rect x="10" y="248" width="700" height="50" rx="5" fill="#f0f6ff" stroke="#2a6099" stroke-width="1.5"/>
+  <text x="24" y="264" font-family="sans-serif" font-size="10" font-weight="700" fill="#2a6099">4D Layout Example: TP=8, PP=4, CP=2, DP=16 = 1,024 GPUs</text>
+  <text x="24" y="279" font-family="sans-serif" font-size="9.5" fill="#333">Innermost→fastest: TP=8 (8 GPUs, NVLink) → CP=2 (2 nodes, IB low-latency) → PP=4 (4 node-groups, IB) → DP=16 (16 replicas, IB BW)</text>
+  <text x="24" y="294" font-family="sans-serif" font-size="9.5" fill="#1a7a3a" font-weight="700">Rule: Pack TP+CP+PP groups onto fewest IB switches possible. SLURM: --switches=N constraint enforces this.</text>
+</svg>
+<figcaption>Fig 14.5 — Mapping each parallelism dimension to its required network fabric. This mapping is the most important design decision in cluster topology planning. A single violation (e.g., TP=16 across IB) can reduce training throughput by 10× for that component.</figcaption>
+</figure>
+</div>
+
+<pre class="formula">
+<span class="cm">── Quantitative Justification: Why TP Must Stay on NVLink ───────────────</span>
+
+TP=8 AllReduce overhead per transformer layer:
+  Message size per AllReduce: hidden_dim × seq_len × 2 bytes = 4096 × 2048 × 2 = 16 MB
+  Number of AllReduces per 80-layer forward pass: 80 layers × 2 ops = 160 ops
+
+  Over InfiniBand (IB) at 50 GB/s per NIC × 8 = 400 GB/s:
+    Time per AllReduce = 2 × 7/8 × 16MB / 400GB/s = 0.07ms
+    Total TP overhead = 160 × 0.07ms = <span class="warn">11.2ms per forward pass</span>
+    Wait — but NCCL ring uses multiple hops, and latency dominates small messages
+    Realistic: 160 × 0.5ms = <span class="warn">80ms per forward pass</span> (unusable)
+
+  Over NVLink at 900 GB/s intra-node:
+    Time per AllReduce ≈ 0.05ms (NVLS hardware, symmetric memory)
+    Total TP overhead = 160 × 0.05ms = <span class="ok">8ms per forward pass</span> (acceptable)
+
+  <span class="hl">IB vs NVLink for TP: 10× difference in overhead — not a minor optimization</span>
+</pre>
+
+
+<!-- ═══ §14.9 SCALING EFFICIENCY ════════════════════════ -->
+<h2 id="s14-9" class="section-anchor">14.9 Scaling Efficiency — Measuring Network Impact on MFU</h2>
+
+<p>Scaling efficiency is the ground truth metric for how well your cluster networking
+supports your training workload. It answers: "If I double the GPUs, how close to double
+do I get in throughput?" Every point of lost efficiency is wasted infrastructure cost.
+At 1,000 GPUs × $3/hr, going from 79% to 85% scaling efficiency saves ~$1.5M per year.</p>
+
+<pre class="formula">
+<span class="cm">── Scaling Efficiency Definition and Measurement ────────────────────────</span>
+
+Scaling Efficiency (SE) = (Multi-node tokens/s) / (Single-node tokens/s × N_nodes)
+
+Ideal SE = 100% — N GPUs deliver exactly N× single-GPU throughput
+Typical SE = 70–90% for well-configured clusters at 1K+ GPUs
+
+<span class="cm">── LLaMA-3 70B Training Benchmark (empirical, 128-node × 8 GPU) ────────</span>
+
+  8 GPUs (1 node baseline):              4,800 tokens/s
+  1,024 GPUs (128 nodes, 4D parallel):   488,000 tokens/s
+  Scaling efficiency: 488,000 / (4,800 × 128) = <span class="hl">79.4%</span>
+
+  <span class="cm">The 20.6% efficiency loss breaks down:</span>
+    AllReduce overhead (DP dimension):   ~8%   (gradient sync across 128 nodes)
+    Pipeline bubbles (PP=8, 16 microbatch): ~6% (bubble = (PP-1)/(PP-1+M) = 7/23 = 30% → ~6% step time)
+    Data loading stalls:                  ~3%   (storage I/O not fast enough)
+    Other overhead:                       ~3%   (SLURM scheduling, kernel launch)
+
+<span class="cm">── How to Measure in Production ─────────────────────────────────────────</span>
+
+  <span class="cm"># Step 1: Single-node baseline</span>
+  torchrun --nproc_per_node=8 train.py --steps 100 --profile
+  <span class="cm"># Record: tokens_per_second, avg_step_time_ms</span>
+
+  <span class="cm"># Step 2: Multi-node run</span>
+  torchrun --nproc_per_node=8 --nnodes=128 train.py --steps 100 --profile
+  <span class="cm"># Compare: (multi-node tok/s) / (single-node tok/s × 128)</span>
+
+  <span class="cm"># Step 3: Attribute the gap (via Nsight Systems or NCCL timing)</span>
+  nsys profile --trace=cuda,nvtx,nccl --output=profile python train.py
+  <span class="cm"># Look for: NCCL AllReduce rows serialized (bad) vs overlapped (good)</span>
+
+<span class="cm">── Pipeline Bubble Analysis ──────────────────────────────────────────────</span>
+
+  Bubble fraction = (PP - 1) / (PP - 1 + num_micro_batches)
+
+  PP=8, micro_batches=8:  bubble = 7/15 = <span class="warn">46.7% — terrible</span>
+  PP=8, micro_batches=16: bubble = 7/23 = <span class="warn">30.4% — still bad</span>
+  PP=8, micro_batches=32: bubble = 7/39 = <span class="ok">17.9% — acceptable</span>
+  PP=4, micro_batches=16: bubble = 3/19 = <span class="ok">15.8% — good</span>
+
+  Solution: Interleaved 1F1B scheduling with virtual pipeline stages
+  Each physical PP stage contains V virtual stages → reduces bubble to 1/(V×PP)
+</pre>
+
+<!-- ═══ PROFILING COOKBOOK ════════════════════════════════ -->
+<h2 id="profiling" class="section-anchor">Profiling &amp; Diagnostic Cookbook</h2>
+
+<div class="cookbook">
+<div class="cookbook-label">🔬 Production Profiling Guide — Networking</div>
+<p><strong>Symptom: Training step time higher than expected, scaling efficiency below 75%</strong></p>
+
+<p><strong>Step 1 — Measure AllReduce fraction of step time</strong></p>
+<pre class="formula">
+export NCCL_DEBUG=INFO
+nsys profile --trace=cuda,nvtx,nccl -o profile_run python train.py --steps 20
+<span class="cm"># In nsys-ui: look at the "NCCL" row</span>
+<span class="cm"># Metric: NCCL_total_time / total_step_time</span>
+<span class="cm"># &lt;10%: networking not the bottleneck</span>
+<span class="cm"># 10–20%: acceptable, minor tuning possible</span>
+<span class="cm"># 20–30%: investigate topology and overlap</span>
+<span class="cm"># &gt;30%: networking IS the primary bottleneck</span>
+</pre>
+
+<p><strong>Step 2 — Test raw AllReduce bandwidth (baseline the fabric)</strong></p>
+<pre class="formula">
+<span class="cm"># NCCL bandwidth test (from nccl-tests package)</span>
+mpirun -np 1024 --hostfile hosts all_reduce_perf   -b 1M -e 4G -f 2 -g 1 -c 1
+<span class="cm"># Output: busBW (GB/s) vs message size</span>
+<span class="cm"># Compare against theoretical peak: (N-1)/N × NIC_BW × N_NICs</span>
+<span class="cm"># If achieved &lt; 80% of theoretical: topology or config problem</span>
+</pre>
+
+<p><strong>Step 3 — Check IB fabric health</strong></p>
+<pre class="formula">
+ibstat mlx5_0 | grep -E "State|Physical|Rate"
+<span class="cm"># Expect: Active / Polling / 400 Gb/sec</span>
+
+perfquery -x 3              <span class="cm"># Check port error counters</span>
+<span class="cm"># PortXmitDiscards &gt; 0 → congestion, bad cable, or config</span>
+<span class="cm"># PortRcvErrors &gt; 0    → signal integrity issue (check cable)</span>
+
+ib_write_bw -d mlx5_0 --report_gbits [server]
+<span class="cm"># Target: ~380–395 Gbps (95%+ of 400G)</span>
+<span class="cm"># If &lt; 350 Gbps: GPUDirect disabled, PFC misconfigured, or cable issue</span>
+</pre>
+
+<p><strong>Step 4 — Decision tree</strong></p>
+<pre class="formula">
+IF AllReduce &gt; 30% of step time:
+  → Check if NCCL operations are overlapped with compute (nsys)
+  → If NOT overlapped: add DDP(static_graph=True, gradient_as_bucket_view=True)
+  → Increase gradient_accumulation_steps to reduce AllReduce frequency
+  → Check NCCL_IB_CUDA_SUPPORT=1 (GPUDirect RDMA enabled)
+
+IF raw bandwidth test &lt; 80% of peak:
+  → Check NCCL_IB_HCA ordering (must match GPU-to-NIC PCIe topology)
+  → Verify rail-optimized topology: GPU-i traffic → NIC-i → Rail-i
+  → Check oversubscription ratio (spine bandwidth adequate?)
+  → Enable NCCL_IB_QPS_PER_CONNECTION=4
+
+IF ibstat shows errors or link speed != 400G:
+  → Replace cable (most common cause)
+  → Check SFP/QSFP transceiver compatibility
+  → Verify PFC and DCQCN configuration on all switches
+
+IF scaling efficiency degrades beyond 1024 GPUs:
+  → Consider IB SHARP (export NCCL_SHARP_ENABLE=1)
+  → Evaluate gradient accumulation to reduce sync frequency
+  → Profile per-GPU step times — identify straggler nodes (thermal throttle?)
+</pre>
+</div>
+
+<!-- ═══ WORKED EXAMPLE ════════════════════════════════════ -->
+<h2 id="worked" class="section-anchor">Worked Example</h2>
+
+<div class="worked">
+<div class="worked-label">✏ Worked Example — AllReduce Budget for 70B Model Training at 1,024 GPUs</div>
+
+<h4>Setup</h4>
+<p>You are planning a LLaMA-3 70B training run on 1,024 H100 GPUs (128 nodes × 8 GPUs).
+Parallelism: TP=8 (intra-node NVLink), PP=4, DP=32. Cluster uses IB NDR 400G with
+8 × ConnectX-7 NICs per node. The training objective: minimize step time while keeping
+AllReduce overhead below 10% of step time. Calculate the AllReduce budget, check feasibility,
+and decide whether gradient accumulation is required.</p>
+
+<h4>Step 1: DP group size and message size</h4>
+<pre class="formula">
+DP groups:    1,024 GPUs / (TP=8 × PP=4) = 32 DP replicas
+Model size:   70B parameters × 2 bytes/param (BF16) = 140 GB
+Gradient size per step: 140 GB (full model gradient in DP AllReduce)
+<span class="cm"># But FSDP ReduceScatter sends only 1/DP fraction per node, then AllGather</span>
+Message per GPU per ReduceScatter: 140 GB / 32 = 4.375 GB
+Total AllReduce volume: 2 × (31/32) × 140 GB = <span class="hl">271 GB of network traffic</span>
+</pre>
+
+<h4>Step 2: AllReduce time calculation</h4>
+<pre class="formula">
+Available IB bandwidth (one DP group = all 128 nodes):
+  Per-node NIC BW: 8 NICs × 50 GB/s = 400 GB/s
+  Ring algorithm: bandwidth = (N-1)/N × per_node_BW = (31/32) × 400 GB/s = 387 GB/s
+
+AllReduce time = message_size / bandwidth = 271 GB / 387 GB/s = <span class="hl">0.70 seconds</span>
+
+With IB SHARP (50% traffic reduction):
+  Effective time = 0.70 × 0.5 = <span class="ok">0.35 seconds</span>
+</pre>
+
+<h4>Step 3: Check against compute time</h4>
+<pre class="formula">
+LLaMA-3 70B forward+backward compute time per step (H100, BF16):
+  ~2.5–3.5 seconds at global batch = 4M tokens
+
+AllReduce fraction WITHOUT overlap or accumulation:
+  0.70 / 3.0 = 23%  <span class="warn">TOO HIGH — exceeds 10% budget</span>
+
+With overlap (DDP/FSDP gradient bucketing, 60% overlap achievable):
+  Effective overhead = 0.70 × (1 - 0.60) = 0.28s → 9.3%  <span class="ok">within budget</span>
+
+With SHARP + overlap:
+  Effective overhead = 0.35 × (1 - 0.60) = 0.14s → 4.7%  <span class="ok">excellent</span>
+</pre>
+
+<h4>Step 4: Gradient accumulation decision</h4>
+<pre class="formula">
+Target: AllReduce fraction &lt; 10% without relying on overlap
+AllReduce time per sync: 0.70s (without SHARP), 0.35s (with SHARP)
+
+Compute time per accumulated super-step with accum=4:
+  super_step_time = 4 × 3.0s = 12.0s
+  AllReduce fraction = 0.70 / 12.0 = <span class="ok">5.8% — easily within budget</span>
+
+<span class="hl">Recommendation:</span>
+  Minimum: NCCL_SHARP_ENABLE=1 + DDP gradient bucketing
+  Conservative: gradient_accumulation_steps=4 + SHARP
+  Both: AllReduce cost becomes negligible (&lt;5% of step)
+  Global batch with accum=4: 4M × 4 = 16M tokens per update
+  (verify convergence at this batch size before committing)
+</pre>
+
+<h4>Result</h4>
+<p>A 70B model at 1,024 H100s on IB NDR 400G is feasible with AllReduce overhead
+within budget — but requires at minimum: (1) IB SHARP enabled, (2) FSDP with
+backward_prefetch overlap. Without both, AllReduce exceeds 20% of step time and
+scaling efficiency drops below 75%. The gradient accumulation option adds a 6× reduction
+in sync frequency, providing a margin of safety for clusters with less optimal topology.</p>
+</div>
+
+
+<!-- ═══ KEY TAKEAWAYS ════════════════════════════════════ -->
+<div id="takeaways" class="section-anchor takeaways">
+  <h3>Key Takeaways</h3>
+
+  <div class="takeaway-group">
+    <div class="tg-label">Core Concepts</div>
+    <ul>
+      <li>AI clusters have a 5-level communication hierarchy. Each level differs by 2–3 orders of magnitude in bandwidth and latency. <strong>Optimize at the lowest possible level</strong> — NVLink is 18× faster than IB for the same bandwidth dollar.</li>
+      <li>NVLink (900 GB/s, H100) enables Tensor Parallelism. InfiniBand NDR (400 Gbps/port × 8) enables Data and Pipeline Parallelism. RoCEv2 provides IB-equivalent bandwidth at lower switch cost but 4× higher latency — requiring explicit lossless configuration via PFC and DCQCN.</li>
+      <li>NCCL selects algorithm based on topology + message size: NVLS (in-NVSwitch) for intra-node large messages, IB SHARP for inter-node large messages, Tree for small messages (&lt;64KB), Ring as default. NCCL 2.27 symmetric memory provides 7–9× latency reduction for small collectives.</li>
+      <li>Ring AllReduce bandwidth = (N−1)/N × BW — at N=1024 GPUs this is effectively 100% of NIC bandwidth. The bottleneck is absolute bandwidth, not the algorithm. A 2B parameter gradient (4GB) takes ~164ms on a 400G IB cluster without SHARP or accumulation.</li>
+    </ul>
+  </div>
+
+  <div class="takeaway-group">
+    <div class="tg-label">Cost &amp; Productivity Impact</div>
+    <ul>
+      <li>Raising scaling efficiency from 79% to 85% on a 1,024-GPU cluster at $3/GPU-hr saves ~$1.5M per year — achievable with SHARP + FSDP gradient overlap + proper rail-optimized topology.</li>
+      <li>Gradient accumulation at 8× reduces AllReduce operations by 8× — typically moving AllReduce from 25–40% of step time to 4–6%. At 1,000 GPUs this alone can recover 20%+ MFU, equivalent to 200 free GPUs of compute.</li>
+      <li>Enabling GPUDirect RDMA (NCCL_IB_CUDA_SUPPORT=1) frees 12 CPU cores per DGX node from NCCL proxy threads — equivalent to recovering $15K/year in CPU headroom per node on dedicated HPC instances.</li>
+    </ul>
+  </div>
+
+  <div class="takeaway-group">
+    <div class="tg-label">Principal-Level Insight</div>
+    <ul>
+      <li><strong>The topology IS the architecture:</strong> A TP=8 training job that accidentally crosses IB instead of NVLink is not "10% slower" — it is 10× slower on that dimension and often untrainable. The physical mapping of TP groups to nodes is the most consequential hardware decision in cluster design.</li>
+      <li><strong>RoCE vs IB is a TCO question, not a performance question:</strong> At 400G per port, both deliver the same bandwidth. Meta proved RoCE can achieve 90% scaling efficiency at 24K GPUs — but required inventing CTS congestion control. The hidden cost of RoCE is engineering debt, not hardware.</li>
+      <li><strong>Scaling efficiency has a floor set by pipeline bubbles, not networking:</strong> At PP=8 with 16 micro-batches, pipeline bubbles alone consume 30% of step time. Doubling IB bandwidth won't fix this. The correct solution is increasing micro-batches (to 32+) or using interleaved 1F1B scheduling — a model architecture choice, not a network choice.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══ REVIEW QUESTIONS ═══════════════════════════════════ -->
+<div id="review" class="section-anchor review-questions">
+  <h3>Review Questions</h3>
+
+  <div class="rq-tier foundational">
+    <div class="rq-tier-label">
+      <span class="rq-badge">Foundational</span>
+      Build the mental model — no math required
+    </div>
+    <ol>
+      <li>A new engineer asks: "Why can't we just use regular Ethernet for GPU-to-GPU communication? It's cheaper." Explain the three specific failure modes that would occur — covering both latency and loss — and describe what would happen to a 128-GPU AllReduce if even 0.1% of packets were dropped.</li>
+      <li>Explain the difference between NVLink, InfiniBand, and RoCEv2 in one sentence each. For each, name one parallelism strategy that depends on it and explain why it requires that specific technology rather than one of the others.</li>
+      <li>What is NCCL's role in distributed training? Why does a ML engineer need to configure it explicitly rather than simply using PyTorch's <code>dist.all_reduce()</code> call and letting it choose defaults?</li>
+    </ol>
+  </div>
+
+  <div class="rq-tier intermediate">
+    <div class="rq-tier-label">
+      <span class="rq-badge">Intermediate</span>
+      Apply and calculate — production context
+    </div>
+    <ol>
+      <li>A 256-GPU training cluster (32 nodes × 8 GPUs, IB NDR 400G, 8 NICs per node) trains a 13B parameter model in BF16. DP=32 (one DP group = all nodes), TP=8 (intra-node), PP=1. Calculate: (a) the AllReduce message size, (b) the ring AllReduce time in seconds, (c) the AllReduce fraction of step time if total step time is 1.2 seconds, and (d) whether this is acceptable and what you would do if it is not.</li>
+      <li>You enable <code>NCCL_DEBUG=INFO</code> and see the log line: <code>"Channel 00 : Coll/chnls 4/4 ... Ring"</code> instead of the <code>NVLS</code> you expected on H100. List three possible reasons NCCL is falling back to Ring instead of NVLS, and give the diagnostic command to verify each.</li>
+      <li>A training job achieves 65% scaling efficiency at 512 GPUs. Nsight Systems shows NCCL AllReduce consuming 35% of step time, with no overlap with backward computation. Write the specific PyTorch code changes (DDP or FSDP configuration) that would enable overlap, and explain why each parameter matters.</li>
+    </ol>
+  </div>
+
+  <div class="rq-tier principal">
+    <div class="rq-tier-label">
+      <span class="rq-badge">Principal Level</span>
+      Design, decide, and defend — architecture reviews
+    </div>
+    <ol>
+      <li>You are designing the networking architecture for a 10,000-GPU training cluster with a $500M capex budget. Leadership is asking whether to use InfiniBand NDR 400G (higher NIC/switch cost, SHARP available) or RoCEv2 400G (lower switch cost, no SHARP, requires CTS-style congestion control). Walk through the decision framework quantitatively: calculate the switch cost difference at 10K GPUs, estimate the SHARP bandwidth savings for a 175B model AllReduce, factor in Meta's CTS engineering investment, and make a final recommendation with explicit assumptions.</li>
+      <li>A 4D parallel training job (TP=8, PP=8, CP=4, DP=8 = 2,048 GPUs) is achieving only 62% scaling efficiency. You have Nsight profiling data showing: AllReduce is 12% of step time (well-overlapped), but each training step shows 28 sequential NCCL barriers per step that are not overlapped with compute. Identify the specific parallelism dimension causing these sequential barriers, explain why it cannot be overlapped (unlike DP AllReduce), and propose two architectural changes — one in training configuration, one in physical cluster placement — that would recover efficiency without changing the total GPU count.</li>
+      <li>The engineering team proposes increasing Tensor Parallelism from TP=8 (intra-node) to TP=16 (crossing two nodes over IB) to support a new 400B model that doesn't fit on 8 GPUs. Quantify the communication overhead at TP=16 over IB NDR 400G for a model with hidden_dim=16384 and 120 layers (assume each TP AllReduce message = hidden_dim × seq_len × 2 bytes, seq_len=4096). Compare this to the compute time for one transformer forward pass on H100. Then propose an alternative architecture that achieves the memory capacity goal without crossing IB with TP traffic.</li>
+    </ol>
+  </div>
+</div>
+
+<!-- ═══ CHAPTER END ═══════════════════════════════════════ -->
+<div class="ch-end">
+  ✦ &nbsp; End of Chapter 14 &nbsp; ✦
+  <div style="margin-top:6px;font-size:9px;color:#ccc">
+    Next: Chapter 15 — Storage &amp; I/O: Feeding 10,000 GPUs Without Starving Them
+  </div>
+</div>
+
+</div><!-- .page -->
+
+<script>
+// Sidebar active section highlight on scroll
+const sidebarLinks = document.querySelectorAll('#sidebar a');
+const anchors = document.querySelectorAll('.section-anchor');
+function updateSidebar(){
+  let active = '';
+  anchors.forEach(el=>{
+    if(window.scrollY >= el.offsetTop - 70) active = el.id;
+  });
+  sidebarLinks.forEach(a=>{
+    const href = a.getAttribute('href').replace('#','');
+    a.classList.toggle('active', href === active);
+  });
+}
+window.addEventListener('scroll', updateSidebar, {passive:true});
+updateSidebar();
+</script>
+</body>
+</html>
+</div>
+</body>
+</html>

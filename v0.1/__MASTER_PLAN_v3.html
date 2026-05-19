@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Master Completion Plan v3 — Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;font-size:13px;line-height:1.8;color:#111;background:#fdfcf7}
+@media print{body{background:#fff;font-size:10.5px}.page{padding:12mm 16mm!important}}
+.page{max-width:960px;margin:0 auto;padding:36px 52px}
+h1{font-size:26px;color:#1c2438;margin:0 0 5px}
+h2{font-size:16px;color:#1c2438;margin:26px 0 9px;border-bottom:2px solid #e3b341;padding-bottom:4px}
+h3{font-size:13.5px;color:#1a3060;margin:14px 0 5px}
+p{margin-bottom:9px;font-size:12.5px}
+strong{color:#1c2438}
+.hdr{margin-bottom:22px;padding-bottom:14px;border-bottom:2px solid #e3b341}
+.hdr-tag{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:3px}
+.hdr-sub{font-size:12px;color:#555;font-style:italic}
+/* Tracker */
+.tracker{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin:12px 0}
+.stat-box{border-radius:7px;padding:9px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.stat-box.done{background:#e8fff0;border:2px solid #27ae60}
+.stat-box.wip{background:#fff8e0;border:2px solid #e3b341}
+.stat-box.todo{background:#f3f5f8;border:2px solid #d0d6e2}
+.stat-box .num{font-size:19px;font-weight:900;font-family:sans-serif}
+.stat-box .label{font-family:sans-serif;font-size:8.5px;text-transform:uppercase;letter-spacing:.8px;color:#666;margin-top:2px}
+.stat-box.done .num{color:#27ae60}.stat-box.wip .num{color:#d4820a}.stat-box.todo .num{color:#888}
+/* Pipeline box — the key new element */
+.pipeline{background:#0d1117;border:2px solid #e3b341;border-radius:10px;padding:0;margin:14px 0;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.pipeline-hdr{background:#e3b341;padding:8px 16px;display:flex;align-items:center;gap:8px}
+.pipeline-hdr span{font-family:sans-serif;font-size:11px;font-weight:900;color:#1c2438;text-transform:uppercase;letter-spacing:1px}
+.pipeline-steps{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0}
+.p-step{padding:14px 16px;border-right:1px solid #1e2533}
+.p-step:last-child{border-right:none}
+.p-step-n{font-family:sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#e3b341;margin-bottom:6px}
+.p-step-title{font-family:sans-serif;font-size:12px;font-weight:700;color:#fff;margin-bottom:5px}
+.p-step-desc{font-family:'Courier New',monospace;font-size:10px;color:#7ec8a0;line-height:1.6}
+/* Session cards */
+.session{border:1.5px solid #d0d6e2;border-radius:8px;margin:8px 0;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.session.done{border-color:#27ae60}.session.next{border-color:#e3b341;box-shadow:0 0 0 3px rgba(227,179,65,.2)}.session.todo{border-color:#d0d6e2}.session.rebuild{border-color:#c0392b;border-style:dashed}
+.sess-hdr{padding:8px 13px;display:flex;align-items:center;gap:10px}
+.session.done .sess-hdr{background:#e8fff0}.session.next .sess-hdr{background:#fffbf0}.session.todo .sess-hdr{background:#f3f5f8}.session.rebuild .sess-hdr{background:#fff5f5}
+.sess-num{font-family:sans-serif;font-size:9.5px;font-weight:700;color:#888;min-width:68px}
+.sess-title{font-size:12.5px;font-weight:bold;color:#1c2438;flex:1}
+.sess-outputs{font-family:sans-serif;font-size:9px;color:#2a6099;font-weight:600;white-space:nowrap}
+.sess-status{font-family:sans-serif;font-size:9px;font-weight:700;padding:2px 8px;border-radius:8px;white-space:nowrap}
+.session.done .sess-status{background:#27ae60;color:#fff}
+.session.next .sess-status{background:#e3b341;color:#1c2438}
+.session.todo .sess-status{background:#d0d6e2;color:#666}
+.session.rebuild .sess-status{background:#c0392b;color:#fff}
+.sess-body{padding:9px 13px;border-top:1px solid rgba(0,0,0,.06);font-size:11.5px}
+.sess-body code{font-family:'Courier New',monospace;font-size:10.5px;background:#f0f2f5;padding:1px 5px;border-radius:3px;color:#1c2438}
+/* Prompt box */
+.prompt-box{background:#12131f;color:#b8ddf0;padding:12px 16px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:10px 0;white-space:pre-wrap;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.prompt-box .hl{color:#e3b341;font-weight:bold}
+.prompt-box .green{color:#7ec8a0}
+/* Callouts */
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:9px 13px;margin:10px 0;border-radius:0 5px 5px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout strong{display:block;margin-bottom:3px;font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+/* Phase banner */
+.phase{background:linear-gradient(135deg,#1c2438 0%,#2a4580 100%);color:#fff;padding:8px 15px;border-radius:7px;margin:18px 0 8px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.phase-n{font-family:sans-serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#e3b341}
+.phase-t{font-size:13.5px;font-weight:900}
+/* Table */
+table{width:100%;border-collapse:collapse;margin:9px 0;font-size:11px}
+th{background:#1c2438;color:#fff;padding:6px 9px;text-align:left;font-family:sans-serif;font-size:9.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:5px 9px;border-bottom:1px solid #e8e0d0;vertical-align:top}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#1a7a3a;font-weight:600}.warn{color:#a55000;font-weight:600}.bad{color:#c0392b;font-weight:600}
+.badge{display:inline-block;font-family:sans-serif;font-size:8px;font-weight:700;padding:1px 6px;border-radius:7px;margin-left:3px}
+.badge.done{background:#27ae60;color:#fff}.badge.todo{background:#d0d6e2;color:#666}.badge.new{background:#7b2d8b;color:#fff}.badge.fix{background:#c0392b;color:#fff}
+.footer{text-align:center;margin-top:32px;padding-top:13px;border-top:1px solid #e0d8c8;font-family:sans-serif;font-size:9.5px;color:#bbb;letter-spacing:2px;text-transform:uppercase}
+ul{margin:4px 0 8px 16px}li{margin-bottom:3px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="hdr">
+  <div class="hdr-tag">v3 — Automated 3-Format Pipeline · May 2026 · Save This File</div>
+  <h1>📋 Master Plan v3 — Fully Automated</h1>
+  <p style="font-size:14px;color:#1c2438;font-weight:bold;margin:4px 0">AI/ML Infrastructure from Silicon to Scale</p>
+  <div class="hdr-sub">Venkat Vinjam · Every session produces .md source + .html + .pdf — fully automated, no manual steps</div>
+</div>
+
+<!-- STATUS -->
+<div class="tracker">
+  <div class="stat-box done"><div class="num">12</div><div class="label">HTML+PDF Done</div></div>
+  <div class="stat-box todo"><div class="num">15</div><div class="label">Sessions Left</div></div>
+  <div class="stat-box done"><div class="num">✓</div><div class="label">Auto PDF Pipeline</div></div>
+  <div class="stat-box todo"><div class="num">27</div><div class="label">Total Files</div></div>
+  <div class="stat-box todo"><div class="num">0</div><div class="label">Manual Steps</div></div>
+  <div class="stat-box wip"><div class="num">~48%</div><div class="label">Complete</div></div>
+</div>
+
+<!-- ═══ THE PIPELINE — Core New Section ═══ -->
+<h2>🔄 The Automated 3-Format Pipeline</h2>
+
+<div class="callout green">
+<strong>How It Works — Every Session Produces 3 Files Automatically</strong>
+weasyprint is installed and tested. It converts our styled HTML (with inline SVG) directly to PDF without Chrome, without manual steps, without leaving Claude. Every chapter session now ends with 3 downloadable files.
+</div>
+
+<div class="pipeline">
+  <div class="pipeline-hdr"><span>📦 3 Files Per Session — Zero Manual Steps</span></div>
+  <div class="pipeline-steps">
+    <div class="p-step">
+      <div class="p-step-n">Step 1 · Source</div>
+      <div class="p-step-title">📝 Markdown</div>
+      <div class="p-step-desc">chXX_source.md
+─────────────
+Raw content with
+all formulas, tables,
+diagrams described.
+Permanent source
+of truth for edits.</div>
+    </div>
+    <div class="p-step">
+      <div class="p-step-n">Step 2 · Render</div>
+      <div class="p-step-title">🌐 Standalone HTML</div>
+      <div class="p-step-desc">chXX.html
+─────────────
+Full design standard.
+Inline SVG diagrams.
+Navy/cream/gold.
+GitHub Pages ready.
+No dependencies.</div>
+    </div>
+    <div class="p-step">
+      <div class="p-step-n">Step 3 · Export</div>
+      <div class="p-step-title">📕 PDF — Automated</div>
+      <div class="p-step-desc">chXX.pdf
+─────────────
+weasyprint converts
+HTML��PDF in-session.
+All SVG diagrams
+render correctly.
+Downloadable now.</div>
+    </div>
+  </div>
+</div>
+
+<h3>The End-of-Session Build Command (Claude runs this every time)</h3>
+<div class="prompt-box"><span class="green">import weasyprint, shutil, os
+
+def build_all_formats(html_path, base_name):
+    """Auto-generate HTML + PDF. MD is written separately during content build."""
+    out = "/mnt/user-data/outputs"
+    
+    # HTML copy
+    shutil.copy(html_path, f"{out}/{base_name}.html")
+    
+    # PDF via weasyprint (handles inline SVG perfectly)
+    weasyprint.HTML(filename=html_path).write_pdf(f"{out}/{base_name}.pdf")
+    
+    print(f"✅ {base_name}.html — {os.path.getsize(f'{out}/{base_name}.html')//1024} KB")
+    print(f"✅ {base_name}.pdf  — {os.path.getsize(f'{out}/{base_name}.pdf')//1024} KB")</span></div>
+
+<h3>Universal Session Start Prompt (paste at every new chat)</h3>
+<div class="prompt-box"><span class="hl">I am Venkat Vinjam, continuing "AI/ML Infrastructure from Silicon to Scale".
+
+Session [N]: Build [CHAPTER NAME]
+Source file: [FILENAME.md] in project knowledge
+Outputs needed: [chXX_source.md] + [chXX.html] + [chXX.pdf]
+
+PIPELINE REQUIREMENT — at end of session you must:
+1. Write chXX_source.md (clean markdown, no HTML tags)
+2. Build chXX.html (silicon_to_scale_v3.html design: cream #fdfcf7, Georgia serif,
+   navy #1c2438, gold #e3b341, inline SVG diagrams, print-ready CSS)
+3. Run this to auto-generate PDF:
+   import weasyprint, shutil
+   shutil.copy("/home/claude/chXX.html", "/mnt/user-data/outputs/chXX.html")
+   weasyprint.HTML(filename="/home/claude/chXX.html").write_pdf("/mnt/user-data/outputs/chXX.pdf")
+4. present_files([".../chXX.html", ".../chXX.pdf"])
+
+Requirements for HTML: 4-8 inline SVG diagrams · sidebar nav · standalone · no external deps
+
+Load source from project knowledge and begin building now.</span></div>
+
+<!-- ═══ FILE INVENTORY ═══ -->
+<h2>📁 Complete File Inventory — All 27 Files</h2>
+<table>
+<thead><tr><th>File</th><th>Title</th><th>Source</th><th>HTML</th><th>PDF</th><th>Session</th></tr></thead>
+<tbody>
+<tr><td><code>index.html</code></td><td>Front Matter (Cover, Preface, ToC)</td><td>book_front_matter.html</td><td class="good">✓</td><td class="warn">Regen</td><td>—</td></tr>
+<tr><td><code>ch01.html</code></td><td>Ch 1 — Performance Architecture Mindset</td><td>chapter_1_complete.html</td><td class="good">✓</td><td class="warn">Regen</td><td>—</td></tr>
+<tr><td><code>ch02.html</code></td><td>Ch 2 — Transformer Architecture</td><td>ch2_transformer_complete.html</td><td class="good">✓</td><td class="warn">Regen</td><td>—</td></tr>
+<tr><td><code>ch03.html</code></td><td>Ch 3 — GPU Architecture Fundamentals</td><td>ch3_book_section.html</td><td class="good">✓</td><td class="warn">Regen</td><td>—</td></tr>
+<tr style="background:#fff8e0"><td><code>ch03a.html</code></td><td>Ch 3A — Non-GPU Accelerators</td><td>ch3a_accelerators.md</td><td class="warn">S-1</td><td class="warn">S-1</td><td>S-1 ⭐</td></tr>
+<tr style="background:#fff8e0"><td><code>ch03b.html</code></td><td>Ch 3B — GPU Roadmap</td><td>ch3b_gpu_roadmap.md</td><td class="warn">S-2</td><td class="warn">S-2</td><td>S-2</td></tr>
+<tr style="background:#fff8e0"><td><code>ch04.html</code></td><td>Ch 4 — Memory Hierarchy + FlashAttention</td><td>ch4_memory_hierarchy.md + ch4_flashattn_expansion.md</td><td class="warn">S-3</td><td class="warn">S-3</td><td>S-3</td></tr>
+<tr style="background:#fff8e0"><td><code>ch05.html</code></td><td>Ch 5 — Thermal, Power &amp; TCO</td><td>ch5_thermal_power_tco.md</td><td class="warn">S-4</td><td class="warn">S-4</td><td>S-4</td></tr>
+<tr><td><code>ch06.html</code></td><td>Ch 6 — Inference Systems</td><td>ch6_inference_complete.html</td><td class="good">✓</td><td class="warn">Regen</td><td>—</td></tr>
+<tr style="background:#fff8e0"><td><code>ch07.html</code></td><td>Ch 7 — GPU Kernels &amp; CUDA/Triton</td><td>ch7_gpu_kernels.md</td><td class="warn">S-5</td><td class="warn">S-5</td><td>S-5</td></tr>
+<tr style="background:#fff8e0"><td><code>ch08.html</code></td><td>Ch 8 — Quantization</td><td>ch8_quantization.md</td><td class="warn">S-6</td><td class="warn">S-6</td><td>S-6</td></tr>
+<tr style="background:#fff8e0"><td><code>ch09.html</code></td><td>Ch 9 — Kernel Fusion &amp; Compilers</td><td>ch9_fusion_compiler.md</td><td class="warn">S-7</td><td class="warn">S-7</td><td>S-7</td></tr>
+<tr style="background:#fff8e0"><td><code>ch10.html</code></td><td>Ch 10 — Distributed Training</td><td>ch10_training_complete.md</td><td class="warn">S-8</td><td class="warn">S-8</td><td>S-8</td></tr>
+<tr style="background:#fff8e0"><td><code>ch11.html</code></td><td>Ch 11 — KV Cache Deep Dive</td><td>ch11_kv_cache_complete.md</td><td class="warn">S-9</td><td class="warn">S-9</td><td>S-9</td></tr>
+<tr style="background:#fff8e0"><td><code>ch12.html</code></td><td>Ch 12 — Benchmarking</td><td>ch12_benchmarking_complete.md</td><td class="warn">S-10</td><td class="warn">S-10</td><td>S-10</td></tr>
+<tr style="background:#fff8e0"><td><code>ch13.html</code></td><td>Ch 13 — Speculative Decoding &amp; MoE</td><td>ch13_speculative_moe.md</td><td class="warn">S-11</td><td class="warn">S-11</td><td>S-11</td></tr>
+<tr style="background:#fff8e0"><td><code>ch14.html</code></td><td>Ch 14 — Networking &amp; Communication</td><td>ch14_networking.md</td><td class="warn">S-12</td><td class="warn">S-12</td><td>S-12</td></tr>
+<tr style="background:#fff8e0"><td><code>ch15.html</code></td><td>Ch 15 — Storage &amp; I/O</td><td>ch15_storage_io.md</td><td class="warn">S-13</td><td class="warn">S-13</td><td>S-13</td></tr>
+<tr style="background:#fff8e0"><td><code>ch16.html</code></td><td>Ch 16 — Cluster Management</td><td>ch16a_cluster_management.md</td><td class="warn">S-14</td><td class="warn">S-14</td><td>S-14</td></tr>
+<tr style="background:#fff8e0"><td><code>ch17.html</code></td><td>Ch 17 — Telemetry &amp; Tools</td><td>ch17_telemetry_tools.md</td><td class="warn">S-15</td><td class="warn">S-15</td><td>S-15</td></tr>
+<tr style="background:#fff8e0"><td><code>ch18.html</code></td><td>Ch 18 — Principal Career</td><td>ch18_principal_career.md</td><td class="warn">S-16</td><td class="warn">S-16</td><td>S-16</td></tr>
+<tr><td><code>ch19.html</code></td><td>Ch 19 — Production Resilience &amp; SRE</td><td>Built this session</td><td class="good">✓</td><td class="good">✓</td><td>—</td></tr>
+<tr style="background:#f0e8ff"><td><code>ch21.html</code></td><td>Ch 21 — Real-World Case Studies <span class="badge new">NEW</span></td><td>Build from seeds + first principles</td><td class="warn">S-17</td><td class="warn">S-17</td><td>S-17</td></tr>
+<tr><td><code>ch20.html</code></td><td>Ch 20 — Future of AI Compute</td><td>ch_future_ai_compute.md</td><td class="good">✓</td><td class="good">✓</td><td>—</td></tr>
+<tr style="background:#fff5f5"><td><code>appendix_a.html</code></td><td>App A — Hardware Reference Tables</td><td>appendix_a_reference.html</td><td class="good">✓</td><td class="warn">Regen</td><td>—</td></tr>
+<tr style="background:#fff5f5"><td><code>appendix_b.html</code></td><td>App B — Profiling Tool Reference <span class="badge fix">REBUILD</span></td><td>appendix_b_tools_reference.md ← CORRECT SOURCE</td><td class="bad">S-18</td><td class="bad">S-18</td><td>S-18</td></tr>
+<tr style="background:#fff5f5"><td><code>appendix_c.html</code></td><td>App C — Glossary <span class="badge fix">REBUILD</span></td><td>appendix_c_glossary.md ← CORRECT SOURCE</td><td class="bad">S-19</td><td class="bad">S-19</td><td>S-19</td></tr>
+<tr><td><code>appendix_d.html</code></td><td>App D — Performance Formulas <span class="badge new">RENAME</span></td><td>appendix_b.html we built → rename</td><td class="good">✓</td><td class="good">✓</td><td>—</td></tr>
+<tr><td><code>appendix_e.html</code></td><td>App E — Reading Roadmap <span class="badge new">RENAME</span></td><td>appendix_c.html we built → rename</td><td class="good">✓</td><td class="good">✓</td><td>—</td></tr>
+</tbody>
+</table>
+
+<!-- ═══ SESSION CARDS — KEY SESSIONS ═══ -->
+<div class="phase"><div class="phase-n">Phase 1 — Sessions 1–19</div><div class="phase-t">One Session = One Chapter = 3 Files: .md + .html + .pdf</div></div>
+
+<div class="session next">
+  <div class="sess-hdr">
+    <div class="sess-num">Session 1 ⭐</div>
+    <div class="sess-title">Ch 3A — Non-GPU Accelerators (TPU, Trainium, Gaudi, Groq)</div>
+    <div class="sess-outputs">→ ch03a_source.md + ch03a.html + ch03a.pdf</div>
+    <div class="sess-status">DO NEXT</div>
+  </div>
+  <div class="sess-body">
+    Source: <code>ch3a_accelerators.md</code> in project knowledge<br>
+    Key diagrams: Systolic array vs SIMT · TPU pod topology · Accelerator selection decision tree · TCO comparison · Latency vs throughput by platform<br>
+    End-of-session: Run weasyprint pipeline → 3 files downloadable
+  </div>
+</div>
+
+<div class="session todo"><div class="sess-hdr"><div class="sess-num">Session 2</div><div class="sess-title">Ch 3B — GPU Roadmap: NVIDIA Ampere→Rubin · AMD CDNA1→4</div><div class="sess-outputs">→ ch03b_source.md + ch03b.html + ch03b.pdf</div><div class="sess-status">TODO</div></div>
+  <div class="sess-body">Source: <code>ch3b_gpu_roadmap.md</code> · Key diagrams: NVIDIA/AMD timeline SVGs · gen-over-gen BW/FLOPS bar chart · HBM evolution · [SHIPPED]/[ANNOUNCED]/[ROADMAP] labels on all specs</div>
+</div>
+
+<div class="session todo"><div class="sess-hdr"><div class="sess-num">Session 3</div><div class="sess-title">Ch 4 — Memory Hierarchy, HBM Deep Dive &amp; FlashAttention</div><div class="sess-outputs">→ ch04_source.md + ch04.html + ch04.pdf</div><div class="sess-status">TODO</div></div>
+  <div class="sess-body">Source: <code>ch4_memory_hierarchy.md</code> + <code>ch4_flashattn_expansion.md</code> (combine both) · Key diagrams: Memory pyramid · HBM3 stack architecture · Roofline with operation dots · FlashAttention tiling · Bandwidth comparison</div>
+</div>
+
+<div class="session todo"><div class="sess-hdr"><div class="sess-num">Session 4</div><div class="sess-title">Ch 5 — Thermal, Power Management &amp; TCO</div><div class="sess-outputs">→ ch05_source.md + ch05.html + ch05.pdf</div><div class="sess-status">TODO</div></div>
+  <div class="sess-body">Source: <code>ch5_thermal_power_tco.md</code> · Key diagrams: Thermal throttling curve · Air vs liquid cooling · TCO waterfall · $/token model · PUE efficiency diagram</div>
+</div>
+
+<div class="session todo"><div class="sess-hdr"><div class="sess-num">Sessions 5–16</div><div class="sess-title">Ch 7 through Ch 18 — (same pattern each session)</div><div class="sess-outputs">→ chXX_source.md + chXX.html + chXX.pdf per session</div><div class="sess-status">TODO</div></div>
+  <div class="sess-body">
+    S-5: ch07 GPU Kernels · S-6: ch08 Quantization · S-7: ch09 Fusion/Compilers<br>
+    S-8: ch10 Distributed Training · S-9: ch11 KV Cache · S-10: ch12 Benchmarking<br>
+    S-11: ch13 Speculative/MoE · S-12: ch14 Networking · S-13: ch15 Storage<br>
+    S-14: ch16 Cluster Mgmt · S-15: ch17 Telemetry · S-16: ch18 Career
+  </div>
+</div>
+
+<div class="session todo"><div class="sess-hdr"><div class="sess-num">Session 17 🆕</div><div class="sess-title">Ch 21 — Real-World Case Studies, Failures &amp; Optimization</div><div class="sess-outputs">→ ch21_source.md + ch21.html + ch21.pdf</div><div class="sess-status">TODO — USE SPECIAL PROMPT</div></div>
+  <div class="sess-body">Build from 4 case study seeds (uploaded ChatGPT PDFs) — develop each with full quantitative analysis, profiling workflows, real tool commands, before/after metrics. 6–8 inline SVGs. Cross-refs to Ch 6, 10, 11, 17, 19.</div>
+</div>
+
+<div class="session rebuild"><div class="sess-hdr"><div class="sess-num">Session 18 🔧</div><div class="sess-title">App B — Profiling Tool Quick Reference (rebuild from correct .md source)</div><div class="sess-outputs">→ appendix_b.html + appendix_b.pdf</div><div class="sess-status">REBUILD</div></div>
+  <div class="sess-body">Source: <code>appendix_b_tools_reference.md</code> in project knowledge · Contains: tool decision tree, nsys/ncu reference, DCGM field IDs, NCCL env vars, nccl-tests interpretation, AMD equivalents, vLLM metrics, storage tools</div>
+</div>
+
+<div class="session rebuild"><div class="sess-hdr"><div class="sess-num">Session 19 🔧</div><div class="sess-title">App C — Glossary (rebuild from correct .md source)</div><div class="sess-outputs">→ appendix_c.html + appendix_c.pdf</div><div class="sess-status">REBUILD</div></div>
+  <div class="sess-body">Source: <code>appendix_c_glossary.md</code> in project knowledge · Format: Alphabetical A-Z · 200-300 terms · 2-3 sentence definitions + chapter reference tags per term</div>
+</div>
+
+<!-- ═══ PDF STITCHING ═══ -->
+<div class="phase"><div class="phase-n">Phase 2 — After All 19 Sessions Complete</div><div class="phase-t">Automated PDF Stitch — One Command Merges Everything</div></div>
+
+<h3>Stitch Session Prompt (One Final Chat)</h3>
+<div class="prompt-box"><span class="hl">I am Venkat Vinjam. Please stitch all chapter PDFs into one complete book PDF.
+
+Upload all PDF files to this chat (index.pdf, ch01.pdf through ch21.pdf,
+appendix_a.pdf through appendix_e.pdf) and run:
+
+import weasyprint
+from pypdf import PdfWriter, PdfReader
+
+writer = PdfWriter()
+for pdf in sorted_pdf_list:  # in order: 00_index, 01_ch01 ... 27_appendix_e
+    reader = PdfReader(pdf)
+    for page in reader.pages:
+        writer.add_page(page)
+        
+with open("/mnt/user-data/outputs/silicon_to_scale_COMPLETE.pdf", "wb") as f:
+    writer.write(f)
+
+Output: silicon_to_scale_COMPLETE.pdf (single downloadable book)</span></div>
+
+<!-- ═══ WHAT TO DO WHEN ═══ -->
+<h2>⚡ Quick Reference — Exactly What to Do</h2>
+<table>
+<thead><tr><th>Situation</th><th>What to say at session start</th></tr></thead>
+<tbody>
+<tr><td>Build next chapter</td><td>"Session [N]. Build [chXX name]. Source: [file.md]. Produce chXX_source.md + chXX.html + chXX.pdf. Run weasyprint pipeline at end."</td></tr>
+<tr><td>Check what's done</td><td>"List all chapter HTML and PDF files currently done for Silicon to Scale using the master plan."</td></tr>
+<tr><td>Regenerate a PDF</td><td>"ch[XX].html already exists in project knowledge. Run weasyprint to regenerate ch[XX].pdf."</td></tr>
+<tr><td>Stitch final book</td><td>Upload all PDFs → "Stitch these into silicon_to_scale_COMPLETE.pdf using pypdf"</td></tr>
+<tr><td>Lost context</td><td>"I am Venkat Vinjam continuing Silicon to Scale. Show current completion status and tell me which session to run next."</td></tr>
+</tbody>
+</table>
+
+<div class="callout green">
+<strong>🎯 End State — 6 Weeks</strong>
+27 HTML files · 27 PDFs · 1 merged complete book · GitHub Pages live.
+Zero manual Chrome steps. Zero pdf24.org. Everything automated inside Claude.
+</div>
+
+<div class="footer">MASTER_PLAN_v3.html · AI/ML Infrastructure from Silicon to Scale · Venkat Vinjam · May 2026</div>
+</div>
+</body>
+</html>

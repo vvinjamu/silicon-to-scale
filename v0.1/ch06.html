@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inference System Architecture | AI/ML Infrastructure from Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
+.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
+.mem-tier-body{flex:1}
+.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
+.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+.fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+
+.takeaways{background:#f3f5f8;border:2px solid #1c2438;border-radius:9px;padding:18px 22px;margin:32px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.takeaways h3{color:#1c2438;margin:0 0 14px;font-size:15px;border:none;padding:0}
+.takeaway-group{margin-bottom:14px}.takeaway-group:last-child{margin-bottom:0}
+.tg-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#e3b341;margin-bottom:6px}
+.takeaway-group ul{margin-left:16px}.takeaway-group li{font-size:12.5px;margin-bottom:4px;color:#222}
+.review-questions{margin-top:36px}
+.review-questions h3{font-size:16px;color:#1c2438;margin-bottom:16px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+.rq-tier{border-radius:8px;padding:14px 18px;margin-bottom:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rq-tier.foundational{background:#e8fff0;border-left:5px solid #27ae60}
+.rq-tier.intermediate{background:#fffbf0;border-left:5px solid #e3b341}
+.rq-tier.principal{background:#f0f0ff;border-left:5px solid #7b2d8b}
+.rq-tier-label{font-family:sans-serif;font-size:10px;color:#555;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.rq-badge{font-weight:700;font-size:9px;padding:2px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.foundational .rq-badge{background:#27ae60;color:#fff}
+.intermediate .rq-badge{background:#e3b341;color:#1c2438}
+.principal .rq-badge{background:#7b2d8b;color:#fff}
+.rq-tier ol{margin-left:18px}
+.rq-tier li{margin-bottom:10px;font-size:12.5px;line-height:1.7;color:#222}
+.objectives{background:#f0f6ff;border:1px solid #c5cfe0;border-radius:8px;padding:14px 18px;margin:18px 0}
+.objectives h4{color:#2a4a8a;margin:0 0 8px;font-style:normal;font-size:13px}
+.objectives ul{margin-left:16px}.objectives li{font-size:12px;margin-bottom:3px;color:#333}
+.worked{background:#fff8e0;border:1px solid #e3b341;border-radius:8px;padding:14px 18px;margin:16px 0}
+.worked h4{color:#856404;margin:0 0 8px;font-style:normal;font-size:13px}
+.diag-cookbook{background:#f8f6f0;border:1px solid #d8d4c8;border-radius:8px;padding:14px 18px;margin:16px 0}
+.diag-cookbook h4{color:#1a3060;margin:0 0 8px;font-style:normal;font-size:13px}
+.shipped{display:inline-block;background:#d4edda;color:#155724;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px}
+.announced{display:inline-block;background:#fff3cd;color:#856404;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px}
+.roadmap{display:inline-block;background:#e2d9f3;color:#4a0e8f;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px}
+</style>
+</head>
+<body>
+<div id="nav"><b>Silicon to Scale</b><a class="home" href="index.html">⌂ Index</a><a href="ch05.html">← Ch 5</a><a href="ch07.html">Ch 7 →</a><a href="ch04.html">Ch 4</a><a href="ch11.html">Ch 11</a><a href="ch13.html">Ch 13</a><a href="ch17.html">Ch 17</a></div>
+<div id="sidebar"><h4>Chapter 6</h4>
+  <a href="#s61">6.1 Prefill vs. Decode</a>
+  <a href="#s62">6.2 Continuous Batching</a>
+  <a href="#s63">6.3 vLLM and PagedAttention</a>
+  <a href="#s64">6.4 Disaggregated Prefill-Decode</a>
+  <a href="#s65">6.5 TensorRT-LLM</a>
+  <a href="#s66">6.6 SLA Engineering: TTFT, TPOT</a>
+  <a href="#s67">6.7 Speculative Decoding</a>
+  <a href="#s68">6.8 Prefix Caching</a>
+  <a href="#s69">6.9 Distributed Inference</a>
+  <a href="#s610">6.10 Inference Observability</a>
+  <a href="#s611">6.11 Fleet Sizing Formula</a>
+  <a href="#diagrams">Diagrams</a>
+  <a href="#cookbook">Diagnostic Cookbook</a>
+  <a href="#takeaways">Key Takeaways</a>
+  <a href="#review">Review Questions</a>
+</div>
+<div class="page">
+<div class="ch-label">Part III · Chapter 6</div>
+<h1 class="ch-title">Inference System Architecture</h1>
+<div class="ch-subtitle">From user request to streamed tokens — every layer, every bottleneck, every tradeoff quantified</div>
+<div class="ch-meta"><strong>Book:</strong> AI/ML Infrastructure from Silicon to Scale &nbsp;|&nbsp; <strong>Author:</strong> Venkat Vinjam &nbsp;|&nbsp; <strong>Cross-ref:</strong> <span class="xref">Ch 4: FlashAttention</span> <span class="xref">Ch 11: KV cache</span> <span class="xref">Ch 13: Speculative decoding</span> <span class="xref">Ch 17: Observability</span></div>
+<div class="ch-divider"></div>
+
+<blockquote>"Inference is where your model meets reality — and where you pay for every engineering mistake made during training infrastructure design. TTFT is the promise you make to the user. TPOT is the promise you keep. This chapter is about not breaking either."
+<cite>— LLM Serving Engineering Principle</cite></blockquote>
+
+<div class="objectives"><h4>Learning Objectives</h4>
+<ul>
+<li><strong>Level 1:</strong> Explain what TTFT and TPOT measure, why prefill and decode are fundamentally different, and why static batching fails</li>
+<li><strong>Level 2:</strong> Calculate TPOT minimum from model size and HBM bandwidth; derive fleet sizing requirements from traffic projections and SLA targets</li>
+<li><strong>Level 3:</strong> Design a production inference architecture with disaggregated prefill-decode, quantize the KV transfer budget, and defend every architectural decision with cost and latency math</li>
+</ul></div>
+
+<h2 id="s61">6.1 Prefill vs. Decode: The Fundamental Dichotomy</h2>
+<p>LLM inference is not a single computation — it is two fundamentally different operations that happen to run sequentially. Every production serving system is, at its core, a system for managing the tension between these two phases.</p>
+
+<div class="formula">THE TWO PHASES:
+
+PHASE 1 — PREFILL:
+  Input:   Full prompt (S tokens) processed IN PARALLEL (one forward pass)
+  Output:  First output token + KV cache for all S positions populated
+  GEMM shape: [S × d_model] × [d_model × 4d_model]  — large, square-ish
+  Arithmetic Intensity: high (S × d_model >> model_bytes)
+  Bottleneck: COMPUTE (Tensor Core throughput)
+  Metric: TTFT — Time To First Token
+  Target: &lt;200ms (chat), &lt;50ms (code completion), &lt;5s (batch API)
+
+PHASE 2 — DECODE:
+  Input:   One token (the last generated) per autoregressive step
+  Output:  Next token logits + one new KV row appended per layer
+  GEMM shape: [1 × d_model] × [d_model × 4d_model]  — extremely thin (GEMV)
+  Arithmetic Intensity: ~1 FLOP/byte (deeply memory-bandwidth-bound)
+  Bottleneck: HBM BANDWIDTH (weight loading)
+  Metric: TPOT — Time Per Output Token
+  Target: &lt;30ms (comfortable), &lt;50ms (acceptable)
+
+TPOT THEORETICAL MINIMUM (from first principles):
+  TPOT_min = model_bytes / HBM_bandwidth
+  
+  LLaMA-3 70B [SHIPPED]:
+    BF16 (140 GB) / 3.35 TB/s = 41.8 ms/token  ← H100 physics floor
+    FP8  (70 GB)  / 3.35 TB/s = 20.9 ms/token  ← 2× speedup from quantization
+    INT4 (35 GB)  / 3.35 TB/s = 10.4 ms/token  ← 4× speedup (bandwidth only!)
+
+  These are minimum possible TPOT at batch=1. No software optimization can
+  exceed them — they are limited by the speed of loading weights from HBM.
+  The ONLY escapes: more HBM bandwidth (H200/MI300X), quantization, batching.</div>
+
+<div class="diagram-wrap" id="diagrams">
+<svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="260" fill="#fff"/>
+  <text x="360" y="22" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#1c2438">LLM Inference: Prefill vs. Decode</text>
+  <!-- Timeline -->
+  <line x1="40" y1="120" x2="680" y2="120" stroke="#e0ddd5" stroke-width="2"/>
+  <!-- Prefill block -->
+  <rect x="40" y="80" width="180" height="80" rx="6" fill="#1c2438" opacity="0.9"/>
+  <text x="130" y="108" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#fff" font-weight="700">PREFILL</text>
+  <text x="130" y="122" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#e3b341">S=2048 tokens</text>
+  <text x="130" y="135" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#b8ddf0">All in parallel (GEMM)</text>
+  <text x="130" y="148" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#7ec8a0">COMPUTE-BOUND</text>
+  <!-- Arrow to first token -->
+  <line x1="220" y1="120" x2="260" y2="120" stroke="#e3b341" stroke-width="2" marker-end="url(#a)"/>
+  <text x="240" y="115" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#e3b341">TTFT</text>
+  <!-- Decode steps -->
+  <rect x="265" y="85" width="54" height="70" rx="4" fill="#2a4580"/>
+  <text x="292" y="118" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">tok 1</text>
+  <text x="292" y="130" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#b8ddf0">GEMV</text>
+  <rect x="325" y="85" width="54" height="70" rx="4" fill="#2a4580"/>
+  <text x="352" y="118" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">tok 2</text>
+  <rect x="385" y="85" width="54" height="70" rx="4" fill="#2a4580"/>
+  <text x="412" y="118" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">tok 3</text>
+  <text x="445" y="118" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#888">···</text>
+  <rect x="475" y="85" width="54" height="70" rx="4" fill="#27ae60"/>
+  <text x="502" y="118" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff">tok N</text>
+  <text x="502" y="130" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#d4edda">EOS</text>
+  <!-- TPOT bracket -->
+  <line x1="265" y1="165" x2="475" y2="165" stroke="#c0392b" stroke-width="1.5"/>
+  <line x1="265" y1="160" x2="265" y2="170" stroke="#c0392b" stroke-width="1.5"/>
+  <line x1="475" y1="160" x2="475" y2="170" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="370" y="180" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b">TPOT = time per step · BW-BOUND · loads ~140 GB per step (70B BF16)</text>
+  <!-- KV cache growth -->
+  <rect x="265" y="40" width="214" height="35" rx="4" fill="#fff3cd" stroke="#e3b341"/>
+  <text x="372" y="56" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#856404" font-weight="700">KV Cache Growth</text>
+  <text x="372" y="69" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#856404">+4 KB per token per layer (70B GQA BF16)</text>
+  <line x1="292" y1="75" x2="292" y2="85" stroke="#e3b341" stroke-width="1" stroke-dasharray="3,2"/>
+  <defs><marker id="a" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#e3b341"/></marker></defs>
+  <!-- Labels -->
+  <text x="130" y="220" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Prefill: ~80ms for 2048 tokens (H100, 70B)</text>
+  <text x="380" y="220" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">Decode: 42ms/token minimum (H100, 70B BF16, batch=1)</text>
+</svg>
+<figcaption>Figure 6.1 — Prefill vs. decode phases in LLM inference. Prefill processes all input tokens in parallel (compute-bound, fast). Decode generates tokens one at a time (memory-bandwidth-bound, slow). The TTFT captures the prefill time; TPOT is the per-token decode time. KV cache grows by 4 KB/token/layer for LLaMA-3 70B with GQA.</figcaption>
+</div>
+
+<h2 id="s62">6.2 Continuous / In-Flight Batching</h2>
+<div class="formula">STATIC BATCHING FAILURE MODES:
+
+Problem 1 — Padding waste:
+  Batch of 4 requests, max output = 200 tokens:
+    Request A: finishes at token 20  → padded 180 steps (90% waste)
+    Request B: finishes at token 50  → padded 150 steps (75% waste)
+    Request C: finishes at token 150 → padded  50 steps (25% waste)
+    Request D: finishes at token 200 → no padding
+  Wasted compute: (180+150+50) / (4×200) = 47.5%
+
+Problem 2 — Head-of-line blocking:
+  New request E arrives at t=10ms; D still running at t=200ms.
+  E's queue wait: 190ms — purely wasted.
+  Combined GPU utilization: 40–55% (typical static batch system)
+
+CONTINUOUS BATCHING (iteration-level scheduling, Orca 2022):
+  At every decode step: evict finished requests, admit new ones immediately.
+  No padding — each request at its exact current sequence length.
+  No head-of-line blocking — new requests admitted as slots open.
+  
+  Throughput gain vs static: 10–30× (measured on real workloads)
+  This is the #1 performance improvement available to any inference system.
+  If your serving stack is not using continuous batching, start there.</div>
+
+<h2 id="s63">6.3 vLLM and PagedAttention</h2>
+<div class="formula">PRE-vLLM KV CACHE ALLOCATION:
+  Must reserve contiguous memory for max_sequence_length upfront:
+  
+  LLaMA-3 70B, max_seq=4096, BF16:
+    Per-request KV = 2 × 80 × 8 × 128 × 4096 × 2 = 5.37 GB reserved upfront
+  
+  On H100 (80 GB), with 10 GB weights (TP=1 fails — need TP=2, but say 10GB overhead):
+    Actually 70B BF16 = 140 GB, so need TP=2, 80 GB per GPU, 35 GB weights per GPU
+    Available for KV: ~40 GB → 40 / 5.37 = 7 max concurrent requests
+    Average actual seq len = 512 → actual KV used = 0.67 GB per request
+    Fragmentation: (5.37 - 0.67) / 5.37 = 87.5% KV memory wasted!
+
+PAGEDATTENTION (Kwon et al., 2023):
+  Inspiration: OS virtual memory paging
+  Block size: 16 tokens per block
+  Allocation: on-demand as tokens arrive (not upfront for max_len)
+  
+  Memory efficiency:
+    Fragmentation: <5% (vs 87% naive)
+    Concurrent requests: ~5-10× more per GPU vs naive allocation
+    
+  Prefix sharing: requests with same system prompt share KV blocks
+    System prompt of 2048 tokens: stored ONCE, pointer-shared across all requests
+    TTFT improvement: 50-80% for system-prompt-heavy workloads
+    
+  Preemption: when GPU KV runs full → swap low-priority request KV to CPU DRAM
+    Preemption cost: ~1-2s (KV transfer via PCIe 128 GB/s is slow)
+    Prevention: target &lt;80% KV utilization at all times</div>
+
+<h2 id="s64">6.4 Disaggregated Prefill-Decode Architecture</h2>
+<div class="formula">CO-LOCATED INTERFERENCE PROBLEM:
+
+In a co-located system (prefill + decode on same GPUs):
+  Long prefill (2048 tokens, H100, 70B): occupies GPU for ~80ms
+  During that 80ms: ALL decode requests on those GPUs STALL
+  
+  Observed effect (real workload [REPRESENTATIVE]):
+    P50 TPOT:  25ms  ← when no prefill interference
+    P99 TPOT: 180ms  ← dominated by prefill spikes
+    P99/P50 ratio: 7.2× ← indicator of prefill-decode interference
+
+DISAGGREGATED SOLUTION:
+  Prefill cluster: optimized for compute throughput (H100 preferred)
+                   large batch prefill → high TFLOPS utilization
+  Decode cluster:  optimized for HBM bandwidth (H200 or MI300X preferred)
+                   stable TPOT with no prefill interference
+  KV transfer:     after prefill → RDMA/NVLink-C2C to decode GPU
+
+KV TRANSFER BANDWIDTH BUDGET:
+  LLaMA-3 70B, 2048-token prompt, INT8 KV:
+    Transfer size = 2 × 80 × 8 × 128 × 2048 × 1 byte = 2.68 GB
+    Over 2× IB NDR (100 GB/s total): 2.68 / 100 = 26.8 ms transfer
+    Over NVLink-C2C (GB200, 10 TB/s): 2.68 / 10,000 = 0.27 ms (!!)
+    
+  Break-even fleet size: &gt;100 GPU-equivalents (engineering overhead is real)
+  Cost savings at scale: 20–35% per token
+  
+  NIXL library (NVIDIA, 2025): achieves 85–95% of theoretical link BW
+  Production deployments: LLaMA.cpp+RDMA, Mooncake, Splitwise</div>
+
+<h2 id="s65">6.5 TensorRT-LLM: Production Compilation</h2>
+<div class="formula">TRT-LLM OPTIMIZATION PIPELINE:
+
+  Input: HuggingFace / PyTorch checkpoint
+    → Quantization (FP8/INT4 via modelopt / AMMO)
+    → TensorRT compilation:
+         Kernel fusion (attention + norm + residual)
+         CUDA Graph recording (fixed decode pipeline)
+         Layer-by-layer optimization for target GPU + precision
+    → Engine file (.plan) tied to {GPU, precision, max_batch, max_seq}
+    → Triton Inference Server integration
+
+PERFORMANCE GAINS vs PyTorch eager [REPRESENTATIVE]:
+  Kernel fusion:        30-50% latency reduction
+  CUDA Graphs:          20-40% decode overhead reduction  
+  FP8 quantization:     ~2× throughput
+  Combined:             2-3× total throughput improvement
+
+OPERATIONAL COSTS:
+  Build time:           5-30 minutes per engine (offline)
+  Engine portability:   NOT portable across {GPU, precision, max_batch, max_seq}
+  Re-build triggers:    GPU type change, precision change, batch config change
+  Partial remedy:       Use --strongly_typed=False for broader batch range</div>
+
+<h2 id="s66">6.6 SLA Engineering: TTFT, TPOT, and the Throughput-Latency Curve</h2>
+<table>
+  <tr><th>Metric</th><th>Definition</th><th>Chat SLA</th><th>Code Complete SLA</th><th>Batch API SLA</th></tr>
+  <tr><td>TTFT</td><td>Time from request to first output token (queue + prefill)</td><td>&lt;200ms</td><td>&lt;50ms</td><td>&lt;5s</td></tr>
+  <tr><td>TPOT</td><td>Time per output token during decode phase</td><td>&lt;30ms</td><td>&lt;20ms</td><td>&lt;100ms</td></tr>
+  <tr><td>E2EL</td><td>End-to-end latency = TTFT + TPOT × (output_tokens - 1)</td><td>&lt;10s</td><td>&lt;3s</td><td>&lt;300s</td></tr>
+  <tr><td>Throughput</td><td>Total output tokens per second across all requests</td><td>Secondary</td><td>Secondary</td><td>Primary</td></tr>
+</table>
+
+<div class="formula">FLEET SIZING FORMULA (§6.11 deep dive):
+
+Step 1: Determine peak traffic
+  peak_tok/s = peak_rps × avg_output_tokens
+  Example: 500 req/s × 200 tok = 100,000 tok/s peak
+
+Step 2: Compute per-GPU decode capacity at SLA
+  tok_per_GPU = (1000 ms / TPOT_target_ms) × batch_at_SLA
+  Example: (1000/25) × 32 = 1,280 tok/s per GPU at TPOT=25ms, batch=32
+
+Step 3: Raw GPU count
+  raw_GPUs = peak_tok/s / tok_per_GPU = 100,000 / 1,280 = 78 GPUs
+
+Step 4: Apply utilization and burst headroom
+  total_GPUs = raw_GPUs / target_utilization × burst_headroom
+             = 78 / 0.75 × 1.20 = 125 H100s
+
+Step 5: Validate KV memory
+  KV_per_req = 5.37 GB (70B, 4K ctx, BF16)
+  KV_budget   = 40 GB (per GPU, after weights+runtime)
+  max_concurrent = 40 / 5.37 = 7 requests → verify batch_at_SLA ≤ 7</div>
+
+<h2 id="s67">6.7 Speculative Decoding in Production</h2>
+<div class="formula">SPECULATIVE DECODING:
+  1. Draft model (7B) generates K=5 candidates in ~2ms
+  2. Target model (70B) verifies all 5 in ONE forward pass (same cost as 1 token verify)
+  3. Accept longest prefix that matches target distribution (rejection sampling)
+
+ACCEPTANCE RATE MATH (α = per-token acceptance rate):
+  Expected accepted tokens = (1 - α^(K+1)) / (1 - α)
+  At α=0.8, K=5: E[tokens] = (1 - 0.8^6) / 0.2 = (1-0.262)/0.2 = 3.69 tokens/verify
+  Effective speedup: 3.69× decode throughput
+
+PRODUCTION GUIDANCE:
+  WHEN speculative decoding helps:
+    ✓ Batch=1 or small batch (single user sessions)
+    ✓ Predictable text (code, structured output, templates)  
+    ✓ α > 0.70 (monitor in production via vllm:spec_decode_acceptance_rate)
+    
+  WHEN it hurts:
+    ✗ Large batch (draft overhead not amortized; draft verification competes)
+    ✗ Creative/diverse generation (α typically 0.3-0.5)
+    ✗ Already memory-bandwidth-bound at high batch (adds compute overhead)</div>
+
+<h2 id="s68">6.8 Prefix Caching and KV Reuse</h2>
+<div class="formula">PREFIX CACHING ECONOMICS:
+
+System prompt = 4,096 tokens. No caching at 10,000 req/s:
+  Wasted prefill: 4,096 × 10,000 = 40.96 billion tokens/s of repeated compute
+  At H100, 2048-token prefill ~= 80ms → prefill overhead per request = 160ms
+  
+With RadixAttention / prefix caching (vLLM ≥0.4, SGLang):
+  System prompt KV computed ONCE → stored in block pool → pointer-shared
+  TTFT improvement: 50-80% for system-prompt-heavy workloads
+  
+IMPORTANT: Cache keyed on EXACT input token IDs only.
+  Temperature ≠ 0 does NOT prevent cache hits (sampling is post-logits)
+  Cached: same system prompt → hit regardless of temperature
+  NOT cached: different user messages with same prompt → partial match</div>
+
+<h2 id="s69">6.9 Distributed Inference: TP and PP</h2>
+<table>
+  <tr><th>Strategy</th><th>What</th><th>Comm Type</th><th>Comm BW Needed</th><th>Constraint</th></tr>
+  <tr><td>Tensor Parallelism (TP)</td><td>Split weight matrices column/row</td><td>AllReduce per layer</td><td class="bad">NVLink required (&gt;500 GB/s)</td><td>Must stay within NVSwitch domain (≤8 GPUs H100)</td></tr>
+  <tr><td>Pipeline Parallelism (PP)</td><td>Split layers across stages</td><td>P2P activations</td><td class="good">IB acceptable (50 GB/s)</td><td>Pipeline bubble = 1/PP_degree overhead</td></tr>
+  <tr><td>Data Parallelism</td><td>Replicate model, split requests</td><td>None at inference</td><td>N/A</td><td>Model must fit per replica</td></tr>
+</table>
+<p><strong>TP over InfiniBand vs NVLink:</strong> TP=8 on 70B, 80 layers, 0.5 GB AllReduce each: NVLink: 0.5/900=0.56ms/layer × 80 = 44ms overhead. IB NDR: 0.5/50=10ms/layer × 80 = 800ms overhead. IB-based TP is unusable for latency-sensitive inference — always use NVLink for TP.</p>
+
+<h2 id="s610">6.10 Inference Observability — The 5 Metrics That Matter</h2>
+<div class="formula">PRODUCTION MONITORING CHECKLIST (Prometheus metrics):
+
+1. vllm:request_queue_time_seconds (P99)
+   Signal: >200ms → insufficient GPU capacity or batch admission problem
+   
+2. vllm:gpu_kv_cache_usage_perc  
+   Signal: >80% → approaching preemption territory; add GPUs or reduce max_seq
+   
+3. vllm:request_prompt_throughput_tokens_per_s + generation_throughput
+   Signal: compare to theoretical (model_flops / gpu_peak_tflops → MFU proxy)
+   
+4. DCGM_FI_DEV_GPU_UTIL (per GPU)
+   Signal: <70% sustained during peak → scheduling or admission control issue
+   
+5. vllm:time_to_first_token_seconds (P50, P95, P99)
+   P99/P50 > 5× → prefill-decode interference (→ consider disaggregation)</div>
+
+<div class="diag-cookbook" id="cookbook">
+<h4>🔧 Diagnostic Cookbook — When P99 TTFT Spikes</h4>
+<p><strong>Symptom:</strong> P99 TTFT is 5–15× higher than P50 TTFT (normal is &lt;3×)</p>
+<ol>
+<li><strong>Check queue depth first:</strong> <code>vllm:request_queue_time_seconds P99 &gt; 200ms</code> → GPU is undersized for peak. Add capacity or reduce max_seq.</li>
+<li><strong>Check KV cache utilization:</strong> <code>vllm:gpu_kv_cache_usage_perc &gt; 85%</code> → preemption events causing recomputation. Lower max concurrent requests.</li>
+<li><strong>Check for prefill-decode interference:</strong> If queue time is low but TTFT still spikes, long prefill requests are stalling decode. Solution: chunked prefill (preempt prefill after N tokens) or disaggregation.</li>
+<li><strong>Check for GPU health issues:</strong> <code>DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL</code> below expected → NVLink degradation. <code>DCGM_FI_DEV_ECC_SBE_VOL_TOTAL</code> rising → memory errors.</li>
+</ol>
+</div>
+
+<div class="takeaways"><h3>Key Takeaways</h3>
+<div class="takeaway-group"><div class="tg-label">Core Concepts</div><ul><li>Prefill is compute-bound; decode is memory-bandwidth-bound. These two phases compete for the same GPU resources. Every inference system architecture decision — batching strategy, disaggregation, speculative decoding — is a response to this fundamental dichotomy.</li><li>TPOT minimum = model_bytes / HBM_bandwidth. For LLaMA-3 70B BF16 on H100: 41.8ms. This is a physics floor — no software optimization crosses it. Only quantization (reduces bytes) or batching (increases AI) can improve it.</li><li>PagedAttention reduces KV fragmentation from 87% to <5% by allocating memory in 16-token blocks on demand. This converts wasted HBM capacity into concurrent request capacity — typically 5–10× more requests per GPU.</li></ul></div>
+<div class="takeaway-group"><div class="tg-label">Cost &amp; Productivity Impact</div><ul><li>Continuous batching delivers 10–30× throughput improvement over static batching. This is not a kernel optimization — it is a scheduling change. A team still running static batching is leaving $500K–$5M/year in GPU time on the table at typical inference fleet sizes.</li><li>TRT-LLM delivers 2–3× throughput over PyTorch eager via kernel fusion and CUDA Graphs. The tradeoff: 5–30 min engine build time per GPU+precision+batch config. A fleet of mixed H100/H200 nodes requires 2× the engine count — plan for this operational overhead.</li><li>Prefix caching eliminates system prompt computation. At 10K req/s with a 4K-token system prompt: saves ~80ms TTFT per request, equivalent to adding 22% GPU capacity at the same throughput. Zero additional hardware required.</li></ul></div>
+<div class="takeaway-group"><div class="tg-label">Principal-Level Insight</div><ul><li>Disaggregated prefill-decode is the correct architecture when P99/P50 TTFT ratio exceeds 5× and queue time is below 200ms — this pattern indicates prefill-decode interference rather than capacity shortage. The breakeven fleet size is ~100 GPU-equivalents; below that, CUDA stream priority is sufficient.</li><li>TP scope is a NVLink constraint, not a software preference. TP=8 over IB NDR (50 GB/s) for 70B inference adds 800ms per sequence in AllReduce overhead — unusable. TP must stay within a NVSwitch domain. Pipeline Parallelism crosses nodes because it communicates activations (P2P, infrequent) rather than weight gradients (AllReduce, per-layer).</li><li>Fleet sizing requires five steps, not one. The most common mistake is computing raw_GPUs without applying the utilization target (0.75) or burst headroom (1.20). Operating at 100% utilization means P99 queue time explodes — plan for 80% maximum utilization as a fleet health invariant.</li></ul></div>
+</div><div class="review-questions"><h3>Review Questions</h3>
+<div class="rq-tier foundational"><div class="rq-tier-label"><span class="rq-badge">Foundational</span>Build the mental model — no math required</div><ol><li>Explain in plain language: why is decode slower than prefill for the same model, even though each decode step processes fewer tokens? What physical resource is the limiting factor in each phase?</li><li>Your team's inference system has P99 TTFT of 800ms and P50 TTFT of 80ms. Before looking at any code, what do you suspect is happening? Name three possible root causes and how you'd distinguish between them using Prometheus metrics.</li><li>What is PagedAttention, and what problem does it solve? Use the analogy of OS virtual memory to explain how it works without using technical jargon.</li></ol></div>
+<div class="rq-tier intermediate"><div class="rq-tier-label"><span class="rq-badge">Intermediate</span>Apply and calculate — production context</div><ol><li>LLaMA-3 70B (140 GB BF16) is served on H100 SXM5 (80 GB, 3.35 TB/s HBM) with TP=2. (a) Calculate TPOT_min at batch=1. (b) The traffic is 200 req/s, avg 300 output tokens, P99 TPOT SLA=25ms. At batch=32 (the maximum at the SLA), how many H100 pairs (TP=2 units) are needed? Apply utilization=75% and burst headroom=20%. (c) Total capex at $25K/GPU?</li><li>Your vLLM deployment shows: P99 TTFT=1.8s, P50 TTFT=120ms, queue time P99=30ms, KV cache util=62%, GPU util=78%. (a) Is this a capacity problem or a scheduling problem? (b) What is causing the TTFT spike? (c) What is the first action you take?</li><li>Speculative decoding with 7B draft, K=5, α=0.75. (a) Expected accepted tokens per verify step. (b) Effective decode speedup. (c) At batch=64, verify cost per step = 80ms (draft + verify). Draft generates 5 tokens in 5ms. What is the break-even α where speculative decoding stops helping?</li></ol></div>
+<div class="rq-tier principal"><div class="rq-tier-label"><span class="rq-badge">Principal Level</span>Design, decide, and defend — architecture reviews</div><ol><li>Design a production inference architecture for LLaMA-3 70B serving 10K req/s at P99 TPOT <25ms and P99 TTFT <200ms. Average input: 500 tokens, output: 300 tokens. Evaluate and quantify: (a) monolithic vs. disaggregated, (b) BF16 vs. INT4 weights, (c) TP=1 (MI300X) vs. TP=2 (H100), (d) prefix cache hit rate assumption and its impact on fleet size. Show all math, state all assumptions.</li><li>A competitor claims their inference system achieves 40% lower TPOT than yours on LLaMA-3 70B at batch=32 BF16. You are using TRT-LLM with FP8. Design a systematic investigation: what benchmarks do you run, what metrics do you compare, what architectural differences do you probe, and what is the most likely explanation for the gap?</li></ol></div>
+</div>
+</div>
+</body>
+</html>

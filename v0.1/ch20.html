@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 20 — The Future of AI Compute | AI/ML Infrastructure from Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
+.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
+.mem-tier-body{flex:1}
+.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
+.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
+.review-q li::marker{color:#e3b341;font-weight:700}
+.fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+
+h1{font-size:28px;color:#1c2438;margin:0 0 8px;line-height:1.2}
+h2{font-size:19px;color:#1c2438;margin:34px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15.5px;color:#1a3060;margin:24px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:16px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 20px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+.ch-hdr{margin-bottom:36px;padding-bottom:20px;border-bottom:1px solid #e0d8c8}
+.ch-n{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:6px}
+.ch-t{font-size:30px;font-weight:900;color:#1c2438;line-height:1.2;margin-bottom:7px}
+.ch-s{font-size:12.5px;color:#555;font-style:italic;line-height:1.6}
+.part-banner{text-align:center;padding:32px 20px;background:linear-gradient(135deg,#1c2438 0%,#2a4580 100%);color:#fff;margin:0 -58px 36px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.part-n{font-family:sans-serif;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#e3b341;margin-bottom:8px}
+.part-t{font-size:22px;font-weight:900}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.gray{border-color:#777;background:#f8f8f8}
+.callout.purple{border-color:#7b2d8b;background:#fdf5ff}
+.callout strong{display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.formula{background:#12131f;color:#cde;padding:14px 18px;border-radius:6px;font-family:'Courier New',monospace;font-size:11px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.diagram-wrap{background:#f3f5f8;border:1px solid #d0d6e2;border-radius:8px;padding:10px;margin:18px 0;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.diagram-wrap figcaption{font-family:sans-serif;font-size:10.5px;color:#666;margin-top:8px;font-style:italic}
+code{background:#f0f2f5;padding:1px 4px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#1c2438}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e0d0}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#1a7a3a;font-weight:600}.warn{color:#a55000;font-weight:600}.bad{color:#c0392b;font-weight:600}
+.box{border:2px solid #1c2438;border-radius:8px;padding:16px 20px;margin:24px 0;background:#fff}
+.label-road{display:inline-block;background:#f0e8ff;color:#6a3a9a;font-family:sans-serif;font-size:9.5px;padding:2px 7px;border-radius:10px;margin-left:4px;font-weight:700}
+.label-conf{display:inline-block;background:#e8fff0;color:#1a7a3a;font-family:sans-serif;font-size:9.5px;padding:2px 7px;border-radius:10px;margin-left:4px;font-weight:700}
+.label-inf{display:inline-block;background:#fff8e0;color:#a55000;font-family:sans-serif;font-size:9.5px;padding:2px 7px;border-radius:10px;margin-left:4px;font-weight:700}
+.ch-end{text-align:center;margin-top:48px;padding-top:20px;border-top:1px solid #e0d8c8;font-family:sans-serif;font-size:10px;color:#bbb;letter-spacing:2px;text-transform:uppercase}
+.review-q{counter-reset:rq}
+.review-q li{margin-bottom:14px;font-size:12.5px;line-height:1.7}</style>
+</head>
+<body>
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="ch19.html">&#8592; Ch 19</a>
+  <a href="ch21.html">Ch 21 &#8594;</a>
+  <a href="ch01.html">Ch 1</a>
+  <a href="ch03b.html">Ch 3B</a>
+  <a href="ch14.html">Ch 14</a>
+</div>
+<div id="sidebar">
+  <h4>Chapter 20</h4>
+  <a href="#s201">20.1 The Inflection Point — Why the Pure G</a>
+  <a href="#s202">20.2 The CPU Renaissance in AI Infrastruct</a>
+  <a href="#s203">20.3 CXL — The Memory Disaggregation Stand</a>
+  <a href="#s204">20.4 In-Network Computing — The Network Be</a>
+  <a href="#s205">20.5 Photonic Interconnects — Light-Speed </a>
+  <a href="#s206">20.6 New Memory Technologies — Beyond HBM3</a>
+  <a href="#s207">20.7 The Heterogeneous Compute Era — Syste</a>
+  <a href="#s208">20.8 Five Invariants That Survive Every Ha</a>
+  <a href="#review">Chapter 20 Review Questions</a>
+</div>
+<div class="page">
+<div class="ch-label">Chapter 20</div>
+<h1 class="ch-title">The Future of AI Compute: 2026–2029</h1>
+<div class="ch-subtitle">Beyond the GPU Era — CPU renaissance · CXL memory disaggregation · In-network computing · Silicon photonics · HBM4/5 · The heterogeneous compute architecture that replaces brute-force GPU scaling</div>
+<div class="ch-divider"></div>
+
+<blockquote style="border-left:3px solid #e3b341;padding:10px 20px;margin:0 0 24px;font-style:italic;color:#444;font-size:13px;background:#fffbf0;border-radius:0 6px 6px 0">
+"The GPU won the first decade of deep learning because it was the right answer to a narrow question: how do you multiply large matrices fast? The next decade asks a different question: how do you move intelligence through systems at planetary scale? That question has a different answer."
+<br><span style="font-size:11px;color:#888;font-style:normal;display:block;margin-top:6px">— AI Infrastructure Architecture Perspective, 2026</span>
+</blockquote>
+
+<div class="callout blue">
+<strong>Chapter Scope — What Changed Since 2024</strong>
+Everything in this chapter is grounded in silicon already shipping, architectures formally announced, or physics that does not change. Timeline estimates reflect public roadmap commitments as of early 2026. The bottleneck shift from "GPU FLOPS shortage" to "memory bandwidth, networking, and power efficiency" is no longer a forecast — it is the present reality.
+</div>
+
+<h2 id="s201">20.1 The Inflection Point — Why the Pure GPU Era Is Ending</h2>
+
+<p>For a decade, the answer to every AI scale question was: add more GPUs. That answer is hitting four simultaneous physical walls that more GPU FLOPS cannot solve.</p>
+
+<!-- DIAGRAM 1: Four Walls -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 290" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <text x="390" y="20" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">The Four Physical Walls of GPU-Centric AI (2026)</text>
+
+  <!-- Wall 1: Power -->
+  <rect x="20" y="38" width="175" height="220" rx="8" fill="#fff" stroke="#c0392b" stroke-width="2.5"/>
+  <rect x="20" y="38" width="175" height="36" rx="8" fill="#c0392b"/>
+  <text x="107" y="56" text-anchor="middle" font-family="sans-serif" font-size="11" fill="white" font-weight="bold">⚡ WALL 1: POWER</text>
+  <text x="107" y="70" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white">Density</text>
+  <text x="30" y="102" font-family="sans-serif" font-size="9.5" fill="#555">H100:     700W per GPU</text>
+  <text x="30" y="118" font-family="sans-serif" font-size="9.5" fill="#555">GB200:  1,400W per GPU</text>
+  <text x="30" y="134" font-family="sans-serif" font-size="9.5" fill="#c0392b">2028:   ~2,000W+</text>
+  <line x1="28" y1="146" x2="188" y2="146" stroke="#eee" stroke-width="1"/>
+  <text x="30" y="162" font-family="sans-serif" font-size="9" fill="#777">Air cooling fails &gt;500W.</text>
+  <text x="30" y="176" font-family="sans-serif" font-size="9" fill="#777">Liquid cooling mandatory.</text>
+  <text x="30" y="196" font-family="sans-serif" font-size="9" fill="#777">Data centers need</text>
+  <text x="30" y="210" font-family="sans-serif" font-size="9" fill="#777">200–300 kW per rack.</text>
+  <text x="30" y="230" font-family="sans-serif" font-size="9" fill="#c0392b" font-weight="bold">→ Power IS the limit,</text>
+  <text x="30" y="244" font-family="sans-serif" font-size="9" fill="#c0392b" font-weight="bold">   not silicon area.</text>
+
+  <!-- Wall 2: Memory BW -->
+  <rect x="210" y="38" width="175" height="220" rx="8" fill="#fff" stroke="#d4820a" stroke-width="2.5"/>
+  <rect x="210" y="38" width="175" height="36" rx="8" fill="#d4820a"/>
+  <text x="297" y="56" text-anchor="middle" font-family="sans-serif" font-size="11" fill="white" font-weight="bold">🧠 WALL 2: MEMORY</text>
+  <text x="297" y="70" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white">Bandwidth Ceiling</text>
+  <text x="220" y="102" font-family="sans-serif" font-size="9.5" fill="#555">H100 HBM3: 3.35 TB/s</text>
+  <text x="220" y="118" font-family="sans-serif" font-size="9.5" fill="#555">B200 HBM3e: 8.0 TB/s</text>
+  <text x="220" y="134" font-family="sans-serif" font-size="9.5" fill="#d4820a">HBM4: ~13+ TB/s (2027)</text>
+  <line x1="218" y1="146" x2="378" y2="146" stroke="#eee" stroke-width="1"/>
+  <text x="220" y="162" font-family="sans-serif" font-size="9" fill="#777">Roofline ridge point</text>
+  <text x="220" y="176" font-family="sans-serif" font-size="9" fill="#777">shifts as BW grows.</text>
+  <text x="220" y="196" font-family="sans-serif" font-size="9" fill="#777">LLM decode is BW-bound</text>
+  <text x="220" y="210" font-family="sans-serif" font-size="9" fill="#777">at virtually all batch sizes.</text>
+  <text x="220" y="230" font-family="sans-serif" font-size="9" fill="#d4820a" font-weight="bold">→ Memory BW, not</text>
+  <text x="220" y="244" font-family="sans-serif" font-size="9" fill="#d4820a" font-weight="bold">   FLOPS, is #1 limit.</text>
+
+  <!-- Wall 3: Interconnect -->
+  <rect x="400" y="38" width="175" height="220" rx="8" fill="#fff" stroke="#2a6099" stroke-width="2.5"/>
+  <rect x="400" y="38" width="175" height="36" rx="8" fill="#2a6099"/>
+  <text x="487" y="56" text-anchor="middle" font-family="sans-serif" font-size="11" fill="white" font-weight="bold">🔗 WALL 3: NETWORK</text>
+  <text x="487" y="70" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white">Bandwidth Gap</text>
+  <text x="410" y="102" font-family="sans-serif" font-size="9.5" fill="#555">NVLink:    900 GB/s (intra)</text>
+  <text x="410" y="118" font-family="sans-serif" font-size="9.5" fill="#555">IB NDR:    400 Gbps (inter)</text>
+  <text x="410" y="134" font-family="sans-serif" font-size="9.5" fill="#2a6099">Gap: 18× intra vs inter</text>
+  <line x1="408" y1="146" x2="568" y2="146" stroke="#eee" stroke-width="1"/>
+  <text x="410" y="162" font-family="sans-serif" font-size="9" fill="#777">AllReduce is the primary</text>
+  <text x="410" y="176" font-family="sans-serif" font-size="9" fill="#777">training bottleneck at</text>
+  <text x="410" y="190" font-family="sans-serif" font-size="9" fill="#777">&gt;1,024 GPUs.</text>
+  <text x="410" y="210" font-family="sans-serif" font-size="9" fill="#777">Photonics closes the gap</text>
+  <text x="410" y="224" font-family="sans-serif" font-size="9" fill="#777">by 2028–2029.</text>
+  <text x="410" y="244" font-family="sans-serif" font-size="9" fill="#2a6099" font-weight="bold">→ Inter-node BW is</text>
+
+  <!-- Wall 4: Vendor lock -->
+  <rect x="590" y="38" width="175" height="220" rx="8" fill="#fff" stroke="#7b2d8b" stroke-width="2.5"/>
+  <rect x="590" y="38" width="175" height="36" rx="8" fill="#7b2d8b"/>
+  <text x="677" y="56" text-anchor="middle" font-family="sans-serif" font-size="11" fill="white" font-weight="bold">🏭 WALL 4: SILICON</text>
+  <text x="677" y="70" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white">Concentration Risk</text>
+  <text x="600" y="102" font-family="sans-serif" font-size="9.5" fill="#555">NVIDIA market share: ~80%</text>
+  <text x="600" y="118" font-family="sans-serif" font-size="9.5" fill="#555">TSMC N4: capacity ceiling</text>
+  <text x="600" y="134" font-family="sans-serif" font-size="9.5" fill="#7b2d8b">Custom ASIC rush: 2025+</text>
+  <line x1="598" y1="146" x2="758" y2="146" stroke="#eee" stroke-width="1"/>
+  <text x="600" y="162" font-family="sans-serif" font-size="9" fill="#777">Google TPUs, AWS Trainium,</text>
+  <text x="600" y="176" font-family="sans-serif" font-size="9" fill="#777">Meta MTIA, MS Maia,</text>
+  <text x="600" y="190" font-family="sans-serif" font-size="9" fill="#777">Apple ANE, Groq LPU</text>
+  <text x="600" y="210" font-family="sans-serif" font-size="9" fill="#777">Structural diversification</text>
+  <text x="600" y="224" font-family="sans-serif" font-size="9" fill="#777">away from GPU monoculture.</text>
+  <text x="600" y="244" font-family="sans-serif" font-size="9" fill="#7b2d8b" font-weight="bold">→ Heterogeneous era</text>
+</svg>
+<figcaption>Figure 20.1 — The four physical walls forcing the shift from homogeneous GPU clusters to heterogeneous, disaggregated AI infrastructure.</figcaption>
+</div>
+
+<h3>20.1.1 The Architectural Response: Disaggregation</h3>
+
+<div class="formula">THE SHIFT IN SYSTEM DESIGN PHILOSOPHY:
+
+2020–2025 (GPU-centric era):
+  Server = CPU + 8 GPUs + fixed memory + fixed networking
+  All resources co-located, statically allocated, vendor-locked
+  One accelerator type for training AND inference
+  Network: "just connectivity" between compute nodes
+
+2026–2029 (Disaggregated era):
+  Compute pool:  GPUs/accelerators of multiple types
+  Memory pool:   CXL-attached DRAM/HBM, independently scalable
+  Network:       Active compute substrate (in-network reductions)
+  CPU pool:      Powerful host processors as first-class AI compute
+  
+  Workload → Scheduler → allocates from each pool dynamically
+  No permanent binding of compute to memory to network
+  
+ONE-LINE TAKEAWAY (from infographic):
+  "AI is no longer a compute problem.
+   It is a data movement and system efficiency problem."</div>
+
+<h2 id="s202">20.2 The CPU Renaissance in AI Infrastructure</h2>
+
+<p>The narrative of "GPUs replaced CPUs for AI" was always an oversimplification. CPUs never left the critical path — they moved to the side. Now they are moving back to the center, driven by four structural forces.</p>
+
+<!-- DIAGRAM 2: CPU Renaissance -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 280" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <text x="390" y="20" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">CPU AI Renaissance: Four Structural Drivers</text>
+
+  <!-- Driver 1 -->
+  <rect x="10" y="38" width="178" height="220" rx="8" fill="#f3f5f8" stroke="#1c2438" stroke-width="1.5"/>
+  <rect x="10" y="38" width="178" height="30" rx="8" fill="#1c2438"/>
+  <text x="99" y="58" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">Driver 1: CPU AI Performance</text>
+  <text x="20" y="84" font-family="sans-serif" font-size="9" fill="#555">Intel Xeon Granite Rapids:</text>
+  <text x="20" y="98" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="bold">  AMX: ~10 TFLOPS BF16</text>
+  <text x="20" y="112" font-family="sans-serif" font-size="9" fill="#555">AMD EPYC Venice (2026):</text>
+  <text x="20" y="126" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="bold">  AI accelerator per CCX</text>
+  <text x="20" y="140" font-family="sans-serif" font-size="9" fill="#555">ARM Neoverse V3 (Grace):</text>
+  <text x="20" y="154" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="bold">  900 GB/s to B200 via C2C</text>
+  <text x="20" y="168" font-family="sans-serif" font-size="9" fill="#555">Apple M4:</text>
+  <text x="20" y="182" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="bold">  30–50 tok/s at 10W</text>
+  <text x="20" y="200" font-family="sans-serif" font-size="9" fill="#e3b341" font-weight="bold">CPU FLOPS: no longer</text>
+  <text x="20" y="214" font-family="sans-serif" font-size="9" fill="#e3b341" font-weight="bold">negligible vs GPU</text>
+
+  <!-- Driver 2 -->
+  <rect x="200" y="38" width="178" height="220" rx="8" fill="#f3f5f8" stroke="#2a6099" stroke-width="1.5"/>
+  <rect x="200" y="38" width="178" height="30" rx="8" fill="#2a6099"/>
+  <text x="289" y="58" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">Driver 2: CPU-Native Loads</text>
+  <text x="210" y="84" font-family="sans-serif" font-size="9" fill="#555">Embedding lookup (RecSys)</text>
+  <text x="210" y="98" font-family="sans-serif" font-size="9" fill="#555">Tokenization at serving scale</text>
+  <text x="210" y="112" font-family="sans-serif" font-size="9" fill="#555">KV cache block allocator</text>
+  <text x="210" y="126" font-family="sans-serif" font-size="9" fill="#555">Request routing/batching</text>
+  <text x="210" y="140" font-family="sans-serif" font-size="9" fill="#555">Scheduling (Kubernetes)</text>
+  <text x="210" y="160" font-family="sans-serif" font-size="9" fill="#2a6099" font-weight="bold">CPU is on the serving</text>
+  <text x="210" y="174" font-family="sans-serif" font-size="9" fill="#2a6099" font-weight="bold">critical path regardless</text>
+  <text x="210" y="188" font-family="sans-serif" font-size="9" fill="#2a6099" font-weight="bold">of GPU strength.</text>
+
+  <!-- Driver 3 -->
+  <rect x="390" y="38" width="178" height="220" rx="8" fill="#f3f5f8" stroke="#27ae60" stroke-width="1.5"/>
+  <rect x="390" y="38" width="178" height="30" rx="8" fill="#27ae60"/>
+  <text x="479" y="58" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">Driver 3: Coherent Links</text>
+  <text x="400" y="84" font-family="sans-serif" font-size="9" fill="#555">Old: CPU ↔ PCIe (128 GB/s)</text>
+  <text x="400" y="98" font-family="sans-serif" font-size="9" fill="#555">→ CPU memory isolated</text>
+  <text x="400" y="114" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="bold">New: NVLink-C2C (900 GB/s)</text>
+  <text x="400" y="128" font-family="sans-serif" font-size="9" fill="#555">→ Unified address space</text>
+  <text x="400" y="144" font-family="sans-serif" font-size="9" fill="#555">→ KV cache spans LPDDR+HBM</text>
+  <text x="400" y="160" font-family="sans-serif" font-size="9" fill="#555">→ 512K+ context feasible</text>
+  <text x="400" y="180" font-family="sans-serif" font-size="9" fill="#27ae60" font-weight="bold">Grace Blackwell: 480 GB</text>
+  <text x="400" y="194" font-family="sans-serif" font-size="9" fill="#27ae60" font-weight="bold">LPDDR5X + 192 GB HBM</text>
+  <text x="400" y="208" font-family="sans-serif" font-size="9" fill="#27ae60" font-weight="bold">= 672 GB unified pool</text>
+
+  <!-- Driver 4 -->
+  <rect x="580" y="38" width="188" height="220" rx="8" fill="#f3f5f8" stroke="#d4820a" stroke-width="1.5"/>
+  <rect x="580" y="38" width="188" height="30" rx="8" fill="#d4820a"/>
+  <text x="674" y="58" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">Driver 4: Edge Efficiency</text>
+  <text x="590" y="84" font-family="sans-serif" font-size="9" fill="#555">Small model inference (1B-7B)</text>
+  <text x="590" y="100" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="bold">Apple M4: 30-50 tok/s @10W</text>
+  <text x="590" y="114" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="bold">Snapdragon X: 20 tok/s @15W</text>
+  <text x="590" y="128" font-family="sans-serif" font-size="9" fill="#555">Cloud GPU: &gt;100W per session</text>
+  <text x="590" y="148" font-family="sans-serif" font-size="9" fill="#d4820a" font-weight="bold">For on-device inference:</text>
+  <text x="590" y="162" font-family="sans-serif" font-size="9" fill="#d4820a" font-weight="bold">CPU/SoC wins on power.</text>
+  <text x="590" y="178" font-family="sans-serif" font-size="9" fill="#555">Margin vs GPU closing</text>
+  <text x="590" y="192" font-family="sans-serif" font-size="9" fill="#555">as model quantization</text>
+  <text x="590" y="206" font-family="sans-serif" font-size="9" fill="#555">enables INT4/INT8 on CPU.</text>
+</svg>
+<figcaption>Figure 20.2 — CPU AI renaissance: four structural drivers returning CPUs to the center of AI infrastructure design.</figcaption>
+</div>
+
+<h3>20.2.1 Grace Blackwell: The CPU/GPU Paradigm Shift <span class="label-conf">SHIPPED</span></h3>
+
+<div class="formula">GRACE BLACKWELL SUPERCHIP ARCHITECTURE (GB200 NVL72):
+
+Grace CPU (ARM Neoverse V3)      B200 GPU (Blackwell)
+┌────────────────────────┐       ┌────────────────────────┐
+│ 72 ARM Neoverse cores  │       │ 192 GB HBM3e           │
+│ 480 GB LPDDR5X         │◄─────►│ 8 TB/s memory BW       │
+│ 960 GB/s CPU BW        │NVLink │ ~20 PFLOPS FP4         │
+│                        │ C2C   │                        │
+│ Power: ~200W           │900GB/s│ Power: ~1,400W         │
+└────────────────────────┘       └────────────────────────┘
+       ↕                                    ↕
+Total coherent memory = 480 GB LPDDR5X + 192 GB HBM3e = 672 GB
+
+KEY IMPLICATIONS FOR INFERENCE:
+  Long-context KV cache: overflows HBM → CPU LPDDR5X transparently
+  Latency penalty: HBM (~100ns) → LPDDR5X from GPU (~300ns)
+  Still 33× faster than NVMe → far better than disk-based KV tiering
+  
+  Context window feasibility on GB200 NVL72 (72 B200 + 36 Grace):
+    HBM total:     72 × 192 GB  = 13.8 TB
+    LPDDR5X total: 36 × 480 GB  = 17.3 TB
+    Combined:                   = 31.1 TB unified
+    Supports: multi-million token contexts on a single NVL72 rack</div>
+
+<h2 id="s203">20.3 CXL — The Memory Disaggregation Standard</h2>
+
+<p>CXL (Compute Express Link) is the most significant memory architecture change in a decade. It enables memory to be disaggregated from processors — placed on independent devices, shared across multiple CPUs and accelerators, and dynamically allocated like compute resources.</p>
+
+<!-- DIAGRAM 3: CXL Architecture -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 300" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <text x="390" y="20" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">CXL Memory Disaggregation Architecture (2026–2028)</text>
+
+  <!-- Traditional -->
+  <rect x="10" y="36" width="350" height="240" rx="8" fill="#fff5f5" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="185" y="58" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#c0392b">TRADITIONAL (Today)</text>
+
+  <rect x="30" y="68" width="140" height="44" rx="5" fill="#1c2438"/>
+  <text x="100" y="84" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="white" font-weight="bold">CPU Node A</text>
+  <text x="100" y="100" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#e3b341">2 TB DDR5 (local only)</text>
+
+  <rect x="190" y="68" width="140" height="44" rx="5" fill="#1c2438"/>
+  <text x="260" y="84" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="white" font-weight="bold">CPU Node B</text>
+  <text x="260" y="100" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#e3b341">2 TB DDR5 (local only)</text>
+
+  <rect x="30" y="132" width="140" height="44" rx="5" fill="#2a4580"/>
+  <text x="100" y="148" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="white" font-weight="bold">GPU Node A</text>
+  <text x="100" y="164" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#e3b341">80 GB HBM (local only)</text>
+
+  <rect x="190" y="132" width="140" height="44" rx="5" fill="#2a4580"/>
+  <text x="260" y="148" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="white" font-weight="bold">GPU Node B</text>
+  <text x="260" y="164" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#e3b341">80 GB HBM (local only)</text>
+
+  <rect x="30" y="200" width="300" height="32" rx="4" fill="#fff5f5" stroke="#c0392b" stroke-width="1"/>
+  <text x="180" y="214" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b" font-weight="bold">Memory is STRANDED — unused capacity cannot be shared</text>
+  <text x="180" y="226" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#c0392b">Node A at 90% while Node B at 20% → waste</text>
+
+  <!-- Arrow separator -->
+  <text x="385" y="166" text-anchor="middle" font-family="sans-serif" font-size="22" fill="#e3b341">→</text>
+
+  <!-- CXL -->
+  <rect x="420" y="36" width="350" height="240" rx="8" fill="#f0fff5" stroke="#27ae60" stroke-width="1.5"/>
+  <text x="595" y="58" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#1a7a3a">CXL DISAGGREGATED (2027)</text>
+
+  <rect x="430" y="68" width="100" height="36" rx="5" fill="#1c2438"/>
+  <text x="480" y="90" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white" font-weight="bold">CPU Node A</text>
+
+  <rect x="540" y="68" width="100" height="36" rx="5" fill="#1c2438"/>
+  <text x="590" y="90" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white" font-weight="bold">CPU Node B</text>
+
+  <rect x="650" y="68" width="100" height="36" rx="5" fill="#2a4580"/>
+  <text x="700" y="90" text-anchor="middle" font-family="sans-serif" font-size="9" fill="white" font-weight="bold">GPU Node A</text>
+
+  <!-- CXL Switch -->
+  <rect x="485" y="120" width="200" height="32" rx="6" fill="#27ae60"/>
+  <text x="585" y="140" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">CXL 3.1 Switch</text>
+
+  <!-- Lines to switch -->
+  <line x1="480" y1="104" x2="520" y2="120" stroke="#888" stroke-width="1.5"/>
+  <line x1="590" y1="104" x2="585" y2="120" stroke="#888" stroke-width="1.5"/>
+  <line x1="700" y1="104" x2="650" y2="120" stroke="#888" stroke-width="1.5"/>
+
+  <!-- Memory pool -->
+  <rect x="440" y="170" width="300" height="48" rx="6" fill="#e3b341"/>
+  <text x="590" y="190" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1c2438" font-weight="bold">Shared CXL Memory Pool</text>
+  <text x="590" y="208" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#1c2438">256 TB DRAM · Any node · Dynamic allocation</text>
+  <line x1="585" y1="152" x2="585" y2="170" stroke="#888" stroke-width="1.5"/>
+
+  <rect x="440" y="234" width="300" height="28" rx="4" fill="#f0fff5" stroke="#27ae60" stroke-width="1"/>
+  <text x="590" y="246" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1a7a3a" font-weight="bold">Any node borrows from pool on demand — no waste</text>
+  <text x="590" y="258" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#1a7a3a">KV cache migrates with request — no data movement</text>
+</svg>
+<figcaption>Figure 20.3 — CXL memory disaggregation: traditional stranded memory vs CXL pooled memory accessible by any compute node dynamically.</figcaption>
+</div>
+
+<div class="formula">CXL ADOPTION TIMELINE AND SPECIFICATIONS:
+
+CXL Version  Year    Key Capability                          Status
+───────────────────────────────────────────────────────────────────
+CXL 1.1     2021-23  Type 1/2/3 devices, PCIe 5.0 base     [SHIPPED]
+                     Memory extension for CPU-only servers
+                     Latency: ~250 ns overhead vs direct DRAM
+                     Shipping: Samsung, Micron, SK Hynix expanders
+
+CXL 2.0     2022-24  Switching + sharing between multiple CPUs [SHIPPED]
+                     One memory expander → shared by 4-8 CPU sockets
+                     Shipping: Xconn, Enfabrica CXL switches
+
+CXL 3.0     2024-26  Rack-scale memory disaggregation        [SHIPPING]
+                     Multi-level switching, thousands of endpoints
+                     GPU support confirmed: NVIDIA Vera Rubin (2027)
+                     AMD: CXL support in EPYC Venice (2026+)
+
+CXL 3.1+    2026-28  "Memory as a Service" at cluster scale  [ROADMAP]
+                     AI cluster memory fabric replacing local DRAM
+                     Target: allocate memory like compute resources
+
+PROJECTED IMPACT ON AI INFERENCE (2027-2028):
+  KV cache stored in CXL pool → served to any available GPU
+  Request migration: session moves between GPUs without cache loss
+  Memory efficiency: 2-3× effective KV capacity with same hardware
+                     vs per-GPU HBM siloed approach</div>
+
+<h2 id="s204">20.4 In-Network Computing — The Network Becomes a Compute Layer</h2>
+
+<p>Traditional networks move data. Next-generation AI networks <em>compute while they move data</em>. This is the deepest architectural shift in cluster design since GPUDirect RDMA.</p>
+
+<!-- DIAGRAM 4: In-network compute evolution -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 260" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <text x="390" y="20" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">Evolution of Network Compute (2015 → 2029)</text>
+
+  <!-- Gen 1 -->
+  <rect x="10" y="36" width="175" height="196" rx="8" fill="#f3f5f8" stroke="#888" stroke-width="1.5"/>
+  <rect x="10" y="36" width="175" height="28" rx="8" fill="#888"/>
+  <text x="97" y="55" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">Gen 1: Dumb Pipes</text>
+  <text x="97" y="67" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="white">Pre-2015</text>
+  <text x="20" y="90" font-family="sans-serif" font-size="9" fill="#555">Network moves bytes A→B</text>
+  <text x="20" y="104" font-family="sans-serif" font-size="9" fill="#555">All aggregation at CPUs</text>
+  <text x="20" y="120" font-family="sans-serif" font-size="9" fill="#555">N endpoints = N-1 trips</text>
+  <text x="20" y="140" font-family="sans-serif" font-size="9" fill="#888" font-weight="bold">AllReduce: O(N) traffic</text>
+  <text x="20" y="158" font-family="sans-serif" font-size="9" fill="#888">CPU involved in every</text>
+  <text x="20" y="172" font-family="sans-serif" font-size="9" fill="#888">reduction step</text>
+  <text x="20" y="200" font-family="sans-serif" font-size="9" fill="#888" font-style="italic">Bottleneck: CPU</text>
+  <text x="20" y="214" font-family="sans-serif" font-size="9" fill="#888" font-style="italic">overhead + N-1 hops</text>
+
+  <!-- Gen 2 -->
+  <rect x="198" y="36" width="175" height="196" rx="8" fill="#f0f6ff" stroke="#2a6099" stroke-width="1.5"/>
+  <rect x="198" y="36" width="175" height="28" rx="8" fill="#2a6099"/>
+  <text x="285" y="55" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">Gen 2: RDMA</text>
+  <text x="285" y="67" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="white">2015–2022</text>
+  <text x="208" y="90" font-family="sans-serif" font-size="9" fill="#555">GPUDirect RDMA</text>
+  <text x="208" y="104" font-family="sans-serif" font-size="9" fill="#555">Bypasses CPU entirely</text>
+  <text x="208" y="118" font-family="sans-serif" font-size="9" fill="#555">GPU → NIC → GPU direct</text>
+  <text x="208" y="138" font-family="sans-serif" font-size="9" fill="#2a6099" font-weight="bold">Problem solved: CPU O/H</text>
+  <text x="208" y="152" font-family="sans-serif" font-size="9" fill="#555">Problem remaining:</text>
+  <text x="208" y="166" font-family="sans-serif" font-size="9" fill="#555">All compute still at</text>
+  <text x="208" y="180" font-family="sans-serif" font-size="9" fill="#555">endpoints (GPU)</text>
+  <text x="208" y="200" font-family="sans-serif" font-size="9" fill="#2a6099" font-style="italic">Bottleneck: endpoint</text>
+  <text x="208" y="214" font-family="sans-serif" font-size="9" fill="#2a6099" font-style="italic">GPU compute</text>
+
+  <!-- Gen 3 -->
+  <rect x="386" y="36" width="175" height="196" rx="8" fill="#fff8e0" stroke="#d4820a" stroke-width="2"/>
+  <rect x="386" y="36" width="175" height="28" rx="8" fill="#d4820a"/>
+  <text x="473" y="55" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">Gen 3: In-Network</text>
+  <text x="473" y="67" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="white">2022–Present ✓</text>
+  <text x="396" y="90" font-family="sans-serif" font-size="9" fill="#555">IB SHARP: AllReduce</text>
+  <text x="396" y="104" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="bold">  INSIDE IB switches</text>
+  <text x="396" y="118" font-family="sans-serif" font-size="9" fill="#555">NVLS: AllReduce inside</text>
+  <text x="396" y="132" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="bold">  NVSwitch ASICs</text>
+  <text x="396" y="150" font-family="sans-serif" font-size="9" fill="#d4820a" font-weight="bold">Results:</text>
+  <text x="396" y="164" font-family="sans-serif" font-size="9" fill="#d4820a">30–50% less traffic</text>
+  <text x="396" y="178" font-family="sans-serif" font-size="9" fill="#d4820a">40% lower latency</text>
+  <text x="396" y="196" font-family="sans-serif" font-size="9" fill="#d4820a" font-style="italic">Bottleneck: network</text>
+  <text x="396" y="210" font-family="sans-serif" font-size="9" fill="#d4820a" font-style="italic">bandwidth</text>
+
+  <!-- Gen 4 -->
+  <rect x="574" y="36" width="196" height="196" rx="8" fill="#f0fff5" stroke="#27ae60" stroke-width="2.5"/>
+  <rect x="574" y="36" width="196" height="28" rx="8" fill="#27ae60"/>
+  <text x="672" y="55" text-anchor="middle" font-family="sans-serif" font-size="10" fill="white" font-weight="bold">Gen 4: Programmable</text>
+  <text x="672" y="67" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="white">2026–2029 [ROADMAP]</text>
+  <text x="584" y="90" font-family="sans-serif" font-size="9" fill="#555">Smart NICs (BlueField-3):</text>
+  <text x="584" y="104" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="bold">  ARM cores in NIC</text>
+  <text x="584" y="118" font-family="sans-serif" font-size="9" fill="#555">P4 switches (Tofino 2):</text>
+  <text x="584" y="132" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="bold">  Custom algos in silicon</text>
+  <text x="584" y="148" font-family="sans-serif" font-size="9" fill="#27ae60" font-weight="bold">Use cases:</text>
+  <text x="584" y="162" font-family="sans-serif" font-size="9" fill="#27ae60">Gradient compression 10:1</text>
+  <text x="584" y="176" font-family="sans-serif" font-size="9" fill="#27ae60">Adaptive routing</text>
+  <text x="584" y="190" font-family="sans-serif" font-size="9" fill="#27ae60">Token routing for MoE</text>
+  <text x="584" y="208" font-family="sans-serif" font-size="9" fill="#27ae60" font-style="italic">Bottleneck: software</text>
+  <text x="584" y="222" font-family="sans-serif" font-size="9" fill="#27ae60" font-style="italic">maturity</text>
+</svg>
+<figcaption>Figure 20.4 — In-network computing evolution from dumb pipes to programmable compute fabric inside the network switches themselves.</figcaption>
+</div>
+
+<h3>20.4.1 NVIDIA Spectrum-X: Ethernet for AI <span class="label-conf">SHIPPED</span></h3>
+
+<div class="formula">THE ETHERNET vs INFINIBAND CONVERGENCE:
+
+Historical problem:
+  InfiniBand: fast, reliable, lossless → good for AI AllReduce
+  Ethernet: lossy, packet drops → bad for RDMA-based collectives
+  
+NVIDIA Spectrum-X (2024): Ethernet that behaves like InfiniBand
+  Congestion control: Advanced ECN + proactive congestion avoidance
+  Adaptive routing: per-packet load balancing (IB ECMP equivalent)
+  NIC pairing: ConnectX-7 with RoCEv2 optimized for ML workloads
+  Claimed performance: RoCE AllReduce within 5% of InfiniBand
+
+COST COMPARISON AT 10,000 GPU CLUSTER:
+  InfiniBand switching infrastructure: ~$500M
+  Ethernet (Spectrum-X):              ~$100M
+  Savings:                            ~$400M per 10K GPU cluster
+  
+  If performance parity holds: Ethernet wins at hyperscaler scale.
+  Meta 24K GPU cluster: RoCE over Ethernet (already deployed).
+  
+TIMELINE FORECAST:
+  2024-2025: First Spectrum-X deployments; benchmarking underway
+  2026-2027: Broad hyperscaler adoption if performance confirmed
+  2028-2029: InfiniBand becomes niche (extreme latency requirements)
+             Ethernet becomes the default AI cluster network</div>
+
+<h2 id="s205">20.5 Photonic Interconnects — Light-Speed Data Movement</h2>
+
+<p>Electrical copper signals face a fundamental bandwidth-distance limit. At 400G per link, copper works for distances up to ~3 meters. As AI clusters scale to tens of thousands of nodes across large datacenter floors, photonics becomes structurally necessary.</p>
+
+<!-- DIAGRAM 5: Photonics Roadmap -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 220" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <text x="390" y="20" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">Silicon Photonics Adoption Roadmap for AI Clusters</text>
+
+  <!-- Timeline axis -->
+  <line x1="30" y1="180" x2="750" y2="180" stroke="#1c2438" stroke-width="2"/>
+  <polygon points="746,174 756,180 746,186" fill="#1c2438"/>
+
+  <!-- Stage markers -->
+  <line x1="120" y1="60" x2="120" y2="180" stroke="#888" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="330" y1="60" x2="330" y2="180" stroke="#888" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="540" y1="60" x2="540" y2="180" stroke="#888" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <!-- Year labels -->
+  <text x="70" y="196" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">Today</text>
+  <text x="225" y="196" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">2025–2027</text>
+  <text x="435" y="196" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">2027–2029</text>
+  <text x="645" y="196" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">2029+</text>
+
+  <!-- Stage 1 box -->
+  <rect x="20" y="40" width="190" height="120" rx="6" fill="#fff" stroke="#2a6099" stroke-width="2"/>
+  <rect x="20" y="40" width="190" height="24" rx="6" fill="#2a6099"/>
+  <text x="115" y="57" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="white" font-weight="bold">Stage 1: Pluggable Optics</text>
+  <text x="30" y="78" font-family="sans-serif" font-size="8.5" fill="#555">Digital → electrical → laser</text>
+  <text x="30" y="92" font-family="sans-serif" font-size="8.5" fill="#555">→ fiber → photodetector</text>
+  <text x="30" y="106" font-family="sans-serif" font-size="8.5" fill="#555">BW: 400G per port</text>
+  <text x="30" y="120" font-family="sans-serif" font-size="8.5" fill="#555">Power: ~10W per module</text>
+  <text x="30" y="136" font-family="sans-serif" font-size="8.5" fill="#555">Cost: $1K–5K per port</text>
+  <text x="30" y="152" font-family="sans-serif" font-size="8.5" fill="#2a6099" font-weight="bold">Status: [SHIPPED]</text>
+
+  <!-- Stage 2 box -->
+  <rect x="222" y="40" width="210" height="120" rx="6" fill="#fff" stroke="#d4820a" stroke-width="2"/>
+  <rect x="222" y="40" width="210" height="24" rx="6" fill="#d4820a"/>
+  <text x="327" y="57" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="white" font-weight="bold">Stage 2: Co-Packaged Optics</text>
+  <text x="232" y="78" font-family="sans-serif" font-size="8.5" fill="#555">Laser integrated INTO switch package</text>
+  <text x="232" y="92" font-family="sans-serif" font-size="8.5" fill="#555">Eliminates pluggable transceiver</text>
+  <text x="232" y="106" font-family="sans-serif" font-size="8.5" fill="#1c2438" font-weight="bold">BW density: 5-10× improvement</text>
+  <text x="232" y="120" font-family="sans-serif" font-size="8.5" fill="#1c2438" font-weight="bold">Power: ~50% reduction</text>
+  <text x="232" y="136" font-family="sans-serif" font-size="8.5" fill="#555">Shipping: Broadcom (2026)</text>
+  <text x="232" y="152" font-family="sans-serif" font-size="8.5" fill="#d4820a" font-weight="bold">Status: [ANNOUNCED/SHIPPING]</text>
+
+  <!-- Stage 3 box -->
+  <rect x="444" y="40" width="210" height="120" rx="6" fill="#fff" stroke="#27ae60" stroke-width="2"/>
+  <rect x="444" y="40" width="210" height="24" rx="6" fill="#27ae60"/>
+  <text x="549" y="57" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="white" font-weight="bold">Stage 3: Silicon Photonics</text>
+  <text x="454" y="78" font-family="sans-serif" font-size="8.5" fill="#555">Photonic components on CMOS wafer</text>
+  <text x="454" y="92" font-family="sans-serif" font-size="8.5" fill="#555">All electrical long-haul eliminated</text>
+  <text x="454" y="106" font-family="sans-serif" font-size="8.5" fill="#1c2438" font-weight="bold">BW: 1.6 Tbps per fiber link</text>
+  <text x="454" y="120" font-family="sans-serif" font-size="8.5" fill="#1c2438" font-weight="bold">Per node: 51.2 Tbps (32 ports)</text>
+  <text x="454" y="136" font-family="sans-serif" font-size="8.5" fill="#555">Research: Intel Labs, MIT, Stanford</text>
+  <text x="454" y="152" font-family="sans-serif" font-size="8.5" fill="#27ae60" font-weight="bold">Status: [ROADMAP 2028-2029]</text>
+
+  <!-- Impact arrow -->
+  <rect x="660" y="56" width="88" height="108" rx="6" fill="#fffbf0" stroke="#e3b341" stroke-width="2"/>
+  <text x="704" y="76" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1c2438" font-weight="bold">2029 Impact</text>
+  <text x="704" y="92" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">Inter-node BW</text>
+  <text x="704" y="106" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">approaches</text>
+  <text x="704" y="120" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#e3b341" font-weight="bold">NVLink speeds</text>
+  <text x="704" y="136" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">TP spans nodes</text>
+  <text x="704" y="150" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">w/o overhead</text>
+</svg>
+<figcaption>Figure 20.5 — Silicon photonics adoption roadmap. By 2029, inter-node bandwidth may approach NVLink intra-node speeds, fundamentally changing parallelism strategy.</figcaption>
+</div>
+
+<h2 id="s206">20.6 New Memory Technologies — Beyond HBM3e</h2>
+
+<div class="formula">HBM EVOLUTION ROADMAP (2024–2030):
+
+          HBM3e (2024)    HBM4 (2027)     HBM5 (2029)
+          Current         AMD MI450       [ROADMAP]
+          standard        NVIDIA Rubin
+─────────────────────────────────────────────────────────
+Pin speed  9.6 Gbps       13-16 Gbps      20+ Gbps [INF]
+Bus width  1024-bit        2048-bit (!)    2048-bit
+Per stack  ~1.2 TB/s       ~3.2-4 TB/s    ~5 TB/s [INF]
+Capacity   24-32 GB        64+ GB          128+ GB [INF]
+Key change —               Wider bus,      Logic die
+                           base die logic  compute (PIM)
+
+IMPACT ON ROOFLINE:
+  H100 (HBM3):   Peak BW 3.35 TB/s → ridge point at 312 FLOPS/byte
+  B200 (HBM3e):  Peak BW 8.0 TB/s  → ridge point at ~250 FLOPS/byte
+  Rubin (HBM4):  Peak BW ~12 TB/s  → ridge point at ~200 FLOPS/byte
+  
+  Observation: As BW grows faster than compute, more operations
+  become compute-bound. Attention (currently BW-bound at small batch)
+  may become compute-bound at decode with HBM5 bandwidths.
+
+PROCESSING IN MEMORY (PIM) — Emerging [ROADMAP]:
+  Samsung HBM-PIM: ARM cores embedded in HBM die
+  SK Hynix AiM: DRAM with compute units between DRAM banks
+  
+  Use case: Embedding table lookup — computed INSIDE memory device
+  Eliminates: the DRAM → GPU bus transfer entirely for this workload
+  Benefit: ~7× power reduction for embedding lookup workloads
+           vs conventional GPU-attached HBM approach</div>
+
+<h2 id="s207">20.7 The Heterogeneous Compute Era — System Design Implications</h2>
+
+<p>The infographic's framework captures the structural shift precisely: we are moving from FLOPS-centric thinking to data movement and system efficiency thinking. For a Principal Performance Architect, this changes <em>what you optimize</em>.</p>
+
+<!-- DIAGRAM 6: Old world vs New world -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 780 260" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <text x="390" y="20" text-anchor="middle" font-family="Georgia,serif" font-size="13" font-weight="bold" fill="#1c2438">Architecture Shift: What the Principal Engineer Optimizes</text>
+
+  <!-- Old world -->
+  <rect x="10" y="36" width="360" height="200" rx="8" fill="#fff5f5" stroke="#c0392b" stroke-width="2"/>
+  <rect x="10" y="36" width="360" height="28" rx="8" fill="#c0392b"/>
+  <text x="190" y="55" text-anchor="middle" font-family="sans-serif" font-size="11" fill="white" font-weight="bold">OLD WORLD (2020–2024): FLOPS-Centric</text>
+
+  <text x="26" y="82" font-family="sans-serif" font-size="9.5" fill="#c0392b">→</text>
+  <text x="40" y="82" font-family="sans-serif" font-size="9.5" fill="#555">FLOPS-Centric Thinking</text>
+  <text x="26" y="100" font-family="sans-serif" font-size="9.5" fill="#c0392b">→</text>
+  <text x="40" y="100" font-family="sans-serif" font-size="9.5" fill="#555">Kernel Optimization (per-op)</text>
+  <text x="26" y="118" font-family="sans-serif" font-size="9.5" fill="#c0392b">→</text>
+  <text x="40" y="118" font-family="sans-serif" font-size="9.5" fill="#555">Single GPU tuning focus</text>
+  <text x="26" y="136" font-family="sans-serif" font-size="9.5" fill="#c0392b">→</text>
+  <text x="40" y="136" font-family="sans-serif" font-size="9.5" fill="#555">Compute scaling (add GPUs)</text>
+  <text x="26" y="154" font-family="sans-serif" font-size="9.5" fill="#c0392b">→</text>
+  <text x="40" y="154" font-family="sans-serif" font-size="9.5" fill="#555">Today's throughput only</text>
+  <text x="26" y="172" font-family="sans-serif" font-size="9.5" fill="#c0392b">→</text>
+  <text x="40" y="172" font-family="sans-serif" font-size="9.5" fill="#555">Homogeneous GPU cluster</text>
+  <text x="26" y="190" font-family="sans-serif" font-size="9.5" fill="#c0392b">→</text>
+  <text x="40" y="190" font-family="sans-serif" font-size="9.5" fill="#555">Memory/network secondary</text>
+  <text x="190" y="226" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#c0392b" font-style="italic">"Add more GPUs" is the answer to everything</text>
+
+  <!-- Arrow -->
+  <text x="390" y="140" text-anchor="middle" font-family="sans-serif" font-size="24" fill="#e3b341">⟹</text>
+
+  <!-- New world -->
+  <rect x="410" y="36" width="360" height="200" rx="8" fill="#f0fff5" stroke="#27ae60" stroke-width="2"/>
+  <rect x="410" y="36" width="360" height="28" rx="8" fill="#27ae60"/>
+  <text x="590" y="55" text-anchor="middle" font-family="sans-serif" font-size="11" fill="white" font-weight="bold">NEW WORLD (2026+): System Efficiency</text>
+
+  <text x="426" y="82" font-family="sans-serif" font-size="9.5" fill="#27ae60">→</text>
+  <text x="440" y="82" font-family="sans-serif" font-size="9.5" fill="#1c2438" font-weight="bold">Data Movement &amp; System Efficiency Thinking</text>
+  <text x="426" y="100" font-family="sans-serif" font-size="9.5" fill="#27ae60">→</text>
+  <text x="440" y="100" font-family="sans-serif" font-size="9.5" fill="#1c2438" font-weight="bold">End-to-End Pipeline Optimization</text>
+  <text x="426" y="118" font-family="sans-serif" font-size="9.5" fill="#27ae60">→</text>
+  <text x="440" y="118" font-family="sans-serif" font-size="9.5" fill="#1c2438" font-weight="bold">Cluster-Level Efficiency (MFU at scale)</text>
+  <text x="426" y="136" font-family="sans-serif" font-size="9.5" fill="#27ae60">→</text>
+  <text x="440" y="136" font-family="sans-serif" font-size="9.5" fill="#1c2438" font-weight="bold">System Scaling (memory + network + compute)</text>
+  <text x="426" y="154" font-family="sans-serif" font-size="9.5" fill="#27ae60">→</text>
+  <text x="440" y="154" font-family="sans-serif" font-size="9.5" fill="#1c2438" font-weight="bold">Sustained Throughput at Scale</text>
+  <text x="426" y="172" font-family="sans-serif" font-size="9.5" fill="#27ae60">→</text>
+  <text x="440" y="172" font-family="sans-serif" font-size="9.5" fill="#1c2438" font-weight="bold">Heterogeneous: GPU+CPU+ASIC+CXL</text>
+  <text x="426" y="190" font-family="sans-serif" font-size="9.5" fill="#27ae60">→</text>
+  <text x="440" y="190" font-family="sans-serif" font-size="9.5" fill="#1c2438" font-weight="bold">Memory &amp; network are first-class constraints</text>
+  <text x="590" y="226" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1a7a3a" font-style="italic">"The system matters more than any single chip"</text>
+</svg>
+<figcaption>Figure 20.6 — The architecture shift in Principal Engineer thinking: from per-GPU FLOPS optimization to system-level data movement and efficiency engineering.</figcaption>
+</div>
+
+<h2 id="s208">20.8 Five Invariants That Survive Every Hardware Generation</h2>
+
+<p>The hardware stack changes every 18–24 months. These five analytical invariants do not. They are the stable substrate beneath an unstable surface.</p>
+
+<div class="callout">
+<strong>Invariant 1: Memory Bandwidth Is Always the Primary Constraint</strong>
+Whether the platform is HBM3e, HBM4, CXL-pooled DRAM, or a future medium, the ratio of available bandwidth to required bandwidth determines whether a workload is memory-bound. Roofline analysis on this ratio remains valid forever. Optimizing memory hierarchy, capacity, and bandwidth is always the primary job.
+</div>
+
+<div class="callout blue">
+<strong>Invariant 2: Arithmetic Intensity Determines the Performance Regime</strong>
+FLOPs/byte is the universal classifier. At AI=1 (embedding lookup), you are always memory-bound. At AI=256 (large GEMM), you are always compute-bound. This ratio and what it implies do not change with hardware generation.
+</div>
+
+<div class="callout green">
+<strong>Invariant 3: Communication-to-Compute Ratio Governs Scalability</strong>
+The fraction of time spent in AllReduce vs computation is the fundamental scalability limit. As you add GPUs, this fraction grows. Reducing communication volume (gradient compression, better parallelism strategies, in-network reduction) remains the key lever at scale.
+</div>
+
+<div class="callout purple">
+<strong>Invariant 4: Disaggregation Requires Programming for Latency</strong>
+As CXL, silicon photonics, and pooled memory increase the diversity of memory latencies, every algorithm must explicitly account for which memory tier it accesses. The roofline model expands from 2D (compute vs one memory) to N-D (compute vs HBM vs CXL vs NVMe vs remote). The principle remains the same.
+</div>
+
+<div class="callout gray">
+<strong>Invariant 5: The Analytical Tools Are Generational, Not Generational</strong>
+Roofline analysis, arithmetic intensity, collective communication modeling, MFU calculation — these tools were invented for GPUs but apply to TPUs, CXL-attached memory, photonic fabrics, and every future substrate. Invest deeply in the tools, not just the current hardware they apply to.
+</div>
+
+<h2 id="review">Chapter 20 Review Questions</h2>
+
+<ol class="review-q">
+<li>The Grace Blackwell superchip achieves 900 GB/s coherent bandwidth between CPU and GPU via NVLink-C2C. Compare the economics of KV cache overflow to CPU DRAM vs to NVMe SSD for a 128K token context with LLaMA-3 70B in BF16. Calculate the effective access latency for each tier and the maximum fraction of KV cache that can reside in CPU LPDDR5X before P99 TPOT degrades by more than 20%.</li>
+
+<li>A CXL 3.1 memory pool provides 256 TB of shared DRAM across a 1,000-GPU inference cluster at 200 ns latency. Compared to per-node local DRAM (80 ns, 2 TB per node), what is the TCO advantage (fewer memory purchases) and what is the latency cost? At what request working-set size does the CXL pool outperform the local DRAM approach on cost-efficiency?</li>
+
+<li>IB SHARP reduces AllReduce latency by 40% for large collectives. If a 1,024-GPU training job spends 28% of step time in AllReduce, calculate: (a) the new AllReduce fraction with SHARP, (b) overall step time improvement, (c) what additional techniques are needed to reach AllReduce fraction below 10%?</li>
+
+<li>Silicon photonics provides 51.2 Tbps per node inter-node bandwidth by 2029, exceeding NVLink's 900 GB/s intra-node bandwidth. A startup claims this eliminates the need for tensor parallelism because inter-node communication becomes faster than intra-node. Evaluate this claim: what constraints remain, what new bottlenecks emerge, and how would you redesign the inference serving stack to exploit this topology?</li>
+
+<li>The chapter identifies five invariants. For each invariant, give a concrete example of how it applies to a system built on CXL-pooled memory and silicon photonic networking rather than traditional GPU-attached HBM and copper InfiniBand. What changes in the analysis, and what stays the same?</li>
+</ol>
+
+<div class="callout" style="margin-top:32px;background:linear-gradient(135deg,#1c2438 0%,#2a4580 100%);border-color:#e3b341;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+<strong style="color:#e3b341">Closing Thought — The Field That Changes Faster Than Any Book</strong>
+<p style="color:rgba(255,255,255,.9);margin:0;font-size:12.5px;line-height:1.7">The specific hardware numbers in this chapter will be outdated within 18–24 months. The five invariants will not be. The engineer who builds and operates the next generation of AI systems is the one who understands the system as a whole — roofline analysis, communication-to-compute ratios, memory hierarchy reasoning — and applies those tools to every new platform as it appears. Build systems. Remove bottlenecks. Create the future.</p>
+</div>
+
+<div class="ch-end">— End of Chapter 20 · AI/ML Infrastructure from Silicon to Scale · Venkat Vinjam —</div>
+
+</div><!-- .page -->
+</body>
+</html>
+</div>
+</body>
+</html>

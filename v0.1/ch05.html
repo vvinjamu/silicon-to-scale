@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 5 &#8212; Thermal, Power &amp; TCO | AI/ML Infrastructure from Silicon to Scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.85;color:#1a1a1a;background:#fdfcf7;padding-top:48px}
+@media print{
+  #nav,#nav *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  #sidebar,#sidebar *{display:none!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:-9999px!important}
+  body{background:#fff;font-size:11px;line-height:1.7;padding-top:0!important}
+  .page{max-width:100%!important;padding:0!important;margin:0!important}
+  @page{size:letter;margin:20mm 18mm 22mm 18mm}
+  h2,h3,h4{page-break-after:avoid}
+  table,.diagram-wrap,.formula,.callout,.worked,.cookbook{page-break-inside:avoid}
+  svg{max-width:100%!important}
+}
+#nav{position:fixed;top:0;left:0;right:0;background:#1c2438;padding:7px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;z-index:999;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#nav b{color:#e3b341;font-family:sans-serif;font-size:11.5px;white-space:nowrap;margin-right:6px}
+#nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
+#nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
+#nav .home{color:#e3b341;border-color:#e3b341}
+#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
+#sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
+#sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
+.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
+.ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
+.ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
+.ch-meta{font-family:sans-serif;font-size:10.5px;color:#888;border-top:1px solid #e0ddd5;padding-top:10px;margin-bottom:28px}
+.ch-divider{height:3px;background:linear-gradient(90deg,#e3b341,#1c2438 60%,transparent);margin-bottom:32px;border-radius:2px}
+h2{font-size:18px;color:#1c2438;margin:36px 0 10px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+h3{font-size:15px;color:#1a3060;margin:22px 0 8px}
+h4{font-size:13px;color:#1a3060;margin:14px 0 5px;font-style:italic}
+p{margin-bottom:12px}
+ul,ol{margin:0 0 12px 22px}
+li{margin-bottom:5px}
+strong{color:#1c2438}
+blockquote{border-left:4px solid #e3b341;margin:18px 0;padding:10px 18px;background:#fffbf0;color:#333;font-style:italic;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-style:normal}
+.callout{border-left:4px solid #e3b341;background:#fffbf0;padding:11px 16px;margin:16px 0;border-radius:0 6px 6px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.callout.blue{border-color:#2a6099;background:#f0f6ff}
+.callout.red{border-color:#c0392b;background:#fff5f5}
+.callout.green{border-color:#27ae60;background:#f0fff5}
+.callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout strong{display:block;margin-bottom:4px}
+.formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+code{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:#c0392b}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#1c2438;color:#fff;padding:8px 10px;text-align:left;font-family:sans-serif;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:7px 10px;border-bottom:1px solid #e8e4da;vertical-align:top}
+tr:nth-child(even) td{background:#f8f6f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.good{color:#155724;font-weight:600}.warn{color:#856404;font-weight:600}.bad{color:#721c24;font-weight:600}
+.xref{font-family:sans-serif;font-size:10.5px;background:#f0f3f8;border:1px solid #c5cfe0;border-radius:4px;padding:2px 8px;color:#2a4a8a;display:inline}
+.shipped{display:inline-block;background:#d4edda;color:#155724;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px;vertical-align:middle}
+.announced{display:inline-block;background:#fff3cd;color:#856404;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px;vertical-align:middle}
+.roadmap{display:inline-block;background:#e2d9f3;color:#4a0e8f;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px;vertical-align:middle}
+.diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.diagram-wrap svg{display:block;width:100%;height:auto}
+.diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
+.worked{background:#fff;border:2px solid #1c2438;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.worked-label{font-family:sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#fff;background:#1c2438;padding:3px 10px;border-radius:3px;display:inline-block;margin-bottom:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.worked h4{color:#1c2438;font-size:13px;font-style:normal;margin:0 0 10px}
+.cookbook{background:#12131f;border-radius:8px;padding:18px 22px;margin:20px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cookbook-label{font-family:sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#e3b341;margin-bottom:10px}
+.cookbook pre{color:#b8ddf0;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.68;white-space:pre-wrap;margin:0}
+.objectives{background:#f0f4fa;border:1px solid #c8d8ee;border-radius:7px;padding:16px 20px;margin:20px 0 28px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.objectives h4{color:#1a3060;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-style:normal;margin:0 0 10px;border:none}
+.objectives .obj-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px}
+.objectives .obj-col{font-size:11.5px;line-height:1.6}
+.objectives .obj-col strong{display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#e3b341;margin-bottom:4px}
+.qref{background:#1c2438;color:#e6e9f0;border-radius:8px;padding:18px 22px;margin:24px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.qref h4{color:#e3b341;font-family:sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-style:normal;margin:0 0 10px}
+.qref pre{font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;white-space:pre-wrap;color:#b8ddf0}
+.takeaways{background:#f3f5f8;border:2px solid #1c2438;border-radius:9px;padding:18px 22px;margin:32px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.takeaways h3{color:#1c2438;margin:0 0 14px;font-size:15px;border:none;padding:0}
+.takeaway-group{margin-bottom:14px}
+.takeaway-group:last-child{margin-bottom:0}
+.tg-label{font-family:sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#e3b341;margin-bottom:6px}
+.takeaway-group ul{margin-left:16px}
+.takeaway-group li{font-size:12.5px;margin-bottom:4px;color:#222}
+.review-questions{margin-top:36px}
+.review-questions h3{font-size:16px;color:#1c2438;margin-bottom:16px;border-bottom:2px solid #e3b341;padding-bottom:5px}
+.rq-tier{border-radius:8px;padding:14px 18px;margin-bottom:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rq-tier.foundational{background:#e8fff0;border-left:5px solid #27ae60}
+.rq-tier.intermediate{background:#fffbf0;border-left:5px solid #e3b341}
+.rq-tier.principal{background:#f0f0ff;border-left:5px solid #7b2d8b}
+.rq-tier-label{font-family:sans-serif;font-size:10px;color:#555;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.rq-badge{font-weight:700;font-size:9px;padding:2px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.foundational .rq-badge{background:#27ae60;color:#fff}
+.intermediate .rq-badge{background:#e3b341;color:#1c2438}
+.principal .rq-badge{background:#7b2d8b;color:#fff}
+.rq-tier ol{margin-left:18px}
+.rq-tier li{margin-bottom:10px;font-size:12.5px;line-height:1.7;color:#222}
+.rq-tier li::marker{font-weight:700}
+.ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV: Chapter links only, NO section anchors -->
+<div id="nav">
+  <b>Silicon to Scale</b>
+  <a class="home" href="index.html">&#8962; Index</a>
+  <a href="ch04.html">&#8592; Ch 4</a>
+  <a href="ch06.html">Ch 6 &#8594;</a>
+  <a href="ch01.html">Ch 1</a>
+  <a href="ch07.html">Ch 7</a>
+  <a href="ch08.html">Ch 8</a>
+  <a href="ch12.html">Ch 12</a>
+  <a href="ch17.html">Ch 17</a>
+</div>
+
+<!-- LEFT SIDEBAR: Section anchors for THIS chapter -->
+<div id="sidebar">
+  <h4>Chapter 5</h4>
+  <a href="#overview">Overview</a>
+  <a href="#s51">5.1 Heat Sources</a>
+  <a href="#s511">&nbsp;&nbsp;&#8627; CMOS Power Physics</a>
+  <a href="#s512">&nbsp;&nbsp;&#8627; H100 Power Map</a>
+  <a href="#s513">&nbsp;&nbsp;&#8627; Throttling Hierarchy</a>
+  <a href="#s52">5.2 Cooling Tech</a>
+  <a href="#s521">&nbsp;&nbsp;&#8627; Thermal Resistance</a>
+  <a href="#s522">&nbsp;&nbsp;&#8627; DLC Architecture</a>
+  <a href="#s523">&nbsp;&nbsp;&#8627; Immersion</a>
+  <a href="#s53">5.3 DVFS &amp; P-States</a>
+  <a href="#s531">&nbsp;&nbsp;&#8627; DVFS Loop</a>
+  <a href="#s532">&nbsp;&nbsp;&#8627; P-States</a>
+  <a href="#s533">&nbsp;&nbsp;&#8627; Power Capping</a>
+  <a href="#s54">5.4 Datacenter Power</a>
+  <a href="#s541">&nbsp;&nbsp;&#8627; Delivery Chain</a>
+  <a href="#s542">&nbsp;&nbsp;&#8627; PUE</a>
+  <a href="#s543">&nbsp;&nbsp;&#8627; Rack Density</a>
+  <a href="#s55">5.5 TCO Modeling</a>
+  <a href="#s551">&nbsp;&nbsp;&#8627; TCO Formula</a>
+  <a href="#s552">&nbsp;&nbsp;&#8627; $/Token</a>
+  <a href="#s553">&nbsp;&nbsp;&#8627; Build/Buy/Rent</a>
+  <a href="#s56">5.6 Monitoring</a>
+  <a href="#s57">5.7 System Design</a>
+  <a href="#s58">5.8 Green AI</a>
+  <a href="#qr">Quick Reference</a>
+  <a href="#takeaways">Key Takeaways</a>
+  <a href="#review">Review Questions</a>
+</div>
+
+<div class="page">
+
+<div id="overview">
+  <div class="ch-label">Part II &middot; GPU &amp; Accelerator Architecture &middot; Chapter 5</div>
+  <h1 class="ch-title">Thermal, Power &amp; TCO</h1>
+  <div class="ch-subtitle">The Economics of AI Infrastructure &#8212; Why a 700-Watt Chip Changes Everything About Building a Datacenter</div>
+  <div class="ch-meta">
+    <strong>Book:</strong> AI/ML Infrastructure from Silicon to Scale &#8212; V2 Edition &nbsp;|&nbsp;
+    <strong>Author:</strong> Venkat Vinjam &nbsp;|&nbsp;
+    <strong>Cross-ref:</strong>
+    <span class="xref">Ch 4: Memory Hierarchy</span>
+    <span class="xref">Ch 7: GPU Kernels</span>
+    <span class="xref">Ch 12: Benchmarking</span>
+    <span class="xref">Ch 17: Telemetry</span>
+  </div>
+  <div class="ch-divider"></div>
+</div>
+
+<blockquote>
+"Every watt you waste cooling hardware is a watt you didn't spend training a model.
+The most important equation in AI infrastructure isn't a matrix multiply &#8212;
+it's <strong>Power &times; PUE &times; $/kWh &times; 8,760 hours</strong>."
+<cite>&#8212; Principal Infrastructure Architect's Cost Axiom</cite>
+</blockquote>
+
+<p>The H100 SXM5 has a Thermal Design Power (TDP) of 700W. A rack of 8 DGX H100 nodes draws 120+ kilowatts. A 10,000-GPU training cluster consumes power comparable to a small town. At this scale, thermal management is not a facilities concern &#8212; it is a <strong>performance engineering concern</strong>. Thermal throttling directly reduces MFU. Poor power allocation inflates TCO by millions of dollars per year.</p>
+
+<div class="objectives">
+  <h4>Learning Objectives</h4>
+  <div class="obj-row">
+    <div class="obj-col"><strong>Foundational</strong>Understand why GPU heat is a performance problem. Learn what PUE means and why cooling choice affects throughput.</div>
+    <div class="obj-col"><strong>Intermediate</strong>Apply thermal resistance formulas, DVFS mechanics, and power-capping tradeoffs. Build TCO models. Instrument clusters with DCGM.</div>
+    <div class="obj-col"><strong>Principal Level</strong>Design a cooling strategy for 10,000+ GPUs from first principles. Model $/token as a function of power, throughput, and PUE. Make build/buy/rent decisions quantitatively.</div>
+  </div>
+</div>
+
+<h2 id="s51">5.1 Where Heat Comes From &#8212; Semiconductor Power Dissipation</h2>
+
+<h3 id="s511">5.1.1 The Three Sources of Power Dissipation</h3>
+<div class="formula">POWER DISSIPATION IN CMOS CIRCUITS:
+
+P_total = P_dynamic + P_static + P_short_circuit
+
+1. DYNAMIC POWER (60-75% of total):
+   P_dynamic = alpha x C x V^2 x f
+   Key: Power scales as V^2 -- reducing V by 10% cuts dynamic power by ~19%.
+   This is the lever behind DVFS.
+
+2. STATIC POWER / LEAKAGE (20-35%):
+   P_static = V_dd x I_leakage
+   At 4nm, leakage ~25% of total power even at zero workload.
+   Idle GPUs draw 100-200W from leakage alone.
+
+3. SHORT-CIRCUIT POWER (&lt;5%):
+   Brief PMOS+NMOS conduction during transitions. Not relevant to system engineers.</div>
+
+<h3 id="s512">5.1.2 H100 Power Distribution</h3>
+<div class="formula">H100 SXM5 Power Distribution (700W TDP, estimated):
+
+COMPONENT                        POWER     % of TDP
+----------------------------------------------------
+Tensor Cores (132 SMs x 4 TC)   ~280W       40%
+HBM3 Interface + Controllers     ~90W       13%
+NVLink 4.0 PHY (18 links)        ~70W       10%
+CUDA Cores + Special Function    ~70W       10%
+L2 Cache + Memory Fabric         ~63W        9%
+PCIe Gen5 Interface              ~35W        5%
+NVSwitch + I/O Fabric            ~35W        5%
+Misc (clock gen, power mgmt)     ~57W        8%
+----------------------------------------------------
+TOTAL                            700W      100%
+
+Hotspot: TC clusters nearest HBM stacks run 15-25 deg C above average die temp.</div>
+
+<h3 id="s513">5.1.3 Thermal Throttling Hierarchy</h3>
+<p>Every GPU has a maximum junction temperature (T_j_max). For H100 SXM: <strong>83&deg;C operational</strong>, 95&deg;C absolute maximum. Throttling is not binary &#8212; it cascades:</p>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <linearGradient id="lg1" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#27ae60"/>
+      <stop offset="50%" stop-color="#e3b341"/>
+      <stop offset="75%" stop-color="#e67e22"/>
+      <stop offset="100%" stop-color="#c0392b"/>
+    </linearGradient>
+  </defs>
+  <rect width="760" height="300" fill="#fafafa"/>
+  <text x="380" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#1c2438">H100 SXM5: SM Clock vs. Junction Temperature</text>
+  <rect x="70" y="35" width="390" height="210" fill="#d4edda" opacity=".4"/>
+  <rect x="460" y="35" width="70" height="210" fill="#fff3cd" opacity=".6"/>
+  <rect x="530" y="35" width="70" height="210" fill="#fde5cc" opacity=".6"/>
+  <rect x="600" y="35" width="140" height="210" fill="#f5c6cb" opacity=".5"/>
+  <text x="255" y="50" text-anchor="middle" font-size="10" font-weight="700" fill="#155724">NOMINAL</text>
+  <text x="495" y="50" text-anchor="middle" font-size="9" font-weight="700" fill="#856404">SOFT</text>
+  <text x="565" y="50" text-anchor="middle" font-size="9" font-weight="700" fill="#c05000">HARD</text>
+  <text x="670" y="50" text-anchor="middle" font-size="9" font-weight="700" fill="#721c24">SHUTDOWN</text>
+  <line x1="70" y1="245" x2="740" y2="245" stroke="#1c2438" stroke-width="1.5"/>
+  <line x1="70" y1="35" x2="70" y2="245" stroke="#1c2438" stroke-width="1.5"/>
+  <line x1="70" y1="205" x2="740" y2="205" stroke="#ddd" stroke-width=".7" stroke-dasharray="3,4"/>
+  <line x1="70" y1="165" x2="740" y2="165" stroke="#ddd" stroke-width=".7" stroke-dasharray="3,4"/>
+  <line x1="70" y1="125" x2="740" y2="125" stroke="#ddd" stroke-width=".7" stroke-dasharray="3,4"/>
+  <line x1="70" y1="85"  x2="740" y2="85" stroke="#ddd" stroke-width=".7" stroke-dasharray="3,4"/>
+  <text x="64" y="249" text-anchor="end" font-size="9" fill="#555">0</text>
+  <text x="64" y="209" text-anchor="end" font-size="9" fill="#555">500</text>
+  <text x="64" y="169" text-anchor="end" font-size="9" fill="#555">1,000</text>
+  <text x="64" y="129" text-anchor="end" font-size="9" fill="#555">1,500</text>
+  <text x="64" y="89"  text-anchor="end" font-size="9" fill="#555">1,980 MHz</text>
+  <text x="70"  y="261" text-anchor="middle" font-size="9" fill="#555">40&#176;C</text>
+  <text x="265" y="261" text-anchor="middle" font-size="9" fill="#555">60&#176;C</text>
+  <text x="460" y="261" text-anchor="middle" font-size="9" fill="#555">75&#176;C</text>
+  <text x="530" y="261" text-anchor="middle" font-size="9" fill="#555">80&#176;C</text>
+  <text x="600" y="261" text-anchor="middle" font-size="9" fill="#555">83&#176;C</text>
+  <text x="740" y="261" text-anchor="middle" font-size="9" fill="#555">95&#176;C</text>
+  <text x="400" y="278" text-anchor="middle" font-size="10" fill="#555">Junction Temperature (&#176;C)</text>
+  <polyline points="70,89 460,89 530,112 600,178 660,218 740,245" fill="none" stroke="url(#lg1)" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="70"  cy="89"  r="4" fill="#27ae60"/>
+  <circle cx="460" cy="89"  r="4" fill="#27ae60"/>
+  <circle cx="530" cy="112" r="4" fill="#e3b341"/>
+  <circle cx="600" cy="178" r="4" fill="#e67e22"/>
+  <circle cx="740" cy="245" r="4" fill="#c0392b"/>
+  <line x1="460" y1="52" x2="460" y2="245" stroke="#856404" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="530" y1="52" x2="530" y2="245" stroke="#c05000" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <line x1="600" y1="52" x2="600" y2="245" stroke="#721c24" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="472" y="106" font-size="9" fill="#856404">1,830 MHz (-7.6%)</text>
+  <text x="542" y="172" font-size="9" fill="#c05000">1,470 MHz (-25.8%)</text>
+  <text x="612" y="215" font-size="9" fill="#721c24">~1,000 MHz (-49.5%)</text>
+  <rect x="75" y="140" width="200" height="90" fill="white" opacity=".9" rx="5" stroke="#ddd"/>
+  <text x="85" y="157" font-size="10" fill="#1c2438" font-weight="700">10,000 GPU Cluster Impact</text>
+  <text x="85" y="173" font-size="9.5" fill="#555">15% throttling at 80&#176;C (air cooling):</text>
+  <text x="85" y="189" font-size="9.5" fill="#721c24" font-weight="600">-387 GPU-equivalents</text>
+  <text x="85" y="205" font-size="9.5" fill="#721c24" font-weight="600">$8.5M/year at $2.50/GPU-hr</text>
+  <text x="85" y="221" font-size="9" fill="#555">Recoverable with DLC</text>
+</svg>
+<figcaption>Figure 5.1 &#8212; H100 SM clock throttling cascade vs. junction temperature. Soft throttle onset at 75&#176;C; hard throttle at 80&#176;C; emergency shutdown at 83&#176;C. At 10,000-GPU scale, 15% soft-throttling costs $8.5M/year in lost capacity.</figcaption>
+</div>
+
+<div class="callout red"><strong>&#9888; The MFU Cost of Thermal Throttling</strong>
+A 10,000-GPU cluster where 15% of GPUs soft-throttle at 25% clock reduction loses 387 GPU-equivalents &#8212; worth <strong>$8.5M/year</strong> at $2.50/GPU-hour. Entirely recoverable with proper cooling. Always check DCGM throttle counters before attributing MFU loss to software.</div>
+
+<h2 id="s52">5.2 Cooling Technologies for AI Infrastructure</h2>
+<h3 id="s521">5.2.1 Thermal Resistance Chain</h3>
+<div class="formula">T_junction = T_ambient + (P_gpu x R_theta_total)
+
+Air cooling  R_theta ~0.07 C/W: DeltaT = 700 x 0.07 = 49 C
+  Required ambient &lt;= 83 - 49 = 34 C  -- dangerously tight
+
+DLC          R_theta ~0.03 C/W: DeltaT = 700 x 0.03 = 21 C
+  Coolant inlet up to 62 C -- comfortable margin</div>
+
+<h3 id="s522">5.2.2 Direct Liquid Cooling (DLC)</h3>
+<p>DLC brings coolant to GPU cold plates directly. With coolant inlet at 45&deg;C: T_j = 45 + (700 &times; 0.02) = <strong>59&deg;C</strong> &#8212; 24&deg;C below soft-throttle. Supports TDP up to 1,500W+, enables 100&#8211;300 kW/rack density, allows waste heat reuse at 55&#8211;65&deg;C outlet. CapEx premium: $50,000&#8211;$200,000+ per CDU.</p>
+
+<h3 id="s523">5.2.3 Cooling Comparison</h3>
+<div class="diagram-wrap">
+<svg viewBox="0 0 760 255" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect width="760" height="255" fill="#fafafa"/>
+  <text x="380" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#1c2438">Cooling Technology Comparison Matrix</text>
+  <rect x="10" y="27" width="158" height="24" fill="#1c2438" rx="2"/>
+  <rect x="176" y="27" width="138" height="24" fill="#2a6099" rx="2"/>
+  <rect x="322" y="27" width="138" height="24" fill="#27ae60" rx="2"/>
+  <rect x="468" y="27" width="138" height="24" fill="#7b2d8b" rx="2"/>
+  <rect x="614" y="27" width="136" height="24" fill="#4a0e8f" rx="2"/>
+  <text x="89"  y="43" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Metric</text>
+  <text x="245" y="43" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Air Cooling</text>
+  <text x="391" y="43" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Direct Liquid (DLC)</text>
+  <text x="537" y="43" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Single-Phase Imm.</text>
+  <text x="682" y="43" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Two-Phase Imm.</text>
+  <g font-size="10.5">
+    <rect x="10" y="51" width="740" height="22" fill="white"/>
+    <text x="20" y="66" font-weight="700" fill="#1c2438">Max GPU TDP</text>
+    <text x="245" y="66" text-anchor="middle" fill="#856404">500W marginal</text>
+    <text x="391" y="66" text-anchor="middle" fill="#155724">1,500W</text>
+    <text x="537" y="66" text-anchor="middle" fill="#155724">2,000W+</text>
+    <text x="682" y="66" text-anchor="middle" fill="#155724">2,000W+</text>
+    <rect x="10" y="73" width="740" height="22" fill="#f8f6f0"/>
+    <text x="20" y="88" font-weight="700" fill="#1c2438">Rack Density</text>
+    <text x="245" y="88" text-anchor="middle">40 kW/rack</text>
+    <text x="391" y="88" text-anchor="middle" fill="#155724">300 kW/rack</text>
+    <text x="537" y="88" text-anchor="middle" fill="#155724">400 kW/rack</text>
+    <text x="682" y="88" text-anchor="middle" fill="#155724">500 kW/rack</text>
+    <rect x="10" y="95" width="740" height="22" fill="white"/>
+    <text x="20" y="110" font-weight="700" fill="#1c2438">PUE Range</text>
+    <text x="245" y="110" text-anchor="middle" fill="#856404">1.20 &#8211; 1.60</text>
+    <text x="391" y="110" text-anchor="middle" fill="#155724">1.03 &#8211; 1.15</text>
+    <text x="537" y="110" text-anchor="middle" fill="#155724">1.02 &#8211; 1.08</text>
+    <text x="682" y="110" text-anchor="middle" fill="#155724">1.01 &#8211; 1.05</text>
+    <rect x="10" y="117" width="740" height="22" fill="#f8f6f0"/>
+    <text x="20" y="132" font-weight="700" fill="#1c2438">CapEx / kW</text>
+    <text x="245" y="132" text-anchor="middle" fill="#155724">$1K&#8211;3K</text>
+    <text x="391" y="132" text-anchor="middle">$5K&#8211;20K</text>
+    <text x="537" y="132" text-anchor="middle" fill="#856404">$15K&#8211;50K</text>
+    <text x="682" y="132" text-anchor="middle" fill="#721c24">$30K&#8211;80K</text>
+    <rect x="10" y="139" width="740" height="22" fill="white"/>
+    <text x="20" y="154" font-weight="700" fill="#1c2438">B200 (1,000W) Viable?</text>
+    <text x="245" y="154" text-anchor="middle" fill="#721c24">&#10007; No</text>
+    <text x="391" y="154" text-anchor="middle" fill="#155724">&#10003; Yes (primary)</text>
+    <text x="537" y="154" text-anchor="middle" fill="#155724">&#10003; Yes</text>
+    <text x="682" y="154" text-anchor="middle" fill="#155724">&#10003; Yes</text>
+    <rect x="10" y="161" width="740" height="22" fill="#f8f6f0"/>
+    <text x="20" y="176" font-weight="700" fill="#1c2438">Maintenance Complexity</text>
+    <text x="245" y="176" text-anchor="middle" fill="#155724">Low</text>
+    <text x="391" y="176" text-anchor="middle">Medium</text>
+    <text x="537" y="176" text-anchor="middle" fill="#856404">High</text>
+    <text x="682" y="176" text-anchor="middle" fill="#721c24">Very High</text>
+    <rect x="10" y="183" width="740" height="22" fill="white"/>
+    <text x="20" y="198" font-weight="700" fill="#1c2438">5-Year Outlook</text>
+    <text x="245" y="198" text-anchor="middle" fill="#856404">Declining</text>
+    <text x="391" y="198" text-anchor="middle" fill="#155724">Dominant</text>
+    <text x="537" y="198" text-anchor="middle">Growing</text>
+    <text x="682" y="198" text-anchor="middle">Pilot Phase</text>
+  </g>
+  <text x="10" y="222" font-size="10" font-weight="700" fill="#1c2438">GPU TDP Evolution:</text>
+  <rect x="10"  y="228" width="40" height="18" fill="#2a6099" rx="2"/><text x="30"  y="241" text-anchor="middle" font-size="8.5" fill="white">V100 300W</text>
+  <rect x="60"  y="224" width="40" height="22" fill="#27ae60" rx="2"/><text x="80"  y="239" text-anchor="middle" font-size="8.5" fill="white">A100 400W</text>
+  <rect x="110" y="218" width="40" height="28" fill="#e3b341" rx="2"/><text x="130" y="236" text-anchor="middle" font-size="8.5" fill="#1c2438">H100 700W</text>
+  <rect x="160" y="210" width="40" height="36" fill="#e67e22" rx="2"/><text x="180" y="232" text-anchor="middle" font-size="8.5" fill="white">B200 1kW</text>
+  <rect x="210" y="200" width="40" height="46" fill="#c0392b" rx="2"/><text x="230" y="228" text-anchor="middle" font-size="8.5" fill="white">GB300 1.2kW</text>
+  <text x="264" y="230" font-size="9.5" fill="#721c24">&#8592; Air cooling insufficient above ~700W at rack density needed for AI</text>
+  <text x="264" y="244" font-size="9.5" fill="#856404">&#8592; DLC mandatory for B200/GB300 production; 8x DGX B200 = 240 kW/rack</text>
+</svg>
+<figcaption>Figure 5.2 &#8212; Cooling technology comparison matrix and GPU TDP trajectory. DLC is the clear choice for H100+ sustained workloads. B200 at 1,000W makes standard air cooling non-viable; rack density reaches 240 kW for a full 8-node DGX B200 configuration.</figcaption>
+</div>
+
+<h2 id="s53">5.3 GPU Power Management &#8212; DVFS and Power States</h2>
+<h3 id="s531">5.3.1 DVFS &#8212; The 1ms Feedback Loop</h3>
+<div class="formula">DVFS FEEDBACK LOOP (every ~1ms on H100):
+  1. Power sensor reads current draw
+  2. Thermal sensor reads junction temp
+  3. If current_power > limit OR T_j > threshold:
+     Reduce V_core by ~5mV, f_core by ~13MHz  (--3% power per step)
+  4. If headroom exists: increase f_core (boost)
+
+Measured sustained SM clocks:
+  Optimal DLC (25C coolant):  1,980 MHz  -- baseline
+  Good DLC (35C coolant):     1,830 MHz  -- -7.6% MFU
+  Air (well-ventilated):      1,650 MHz  -- -16.7% MFU
+  Air (hot aisle, 50C inlet): 1,470 MHz  -- -25.8% MFU
+  Hard throttle (83C T_j):   ~1,000 MHz  -- -49.5% MFU</div>
+
+<div class="callout navy"><strong>&#128161; Sustained Clock &#8800; Advertised Boost Clock</strong>
+H100 boost clock of 1,980 MHz is transient only. Under sustained 700W load, SM clocks stabilize at <strong>1,600&#8211;1,800 MHz</strong> depending on cooling &#8212; a 9&#8211;24% gap never captured in burst benchmarks. Design capacity plans from DCGM sustained measurements, not spec sheets.</div>
+
+<h3 id="s532">5.3.2 P-States</h3>
+<div class="formula">P-State Hierarchy (H100):
+  P0  Maximum Performance:  700W  | Full TDP, max clocks
+  P1  High Performance:     500W  | ~80% max clocks
+  P2  Balanced:             350W  | Moderate clocks
+  P8  Low Power Idle:       125W  | Initialized, not computing
+  P12 Deep Idle:             40W  | Maximum clock gating
+
+P0 &lt;-&gt; P8 transition: 10-50ms latency
+  Inference servers: lock at P0 to avoid TTFT spikes
+  Fleet cost: 100-150W/GPU idle P0 vs P8 -- material at scale</div>
+
+<h3 id="s533">5.3.3 Power Capping</h3>
+<div class="formula">H100 Performance-per-Watt (GEMM, approximate):
+  500W --> 800 TFLOPS  = 1.60 TFLOPS/W  (+13.5% efficiency vs TDP)
+  600W --> 910 TFLOPS  = 1.52 TFLOPS/W  (+7.8% vs TDP)
+  700W --> 989 TFLOPS  = 1.41 TFLOPS/W  (baseline, worst efficiency)
+
+Last 100W of TDP buys only ~9% more performance at 14.3% more power.
+For $/token optimization: 500W may be more profitable than 700W TDP.</div>
+
+<h2 id="s54">5.4 Datacenter Power Infrastructure</h2>
+<h3 id="s541">5.4.1 Power Delivery Chain</h3>
+<div class="formula">Utility (480V AC) --> UPS (96%) --> PDU (98%) --> PSU (94%) --> VRM (90%) --> GPU
+Cumulative: 0.985 x 0.96 x 0.98 x 0.94 x 0.90 = 80.7% efficient
+
+For every 1,000W at the GPU die: 1,239W from the utility grid.
+239W of losses = heat that must also be cooled.</div>
+
+<h3 id="s542">5.4.2 Power Usage Effectiveness (PUE)</h3>
+<div class="formula">PUE = Total Facility Power / IT Equipment Power
+
+Example (10,000 H100 cluster):
+  IT Power:    7,663 kW (GPUs + CPU + network + storage)
+  Overhead:    1,027 kW (DLC + UPS losses + misc)
+  PUE = 8,690 / 7,663 = 1.134
+
+Benchmarks:
+  1.01-1.05  World-class (Google Oregon with waste heat reuse)
+  1.05-1.15  Excellent (modern hyperscaler with DLC)
+  1.20-1.30  Good (modern air-cooled)
+  1.40-1.60  Average enterprise datacenter
+  &gt;2.00     Legacy (half of IT power wasted)
+
+Cost impact: every 0.10 PUE improvement saves ~$3.1M/year (10K GPU, $0.05/kWh)</div>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect width="760" height="230" fill="#fafafa"/>
+  <text x="380" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#1c2438">PUE: IT Power vs. Facility Overhead (10,000 H100 Cluster, 7,663 kW IT)</text>
+  <!-- IT bars (fixed height 80px = 7,663 kW) + overhead (proportional) -->
+  <!-- PUE 2.0: overhead = 7663kW = 80px -->
+  <rect x="60"  y="60"  width="80" height="80" fill="#c0392b" opacity=".75" rx="2"/>
+  <rect x="60"  y="140" width="80" height="80" fill="#1c2438" rx="2"/>
+  <text x="100" y="102" text-anchor="middle" font-size="9" fill="white">Overhead</text>
+  <text x="100" y="114" text-anchor="middle" font-size="9" fill="white">7,663 kW</text>
+  <text x="100" y="177" text-anchor="middle" font-size="9" fill="white">IT 7,663 kW</text>
+  <text x="100" y="210" text-anchor="middle" font-size="10" font-weight="700" fill="#c0392b">PUE 2.0</text>
+  <!-- PUE 1.40: overhead = 0.4 x 80 = 32px -->
+  <rect x="190" y="108" width="80" height="32" fill="#e67e22" opacity=".85" rx="2"/>
+  <rect x="190" y="140" width="80" height="80" fill="#1c2438" rx="2"/>
+  <text x="230" y="127" text-anchor="middle" font-size="9" fill="white">3,065 kW</text>
+  <text x="230" y="177" text-anchor="middle" font-size="9" fill="white">IT 7,663 kW</text>
+  <text x="230" y="210" text-anchor="middle" font-size="10" font-weight="700" fill="#e67e22">PUE 1.40</text>
+  <!-- PUE 1.20: overhead = 0.2 x 80 = 16px -->
+  <rect x="320" y="124" width="80" height="16" fill="#e3b341" opacity=".9" rx="2"/>
+  <rect x="320" y="140" width="80" height="80" fill="#1c2438" rx="2"/>
+  <text x="360" y="135" text-anchor="middle" font-size="9" fill="#1c2438">1,533 kW</text>
+  <text x="360" y="177" text-anchor="middle" font-size="9" fill="white">IT 7,663 kW</text>
+  <text x="360" y="210" text-anchor="middle" font-size="10" font-weight="700" fill="#856404">PUE 1.20</text>
+  <!-- PUE 1.13: overhead = 0.13 x 80 = 10px -->
+  <rect x="450" y="130" width="80" height="10" fill="#27ae60" opacity=".9" rx="2"/>
+  <rect x="450" y="140" width="80" height="80" fill="#1c2438" rx="2"/>
+  <text x="490" y="138" text-anchor="middle" font-size="9" fill="#1c2438">996 kW</text>
+  <text x="490" y="177" text-anchor="middle" font-size="9" fill="white">IT 7,663 kW</text>
+  <text x="490" y="210" text-anchor="middle" font-size="10" font-weight="700" fill="#155724">PUE 1.13 (DLC)</text>
+  <!-- PUE 1.03: overhead = 0.03 x 80 = 2px min 4px -->
+  <rect x="580" y="136" width="80" height="4" fill="#27ae60" opacity=".9" rx="2"/>
+  <rect x="580" y="140" width="80" height="80" fill="#1c2438" rx="2"/>
+  <text x="620" y="133" text-anchor="middle" font-size="9" fill="#155724">230 kW</text>
+  <text x="620" y="177" text-anchor="middle" font-size="9" fill="white">IT 7,663 kW</text>
+  <text x="620" y="210" text-anchor="middle" font-size="9.5" font-weight="700" fill="#155724">PUE 1.03 (Immersion)</text>
+  <!-- Legend -->
+  <rect x="62" y="35" width="10" height="8" fill="#1c2438"/>
+  <text x="76" y="42" font-size="9.5" fill="#333">IT Equipment (fixed)</text>
+  <rect x="195" y="35" width="10" height="8" fill="#e67e22" opacity=".85"/>
+  <text x="209" y="42" font-size="9.5" fill="#333">Cooling + Facility Overhead</text>
+  <text x="440" y="42" font-size="9.5" fill="#155724" font-weight="600">PUE 1.40&#8594;1.13 saves ~$12.5M/year in electricity (10K GPU cluster)</text>
+</svg>
+<figcaption>Figure 5.3 &#8212; PUE visualization for a 10,000 H100 cluster. Moving from PUE 1.40 to 1.13 eliminates 2,069 kW of overhead load, saving ~$9.1M/year in electricity costs and substantially reducing cooling plant capital requirements.</figcaption>
+</div>
+
+<h3 id="s543">5.4.3 Rack Density and Power Infrastructure</h3>
+<table>
+  <tr><th>Generation</th><th>GPU</th><th>TDP</th><th>DGX Node</th><th>8-Node Rack</th><th>Cooling Required</th></tr>
+  <tr><td>Pre-AI (2018)</td><td>V100 <span class="shipped">SHIPPED</span></td><td>300W</td><td>2.4 kW</td><td>19 kW</td><td class="good">Standard air</td></tr>
+  <tr><td>First wave (2021)</td><td>A100 <span class="shipped">SHIPPED</span></td><td>400W</td><td>6.5 kW</td><td>52 kW</td><td class="warn">High-density air</td></tr>
+  <tr><td>Current (2023)</td><td>H100 <span class="shipped">SHIPPED</span></td><td>700W</td><td>10.2 kW</td><td>82 kW</td><td class="warn">DLC recommended</td></tr>
+  <tr><td>Next gen (2025)</td><td>B200 <span class="shipped">SHIPPED</span></td><td>1,000W</td><td>14.3 kW</td><td>115 kW</td><td class="bad">DLC mandatory</td></tr>
+  <tr><td>Future (2026+)</td><td>GB300 <span class="roadmap">ROADMAP</span></td><td>~1,200W+</td><td>~18 kW</td><td>~144 kW</td><td class="bad">DLC + specialized</td></tr>
+</table>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect width="760" height="270" fill="#fafafa"/>
+  <text x="380" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#1c2438">GB200 NVL72 Rack Power Architecture &#8212; 120 kW/Rack</text>
+  <rect x="290" y="28" width="180" height="28" fill="#1c2438" rx="4"/>
+  <text x="380" y="42" text-anchor="middle" font-size="10" fill="white" font-weight="700">Utility: 3-Phase 480V AC</text>
+  <text x="380" y="53" text-anchor="middle" font-size="9" fill="#e3b341">~150 kVA input (PUE ~1.25)</text>
+  <line x1="380" y1="56" x2="380" y2="70" stroke="#1c2438" stroke-width="2"/>
+  <rect x="290" y="70" width="180" height="24" fill="#2a6099" rx="3"/>
+  <text x="380" y="83" text-anchor="middle" font-size="9.5" fill="white">UPS &#8212; N+1 Redundancy, 97% efficient</text>
+  <line x1="380" y1="94" x2="380" y2="106" stroke="#2a6099" stroke-width="2"/>
+  <rect x="130" y="106" width="500" height="18" fill="#7b2d8b" rx="3"/>
+  <text x="380" y="119" text-anchor="middle" font-size="9.5" fill="white" font-weight="700">Overhead Busway &#8212; 480V, 250A/phase &#8594; 120 kW capacity</text>
+  <line x1="240" y1="124" x2="240" y2="138" stroke="#7b2d8b" stroke-width="1.5"/>
+  <line x1="380" y1="124" x2="380" y2="138" stroke="#7b2d8b" stroke-width="1.5"/>
+  <line x1="520" y1="124" x2="520" y2="138" stroke="#7b2d8b" stroke-width="1.5"/>
+  <rect x="174" y="138" width="130" height="24" fill="#e3b341" rx="3"/>
+  <rect x="315" y="138" width="130" height="24" fill="#e3b341" rx="3"/>
+  <rect x="456" y="138" width="130" height="24" fill="#e3b341" rx="3"/>
+  <text x="239" y="151" text-anchor="middle" font-size="9.5" fill="#1c2438" font-weight="700">PDU A &#8212; Redundant 60kW</text>
+  <text x="380" y="151" text-anchor="middle" font-size="9.5" fill="#1c2438" font-weight="700">PDU B &#8212; Primary 60kW</text>
+  <text x="521" y="151" text-anchor="middle" font-size="9.5" fill="#1c2438" font-weight="700">PDU C &#8212; Monitored</text>
+  <line x1="380" y1="162" x2="380" y2="174" stroke="#e3b341" stroke-width="1.5"/>
+  <rect x="100" y="174" width="560" height="24" fill="#27ae60" rx="3" opacity=".9"/>
+  <text x="380" y="187" text-anchor="middle" font-size="9.5" fill="white" font-weight="700">Server PSUs &#8212; Titanium 80+ (96%) &#8212; 48V DC bus distribution</text>
+  <text x="380" y="199" text-anchor="middle" font-size="9" fill="white">72x GB200 GPUs x 1,000W = 72,000W GPU | NVSwitch + CPU + Net ~48,000W</text>
+  <line x1="380" y1="199" x2="380" y2="210" stroke="#27ae60" stroke-width="1.5"/>
+  <g fill="#e8f4f8" stroke="#2a6099" stroke-width=".7">
+    <rect x="22"  y="210" width="72" height="20" rx="2"/><text x="58"  y="224" text-anchor="middle" font-size="8.5" fill="#1c2438">GB200x8</text>
+    <rect x="102" y="210" width="72" height="20" rx="2"/><text x="138" y="224" text-anchor="middle" font-size="8.5" fill="#1c2438">GB200x8</text>
+    <rect x="182" y="210" width="72" height="20" rx="2"/><text x="218" y="224" text-anchor="middle" font-size="8.5" fill="#1c2438">GB200x8</text>
+    <rect x="262" y="210" width="72" height="20" rx="2"/><text x="298" y="224" text-anchor="middle" font-size="8.5" fill="#1c2438">GB200x8</text>
+    <rect x="342" y="210" width="72" height="20" rx="2"/><text x="378" y="224" text-anchor="middle" font-size="8.5" fill="#1c2438">GB200x8</text>
+    <rect x="422" y="210" width="72" height="20" rx="2"/><text x="458" y="224" text-anchor="middle" font-size="8.5" fill="#1c2438">GB200x8</text>
+    <rect x="502" y="210" width="72" height="20" rx="2"/><text x="538" y="224" text-anchor="middle" font-size="8.5" fill="#1c2438">GB200x8</text>
+    <rect x="582" y="210" width="72" height="20" rx="2"/><text x="618" y="224" text-anchor="middle" font-size="8.5" fill="#1c2438">GB200x8</text>
+    <rect x="662" y="210" width="80" height="20" rx="2"/><text x="702" y="224" text-anchor="middle" font-size="8.5" fill="#1c2438">NVSwitch</text>
+  </g>
+  <rect x="22" y="236" width="720" height="26" fill="#1c2438" rx="4"/>
+  <text x="380" y="249" text-anchor="middle" font-size="9.5" fill="white" font-weight="700">DLC Cold Plate Loop &#8212; Cooling Distribution Unit (CDU)</text>
+  <text x="380" y="259" text-anchor="middle" font-size="9" fill="#e3b341">Inlet &#8804;45&#176;C &#8594; Outlet ~60&#176;C | Flow: ~40 L/min | Removes ~90% of GPU heat</text>
+</svg>
+<figcaption>Figure 5.4 &#8212; GB200 NVL72 rack power architecture. 72 GB200 GPUs at 1,000W = 72 kW GPU power; total rack draw reaches 120 kW with NVSwitch, CPU, and networking. Requires 3-phase 480V circuits, overhead busway, and DLC infrastructure. Standard 30 kW enterprise circuits are completely inadequate.</figcaption>
+</div>
+
+<h2 id="s55">5.5 TCO Modeling for AI Infrastructure</h2>
+<h3 id="s551">5.5.1 TCO Formula and 3-Year Breakdown</h3>
+<div class="formula">TCO = CapEx + (Power_kW x PUE x $/kWh x 8,760 x years) + OpEx_other
+
+3-YEAR TCO -- 10,000 GPU H100 Cluster:
+
+CapEx (3yr amortized):
+  GPU hardware (~$30K avg):    $3.0B  -- dominates at 83% of TCO
+  InfiniBand network:            $64M
+  Storage:                       $20M
+  DLC + DC buildout + power:    $95M
+  Total CapEx:                ~$3.18B (amortized: ~$1.06B/year)
+
+Annual OpEx:
+  Power (7,663kW x 1.13 x 8,760 x $0.05):  $34.4M
+  HW maintenance (3% CapEx):                $90.0M
+  Staff (50 FTEs x $180K):                   $9.0M
+  Software licenses + other:                $13.0M
+  Total Annual OpEx:                       ~$146M
+
+3-Year Total: $3.18B + ($146M x 3) = ~$3.62B
+
+Cost/GPU-hour (80% util, 3yr):
+  GPU-hours = 10,000 x 8,760 x 3 x 0.80 = 210M
+  $/GPU-hr  = $3,620M / 210M = ~$17.24 (owned H100)
+
+Compare: Cloud H100 on-demand = $3.50-4.50/GPU-hr
+  Owned infrastructure only beats cloud at &gt;65% sustained utilization</div>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect width="760" height="280" fill="#fafafa"/>
+  <text x="380" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#1c2438">3-Year TCO Waterfall &#8212; 10,000 GPU H100 Cluster</text>
+  <text x="380" y="32" text-anchor="middle" font-size="10" fill="#666">CapEx amortized (3yr) + Annual OpEx x 3 years. Scale: $3B = 240px height.</text>
+  <line x1="60" y1="48" x2="60" y2="240" stroke="#1c2438" stroke-width="1.5"/>
+  <line x1="60" y1="240" x2="720" y2="240" stroke="#1c2438" stroke-width="1.5"/>
+  <line x1="60" y1="200" x2="720" y2="200" stroke="#ddd" stroke-dasharray="3,4"/>
+  <line x1="60" y1="160" x2="720" y2="160" stroke="#ddd" stroke-dasharray="3,4"/>
+  <line x1="60" y1="120" x2="720" y2="120" stroke="#ddd" stroke-dasharray="3,4"/>
+  <line x1="60" y1="80"  x2="720" y2="80"  stroke="#ddd" stroke-dasharray="3,4"/>
+  <text x="54" y="244" text-anchor="end" font-size="9" fill="#555">$0</text>
+  <text x="54" y="204" text-anchor="end" font-size="9" fill="#555">$500M</text>
+  <text x="54" y="164" text-anchor="end" font-size="9" fill="#555">$1B</text>
+  <text x="54" y="124" text-anchor="end" font-size="9" fill="#555">$1.5B</text>
+  <text x="54" y="84"  text-anchor="end" font-size="9" fill="#555">$2B</text>
+  <!-- GPU HW $3B: 240px -->
+  <rect x="75"  y="0"   width="78" height="240" fill="#1c2438" rx="3"/>
+  <text x="114" y="248" text-anchor="middle" font-size="8.5" fill="#555">GPU HW</text>
+  <text x="114" y="258" text-anchor="middle" font-size="8.5" fill="#e3b341">$3,000M</text>
+  <!-- Network $64M: 5px -> show 18px -->
+  <rect x="163" y="222" width="70" height="18" fill="#2a6099" rx="3"/>
+  <text x="198" y="248" text-anchor="middle" font-size="8.5" fill="#555">Network</text>
+  <text x="198" y="258" text-anchor="middle" font-size="8.5" fill="#555">$64M</text>
+  <!-- Storage $20M: min 12px -->
+  <rect x="243" y="228" width="70" height="12" fill="#7b2d8b" rx="3"/>
+  <text x="278" y="248" text-anchor="middle" font-size="8.5" fill="#555">Storage</text>
+  <text x="278" y="258" text-anchor="middle" font-size="8.5" fill="#555">$20M</text>
+  <!-- Infra $95M: min 24px -->
+  <rect x="323" y="216" width="70" height="24" fill="#27ae60" rx="3"/>
+  <text x="358" y="248" text-anchor="middle" font-size="8.5" fill="#555">Infra</text>
+  <text x="358" y="258" text-anchor="middle" font-size="8.5" fill="#555">$95M</text>
+  <!-- 3yr Power $103M: min 25px -->
+  <rect x="403" y="215" width="70" height="25" fill="#e3b341" rx="3"/>
+  <text x="438" y="248" text-anchor="middle" font-size="8.5" fill="#555">Power</text>
+  <text x="438" y="258" text-anchor="middle" font-size="8.5" fill="#855">$103M</text>
+  <!-- 3yr Staff $42M: min 18px -->
+  <rect x="483" y="222" width="70" height="18" fill="#e67e22" rx="3"/>
+  <text x="518" y="248" text-anchor="middle" font-size="8.5" fill="#555">Staff/SW</text>
+  <text x="518" y="258" text-anchor="middle" font-size="8.5" fill="#555">$42M</text>
+  <!-- 3yr HW Maint $270M: 22px -->
+  <rect x="563" y="218" width="70" height="22" fill="#c0392b" rx="3"/>
+  <text x="598" y="248" text-anchor="middle" font-size="8.5" fill="#555">HW Maint</text>
+  <text x="598" y="258" text-anchor="middle" font-size="8.5" fill="#555">$270M</text>
+  <text x="380" y="270" text-anchor="middle" font-size="10" fill="#721c24" font-weight="700">GPU hardware = ~83% of 3-yr TCO | Power = ~2.8% | $/GPU-hr ~$17.24 at 80% util</text>
+</svg>
+<figcaption>Figure 5.5 &#8212; 3-year TCO waterfall. GPU hardware overwhelmingly dominates at ~83% of total cost. Power, while $34M/year, is only ~2.8% of TCO at current H100 prices &#8212; but this ratio rises to 10&#8211;15% as GPU costs fall in future generations.</figcaption>
+</div>
+
+<h3 id="s552">5.5.2 $/Token &#8212; The True Production Cost Metric</h3>
+<div class="formula">$/token = GPU_cost_per_hour / (tokens_per_second x 3,600)
+
+Optimization impact (H100, LLaMA-3 70B, $0.05/kWh, PUE 1.13):
+
+Configuration           Throughput    $/1M tokens  Saving
+----------------------------------------------------------
+BF16 baseline           1,200 tok/s   $0.0092       --
+FP8 quantization        2,000 tok/s   $0.0055      -40%
+INT4 quantization       3,500 tok/s   $0.0032      -65%
++ Power cap 550W        3,500 tok/s   $0.0025      -73%
++ Flash Attention v3    4,200 tok/s   $0.0020      -78%
+
+At 100B tokens/month, 10,000 GPUs:
+  BF16:          $9.2B/month total power cost
+  Fully opt.:    $2.0B/month total power cost
+  Monthly saving: $7.2B -- entirely from software optimization</div>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 Z" fill="#e3b341"/>
+    </marker>
+  </defs>
+  <rect width="760" height="200" fill="#fafafa"/>
+  <text x="380" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#1c2438">$/Token Cost Flow: GPU Cost &#8594; Utilization &#8594; Throughput &#8594; $/1M Tokens</text>
+  <rect x="20"  y="35" width="145" height="80" fill="#1c2438" rx="5"/>
+  <text x="93"  y="54"  text-anchor="middle" font-size="10" font-weight="700" fill="#e3b341">GPU Cost/hr</text>
+  <text x="93"  y="70"  text-anchor="middle" font-size="9.5" fill="white">Owned H100: ~$1.66</text>
+  <text x="93"  y="84"  text-anchor="middle" font-size="9.5" fill="white">Cloud H100: ~$3.50</text>
+  <text x="93"  y="98"  text-anchor="middle" font-size="9.5" fill="white">Spot H100:  ~$1.40</text>
+  <line x1="165" y1="75" x2="192" y2="75" stroke="#e3b341" stroke-width="2" marker-end="url(#arr2)"/>
+  <rect x="192" y="35" width="145" height="80" fill="#2a6099" rx="5"/>
+  <text x="265" y="54"  text-anchor="middle" font-size="10" font-weight="700" fill="#e3b341">Utilization</text>
+  <text x="265" y="70"  text-anchor="middle" font-size="9.5" fill="white">Target: &gt;70%</text>
+  <text x="265" y="84"  text-anchor="middle" font-size="9.5" fill="white">Breakeven: ~65%</text>
+  <text x="265" y="98"  text-anchor="middle" font-size="9.5" fill="white">&lt;30%: rent cloud</text>
+  <line x1="337" y1="75" x2="364" y2="75" stroke="#e3b341" stroke-width="2" marker-end="url(#arr2)"/>
+  <rect x="364" y="35" width="165" height="80" fill="#27ae60" rx="5"/>
+  <text x="447" y="54"  text-anchor="middle" font-size="10" font-weight="700" fill="white">Throughput (tok/s)</text>
+  <text x="447" y="70"  text-anchor="middle" font-size="9.5" fill="white">BF16:  1,200 tok/s</text>
+  <text x="447" y="84"  text-anchor="middle" font-size="9.5" fill="white">FP8:   2,000 tok/s</text>
+  <text x="447" y="98"  text-anchor="middle" font-size="9.5" fill="white">INT4+: 4,200 tok/s</text>
+  <line x1="529" y1="75" x2="556" y2="75" stroke="#e3b341" stroke-width="2" marker-end="url(#arr2)"/>
+  <rect x="556" y="25" width="185" height="100" fill="#c0392b" rx="5"/>
+  <text x="649" y="46"  text-anchor="middle" font-size="11" font-weight="700" fill="white">$/Million Tokens</text>
+  <text x="649" y="64"  text-anchor="middle" font-size="10" fill="white">BF16:     $0.0092</text>
+  <text x="649" y="80"  text-anchor="middle" font-size="10" fill="white">FP8:      $0.0055  -40%</text>
+  <text x="649" y="96"  text-anchor="middle" font-size="10" fill="white">INT4+FA3: $0.0020  -78%</text>
+  <text x="649" y="116" text-anchor="middle" font-size="9"   fill="#fcc">power component</text>
+  <rect x="20" y="140" width="720" height="32" fill="#1c2438" rx="5"/>
+  <text x="380" y="156" text-anchor="middle" font-size="11" fill="#e3b341" font-weight="700">$/token = GPU_cost_per_hour / (tokens_per_second x 3,600)</text>
+  <text x="380" y="168" text-anchor="middle" font-size="9.5" fill="#b8ddf0">cost_per_hour includes: hardware amortization + power + cooling + ops staff</text>
+  <text x="380" y="192" text-anchor="middle" font-size="10" fill="#721c24" font-weight="700">At ChatGPT-scale (100B tok/month, 10K GPUs): BF16&#8594;optimized saves $7.2M/month in power alone</text>
+</svg>
+<figcaption>Figure 5.6 &#8212; $/token cost flow. The optimization stack (FP8 &#8594; INT4 &#8594; FlashAttention v3 &#8594; power cap) achieves a 78% cost reduction without changing hardware. At production scale, software optimization is the highest-ROI activity in AI infrastructure.</figcaption>
+</div>
+
+<div class="worked">
+<div class="worked-label">Worked Example 5.1</div>
+<h4>DLC vs. Air Cooling &#8212; True ROI Beyond Electricity Savings</h4>
+<p><strong>Problem:</strong> Air (PUE 1.35) vs. DLC (PUE 1.10). DLC premium: $25M. At $0.05/kWh, when does DLC pay back &#8212; and what changes when MFU recovery is included?</p>
+<div class="formula">Step 1: Annual electricity -- Air (PUE 1.35)
+  Facility power = 7,663 kW x 1.35 = 10,345 kW
+  Annual cost    = 10,345 x 8,760 x $0.05 = $4.53M/year
+
+Step 2: Annual electricity -- DLC (PUE 1.10)
+  Facility power = 7,663 kW x 1.10 = 8,429 kW
+  Annual cost    = 8,429 x 8,760 x $0.05 = $3.69M/year
+
+Step 3: Electricity savings = $4.53M - $3.69M = $0.84M/year
+  Payback from electricity alone: $25M / $0.84M = 29.8 years  ← Not viable!
+
+Step 4: Include MFU recovery (conservative: 15% GPUs throttle at 10% loss)
+  Lost capacity = 1,500 GPUs x 10% = 150 GPU-equivalents
+  At $2.50/GPU-hr: 150 x 8,760 x $2.50 = $3.29M/year recovered
+  (Aggressive: 15% at 25.8% loss = $8.5M/year recovered)
+
+Step 5: Combined payback
+  Conservative: $25M / ($0.84M + $3.29M) = 6.1 years
+  Moderate:     $25M / ($0.84M + $8.50M) = 2.7 years  GOOD ROI
+
+Principal Lesson: DLC ROI is driven by performance recovery (MFU),
+NOT electricity savings alone. Pitch DLC on recovered GPU-hours,
+not on the power bill. The electricity saving is a rounding error.</div>
+</div>
+
+<h3 id="s553">5.5.3 Build vs. Buy vs. Rent</h3>
+<div class="formula">PROCUREMENT DECISION FRAMEWORK:
+
+Step 1 -- Utilization:
+  &lt; 30%?   RENT cloud on-demand/spot
+  30-60%?  HYBRID reserved cloud + spot
+  &gt; 60%?   BUY on-premise or colo
+
+Step 2 -- Timeline:
+  &lt; 3 months: RENT (GPU lead times 6-18 months)
+  &gt; 6 months: BUY viable
+
+Step 3 -- Breakeven:
+  Cloud H100 (1yr reserved): ~$2.50-3.00/GPU-hr
+  Owned H100 (80% util, 3yr): ~$1.50-2.50/GPU-hr
+  Breakeven utilization: ~65-70%
+
+Step 4 -- TCO risk factors:
+  GPU cycle: new generation every ~2 years (vs 3yr depreciation)
+  Power rate: $0.01/kWh change = ~$6.1M/year (10K cluster)
+  Cooling retrofit: $1,000-5,000/kW for legacy facilities
+  Ops: on-prem 40-80 FTEs vs cloud 10-20 FTEs</div>
+
+<h2 id="s56">5.6 Thermal Monitoring &#8212; Profiling Cookbook</h2>
+<div class="cookbook">
+<div class="cookbook-label">&#128295; PROFILING COOKBOOK &#8212; Thermal &amp; Power Diagnostics</div>
+<pre>
+WHAT TO MEASURE FIRST:
+  DCGM field 203 (GPU_TEMP)        alert: &gt;78 C
+  DCGM field 204 (MEM_TEMP)        alert: &gt;90 C
+  DCGM field 155 (SM_CLOCK)        detects throttling in real time
+  DCGM field 240 (THROTTLE_REASON) non-zero = active throttle event
+  DCGM field 112 (POWER_DRAW)      compare to configured power limit
+
+COMMANDS:
+  # Quick check -- all GPUs
+  nvidia-smi --query-gpu=index,temperature.gpu,power.draw,clocks.sm,
+    clocks_throttle_reasons.hw_slowdown,clocks_throttle_reasons.sw_thermal_slowdown
+    --format=csv,noheader
+
+  # Find throttling GPUs immediately
+  nvidia-smi --query-gpu=index,temperature.gpu,
+    clocks_throttle_reasons.hw_slowdown,clocks_throttle_reasons.sw_thermal_slowdown,
+    power.draw --format=csv,noheader |
+    awk -F',' '$3=="Yes" || $4=="Yes" {print "THROTTLE:",$0}'
+
+  # DCGM real-time monitor (production clusters)
+  dcgmi dmon -e 203,204,155,156,112,240
+
+  # Prometheus/Grafana exporter
+  dcgm-exporter &amp;
+  # Exposes: DCGM_FI_DEV_GPU_TEMP, DCGM_FI_DEV_SM_CLOCK,
+  #          DCGM_FI_DEV_POWER_USAGE, DCGM_FI_DEV_THROTTLE_REASON
+
+  # Set power cap
+  nvidia-smi --power-limit=600        # All GPUs
+  nvidia-smi -i 3 --power-limit=550   # Single GPU index 3
+
+DECISION TREE when GPU_TEMP &gt; 78 C:
+  Check inlet temp (IPMI):
+    Inlet &gt;35 C?  YES: Facility issue (CRAC/CDU failure, hot aisle containment)
+                  NO:  Server issue (fan RPM, DLC flow rate, TIM degradation)
+  Can resolve in &lt;30 min?
+    YES: Monitor at 5-min intervals
+    NO:  IMMEDIATE: power-cap to 500W, drain workloads gracefully
+         Training: trigger async checkpoint NOW
+         Inference: remove from load balancer, reduce batch size
+
+MFU drops 15-30% with no code change?
+  Check SM_CLOCK via DCGM -- below expected?
+  YES: check THROTTLE_REASONS (thermal or power limit)
+  Check NVSwitch temp: &gt;90 C causes fabric BW drop 30-50%
+  Check NVLink error counters + board BMC temperature
+</pre>
+</div>
+
+<h2 id="s57">5.7 Thermal Considerations in System Design</h2>
+<h3>5.7.1 Thermal-Aware Job Scheduling</h3>
+<div class="formula">THERMAL-AWARE SCHEDULING (SLURM + DCGM):
+  thermal_score(node) = 1.0 - (T_j - T_nominal) / (T_max - T_nominal)
+  placement_score = 0.7 x utilization_score + 0.3 x thermal_score
+  Avoid placement if T_j &gt; 76 C
+  Result: throttling events reduced ~40-60% across cluster
+  (Meta MWFS, Google Borg, NVIDIA Base Command Manager)</div>
+
+<h3>5.7.2 Batch Size and Thermal Load</h3>
+<div class="formula">Decode phase thermal profile:
+  Batch=1:    ~400-450W | T_j ~55-60 C | no throttling
+  Batch=32:   ~550-600W | T_j ~68-72 C | mild risk
+  Batch=128:  ~650-700W | T_j ~78-83 C | guaranteed throttle in air
+
+Prefill is always compute-bound regardless of sequence length.
+Power draws near TDP within 30-60 seconds of sustained prefill.
+
+Thermal governor pattern:
+  if T_j &gt; 76 C: reduce max_batch_size by 20%
+  Prevents throttle-thrash cycles, stabilizes production MFU.</div>
+
+<h2 id="s58">5.8 The Green AI Imperative</h2>
+<div class="formula">ENERGY: Notable AI Training Runs
+  GPT-3 (175B):    ~1K A100,  ~34 days,  ~1,060 MWh
+  LLaMA-3 (405B): ~16K H100, ~56 days, ~50,200 MWh
+  Frontier model: ~100K H100, ~90 days, ~504,000 MWh
+
+504,000 MWh = annual electricity for ~47,000 US homes
+CO2 (US grid 0.386 kg/kWh): frontier = 194,544 tonnes
+
+Performance optimization IS sustainability optimization.
+INT4 quantization: -65% $/token = -65% CO2/token (same metric, different units).</div>
+
+<div class="callout green"><strong>&#127807; Engineering Excellence = Sustainability</strong>
+Every throughput optimization halves the energy footprint at the same time it halves the cost. Performance engineering and sustainability engineering are the same discipline measured in different units. The engineer who achieves 2x throughput for the same hardware has also halved the carbon footprint.</div>
+
+<div class="qref" id="qr">
+<h4>&#9889; Power &amp; Thermal Quick Reference &#8212; Know These Cold</h4>
+<pre>
+GPU TDP:
+  H100 SXM5:  700W (SXM)  | 350W (PCIe)   [SHIPPED]
+  H200 SXM:   700W (same TDP, 2x HBM BW)  [SHIPPED]
+  B200 SXM:   1,000W -- DLC mandatory      [SHIPPED]
+  MI300X AMD: 750W                         [SHIPPED]
+  GB300:      ~1,200W+                     [ROADMAP]
+
+Thermal Limits (H100):
+  T_j operational max: 83 C | Soft throttle: ~75 C | Hard: ~80 C
+  HBM max: ~95 C | HBM throttle onset: ~88 C
+
+Cooling PUE:
+  Air:          1.20-1.60 | Rear-door HX: 1.15-1.25
+  DLC:          1.03-1.15 | Two-phase:    1.01-1.05
+
+TCO Rules (10K H100, $0.05/kWh):
+  Annual power cost:        ~$34M/yr
+  GPU amortization (3yr):   ~$1.0B/yr
+  Power % of TCO:           ~3% (rises 10-15% as GPU prices fall)
+  Each 0.10 PUE improvement: ~$3.1M/yr savings
+  $0.01/kWh rate change:     ~$6.1M/yr impact
+
+Performance-per-Watt (LLaMA-3 70B FP8):
+  A100: 2.75 tok/s/W | H100: 3.14 tok/s/W
+  H200: 4.43 tok/s/W | B200: 6.80 tok/s/W
+
+Power Capping Sweet Spots (H100):
+  500W: 1.60 TFLOPS/W  +13.5% efficiency vs TDP
+  600W: 1.52 TFLOPS/W   +7.8% efficiency vs TDP
+  700W: 1.41 TFLOPS/W   baseline (worst efficiency)
+</pre>
+</div>
+
+<div class="takeaways" id="takeaways">
+  <h3>Key Takeaways &#8212; Chapter 5</h3>
+  <div class="takeaway-group">
+    <div class="tg-label">Core Concepts</div>
+    <ul>
+      <li>GPU power follows P = &#945;CV&#178;f; DVFS controls V and f together &#8212; reducing V by 10% cuts dynamic power by ~19% (quadratic), not 10% (linear). This is the physics behind every power optimization.</li>
+      <li>Thermal resistance governs sustainable performance: T_j = T_ambient + (P &#215; R_theta). Air cooling at 700W leaves only a 1&#176;C margin in a standard hot aisle &#8212; any ambient temperature spike triggers throttling.</li>
+      <li>PUE = Total Facility Power / IT Power. Every 0.10 PUE improvement on a 10,000-GPU cluster saves ~$3.1M/year. DLC enables PUE 1.03&#8211;1.15 vs. air cooling's 1.20&#8211;1.60.</li>
+      <li>H100 advertised boost clock (1,980 MHz) is transient. Sustained frequency under 700W load is 1,600&#8211;1,800 MHz &#8212; a 9&#8211;19% gap that burst benchmarks never capture. Always plan from sustained DCGM measurements.</li>
+    </ul>
+  </div>
+  <div class="takeaway-group">
+    <div class="tg-label">Cost &amp; Productivity Impact</div>
+    <ul>
+      <li>15% of GPUs throttling at 25% clock reduction on a 10,000-GPU cluster wastes 387 GPU-equivalents &#8212; $8.5M/year at $2.50/GPU-hr. DLC eliminates this entirely; the MFU recovery is the real DLC ROI, not the electricity bill.</li>
+      <li>FP8 reduces $/token 40% vs. BF16; the full stack (INT4 + FlashAttention v3 + power cap) achieves 78% cost reduction &#8212; saving $7.2M/month per 10,000 GPUs at ChatGPT-scale with zero hardware changes.</li>
+      <li>Power capping H100 at 500W vs. 700W improves TFLOPS/W by 13.5%. For cloud providers optimizing margin, lower absolute power may yield higher $/token efficiency despite lower raw throughput.</li>
+    </ul>
+  </div>
+  <div class="takeaway-group">
+    <div class="tg-label">Principal-Level Insight</div>
+    <ul>
+      <li>DLC payback from electricity savings alone takes ~30 years at $0.05/kWh. With MFU recovery included (conservative), payback drops to 2&#8211;6 years. Never pitch DLC on power savings &#8212; always pitch it on recovered GPU-hours and eliminated throttle events.</li>
+      <li>The $/token formula is the correct optimization target, not raw TFLOPS. It integrates utilization, quantization, power state, and cooling into one metric that aligns hardware, software, and business objectives simultaneously.</li>
+      <li>Owned vs. cloud breakeven (~65&#8211;70% utilization) is dominated by GPU amortization, not power. For frontier model companies at 90%+ utilization, owned infrastructure wins by 2&#8211;3&#215; on $/GPU-hr. For product companies with bursty demand, cloud spot remains superior regardless of at-scale economics.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="review-questions" id="review">
+  <h3>Review Questions</h3>
+  <div class="rq-tier foundational">
+    <div class="rq-tier-label"><span class="rq-badge">Foundational</span>Build the mental model &#8212; no math required</div>
+    <ol>
+      <li>Explain why a GPU running at 82&#176;C junction temperature is a performance problem, not just a hardware reliability concern. What mechanism connects temperature directly to computational throughput?</li>
+      <li>A datacenter engineer says "our air-cooled facility has PUE 1.35, better than the industry average." Why does this statement, while accurate, miss the most critical constraint for a B200-class AI cluster?</li>
+      <li>Why does an H100 GPU still draw 100&#8211;150W at idle with no active workloads? Trace this back to the physics of CMOS transistors at 4nm process nodes.</li>
+    </ol>
+  </div>
+  <div class="rq-tier intermediate">
+    <div class="rq-tier-label"><span class="rq-badge">Intermediate</span>Apply and calculate &#8212; production context</div>
+    <ol>
+      <li>H100 GPUs at batch=64 run at 700W and 82&#176;C with occasional throttling (SM clock ~1,470 MHz). At batch=48 they run at 580W and 72&#176;C with zero throttling but 15% lower throughput. Calculate which configuration has lower cost per token using chapter numbers at $0.05/kWh, PUE 1.13.</li>
+      <li>A 5,000-GPU H100 cluster has PUE 1.40 with air cooling. Calculate: (a) annual electricity cost at $0.06/kWh, (b) annual cost at PUE 1.10 with DLC, (c) years to recoup a $12M DLC installation from electricity savings alone, (d) GPU-equivalents lost if 20% of GPUs throttle to 1,470 MHz.</li>
+      <li>Using T_j = T_ambient + (P &#215; R_theta), with H100 SXM at R_theta 0.07&#176;C/W, inlet air at 38&#176;C, GPU at 700W: calculate T_j, identify the throttle zone, and state the expected SM clock and MFU impact from the chapter's measured data.</li>
+    </ol>
+  </div>
+  <div class="rq-tier principal">
+    <div class="rq-tier-label"><span class="rq-badge">Principal Level</span>Design, decide, and defend &#8212; architecture reviews</div>
+    <ol>
+      <li><strong>System Design:</strong> Architect a 20,000 B200 GPU cluster for frontier model training at $0.07/kWh. Design the complete thermal and power stack from first principles: rack layout, cooling technology, PDU architecture, substation sizing, and PUE target. Quantify the 5-year TCO delta between your optimal design and a "ship it fast" air-cooled alternative. Name the three largest risk factors and your mitigation for each.</li>
+      <li><strong>Tradeoff Analysis:</strong> Your company owns 8,000 H100s on-prem in an air-cooled facility limited to 30 kW/rack at PUE 1.35. Evaluate: (a) upgrade to B200, (b) add more H100s, or (c) shift variable workloads to cloud spot. Build the quantitative decision framework: TCO per token for each option, cooling infrastructure requirements, timeline constraints, and the utilization rate at which each option dominates.</li>
+      <li><strong>Performance Incident:</strong> During a 30-day LLaMA-4 pre-training run on 12,000 H100s, average MFU drops from 42% to 31% on Day 8. GPU temperatures are nominal (72&#8211;76&#176;C). NVLink error counters are unchanged. SM clocks look stable. Power draw is 660W vs. expected 700W. Walk through your complete diagnostic process, name three likely root causes given these symptoms, and describe the specific DCGM metrics that would definitively distinguish between them.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="ch-end">
+  &#10022; End of Chapter 5 &#10022; &nbsp;&middot;&nbsp;
+  Next: <a href="ch06.html" style="color:#e3b341;text-decoration:none">Chapter 6 &#8212; Inference System Architecture</a>
+  &nbsp;&middot;&nbsp; AI/ML Infrastructure from Silicon to Scale &#8212; Venkat Vinjam
+</div>
+
+</div><!-- .page -->
+</body>
+</html>
