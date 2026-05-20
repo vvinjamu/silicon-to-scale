@@ -21,11 +21,11 @@ body{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.
 #nav a{color:#ccc;text-decoration:none;font-family:sans-serif;font-size:10.5px;padding:3px 9px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.08)}
 #nav a:hover{background:#e3b341;color:#1c2438;font-weight:700}
 #nav .home{color:#e3b341;border-color:#e3b341}
-#sidebar{position:fixed;top:48px;left:0;width:200px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
+#sidebar{position:fixed;top:48px;left:0;width:210px;height:calc(100vh - 48px);overflow-y:auto;background:#f5f3ec;border-right:1px solid #ddd;padding:16px 0;font-family:sans-serif;font-size:10.5px}
 #sidebar h4{color:#e3b341;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;padding:8px 14px 4px;border-bottom:1px solid #e0ddd5;margin-bottom:4px}
 #sidebar a{display:block;padding:4px 14px;color:#444;text-decoration:none;border-left:2px solid transparent;line-height:1.4}
 #sidebar a:hover{background:#ece9e0;border-left-color:#e3b341;color:#1c2438}
-.page{max-width:830px;margin:0 auto 0 216px;padding:42px 52px}
+.page{max-width:830px;margin:0 auto 0 226px;padding:42px 52px}
 .ch-label{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#e3b341;margin-bottom:7px}
 .ch-title{font-size:30px;font-weight:900;color:#1c2438;line-height:1.15;margin-bottom:9px}
 .ch-subtitle{font-size:13px;color:#555;font-style:italic;margin-bottom:14px;line-height:1.5}
@@ -44,6 +44,7 @@ strong{color:#1c2438}
 .callout.green{border-color:#27ae60;background:#f0fff5}
 .callout.gray{border-color:#777;background:#f8f8f8}
 .callout.navy{border-color:#1c2438;background:#f0f3f8}
+.callout.purple{border-color:#7b2d8b;background:#f8f0ff}
 .callout strong{display:block;margin-bottom:4px}
 .formula{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;white-space:pre;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .code-block{background:#0d1117;color:#b8ddf0;padding:13px 17px;border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;margin:14px 0;overflow-x:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -59,17 +60,11 @@ blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-styl
 .diagram-wrap{margin:28px 0;border:1px solid #d8d4c8;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .diagram-wrap svg{display:block;width:100%;height:auto}
 .diagram-wrap figcaption{background:#f5f3ec;border-top:1px solid #e0ddd5;padding:8px 16px;font-family:sans-serif;font-size:10.5px;color:#555;font-style:italic}
-.mem-tier{border:1px solid #d8d4c8;border-radius:6px;padding:12px 16px;margin:8px 0;display:flex;align-items:flex-start;gap:14px}
-.mem-tier-badge{min-width:64px;text-align:center;font-family:sans-serif;font-weight:700;font-size:11px;border-radius:4px;padding:6px 4px;color:#fff;flex-shrink:0}
-.mem-tier-body{flex:1}
-.mem-tier-body h4{margin:0 0 4px;font-style:normal;font-size:13px}
-.mem-tier-body p{margin:0;font-size:12px;color:#444;line-height:1.5}
 .ch-end{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e0ddd5;font-family:sans-serif;font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase}
 .review-q{counter-reset:rq}
 .review-q li{counter-increment:rq;margin-bottom:16px;padding-left:4px}
 .review-q li::marker{color:#e3b341;font-weight:700}
 .fa-ver{display:inline-block;background:#1c2438;color:#e3b341;font-family:sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
-
 .takeaways{background:#f3f5f8;border:2px solid #1c2438;border-radius:9px;padding:18px 22px;margin:32px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .takeaways h3{color:#1c2438;margin:0 0 14px;font-size:15px;border:none;padding:0}
 .takeaway-group{margin-bottom:14px}.takeaway-group:last-child{margin-bottom:0}
@@ -98,6 +93,14 @@ blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-styl
 .shipped{display:inline-block;background:#d4edda;color:#155724;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px}
 .announced{display:inline-block;background:#fff3cd;color:#856404;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px}
 .roadmap{display:inline-block;background:#e2d9f3;color:#4a0e8f;font-family:sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px}
+.part-banner{background:linear-gradient(135deg,#f0f3f8,#e8ecf4);border:1px solid #c5cfe0;border-left:5px solid #1c2438;border-radius:0 8px 8px 0;padding:14px 20px;margin:36px 0 28px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.part-banner .part-label{font-family:sans-serif;font-size:9.5px;color:#e3b341;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;font-weight:700}
+.part-banner .part-title{font-size:16px;color:#1c2438;font-weight:700;margin-bottom:4px}
+.part-banner .part-desc{font-size:12px;color:#555;font-style:italic}
+.fwd-bwd-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.fwd-bwd-card{background:#f8f6f0;border:1px solid #d8d4c8;border-radius:6px;padding:12px 14px}
+.fwd-bwd-card h4{margin:0 0 6px;font-style:normal;font-size:12px;color:#1c2438}
+.fwd-bwd-card ul{margin-left:14px}.fwd-bwd-card li{font-size:11.5px;margin-bottom:3px;color:#333}
 </style>
 </head>
 <body>
@@ -106,13 +109,14 @@ blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-styl
   <a href="#s21">2.1 Why Engineers Must Know Transformers</a>
   <a href="#s22">2.2 Attention as Matrix Multiply</a>
   <a href="#s23">2.3 Multi-Head Attention</a>
-  <a href="#s24">2.4 Attention Visualization</a>
+  <a href="#s24">2.4 Encoder-Decoder vs Decoder-Only</a>
   <a href="#s25">2.5 RMSNorm vs LayerNorm</a>
-  <a href="#s26">2.6 RoPE and Positional Encoding</a>
+  <a href="#s26">2.6 RoPE &amp; Positional Encoding</a>
   <a href="#s27">2.7 FFN and Activation Bottleneck</a>
   <a href="#s28">2.8 Complete FLOP Budget</a>
-  <a href="#s29">2.9 Decoder vs Encoder-Decoder</a>
+  <a href="#s29">2.9 Forward &amp; Backward Pass Memory</a>
   <a href="#s210">2.10 GQA, MQA, MLA, MoE</a>
+  <a href="#s211">2.11 Attention Math Reference</a>
   <a href="#diagrams">Diagrams</a>
   <a href="#takeaways">Key Takeaways</a>
   <a href="#review">Review Questions</a>
@@ -120,8 +124,8 @@ blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-styl
 <div class="page">
 <div class="ch-label">Part I · Chapter 2</div>
 <h1 class="ch-title">Transformer Architecture: A Performance Engineer's Deep Dive</h1>
-<div class="ch-subtitle">Attention, normalization, positional encoding — seen as memory and compute problems</div>
-<div class="ch-meta"><strong>Book:</strong> AI/ML Infrastructure from Silicon to Scale &nbsp;|&nbsp; <strong>Author:</strong> Venkat Vinjam &nbsp;|&nbsp; <strong>Cross-ref:</strong> <span class="xref">Ch 4: FlashAttention</span> <span class="xref">Ch 6: KV cache serving</span> <span class="xref">Ch 11: KV paging</span></div>
+<div class="ch-subtitle">Attention, normalization, positional encoding — seen as memory and compute problems. Every formula derived from first principles, every number checkable against LLaMA-3 70B.</div>
+<div class="ch-meta"><strong>Book:</strong> AI/ML Infrastructure from Silicon to Scale &nbsp;|&nbsp; <strong>Author:</strong> Venkat Vinjam &nbsp;|&nbsp; <strong>Cross-ref:</strong> <span class="xref">Ch 4: FlashAttention</span> <span class="xref">Ch 6: KV cache serving</span> <span class="xref">Ch 11: KV paging</span> <span class="xref">Ch 13: MoE routing</span></div>
 <div class="ch-divider"></div>
 
 <blockquote>"The transformer is not an algorithm. It is a data movement problem wearing an algorithm's clothes. Every optimization in LLM infrastructure is an optimization for how we move Q, K, V, and the weight matrices through the memory hierarchy."
@@ -131,9 +135,9 @@ blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-styl
 
 <div class="objectives"><h4>Learning Objectives</h4>
 <ul>
-<li><strong>Level 1:</strong> Explain what attention is doing computationally and why transformers replaced RNNs for language modeling</li>
-<li><strong>Level 2:</strong> Compute exact FLOPs and memory for any transformer configuration; classify each operation by arithmetic intensity and regime</li>
-<li><strong>Level 3:</strong> Reason about architecture choices (GQA vs MHA, MLA vs GQA, MoE sparsity) as infrastructure engineering decisions with quantified cost consequences</li>
+<li><strong>Level 1:</strong> Explain what attention is doing computationally and why transformers replaced RNNs; distinguish encoder-decoder from decoder-only architectures and their system implications</li>
+<li><strong>Level 2:</strong> Compute exact FLOPs and memory for any transformer configuration; derive KV cache sizes; classify each operation by arithmetic intensity and performance regime</li>
+<li><strong>Level 3:</strong> Reason about architecture choices (GQA vs MHA vs MLA, MoE sparsity) as infrastructure engineering decisions with quantified cost; analyze forward and backward pass memory at every stage for training system design</li>
 </ul></div>
 
 <h2 id="s21">2.1 Why Performance Engineers Must Understand Transformers</h2>
@@ -141,32 +145,63 @@ blockquote cite{display:block;margin-top:6px;font-size:11px;color:#777;font-styl
 
 <div class="callout navy"><strong>What you must be able to derive from a model card:</strong> (1) total parameter count and memory in any precision, (2) FLOPs per token for prefill vs decode, (3) KV cache bytes per token per request, (4) arithmetic intensity of each operation class, (5) which operations are compute- vs memory-bound at each batch size — before running a single experiment.</div>
 
+<p>The transformer's dominance traces to a single insight: replace recurrence with attention. RNNs process tokens serially — O(S) sequential steps, no parallelism. Transformers compute all-to-all attention in a single parallel operation, enabling massive GPU utilization during training. The cost is O(S²) attention complexity — the quadratic wall that every long-context system must engineer around.</p>
+
 <h2 id="s22">2.2 Attention as Matrix Multiplication: The FLOP and Memory Breakdown</h2>
 <p>Scaled dot-product attention computes: <strong>Attention(Q, K, V) = softmax(QK<sup>T</sup> / √d_k) × V</strong>. For a performance engineer, this is two matrix multiplies (QK<sup>T</sup> and Attn×V) separated by a softmax with specific memory access patterns.</p>
 
-<div class="formula">ATTENTION FLOP ANALYSIS — single head, single layer:
+<div class="formula">SCALED DOT-PRODUCT ATTENTION — step-by-step derivation:
+
+  Input: X ∈ R^{S × d_model}   (S tokens, d_model dimensions)
+  
+  Step 1 — Project to Q, K, V:
+    Q = X · W_Q    W_Q ∈ R^{d_model × d_head}    → Q ∈ R^{S × d_head}
+    K = X · W_K    W_K ∈ R^{d_model × d_head}    → K ∈ R^{S × d_head}
+    V = X · W_V    W_V ∈ R^{d_model × d_head}    → V ∈ R^{S × d_head}
+
+  Step 2 — Compute attention scores:
+    S_matrix = Q · K^T / √d_k    → R^{S × S}     ← THE QUADRATIC TERM
+
+  Step 3 — Causal mask (decoder-only):
+    M[i,j] = 0 if j ≤ i,  -inf if j > i   → position i cannot see future tokens
+
+  Step 4 — Softmax:
+    A = softmax(S_matrix + M)               → R^{S × S},  each row sums to 1
+
+  Step 5 — Weighted sum:
+    O = A · V                               → R^{S × d_head}
+
+  Complete formula: Attention(Q,K,V) = softmax( Q·K^T / √d_k + M ) · V
+
+ATTENTION FLOP ANALYSIS — single head, single layer:
   S = sequence length, d = head dimension = d_model / H_q
 
   QK^T product:   2 × S × d × S  = 2S²d   FLOPs  (outer product)
   Softmax:        ~5 × S²         FLOPs  (≈1% of total — negligible vs GEMM)
   AV product:     2 × S × S × d  = 2S²d   FLOPs
-
   Total per head: 4S²d FLOPs  (ignoring softmax)
-  
-  HBM memory traffic (standard attention, BF16):
-    Reads:   Q(S×d) + K(S×d) + P(S×S) + V(S×d) = 4Sd + S²  × 2 bytes
-    Writes:  S(S×S) + P(S×S) + O(S×d)           = 2S² + Sd  × 2 bytes
-    Total:   (4Sd + 3S²) × 2 bytes   ← the S² term is what kills standard attention
 
-  Arithmetic Intensity (per head, S=512, d=128):
-    AI = 4S²d / ((4Sd + 3S²) × 2) ≈ 4S²d / (6S² × 2) = d/3 = 43 FLOP/byte
-    → Memory-bound on H100 (ridge = 295)
-    
-  At S=4096:  AI ≈ d/3 = 43 FLOP/byte  (still memory-bound — S cancels!)
-  Key insight: standard attention is always memory-bound due to the N² matrix.
-  FlashAttention eliminates the N² HBM traffic entirely. (→ Ch 4 §4.8)</div>
+WHY √d_k? The softmax saturation problem:
+  Without scaling: for random Q,K with unit variance, σ(Q·K^T) ≈ √d_k
+  At d_k=128: σ ≈ 11.3 → softmax inputs in range [-30,+30]
+  Softmax gradient ∂σ/∂x ≈ σ(1−σ) → near 0 → vanishing gradients
+  Dividing by √d_k normalizes variance back to 1.0 → healthy gradient flow.
 
-<h2 id="s23">2.3 Multi-Head Attention: Parallelism and KV Cache</h2>
+HBM MEMORY TRAFFIC (standard attention, BF16):
+  Reads:   Q(S×d) + K(S×d) + P(S×S) + V(S×d) = 4Sd + S²  × 2 bytes
+  Writes:  S(S×S) + P(S×S) + O(S×d)           = 2S² + Sd  × 2 bytes
+  Total:   (4Sd + 3S²) × 2 bytes   ← the S² term kills standard attention
+
+  S=4096: attention matrix per head = 4096² × 2B = 32 MB
+  80 layers × 64 heads = 163 GB to HBM — impossible without FlashAttention!
+
+  FlashAttention (→ Ch 4 §4.8) eliminates N² HBM traffic entirely:
+  → A is computed in SRAM tiles, never written to HBM
+  → HBM access drops from O(S²) to O(S·d)  [compute stays O(S²)]</div>
+
+<h2 id="s23">2.3 Multi-Head Attention: Parallelism, KV Cache, and Head Specialization</h2>
+<p>Running attention once gives one view of token relationships. Multi-head attention runs H parallel attention operations on lower-dimensional projections, giving the model H independent perspectives simultaneously.</p>
+
 <div class="formula">MULTI-HEAD ATTENTION QKV PROJECTION FLOPs (LLaMA-3 70B):
 
 Config: d_model=8192, H_q=64 heads, H_kv=8 (GQA), d_head=128
@@ -185,59 +220,123 @@ KV CACHE MEMORY (the serving cost that persists across tokens):
     KV_bytes = 2 × L × H_kv × d_head × S × 2
              = 2 × 80 × 8 × 128 × 4096 × 2 = 5.37 GB per request
 
-  On H100 (80 GB HBM), 10 GB for weights, 10 GB for activations:
+  On H100 (80 GB HBM), 10 GB for weights (TP), 10 GB for activations:
     Available for KV: 60 GB / 5.37 GB = ~11 concurrent 4K requests (BF16)
     INT8 KV: 2.7 GB/request → 22 concurrent requests (2× more serving capacity)</div>
 
+<h3>2.3.1 Head Specialization — What Interpretability Research Shows</h3>
+<p>Different heads in a transformer learn qualitatively different relationships. This is not just empirical observation — it has direct implications for pruning, distillation, and understanding which heads to keep under compression.</p>
+<table>
+  <tr><th>Head Type</th><th>What It Learns</th><th>Typical Layer Range</th><th>Pruning Risk</th></tr>
+  <tr><td><strong>Positional heads</strong></td><td>Attend to adjacent tokens — local syntactic structure, prev/next word</td><td>Early (0–8)</td><td>Medium</td></tr>
+  <tr><td><strong>Syntactic heads</strong></td><td>Subject-verb agreement, pronoun coreference, dependency arcs</td><td>Middle (8–40)</td><td>High</td></tr>
+  <tr><td><strong>Induction heads</strong></td><td>Pattern completion: [A][B]…[A] → predict [B]. Mechanistic basis of in-context learning</td><td>Deep (40+)</td><td>Critical</td></tr>
+  <tr><td><strong>Copying heads</strong></td><td>Directly copy tokens from context to output — essential for in-context retrieval</td><td>Deep</td><td>Critical</td></tr>
+</table>
+
+<div class="callout green"><strong>Heads Are "Free" in Compute — Not in Memory:</strong> Adding more query heads does not proportionally increase FLOP cost — total projection cost is fixed at d_model × d_model. What scales with H is the attention score computation (H × S² per layer) and the KV cache size. This is why GQA can reduce KV heads without reducing Q heads — quality loss is minimal, memory savings are large (see §2.10).</div>
+
+<h2 id="s24">2.4 Encoder-Decoder vs. Decoder-Only: Architecture and System Implications</h2>
+<p>The original transformer ("Attention Is All You Need", Vaswani 2017) used a full encoder-decoder structure for machine translation. Modern LLMs have almost universally converged to decoder-only. Understanding both architectures — and why decoder-only won — is foundational knowledge for a performance engineer who must reason about cross-attention costs, KV cache structure, and inference memory footprint.</p>
+
+<!-- DIAGRAM 2.4a: Architecture comparison -->
 <div class="diagram-wrap" id="diagrams">
-<svg viewBox="0 0 720 280" xmlns="http://www.w3.org/2000/svg">
-  <rect width="720" height="280" fill="#fff"/>
-  <text x="360" y="22" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#1c2438">Transformer Layer — Data Flow &amp; Memory</text>
-  <!-- Input -->
-  <rect x="30" y="40" width="100" height="40" rx="5" fill="#1c2438"/>
-  <text x="80" y="64" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#fff">Input x_l</text>
-  <text x="80" y="76" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#e3b341">[B,S,d_model]</text>
-  <!-- RMSNorm -->
-  <rect x="160" y="40" width="100" height="40" rx="5" fill="#2a6099"/>
-  <text x="210" y="57" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#fff">RMSNorm</text>
-  <text x="210" y="70" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#b8ddf0">AI≈1.25 (BW-bound)</text>
-  <line x1="130" y1="60" x2="160" y2="60" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
-  <!-- QKV -->
-  <rect x="290" y="40" width="100" height="40" rx="5" fill="#27ae60"/>
-  <text x="340" y="57" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#fff">QKV Proj</text>
-  <text x="340" y="70" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#d4edda">167.8M FLOPs</text>
-  <line x1="260" y1="60" x2="290" y2="60" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
-  <!-- FlashAttn -->
-  <rect x="420" y="40" width="110" height="40" rx="5" fill="#856404"/>
-  <text x="475" y="57" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#fff">FlashAttn v3</text>
-  <text x="475" y="70" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#fff3cd">No N² HBM write</text>
-  <line x1="390" y1="60" x2="420" y2="60" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
-  <!-- Out Proj -->
-  <rect x="560" y="40" width="100" height="40" rx="5" fill="#1c2438"/>
-  <text x="610" y="57" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#fff">Out Proj</text>
-  <text x="610" y="70" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#e3b341">134.2M FLOPs</text>
-  <line x1="530" y1="60" x2="560" y2="60" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
-  <!-- Residual -->
-  <line x1="30" y1="85" x2="30" y2="130" stroke="#e3b341" stroke-width="2" stroke-dasharray="4,2"/>
-  <line x1="30" y1="130" x2="610" y2="130" stroke="#e3b341" stroke-width="2" stroke-dasharray="4,2"/>
-  <text x="320" y="126" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#e3b341">Residual connection</text>
-  <!-- FFN block -->
-  <rect x="160" y="150" width="400" height="60" rx="5" fill="#f5f3ec" stroke="#d8d4c8"/>
-  <text x="360" y="172" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#1c2438">Feed-Forward Network (SwiGLU)</text>
-  <text x="360" y="188" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">gate = SiLU(x × W_gate) &nbsp;·&nbsp; up = x × W_up &nbsp;·&nbsp; out = (gate ⊗ up) × W_down</text>
-  <text x="360" y="202" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#856404">16 × S × d_model² FLOPs per layer (83% of total at decode batch=1)</text>
-  <!-- KV cache callout -->
-  <rect x="420" y="100" width="160" height="42" rx="4" fill="#fff8e0" stroke="#e3b341"/>
-  <text x="500" y="115" text-anchor="middle" font-family="sans-serif" font-size="8.5" font-weight="700" fill="#856404">KV Cache (LLaMA-3 70B)</text>
-  <text x="500" y="127" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">4 KB/token/layer · 5.37 GB/req</text>
-  <text x="500" y="138" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">at 4K context, BF16</text>
-  <line x1="475" y1="80" x2="480" y2="100" stroke="#e3b341" stroke-width="1.2" stroke-dasharray="3,2"/>
-  <!-- Arrow marker -->
-  <defs><marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#555"/></marker></defs>
-  <text x="360" y="240" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#888">Figure 2.1 — One transformer layer data flow. FFN dominates at 83% of decode FLOPs. KV cache shown as per-request HBM cost.</text>
+<svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr" markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#555"/></marker>
+    <marker id="arrgold" markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#e3b341"/></marker>
+    <marker id="arrblue" markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#2a6099"/></marker>
+  </defs>
+  <rect width="720" height="380" fill="#fff"/>
+  <text x="360" y="22" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#1c2438">Encoder-Decoder vs Decoder-Only Transformer</text>
+
+  <!-- ENCODER COLUMN -->
+  <rect x="30" y="35" width="290" height="300" rx="8" fill="#f8f6f0" stroke="#d8d4c8" stroke-width="1.5"/>
+  <text x="175" y="55" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#1c2438">ENCODER (e.g., BERT, T5 enc)</text>
+
+  <!-- Encoder blocks from bottom -->
+  <rect x="50" y="290" width="250" height="30" rx="4" fill="#f0c8c8" stroke="#c05050"/>
+  <text x="175" y="309" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#721c24">Input Embedding + Positional Encoding</text>
+
+  <rect x="50" y="248" width="250" height="30" rx="4" fill="#c8d8f0" stroke="#2a6099"/>
+  <text x="175" y="261" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#1c2438">Multi-Head Self-Attention (Bidirectional)</text>
+  <text x="175" y="273" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">All tokens attend to ALL tokens</text>
+
+  <rect x="50" y="206" width="250" height="30" rx="4" fill="#d8f0c8" stroke="#27ae60"/>
+  <text x="175" y="222" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#155724">Add &amp; Norm + Feed Forward</text>
+
+  <text x="175" y="196" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#888">× N layers</text>
+
+  <rect x="50" y="148" width="250" height="30" rx="4" fill="#f5f0e0" stroke="#e3b341"/>
+  <text x="175" y="166" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#856404">Contextual Representations [S × d_model]</text>
+
+  <text x="175" y="135" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">→ Output used by decoder cross-attention</text>
+  <text x="175" y="120" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#2a6099">Use: classification, embeddings, search</text>
+
+  <line x1="175" y1="290" x2="175" y2="280" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="175" y1="248" x2="175" y2="238" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="175" y1="206" x2="175" y2="176" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- DECODER COLUMN -->
+  <rect x="400" y="35" width="290" height="300" rx="8" fill="#f0f3f8" stroke="#c5cfe0" stroke-width="1.5"/>
+  <text x="545" y="55" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#1c2438">DECODER-ONLY (GPT, LLaMA, Claude)</text>
+
+  <rect x="420" y="290" width="250" height="30" rx="4" fill="#f0c8c8" stroke="#c05050"/>
+  <text x="545" y="309" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#721c24">Text + Position Embedding</text>
+
+  <rect x="420" y="248" width="250" height="30" rx="4" fill="#c8c8f8" stroke="#7b2d8b"/>
+  <text x="545" y="261" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#1c2438">Masked Multi-Head Self-Attention</text>
+  <text x="545" y="273" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">Causal: token i only sees tokens 0..i</text>
+
+  <rect x="420" y="206" width="250" height="30" rx="4" fill="#d8f0c8" stroke="#27ae60"/>
+  <text x="545" y="222" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#155724">Add &amp; Norm + Feed Forward (SwiGLU)</text>
+
+  <text x="545" y="196" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#888">× N layers</text>
+
+  <rect x="420" y="148" width="250" height="30" rx="4" fill="#fff0c8" stroke="#e3b341"/>
+  <text x="545" y="164" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#856404">Layer Norm → Linear → Softmax</text>
+  <text x="545" y="176" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555">→ Next token probability distribution</text>
+
+  <text x="545" y="120" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#2a6099">Use: generation, LLMs — dominant paradigm</text>
+  <text x="545" y="132" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#e3b341">KV cache: entire context grows autoregressively</text>
+
+  <line x1="545" y1="290" x2="545" y2="280" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="545" y1="248" x2="545" y2="238" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="545" y1="206" x2="545" y2="178" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <text x="360" y="360" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#888">Figure 2.4 — Encoder (bidirectional attention, fixed representations) vs Decoder-only (causal masking, autoregressive KV cache growth)</text>
 </svg>
-<figcaption>Figure 2.1 — Transformer layer anatomy. At decode batch=1, the FFN accounts for 83% of FLOPs and all operations are memory-bandwidth-bound. At large batch prefill, the large GEMM operations become compute-bound.</figcaption>
+<figcaption>Figure 2.4 — Architecture comparison. The encoder processes the full input bidirectionally; the decoder-only model generates tokens left-to-right with causal masking. Cross-attention (connecting encoder outputs to decoder layers) is present in encoder-decoder models but absent in decoder-only LLMs.</figcaption>
 </div>
+
+<table>
+  <tr><th>Property</th><th>Encoder (BERT, RoBERTa)</th><th>Encoder-Decoder (T5, BART)</th><th>Decoder-Only (GPT, LLaMA, Claude)</th></tr>
+  <tr><td>Attention type</td><td>Bidirectional self-attention</td><td>Enc: bidirectional; Dec: causal + cross</td><td>Causal self-attention only</td></tr>
+  <tr><td>Use case</td><td>Classification, embeddings, search</td><td>Translation, summarization, seq2seq</td><td>Open-ended generation — dominant paradigm</td></tr>
+  <tr><td>KV cache</td><td>None (no autoregressive generation)</td><td>Encoder KV computed once; decoder KV grows</td><td>Entire context KV grows with each token</td></tr>
+  <tr><td>Cross-attention</td><td>No</td><td>Yes — decoder attends encoder output (extra cost)</td><td>No — self-attention only</td></tr>
+  <tr><td>Memory at inference</td><td>O(1) after encoding</td><td>O(n_enc + n_dec) — smaller decoder KV</td><td>O(n_total) — all tokens share one KV</td></tr>
+  <tr><td>Industry trend</td><td>BERT-class still used for retrieval</td><td>Declining for new model development</td><td class="good">Dominant: GPT-4, Claude, Gemini, LLaMA</td></tr>
+</table>
+
+<h3>2.4.1 Tokenization, Embeddings, and Positional Injection</h3>
+<p>Before any attention computation, raw text must be converted to vectors the GPU can process. The pipeline: raw text → tokens → integer IDs → dense embeddings → add positional information → feed to transformer blocks.</p>
+<div class="formula">TOKENIZATION AND EMBEDDING PIPELINE:
+
+  "The cat sat on mat" → tokenizer → [101, 532, 992, 87, 671]
+  
+  Embedding lookup:  E = W_emb[token_ids]    W_emb ∈ R^{vocab × d_model}
+  LLaMA-3 70B: W_emb ∈ R^{128256 × 8192} → 128256 × 8192 × 2B = 2.1 GB
+  
+  Add positional information: X = E + PE  (or multiply with RoPE during attention)
+  
+  Sinusoidal PE (original, Vaswani 2017):
+    PE(pos,2i)   = sin(pos / 10000^(2i/d))
+    PE(pos,2i+1) = cos(pos / 10000^(2i/d))
+  → Fixed, no learnable parameters, hard limit at training length
+  
+  RoPE (modern standard): applied inside attention, not added to embeddings
+  → See §2.6 for full RoPE derivation</div>
 
 <h2 id="s25">2.5 RMSNorm vs. LayerNorm</h2>
 <div class="formula">LAYERNORM vs. RMSNORM:
@@ -245,9 +344,9 @@ KV CACHE MEMORY (the serving cost that persists across tokens):
 LayerNorm: y = ((x - μ) / σ) × γ + β
   μ = mean(x), σ = std(x) — requires 2 passes over data
   FLOPs/element: ~8 (mean, variance, subtract, divide, scale, shift)
-  Memory AI: ~1.5 FLOP/byte → memory-bound
+  Memory AI: ~1.5 FLOP/byte → deeply memory-bound
 
-RMSNorm (LLaMA, Mistral, Qwen — modern standard):
+RMSNorm (LLaMA, Mistral, Qwen, Gemma — modern standard):
   y = x / RMS(x) × γ,   where RMS(x) = √(mean(x²))
   FLOPs/element: ~5 (square, mean, sqrt, divide, scale) — no mean subtraction
   Memory AI: ~1.25 FLOP/byte → memory-bound
@@ -260,115 +359,499 @@ WHY RMSNorm won in production:
 PRODUCTION IMPLICATION:
   Both are deeply memory-bound (AI < 2). Standalone, they waste 99%+ of
   compute. Solution: ALWAYS fuse with adjacent GEMM or elementwise op.
-  Unfused RMSNorm at 10B tokens/day costs ~12 GB/s of wasted HBM BW — trivial
-  individually but adds up across 80 layers × 10,000 requests/sec.</div>
+  Unfused RMSNorm at 10B tokens/day costs ~12 GB/s of wasted HBM BW —
+  trivial individually but adds up across 80 layers × 10,000 requests/sec.
+  
+  Pre-norm vs Post-norm:
+  Pre-norm (modern):  x_out = x + Sublayer(Norm(x))   → stable deep training
+  Post-norm (original): x_out = Norm(x + Sublayer(x)) → sensitive to init</div>
 
-<h2 id="s26">2.6 Positional Encoding: RoPE and Context Length</h2>
+<h2 id="s26">2.6 Positional Encoding: RoPE — Full Derivation and Context Extension</h2>
+
+<h3>2.6.1 RoPE Design Goal and Full Derivation</h3>
+<p>Transformers have no inherent notion of token order — attention treats input as a set. RoPE's key design goal: encode positions so that the dot product ⟨q_m, k_n⟩ depends only on token content and the <em>relative</em> distance (m−n), not absolute position values.</p>
+
+<div class="formula">ROPE DESIGN GOAL AND DERIVATION:
+
+  Find f(·, pos) such that: ⟨f(q, m), f(k, n)⟩ = g(q, k, m−n)
+  
+  Rotation matrices achieve this exactly:
+    f(x, pos) = R(pos) · x    (rotate x by angle proportional to position)
+    ⟨R(m)q, R(n)k⟩ = q^T R(m)^T R(n) k = q^T R(n−m) k
+    Because R(a)^T R(b) = R(b−a)  → dot product depends ONLY on (n−m) ✓
+
+  2D rotation (basis of RoPE):
+    R(θ) × [x₁, x₂]^T = [x₁cosθ − x₂sinθ, x₁sinθ + x₂cosθ]^T
+
+  RoPE generalization to d_head dimensions:
+    Form d_head/2 pairs: (0,1), (2,3), ..., (d_head−2, d_head−1)
+    Pair (2i, 2i+1) rotated by angle: θᵢ(pos) = pos / θ_base^(2i/d_head)
+    
+    Frequencies:   θᵢ = 1 / θ_base^(2i / d_head)
+    High-freq (small i): fast rotation → encodes short-range positions
+    Low-freq  (large i): slow rotation → encodes long-range positions
+
+  Implementation (no explicit matrix):
+    q_rot[2i]   = q[2i]   cos(m·θᵢ) − q[2i+1] sin(m·θᵢ)
+    q_rot[2i+1] = q[2i]   sin(m·θᵢ) + q[2i+1] cos(m·θᵢ)   for all i
+
+PRODUCTION θ_base VALUES:
+  θ_base = 10,000   → max reliable context ≈   4,096 tokens (original Transformer)
+  θ_base = 500,000  → max reliable context ≈ 128,000 tokens (LLaMA-3, Qwen-2.5)
+  θ_base = 1,000,000 → max context ≈ 256,000+ tokens (experimental)
+  Rule: doubling θ_base roughly doubles reliable context length.</div>
+
+<h3>2.6.2 YaRN: Extending Context Without Full Retraining</h3>
+<div class="formula">YARN CONTEXT EXTENSION (Peng et al. 2023):
+
+  Problem: Model trained at L_train → θ frequencies calibrated for that range.
+  At L_test >> L_train, low-frequency dimensions see unseen rotation magnitudes.
+  
+  YaRN solution: scale θ_base to reduce rotation speed for low-freq dimensions.
+  For dimension pair i, define wavelength λᵢ = 2π / θᵢ = 2π · θ_base^(2i/d_head)
+  
+  If λᵢ < r·L_train:  high-freq, no change (short-range encoding intact)
+  If λᵢ > s·L_train:  low-freq, scale θᵢ → θᵢ / (L_test / L_train)
+  Otherwise:           interpolate between the two regimes
+  
+  YaRN requires only fine-tuning (1000–5000 steps), NOT full retraining.
+  LLaMA-3 uses θ_base=500,000 to natively support 128K tokens.</div>
+
 <table>
-  <tr><th>Method</th><th>Used By</th><th>Context Extrapolation</th><th>FLOPs</th><th>Production Status</th></tr>
-  <tr><td>Learned absolute</td><td>GPT-2, BERT</td><td>Hard limit at training length</td><td>Zero</td><td>Legacy — not used in new models</td></tr>
-  <tr><td>RoPE</td><td>LLaMA, Mistral, Gemma, Qwen</td><td>Good with YaRN/LongRoPE (2–4×)</td><td>~2% of attention FLOPs</td><td>Production standard [SHIPPED]</td></tr>
-  <tr><td>ALiBi</td><td>MPT, BLOOM</td><td>Excellent linear decay bias</td><td>Minimal</td><td>Declining — RoPE preferred</td></tr>
+  <tr><th>PE Method</th><th>Used By</th><th>Context Extension</th><th>FLOPs</th><th>Production Status</th></tr>
+  <tr><td>Sinusoidal (fixed)</td><td>Original Transformer (Vaswani 2017)</td><td>Hard limit at training length</td><td>Zero</td><td>Legacy — not used in new models</td></tr>
+  <tr><td>Learned absolute</td><td>GPT-2, BERT</td><td>Hard limit; cannot generalize</td><td>Zero</td><td>Legacy</td></tr>
+  <tr><td>ALiBi</td><td>MPT, BLOOM</td><td>Good linear decay bias</td><td>Minimal</td><td>Declining — RoPE preferred</td></tr>
+  <tr><td>RoPE <span class="shipped">PRODUCTION</span></td><td>LLaMA, Mistral, Gemma, Qwen, DeepSeek</td><td>Excellent with YaRN/LongRoPE (4–32×)</td><td>~2% of attn FLOPs</td><td class="good">Universal production standard</td></tr>
 </table>
-<p>RoPE (Rotary Position Embedding) encodes position by rotating Q and K vectors in pairs of dimensions. The rotation matrix R_m for position m is applied as Q_m = R_m × Q, K_n = R_n × K. The inner product QK<sup>T</sup> then depends only on relative position (m−n), giving the model positional information without absolute embeddings. YaRN and LongRoPE extend the effective context window by 2–4× beyond training length by modifying the interpolation of rotation frequencies.</p>
 
 <h2 id="s27">2.7 Feed-Forward Networks and the Activation Bottleneck</h2>
 <div class="formula">FFN FLOP COMPARISON (LLaMA-3 70B, d_model=8192, d_ffn=28,672):
 
-Standard FFN (GPT-style):     FFN(x) = max(0, xW₁ + b₁)W₂ + b₂
-  W₁: [d_model × d_ffn],  W₂: [d_ffn × d_model]
-  FLOPs: 2 × 2 × S × d_model × d_ffn = 2 × 2 × S × 8192 × 32768 ≈ not used in LLaMA
+Standard FFN (GPT-style):
+  FFN(x) = max(0, x·W₁ + b₁)·W₂ + b₂
+  Two matrices: W₁ ∈ [d_model × d_ffn], W₂ ∈ [d_ffn × d_model]
+  FLOPs: 2 × 2 × S × d_model × d_ffn (but not used in LLaMA-3)
 
-SwiGLU FFN (LLaMA-3 standard): FFN(x) = (SiLU(xW_gate) ⊗ xW_up) × W_down
+SwiGLU FFN (LLaMA-3, Mistral, Gemma — modern standard):
+  FFN(x) = (SiLU(x·W_gate) ⊗ x·W_up) × W_down
   Three matrices: W_gate, W_up ∈ [d_model × d_ffn], W_down ∈ [d_ffn × d_model]
   FLOPs: 3 × 2 × S × d_model × d_ffn = 3 × 2 × S × 8192 × 28,672
 
+  Note: d_ffn is SMALLER in SwiGLU to compensate for third matrix:
+    Standard FFN: d_ffn = 4 × d_model = 32,768
+    SwiGLU FFN:   d_ffn = 8/3 × d_model ≈ 21,845 (LLaMA rounds to 28,672)
+    Net FLOP cost: similar to standard FFN despite 3 matrices
+
 Per token per layer:
-  FFN FLOPs = 3 × 2 × 1 × 8192 × 28,672 = 1,409 M FLOPs [SHIPPED derivation]
+  FFN FLOPs = 3 × 2 × 1 × 8192 × 28,672 = 1,409 M FLOPs
   QKV+O FLOPs (from §2.3)             =   302 M FLOPs
   Attention score FLOPs (at S=1):      =     0.13 M FLOPs (negligible)
   
-  FFN fraction at decode S=1: 1409 / (1409 + 302) = 82.4%
+  FFN fraction at decode S=1: 1409 / (1409 + 302) = 82.4%  ← FFN DOMINATES
   FFN fraction at prefill S=4096: 1409 / (1409 + 302 + 67) = 79%
 
-→ The FFN is the dominant compute consumer at decode (83%) and prefill (79%).
-  Quantizing FFN weights delivers the highest bandwidth reduction per bit.
+→ Quantizing FFN weights delivers the highest bandwidth reduction per bit.
   INT4 FFN: 4× less weight bytes → 4× faster decode (bandwidth-bound).</div>
 
 <h2 id="s28">2.8 Complete FLOP Budget — LLaMA-3 70B</h2>
 <div class="formula">FULL TRANSFORMER LAYER FLOP FORMULA:
-  Per-layer FLOPs = QKV_proj + Attn_score + Output_proj + FFN
+  Model: LLaMA-3 70B — d_model=8192, L=80, H_q=64, H_kv=8, d_head=128, d_ffn=28,672
+
+  Per transformer block, sequence length S, batch B=1:
+
+  ① Q projection  [S×8192] × [8192×8192]:          2·S·8192²      = 134.2M·S
+  ② K projection  [S×8192] × [8192×1024]:           2·S·8192·1024  =  16.8M·S
+  ③ V projection  [S×8192] × [8192×1024]:           2·S·8192·1024  =  16.8M·S
+  ④ QK^T scores  64 heads × [S×128] × [128×S]:     2·64·S·128·S   = 16,384·S²  ← QUADRATIC
+  ⑤ A·V output   64 heads × [S×S] × [S×128]:       2·64·S·S·128   = 16,384·S²  ← QUADRATIC
+  ⑥ O projection [S×8192] × [8192×8192]:            2·S·8192²      = 134.2M·S
+  ⑦ FFN W_gate   [S×8192] × [8192×28672]:           2·S·8192·28672 = 469.8M·S
+  ⑧ FFN W_up     [S×8192] × [8192×28672]:           2·S·8192·28672 = 469.8M·S
+  ⑨ FFN W_down   [S×28672] × [28672×8192]:          2·S·28672·8192 = 469.8M·S
+  ──────────────────────────────────────────────────────────────
+  At S=1 (single decode step):
+    Linear ops: 134.2+16.8+16.8+134.2+469.8+469.8+469.8 = 1,711M FLOPs
+    Attn (④+⑤): 32,768 FLOPs  (effectively zero vs linear)
+    FFN share: 1,409 / 1,711 = 82.4%  [FFN utterly dominates decode]
   
-  LLaMA-3 70B per token per layer:
-    Q proj:           134.2 M FLOPs (2 × 8192 × 8192)
-    K proj:            16.8 M FLOPs (2 × 8192 × 1024, GQA H_kv=8)
-    V proj:            16.8 M FLOPs
-    Attn score (S=1):   0.13M FLOPs (negligible at decode)
-    Output proj:       134.2 M FLOPs
-    FFN SwiGLU:      1,409.3 M FLOPs (3 × 2 × 8192 × 28672)
-    ──────────────────────────────────────────────────────────
-    Total/layer:     1,711.4 M FLOPs ≈ 1.71 GFLOP per token per layer
-    Total (L=80):    80 × 1.71 = 136.9 GFLOP per token (full forward pass)
+  Full model (×80 layers):
+    Decode total:  1,711M × 80 = 136.9 GFLOP per decode step
+    Prefill S=4096: (1,711M × 4096 + 2 × 16,384 × 4096²) × 80 = 604 TFLOP
 
-  TPOT lower bound (batch=1, H100 989 TFLOPS, 100% MFU):
-    136.9 GFLOP / 989,000 GFLOP/s = 0.138 ms minimum (compute floor)
-    BUT: model weights = 140 GB BF16, bandwidth = 3.35 TB/s
-    Loading time: 140 GB / 3.35 TB/s = 41.8 ms minimum (bandwidth floor!)
-    
-  The bandwidth floor (41.8ms) is 303× higher than the compute floor (0.138ms).
-  Decode is never compute-limited. It is always bandwidth-limited at any batch
-  size below the arithmetic intensity ridge point (batch ≈ 295 for H100).</div>
+TPOT LOWER BOUND ANALYSIS (batch=1, H100):
+  H100 compute:  989 TFLOPS BF16 → compute floor = 136.9 GFLOP / 989 TFLOPS = 0.14 ms
+  H100 BW:       3.35 TB/s → BW floor = 140 GB / 3.35 TB/s = 41.8 ms
+  
+  BW floor / compute floor = 41.8 / 0.14 = 303×  ← decode is ALWAYS bandwidth-limited!
+  Crossover batch size: ~295 (arithmetic intensity ridge of H100)
 
-<h2 id="s29">2.9 Decoder-Only vs. Encoder-Decoder</h2>
-<table>
-  <tr><th>Property</th><th>Encoder-Decoder (T5, BART)</th><th>Decoder-Only (GPT, LLaMA, Claude)</th></tr>
-  <tr><td>Use case</td><td>Fixed-length output tasks (translation, summarization)</td><td>Open-ended generation — the dominant paradigm</td></tr>
-  <tr><td>KV cache</td><td>Encoder KV computed once; decoder KV grows</td><td>Entire context KV grows with each token</td></tr>
-  <tr><td>Cross-attention</td><td>Yes — decoder attends to encoder output</td><td>No — self-attention only</td></tr>
-  <tr><td>Memory at inference</td><td>O(n_enc + n_dec) — smaller decoder KV</td><td>O(n_total) — all tokens share one KV</td></tr>
-  <tr><td>Industry trend</td><td>Declining for new model development</td><td>Dominant: GPT-4, Claude, Gemini, LLaMA all use</td></tr>
-</table>
+THE 6ND RULE (training FLOPs estimation):
+  Training FLOPs ≈ 6 × N × D  (N=params, D=training tokens)
+  LLaMA-3 70B on 15T tokens: 6 × 70×10⁹ × 15×10¹² = 6.3×10²⁴ FLOPs
+  At H100 cluster (1000 GPUs, 300 TFLOP/s sustained): 21,000 GPU-days ≈ $36M
+
+QUADRATIC CROSSOVER (attention FLOPs > FFN FLOPs):
+  Attn FLOPs = FFN FLOPs when:  4·H_q·S² = 3·2·d_model·d_ffn
+  LLaMA-3 70B: 4·64·S² = 1,409M → S ≈ 65,000 tokens
+  → Below 65K tokens, FFN dominates. Long-context RAG/document enters attn regime.</div>
+
+<h2 id="s29">2.9 Forward and Backward Pass — Memory at Every Stage</h2>
+<p>Training a transformer requires holding significantly more in memory than inference: not just the current activations, but intermediate tensors needed for gradient computation in the backward pass. Understanding memory at every stage is essential for activation checkpointing decisions, pipeline parallelism design, and gradient accumulation strategy.</p>
+
+<h3>2.9.1 Full Forward Pass Data Flow</h3>
+<div class="formula">FORWARD PASS MEMORY — single transformer block (LLaMA-3 70B, B=4, S=2048, BF16):
+
+STAGE              OPERATION                        TENSOR SIZE
+──────────────────────────────────────────────────────────────────────
+1. Input           x_l ∈ R^{B×S×d}                 4×2048×8192×2 =  128 MB
+2. RMSNorm         x_norm = norm(x_l)               store: 128 MB
+3. Q projection    Q = x_norm × W_Q                 4×2048×8192×2 =  128 MB
+4. K projection    K = x_norm × W_K (GQA)           4×2048×1024×2 =   16 MB
+5. V projection    V = x_norm × W_V (GQA)           4×2048×1024×2 =   16 MB
+6. RoPE            Q_rot, K_rot (in-place)           0 extra bytes
+7. FlashAttention  O = FA(Q_rot, K_rot, V)           128 MB out; S×S NEVER stored
+8. Output proj     Y = O × W_O                       128 MB
+9. Residual add    x_attn = x_l + Y                  128 MB (store for backward)
+10. RMSNorm        x_norm2 = norm(x_attn)            store: 128 MB
+11. FFN gate       gate = SiLU(x_norm2 × W_gate)     4×2048×28672×2 = 448 MB
+12. FFN up         up = x_norm2 × W_up               448 MB
+13. FFN hidden     h = gate ⊗ up                     448 MB (MUST store for backward)
+14. FFN down       y_ffn = h × W_down                128 MB
+15. Residual add   x_{l+1} = x_attn + y_ffn          128 MB (output)
+──────────────────────────────────────────────────────────────────────
+Activation memory WITHOUT checkpointing: ~1,850 MB per block
+Activation memory WITH selective checkpointing (store x_l, x_attn only): ~256 MB/block
+  → Recompute everything else during backward
+  → Memory reduction: 85%  |  Compute overhead: ~30% (one extra forward pass)
+
+FFN activations account for 76% of layer activation memory → primary recompute target</div>
+
+<h3>2.9.2 Flash Attention Backward — No S×S Storage</h3>
+<div class="formula">FLASH ATTENTION BACKWARD PASS:
+
+Standard attention backward:
+  Requires storing A (the S×S attention matrix) → O(S²) memory
+  At S=8192, H_q=64, BF16: 64 × 8192² × 2B = 8.6 GB PER LAYER
+
+Flash Attention backward (Dao et al. 2022):
+  Stores only: Q, K, V, O (O(N) total), PLUS log-sum-exp (LSE) per row
+  LSE[i] = log(Σⱼ exp(Sᵢⱼ/√d_k))  → one scalar per query position
+  
+  During backward: recompute A_ij = exp(S_ij/√d_k − LSE[i]) in SRAM tiles
+  → Never materialize the full S×S matrix in HBM.
+  
+  Memory saved per layer at S=8192, BF16:
+    S×S matrix: 64 × 8192² × 2B = 8.598 GB (SAVED)
+    LSE:        64 × 8192 × 4B  = 2 MB     (stored)
+    Net saving per layer:         8.596 GB per layer
+
+  Flash Attention is not just an optimization — it is the enabling technology
+  for any context window above ~4K tokens in training.</div>
+
+<h3>2.9.3 Pipeline Parallelism Stage Memory</h3>
+<div class="formula">PIPELINE PARALLELISM MEMORY (LLaMA-3 70B, P=8 stages):
+
+  Layers per stage = 80/8 = 10 layers
+  
+  With selective checkpointing:
+    Activation per stage = 10 × 256 MB = 2.56 GB
+    Weight per stage = 140 GB / 8 = 17.5 GB
+    Total per GPU ≈ 17.5 + 2.56 = 20.1 GB  (fits on 80 GB H100 with headroom)
+  
+  Pipeline bubble fraction:
+    Bubble = (P−1) / (M + P−1)   (M = micro-batches)
+    M=16, P=8: bubble = 7/23 = 30%  → use 1F1B interleaved schedule
+    1F1B reduces effective bubble to ~15%
+    Target M ≥ 4×P to keep bubble below 20%</div>
+
+<div class="callout blue"><strong>Activation Memory Quick Reference (LLaMA-3 70B, per layer):</strong> Without checkpointing: ~1,850 MB · With selective checkpointing: ~256 MB (85% reduction) · Flash Attention removes 8.6 GB of S×S storage per layer at S=8192 · FFN activations are the dominant recompute target (76% of activation memory).</div>
 
 <h2 id="s210">2.10 Modern Variants: GQA, MQA, MLA, MoE</h2>
-<div class="formula">KV CACHE REDUCTION VARIANTS:
+
+<h3>2.10.1 KV Cache Reduction Variants</h3>
+<div class="formula">KV CACHE VARIANTS — detailed comparison:
 
 MHA (Multi-Head Attention, baseline):
   H_q query heads, H_kv = H_q key-value heads
   KV bytes/token/layer = 2 × H_kv × d_head × 2 = 2 × 64 × 128 × 2 = 32,768 bytes
 
-GQA (Grouped-Query Attention, LLaMA-3 standard):
+GQA (Grouped-Query Attention — LLaMA-3 standard):
   H_q = 64, H_kv = 8 (GQA ratio R = 8)
+  Group mapping: Q-head q uses KV group q // (H_q/H_kv)
   KV bytes/token/layer = 2 × 8 × 128 × 2 = 4,096 bytes  ← 8× reduction
-  Quality loss: ~0% (empirically verified at 70B+ scale)
-  Production use: LLaMA-3 70B, Mistral, Gemma, Qwen, Falcon
+  Quality loss: ~0.2–0.5% at G≥8 (empirically verified at 70B+ scale)
+  Production use: LLaMA-3, Mistral, Gemma, Qwen, Falcon
 
 MQA (Multi-Query Attention, extreme):
   H_q = 64, H_kv = 1
   KV bytes/token/layer = 2 × 1 × 128 × 2 = 512 bytes  ← 64× reduction
   Quality loss: ~1–2% on complex reasoning tasks
-  
-MLA (Multi-head Latent Attention, DeepSeek):
-  Compress KV to low-rank latent c_KV ∈ [d_c] (d_c << H_q × d_head)
-  DeepSeek-V3: d_c=512, d_model=7168, H_q=128
-  KV bytes/token/layer ≈ d_c × 2 = 1,024 bytes  ← 32× reduction vs MHA
-  Reconstruction: K,V = c_KV × W_UK, W_UV (GEMM at decode — compute cost)
-  
-MoE (Mixture-of-Experts):
-  N expert FFNs, route each token to K of N (K << N)
-  Mixtral 8×7B: N=8, K=2, d_ffn=14336 per expert
-  Active FLOPs per token: K/N × N × FFN_flops = 2/8 × total = same as dense!
-  Total params: N × FFN + shared = 8 × 7B = 47B params (vs 7B active)
-  Key system cost: All-to-All collective for expert routing (Ch 13)</div>
+  Use: edge inference, strict memory budgets (Gemma 2B, Falcon 7B)
 
-<div class="takeaways"><h3>Key Takeaways</h3>
-<div class="takeaway-group"><div class="tg-label">Core Concepts</div><ul><li>The FFN consumes 83% of FLOPs at decode (batch=1) and 79% at prefill. This is why FFN weight quantization (INT4/FP8) has the highest bandwidth ROI of any quantization decision.</li><li>KV cache size = 2 × L × H_kv × d_head × S × dtype_bytes. For LLaMA-3 70B at 4K context in BF16: 5.37 GB per concurrent request. GQA (H_kv=8 vs H_q=64) delivers an 8× reduction with negligible quality loss — directly 8× more concurrent users per GPU.</li><li>Decode batch=1 TPOT is always bandwidth-limited, never compute-limited. The H100 bandwidth floor (41.8ms for 70B BF16) is 303× higher than the compute floor (0.14ms). No kernel optimization can help — only quantization (reducing bytes) or batching (increasing arithmetic intensity).</li></ul></div>
-<div class="takeaway-group"><div class="tg-label">Cost &amp; Productivity Impact</div><ul><li>Switching from MHA to GQA (H_kv: 64 → 8) on a 70B model reduces KV cache from 42 GB to 5.4 GB at 4K context. On an 80 GB H100 with 10 GB overhead, this increases max concurrent requests from ~1 to ~11 per GPU — an 11× serving capacity gain.</li><li>INT4 quantization of the FFN weights (70B BF16 → 35 GB) reduces the per-token weight loading from 140 GB to 35 GB, directly delivering 4× TPOT improvement (41.8ms → 10.4ms) at batch=1. The bandwidth floor is the only floor that matters.</li><li>MLA (DeepSeek) reduces KV cache by 32× over MHA but introduces a GEMM at decode time (reconstructing K,V from the latent). This GEMM is compute-bound at batch=1 — adding a new compute cost in exchange for bandwidth savings. The tradeoff breaks even at batch>8 approximately.</li></ul></div>
-<div class="takeaway-group"><div class="tg-label">Principal-Level Insight</div><ul><li>Every architecture choice is an infrastructure engineering decision: MHA vs GQA vs MLA determines serving capacity per GPU. The model team's quality preference must be evaluated against the serving team's GPU cost. A 1% quality improvement that requires 4× more GPUs costs $100K/year in GPU time on a 100-GPU serving cluster.</li><li>MoE routing introduces an All-to-All collective at every FFN layer — absent in dense models. At 8 experts with top-2 routing, 75% of expert compute happens remotely (off the local GPU). The communication overhead of this All-to-All determines whether MoE saves cost or adds it — see Ch 13.</li><li>The quadratic crossover (attention FLOPs exceeding FFN FLOPs) for LLaMA-3 70B occurs at S ≈ 65,000 tokens. Below this, FFN dominates. Only long-context inference (RAG, document processing, code repositories) enters the attention-dominated regime — design your hardware and batching strategy accordingly.</li></ul></div>
-</div><div class="review-questions"><h3>Review Questions</h3>
-<div class="rq-tier foundational"><div class="rq-tier-label"><span class="rq-badge">Foundational</span>Build the mental model — no math required</div><ol><li>In plain language, explain why a transformer with GQA (H_kv=8) can serve more concurrent users than one with MHA (H_kv=64), even though both produce the same output quality at the same sequence length.</li><li>What is the attention 'KV cache', and why does it grow with sequence length during autoregressive decoding? Give a concrete example with numbers for a 70B model at 1000 tokens context.</li><li>Why did RMSNorm replace LayerNorm in modern LLMs? Name two reasons — one computational, one system-level — and explain why both matter for production inference.</li></ol></div>
-<div class="rq-tier intermediate"><div class="rq-tier-label"><span class="rq-badge">Intermediate</span>Apply and calculate — production context</div><ol><li>For LLaMA-3 70B (L=80, d=8192, H_q=64, H_kv=8, d_ffn=28672, BF16) serving 50 concurrent requests at S=2048: (a) Compute total KV cache memory required. (b) An H100 has 80 GB HBM; weights take 140 GB with TP=2, runtime overhead 10 GB. How many H100s are needed to hold weights + KV cache? (c) If you switch to FP8 KV, how many H100s do you need?</li><li>Compute the arithmetic intensity of the FFN down projection (W_down: [28672 × 8192]) at batch=1 vs batch=64, BF16. Which is memory-bound on H100 (ridge 295 FLOP/byte)? At what exact batch size does this operation cross the ridge point?</li><li>A MoE model has 8 experts, top-2 routing, each expert FFN has d_ffn=14336, d_model=7168. (a) Total parameters vs a dense 7B model with d_ffn=14336. (b) Active FLOPs per token vs the dense baseline. (c) What additional communication primitive is required at each FFN layer and what is its volume in bytes at batch=32?</li></ol></div>
-<div class="rq-tier principal"><div class="rq-tier-label"><span class="rq-badge">Principal Level</span>Design, decide, and defend — architecture reviews</div><ol><li>Your team is choosing between GQA (H_kv=8), MQA (H_kv=1), and MLA (d_c=512) for a new 13B model targeting 100K token context length serving. Quantify: (a) KV cache bytes per request at 100K tokens for each variant. (b) Available concurrent requests on a single H100 (80 GB, 26 GB weights). (c) Reconstruction compute cost for MLA at batch=32. Recommend one variant with a quantitative justification.</li><li>Design the serving infrastructure for a 70B MoE model (8 experts, top-2, same architecture as Mixtral) at 10K req/s with average 500-token output, P99 TPOT SLA of 30ms. How many GPUs, what tensor parallelism degree, and what expert placement strategy? Show all calculations and justify each assumption.</li></ol></div>
+MLA (Multi-head Latent Attention, DeepSeek-V2/V3):
+  Compress KV to low-rank latent: c_KV = x × W_DKV  (W_DKV ∈ R^{d_model × d_c})
+  Reconstruct K,V at attention time: [K,V] = c_KV × W_UKV
+  Only c_KV is cached; W_UKV stays in L2/SMEM (not seq-length-dependent)
+  
+  DeepSeek-V3: d_c=512, d_rope=64, d_model=7168, H_q=128
+  MLA bytes/token/layer ≈ (d_c + d_rope) × 2 = 576 × 2 = 1,152 bytes
+  
+  Comparison (DeepSeek-V3 config, S=8192, L=61, BF16):
+    MHA:    61 × 2 × 128 × 128 × 8192 × 2 = 32.8 GB
+    GQA R=16: 61 × 2 × 8 × 128 × 8192 × 2 =  2.05 GB
+    MLA:    61 × 576 × 8192 × 2            =  576 MB  ← 57× vs MHA!</div>
+
+<h3>2.10.2 Model Family Reference Table</h3>
+<table>
+  <tr><th>Model</th><th>H_q</th><th>H_kv</th><th>Variant</th><th>KV Reduction vs MHA</th><th>Notes</th></tr>
+  <tr><td>LLaMA-2 7B</td><td>32</td><td>32</td><td>MHA</td><td>1× (baseline)</td><td>Legacy baseline</td></tr>
+  <tr><td>LLaMA-3 8B</td><td>32</td><td>8</td><td>GQA</td><td>4×</td><td>—</td></tr>
+  <tr><td>LLaMA-3 70B</td><td>64</td><td>8</td><td>GQA</td><td class="good">8×</td><td>Production standard</td></tr>
+  <tr><td>LLaMA-3.1 405B</td><td>128</td><td>8</td><td>GQA</td><td>16×</td><td>—</td></tr>
+  <tr><td>Mistral 7B</td><td>32</td><td>8</td><td>GQA</td><td>4×</td><td>—</td></tr>
+  <tr><td>Gemma 2B</td><td>8</td><td>1</td><td>MQA</td><td>8× (edge)</td><td>Mobile focused</td></tr>
+  <tr><td>DeepSeek-V3</td><td>128</td><td>—</td><td>MLA</td><td class="good">57× vs MHA</td><td>d_c=512, d_rope=64</td></tr>
+</table>
+
+<h3>2.10.3 Causal Masking — The Root of KV Cache</h3>
+<div class="formula">CAUSAL MASKING AND THE KV CACHE OPPORTUNITY:
+
+  Causal mask M for decoder-only models:
+    M[i,j] = 0   if j ≤ i   (position i CAN attend to position j)
+    M[i,j] = -∞  if j > i   (position i CANNOT attend to future token j)
+
+  THE INSIGHT: K[0..t-1] and V[0..t-1] are IDENTICAL for all future tokens.
+  (Keys and values are deterministic functions of input tokens + model weights.)
+  
+  THEREFORE: Compute K,V once during prefill, cache and REUSE at every decode step.
+  
+  WITHOUT KV cache: generating token t requires recomputing O(t × d) work each step
+  WITH KV cache:    only compute K,V for NEW token; O(t) BW to load cached K,V
+  
+  Consequence chain:
+    Causal mask → stable K,V per position → cacheable
+    → KV dominates inference memory → GQA/MLA reduce that cost
+    → Smaller KV → more concurrent requests → higher throughput
+
+  Encoder models (BERT): bidirectional attention → no stable K,V → no KV cache possible
+  → BERT encodes whole sequence each time, never autoregressively</div>
+
+<h3>2.10.4 MoE: Mixture-of-Experts</h3>
+<div class="formula">MIXTURE-OF-EXPERTS (MoE) ARCHITECTURE:
+
+  N expert FFNs, router sends each token to K of N experts (K << N)
+  
+  Mixtral 8×7B: N=8, K=2, d_ffn=14,336 per expert
+  Active FLOPs per token: K/N × total_FFN_FLOPs = 2/8 = 25% ... WAIT:
+    Actually: each token hits K=2 experts, each with full FFN
+    Active FLOPs = K × FFN_flops_per_expert = same as 2× dense 7B FFN
+    Total params: N × FFN_params + shared = 8 × 7B = 47B total, 7B active
+  
+  Router: linear layer x → softmax → top-K selection
+    Router FLOPs: negligible (d_model × N = tiny vs FFN)
+    Expert capacity = batch_size × K / N × capacity_factor
+    Capacity factor > 1.0 needed to handle uneven routing → token dropping risk
+  
+  KEY SYSTEM COST: All-to-All collective at every FFN layer:
+    Each GPU holds 1 expert (expert parallelism)
+    Tokens assigned to remote experts are sent via All-to-All
+    Volume: batch_size × K × d_model × 2B bytes each direction
+    At batch=32, K=2, d_model=7168: 32 × 2 × 7168 × 2 = 917 KB bidirectional
+    
+  Load balancing loss: auxiliary loss to prevent routing collapse to few experts
+  See Ch 13 for full MoE serving system design including expert placement.</div>
+
+<h2 id="s211">2.11 Attention Variants — Full Math Reference</h2>
+<p>This section is the single-page reference for design reviews and production investigations. All attention variants, their exact memory formulas, and the canonical formula are collected here.</p>
+
+<div class="formula">FULL KV CACHE MEMORY FORMULA — all variants:
+
+  Notation: L=layers, H=Q heads, G=KV groups, d=head dim, S=seq len, B=batch, P=bytes/elem
+
+  ┌──────────┬─────────────────────────┬─────────────────────────────┬────────────┐
+  │ Variant  │ Cache Content           │ Formula                     │ Relative   │
+  ├──────────┼─────────────────────────┼─────────────────────────────┼────────────┤
+  │ MHA      │ K+V, one per Q head     │ L×2×H×d×S×B×P              │ 1× (base)  │
+  │ MQA      │ K+V, one shared head    │ L×2×1×d×S×B×P              │ 1/H        │
+  │ GQA      │ K+V, G shared groups    │ L×2×G×d×S×B×P              │ G/H = 1/R  │
+  │ MLA      │ c_KV + k_rope           │ L×(d_c + d_rope)×S×B×P     │ varies     │
+  └──────────┴─────────────────────────┴─────────────────────────────┴────────────┘
+
+  Concrete numbers (L=80, H=64, d=128, BF16, S=8192, B=1):
+  MHA:        80 × 2 × 64 × 128 × 8192 × 2 = 27.5 GB
+  MQA:        80 × 2 × 1  × 128 × 8192 × 2 =  430 MB
+  GQA (G=8):  80 × 2 × 8  × 128 × 8192 × 2 =  3.4 GB   ← standard LLaMA-3 70B
+  MLA (est):  80 × 576 × 8192 × 2           =  754 MB
+
+VARIANT DECISION TABLE:
+  Variant │ KV Bytes/Tok/Layer │ Quality vs MHA  │ Extra Compute    │ Best Use
+  MHA     │ 2 × H × d × P     │ Baseline        │ None             │ Small models, training
+  MQA     │ 2 × d × P         │ −1−2% reasoning │ None             │ Edge, strict budget
+  GQA     │ 2 × G × d × P     │ −0.2−0.5% (G≥8) │ None            │ Production 70B+
+  MLA     │ (d_c+d_rope) × P  │ ~0% (MHA-level) │ Up-proj GEMM     │ Frontier + memory</div>
+
+<!-- DIAGRAM 2.11: Layer data flow updated -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="300" fill="#fff"/>
+  <text x="360" y="22" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#1c2438">Transformer Layer — Data Flow, FLOPs &amp; Memory Regime</text>
+  <!-- Row 1: Attention path -->
+  <rect x="20" y="45" width="90" height="42" rx="5" fill="#1c2438"/>
+  <text x="65" y="63" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#fff">Input x_l</text>
+  <text x="65" y="76" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#e3b341">[B,S,d_model]</text>
+  <line x1="110" y1="66" x2="135" y2="66" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="135" y="45" width="90" height="42" rx="5" fill="#2a6099"/>
+  <text x="180" y="61" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#fff">RMSNorm</text>
+  <text x="180" y="74" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#b8ddf0">AI≈1.25 BW-bound</text>
+  <line x1="225" y1="66" x2="250" y2="66" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="250" y="45" width="95" height="42" rx="5" fill="#27ae60"/>
+  <text x="297" y="61" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#fff">QKV Proj (GQA)</text>
+  <text x="297" y="74" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#d4edda">167.8M FLOPs/tok</text>
+  <line x1="345" y1="66" x2="370" y2="66" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="370" y="45" width="100" height="42" rx="5" fill="#856404"/>
+  <text x="420" y="61" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#fff">FlashAttn v3</text>
+  <text x="420" y="74" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#fff3cd">No N² HBM write</text>
+  <line x1="470" y1="66" x2="495" y2="66" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="495" y="45" width="95" height="42" rx="5" fill="#1c2438"/>
+  <text x="542" y="61" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#fff">Out Proj</text>
+  <text x="542" y="74" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#e3b341">134.2M FLOPs/tok</text>
+  <line x1="590" y1="66" x2="615" y2="66" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <!-- residual 1 -->
+  <path d="M 65,87 Q 65,110 342,110 Q 542,110 542,87" stroke="#e3b341" stroke-width="1.5" stroke-dasharray="4,2" fill="none"/>
+  <text x="305" y="107" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#e3b341">Residual add</text>
+  <!-- Row 2: FFN path -->
+  <rect x="140" y="140" width="105" height="42" rx="5" fill="#2a6099"/>
+  <text x="192" y="157" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#fff">RMSNorm</text>
+  <text x="192" y="170" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#b8ddf0">AI≈1.25 BW-bound</text>
+  <line x1="245" y1="161" x2="268" y2="161" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="268" y="140" width="240" height="58" rx="5" fill="#f5f3ec" stroke="#d8d4c8"/>
+  <text x="388" y="160" text-anchor="middle" font-family="sans-serif" font-size="9.5" font-weight="700" fill="#1c2438">SwiGLU FFN</text>
+  <text x="388" y="175" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#555">gate=SiLU(x·W_gate) · up=x·W_up · out=(gate⊗up)·W_down</text>
+  <text x="388" y="190" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#856404">1,409M FLOPs/tok — 82.4% of total at decode S=1</text>
+  <line x1="508" y1="161" x2="530" y2="161" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="530" y="140" width="100" height="42" rx="5" fill="#1c2438"/>
+  <text x="580" y="157" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#fff">x_{l+1}</text>
+  <text x="580" y="170" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#e3b341">[B,S,d_model]</text>
+  <!-- residual 2 -->
+  <path d="M 542,87 Q 680,87 680,161 Q 680,182 630,182" stroke="#e3b341" stroke-width="1.5" stroke-dasharray="4,2" fill="none" marker-end="url(#arrgold)"/>
+  <!-- KV cache annotation -->
+  <rect x="375" y="100" width="155" height="34" rx="4" fill="#fff8e0" stroke="#e3b341"/>
+  <text x="452" y="114" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="700" fill="#856404">KV Cache (LLaMA-3 70B GQA)</text>
+  <text x="452" y="126" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#555">4 KB/token/layer · 5.37 GB/req at 4K ctx</text>
+  <line x1="420" y1="87" x2="430" y2="100" stroke="#e3b341" stroke-width="1" stroke-dasharray="2,2"/>
+  <!-- connect attn output to FFN norm -->
+  <line x1="542" y1="87" x2="192" y2="140" stroke="#777" stroke-width="1.2" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+  <defs>
+    <marker id="arr" markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#555"/></marker>
+    <marker id="arrgold" markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#e3b341"/></marker>
+  </defs>
+  <text x="360" y="265" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#888">Figure 2.11 — One transformer layer data flow. FFN dominates at 82.4% of decode FLOPs. FlashAttention eliminates N² HBM traffic. KV cache persists across decode steps.</text>
+</svg>
+<figcaption>Figure 2.11 — Transformer layer anatomy with FLOP breakdown. At decode batch=1, the FFN accounts for 82.4% of FLOPs and all operations are memory-bandwidth-bound. At large-batch prefill, large GEMM operations become compute-bound.</figcaption>
 </div>
+
+<!-- DIAGRAM 2.11b: RoPE PE Evolution timeline -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 720 170" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="170" fill="#fff"/>
+  <text x="360" y="22" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#1c2438">Positional Encoding Evolution — From Sinusoidal to RoPE</text>
+  <line x1="60" y1="80" x2="680" y2="80" stroke="#d8d4c8" stroke-width="2.5"/>
+  <!-- Nodes -->
+  <circle cx="100" cy="80" r="10" fill="#777"/>
+  <circle cx="270" cy="80" r="10" fill="#2a6099"/>
+  <circle cx="440" cy="80" r="10" fill="#856404"/>
+  <circle cx="610" cy="80" r="12" fill="#27ae60" stroke="#155724" stroke-width="2"/>
+  <!-- Top labels -->
+  <text x="100" y="38" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="600" fill="#555">Sinusoidal</text>
+  <text x="100" y="50" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#888">Vaswani 2017</text>
+  <text x="100" y="62" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#888">Fixed; hard context limit</text>
+  <text x="270" y="38" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="600" fill="#2a6099">Learned Absolute</text>
+  <text x="270" y="50" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#888">GPT-2, BERT</text>
+  <text x="270" y="62" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#888">Learnable; still hard limit</text>
+  <text x="440" y="38" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="600" fill="#856404">ALiBi</text>
+  <text x="440" y="50" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#888">MPT, BLOOM</text>
+  <text x="440" y="62" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#888">Linear bias; no params</text>
+  <text x="610" y="38" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#27ae60">RoPE</text>
+  <text x="610" y="50" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#155724">LLaMA, Mistral, Qwen</text>
+  <text x="610" y="62" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#155724">Relative; extendable via YaRN</text>
+  <!-- Bottom labels -->
+  <text x="100" y="104" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#888">Hard limit ✗</text>
+  <text x="270" y="104" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#888">Hard limit ✗</text>
+  <text x="440" y="104" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#888">Some extrapolation ✓</text>
+  <text x="610" y="104" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="700" fill="#27ae60">YaRN: 4–32× extension ✓✓</text>
+  <text x="610" y="116" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#27ae60">θ_base=500K → 128K tokens</text>
+  <text x="360" y="148" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#888">Figure 2.12 — Positional encoding evolution. RoPE with YaRN is the universal production standard for context-length extension in modern LLMs.</text>
+</svg>
+<figcaption>Figure 2.12 — Positional encoding evolution from sinusoidal to RoPE. RoPE's relative-position property enables context extension via frequency rescaling (YaRN) without full retraining.</figcaption>
+</div>
+
+<!-- DIAGRAM: Attention Variant KV Cache Comparison -->
+<div class="diagram-wrap">
+<svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="200" fill="#fff"/>
+  <text x="360" y="22" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#1c2438">KV Cache Memory per Request — LLaMA-3 70B Config (S=8192, BF16)</text>
+  <!-- Bars -->
+  <!-- MHA: 27.5 GB → 27.5/27.5 = 100% = 500px width -->
+  <rect x="80" y="50" width="500" height="28" rx="3" fill="#c0392b"/>
+  <text x="75" y="69" text-anchor="end" font-family="sans-serif" font-size="9.5" fill="#555">MHA</text>
+  <text x="586" y="69" text-anchor="start" font-family="sans-serif" font-size="9.5" fill="#c0392b">27.5 GB</text>
+  <!-- GQA G=8: 3.4 GB → 3.4/27.5 × 500 = 61.8px -->
+  <rect x="80" y="90" width="62" height="28" rx="3" fill="#27ae60"/>
+  <text x="75" y="109" text-anchor="end" font-family="sans-serif" font-size="9.5" fill="#555">GQA G=8</text>
+  <text x="148" y="109" text-anchor="start" font-family="sans-serif" font-size="9.5" fill="#27ae60">3.4 GB (8×)</text>
+  <!-- MQA: 430MB → 0.43/27.5 × 500 = 7.8px -->
+  <rect x="80" y="130" width="8" height="28" rx="3" fill="#2a6099"/>
+  <text x="75" y="149" text-anchor="end" font-family="sans-serif" font-size="9.5" fill="#555">MQA</text>
+  <text x="95" y="149" text-anchor="start" font-family="sans-serif" font-size="9.5" fill="#2a6099">430 MB (64×)</text>
+  <!-- MLA: 754MB → 0.754/27.5 × 500 = 13.7px -->
+  <rect x="80" y="165" width="14" height="28" rx="3" fill="#7b2d8b"/>
+  <text x="75" y="184" text-anchor="end" font-family="sans-serif" font-size="9.5" fill="#555">MLA</text>
+  <text x="100" y="184" text-anchor="start" font-family="sans-serif" font-size="9.5" fill="#7b2d8b">754 MB (37×) + decode GEMM</text>
+  <text x="360" y="198" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#888">Figure 2.13 — KV cache memory at S=8192 BF16. GQA (standard) already delivers 8× over MHA; MQA and MLA push further with quality/compute tradeoffs.</text>
+</svg>
+<figcaption>Figure 2.13 — KV cache memory comparison. The engineering decision between MHA/GQA/MQA/MLA determines concurrent requests per GPU and thus cost per inference.</figcaption>
+</div>
+
+<div class="takeaways" id="takeaways"><h3>Key Takeaways</h3>
+<div class="takeaway-group"><div class="tg-label">Core Architecture Concepts</div><ul>
+<li>The FFN consumes 82.4% of FLOPs at decode (batch=1) and 79% at prefill. This is why FFN weight quantization (INT4/FP8) has the highest bandwidth ROI of any quantization decision.</li>
+<li>KV cache size = 2 × L × H_kv × d_head × S × dtype_bytes. LLaMA-3 70B at 4K context in BF16: 5.37 GB per concurrent request. GQA (H_kv=8 vs H_q=64) delivers 8× reduction with negligible quality loss — directly 8× more concurrent users per GPU.</li>
+<li>Decoder-only LLMs (GPT, LLaMA, Claude) use causal masking to enable KV caching. Bidirectional encoder models (BERT) cannot use a KV cache — each inference must recompute attention from scratch.</li>
+<li>Causal masking is not just a quality choice — it is the architectural root of the entire KV cache optimization chain: causal mask → fixed K,V per position → cacheable → GQA/MLA reduce that cache cost → more concurrent requests.</li>
+</ul></div>
+<div class="takeaway-group"><div class="tg-label">Performance &amp; Bandwidth Bottlenecks</div><ul>
+<li>Decode at batch=1 TPOT is always bandwidth-limited, never compute-limited. H100 bandwidth floor (41.8ms for 70B BF16) is 303× the compute floor (0.14ms). No kernel optimization helps — only quantization (fewer bytes) or batching (higher arithmetic intensity).</li>
+<li>Flash Attention removes the N² HBM materialization, saving 8.6 GB per layer at S=8192. This is not optional above 4K context in training — it is the enabling technology for long-context models.</li>
+<li>Activation checkpointing trades 30% extra compute for 85% activation memory reduction per layer. FFN activations (76% of layer memory) are the primary recompute target.</li>
+</ul></div>
+<div class="takeaway-group"><div class="tg-label">Principal-Level Architecture Insights</div><ul>
+<li>Every attention variant is an infrastructure cost decision: MHA vs GQA vs MLA determines KV cache size, which determines serving capacity per GPU. A 1% quality improvement requiring 4× more GPUs costs ~$100K/year on a 100-GPU serving cluster.</li>
+<li>MLA (DeepSeek) reduces KV cache 57× vs MHA but adds an up-projection GEMM at each decode step. This GEMM is compute-bound at batch=1 — trading bandwidth cost for compute cost. The tradeoff breaks even around batch~8.</li>
+<li>MoE routing introduces All-to-All communication at every FFN layer. At top-2/8 routing with expert parallelism, 75% of expert compute happens remotely. Communication overhead determines whether MoE saves cost or adds it — see Ch 13.</li>
+<li>The 6ND rule (training FLOPs ≈ 6 × N × D) lets you estimate full pretraining cost before writing a line of code. LLaMA-3 70B on 15T tokens ≈ $36M compute at H100 cluster pricing.</li>
+</ul></div>
+</div>
+
+<div class="review-questions" id="review"><h3>Review Questions</h3>
+<div class="rq-tier foundational"><div class="rq-tier-label"><span class="rq-badge">Foundational</span>Build the mental model — no math required</div><ol>
+<li>In plain language, explain why a transformer with GQA (H_kv=8) can serve more concurrent users than one with MHA (H_kv=64), even though both produce the same output quality at the same sequence length.</li>
+<li>What is the attention KV cache, and why does it grow with sequence length during autoregressive decoding? Give a concrete example with numbers for a 70B model at 1000 tokens context.</li>
+<li>Why did RMSNorm replace LayerNorm in modern LLMs? Name two reasons — one computational, one system-level — and explain why both matter for production inference.</li>
+<li>Explain the difference between encoder-only (BERT), encoder-decoder (T5), and decoder-only (LLaMA) architectures. Which can use a KV cache and why? What does bidirectional attention give up compared to causal masking?</li>
+</ol></div>
+<div class="rq-tier intermediate"><div class="rq-tier-label"><span class="rq-badge">Intermediate</span>Apply and calculate — production context</div><ol>
+<li>For LLaMA-3 70B (L=80, d=8192, H_q=64, H_kv=8, d_ffn=28672, BF16) serving 50 concurrent requests at S=2048: (a) Compute total KV cache memory. (b) H100 has 80 GB HBM; weights take 140 GB with TP=2, runtime overhead 10 GB. How many H100s needed? (c) Switch to FP8 KV — how many H100s now?</li>
+<li>Compute arithmetic intensity of the FFN down projection (W_down: [28672 × 8192]) at batch=1 vs batch=64, BF16. Which is memory-bound on H100 (ridge 295 FLOP/byte)? At what exact batch size does this operation cross the ridge?</li>
+<li>A model is trained at 4K context using θ_base=10,000 in RoPE. You want to extend to 128K context using YaRN. (a) What is the new θ_base needed? (b) Which RoPE frequency dimensions are most affected? (c) Why does YaRN require only fine-tuning (~1000 steps) rather than full retraining?</li>
+</ol></div>
+<div class="rq-tier principal"><div class="rq-tier-label"><span class="rq-badge">Principal Level</span>Design, decide, and defend — architecture reviews</div><ol>
+<li>Your team is choosing between GQA (H_kv=8), MQA (H_kv=1), and MLA (d_c=512) for a new 13B model targeting 100K token context serving. Quantify: (a) KV cache bytes per request at 100K tokens for each variant. (b) Available concurrent requests on a single H100 (80 GB, 26 GB weights). (c) Reconstruction compute cost for MLA at batch=32. Recommend one variant with quantitative justification.</li>
+<li>Design training infrastructure for LLaMA-3 70B: (a) Memory budget per GPU with 8-way tensor parallelism, batch=8, S=4096, with and without activation checkpointing. (b) At what pipeline parallelism degree and micro-batch count does bubble overhead drop below 15%? (c) Flash Attention backward saves how much HBM per layer at this sequence length? Show all calculations.</li>
+</ol></div>
+</div>
+
+<div class="ch-end">Chapter 2 · Silicon to Scale · Venkat Vinjam</div>
 </div>
 </body>
 </html>
